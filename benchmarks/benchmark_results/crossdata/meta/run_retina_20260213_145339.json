@@ -1,0 +1,33 @@
+{
+  "timestamp": "20260213_145339",
+  "script": "benchmark_crossdata.py",
+  "dataset": "retina",
+  "data_path": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE165784_RetinaHmDev.h5ad",
+  "data_type": "cluster",
+  "label_key": "cell_type",
+  "n_cells": 3000,
+  "n_genes": 3000,
+  "n_labels": 20,
+  "epochs_per_model": {
+    "Pure-AE": 600,
+    "Pure-Transformer-AE": 600,
+    "Pure-Contrastive-AE": 600,
+    "DPMM-Base": 600,
+    "DPMM-Transformer": 600,
+    "DPMM-Contrastive": 600
+  },
+  "lr": 0.001,
+  "batch_size": 128,
+  "latent_dim": 10,
+  "hvg": 3000,
+  "max_cells": 3000,
+  "seed": 42,
+  "models": [
+    "Pure-AE",
+    "Pure-Transformer-AE",
+    "Pure-Contrastive-AE",
+    "DPMM-Base",
+    "DPMM-Transformer",
+    "DPMM-Contrastive"
+  ]
+}

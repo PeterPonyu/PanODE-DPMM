@@ -1,0 +1,100 @@
+{
+  "timestamp": "20260212_161246",
+  "script": "benchmark_sensitivity.py",
+  "series": "dpmm",
+  "data_path": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/setty.h5ad",
+  "n_cells": 3000,
+  "n_genes": 3000,
+  "epochs": 600,
+  "lr": 0.001,
+  "defaults": {
+    "latent_dim": 10,
+    "topic_kl_weight": 0.1,
+    "topic_encoder_hidden": 128,
+    "topic_dropout": 0.1,
+    "dpmm_warmup_ratio": 0.6,
+    "dpmm_encoder_dims": [
+      256,
+      128
+    ],
+    "dpmm_dropout": 0.1
+  },
+  "sweeps": {
+    "kl_weight": {
+      "topic": [
+        1.0,
+        0.5,
+        0.1,
+        0.01
+      ]
+    },
+    "warmup_ratio": {
+      "dpmm": [
+        0.4,
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9
+      ]
+    },
+    "latent_dim": {
+      "both": [
+        5,
+        10,
+        20,
+        50
+      ]
+    },
+    "encoder_size": {
+      "topic": [
+        64,
+        128,
+        256
+      ],
+      "dpmm": [
+        [
+          128,
+          64
+        ],
+        [
+          256,
+          128
+        ],
+        [
+          512,
+          256
+        ]
+      ]
+    },
+    "dropout_rate": {
+      "both": [
+        0.0,
+        0.1,
+        0.2,
+        0.3
+      ]
+    }
+  },
+  "batch_size": 128,
+  "seed": 42,
+  "models": [
+    "DPMM(wr=0.4)",
+    "DPMM(wr=0.5)",
+    "DPMM(wr=0.6)",
+    "DPMM(wr=0.7)",
+    "DPMM(wr=0.8)",
+    "DPMM(wr=0.9)",
+    "DPMM(dim=5)",
+    "DPMM(dim=10)",
+    "DPMM(dim=20)",
+    "DPMM(dim=50)",
+    "DPMM(enc=128x64)",
+    "DPMM(enc=256x128)",
+    "DPMM(enc=512x256)",
+    "DPMM(drop=0.0)",
+    "DPMM(drop=0.1)",
+    "DPMM(drop=0.2)",
+    "DPMM(drop=0.3)"
+  ]
+}

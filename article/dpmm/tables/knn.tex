@@ -1,0 +1,17 @@
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{$k$NN downstream classification (DPMM series).} Mean accuracy and macro-F1 across 12 datasets. Best value per column in bold.}
+\label{tab:dpmm_knn}
+\begin{tabular}{lcc}
+\toprule
+Model & Accuracy & F1-macro \\
+\midrule
+Pure-Transformer-AE & \textbf{0.785} & \textbf{0.580} \\
+Pure-AE & 0.784 & 0.572 \\
+Pure-Contrastive-AE & 0.777 & 0.566 \\
+DPMM-Contrastive & 0.737 & 0.519 \\
+DPMM-Base & 0.725 & 0.485 \\
+DPMM-Transformer & 0.692 & 0.441 \\
+\bottomrule
+\end{tabular}
+\end{table}

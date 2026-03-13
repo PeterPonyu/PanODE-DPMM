@@ -1,0 +1,67 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Environment ──────────────────────────────────────────────────────────────
+.conda/
+.venv/
+.env
+
+# ── IDE / editor ─────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Node / Next.js ───────────────────────────────────────────────────────────
+node_modules/
+.next/
+model-arch-viewer/.next/
+model-arch-viewer/node_modules/
+
+# ── Large benchmark artifacts (regenerable) ──────────────────────────────────
+benchmarks/benchmark_results/cache/
+benchmarks/benchmark_results/models/
+benchmarks/benchmark_results/*/latents/
+benchmarks/benchmark_results/*/plots/
+benchmarks/benchmark_results/seed_pipeline.log
+benchmarks/training_dynamics_results/
+benchmarks/biological_validation/results/
+benchmarks/paper_figures/
+metrics/latent_extensions/results/
+
+# ── Experiment results (selectively tracked) ──────────────────────────────
+# Ignore bulk data but keep figure outputs needed by article and blueprints
+# -- Full-catalogue experiment runs (entirely regenerable) --
+experiments/results/ablation_dpmm_full/
+experiments/results/ablation_topic_full/
+experiments/results/full_comparison_all/
+experiments/results/full_vs_external_all/
+experiments/results/external_full/
+experiments/results/mixed/
+experiments/results/external/
+# -- Per-series bulk data (keep only figures/) --
+experiments/results/*/ablation/tables/
+experiments/results/*/ablation/series/
+experiments/results/*/ablation/cache/
+experiments/results/*/ablation/latents/
+experiments/results/*/ablation/figures/training_curves/
+experiments/results/*/vs_external/tables/
+experiments/results/*/vs_external/series/
+experiments/results/*/vs_external/cache/
+experiments/results/*/vs_external/latents/
+lightning_logs/
+
+# ── Benchmark result exports (regenerable) ─────────────────────────────────
+benchmarks/benchmark_results/*/csv/
+benchmarks/benchmark_results/statistical_exports/
+benchmarks/benchmark_results/external/
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

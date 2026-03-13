@@ -1,0 +1,61 @@
+{
+  "timestamp": "20260220_162119",
+  "n_shared_genes": 3000,
+  "shared_genes_sample": [
+    "CCL4",
+    "CCL3",
+    "MYL9",
+    "CLU",
+    "LGALS3",
+    "CENPF",
+    "TOP2A",
+    "GNG11",
+    "ID2",
+    "IRF8",
+    "APOC1",
+    "NEAT1",
+    "RGS2",
+    "SOX4",
+    "HPGD",
+    "TM4SF1",
+    "HMGB2",
+    "CDC20",
+    "ISG15",
+    "SAT1"
+  ],
+  "datasets": [
+    "setty",
+    "lung",
+    "endo",
+    "dentate",
+    "hemato",
+    "blood_aged",
+    "hesc",
+    "retina",
+    "teeth",
+    "pituitary"
+  ],
+  "skipped_datasets": [],
+  "cell_counts": {
+    "setty": 2000,
+    "lung": 2000,
+    "endo": 2000,
+    "dentate": 2000,
+    "hemato": 2000,
+    "blood_aged": 2000,
+    "hesc": 2000,
+    "retina": 2000,
+    "teeth": 2000,
+    "pituitary": 2000
+  },
+  "epochs": 300,
+  "max_cells_per_ds": 2000,
+  "models_trained": [
+    "Topic-Base",
+    "Topic-Transformer",
+    "Topic-Contrastive",
+    "Pure-VAE",
+    "Pure-Transformer-VAE",
+    "Pure-Contrastive-VAE"
+  ]
+}

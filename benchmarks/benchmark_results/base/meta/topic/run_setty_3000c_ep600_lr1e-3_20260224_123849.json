@@ -1,0 +1,359 @@
+{
+  "timestamp": "20260224_123849",
+  "data_name": "setty",
+  "data_path": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/setty.h5ad",
+  "n_cells": 3000,
+  "n_genes": 3000,
+  "hvg_top_genes": 3000,
+  "max_cells": 3000,
+  "epochs_requested": 600,
+  "epochs_trained": {
+    "Pure-AE": 1000,
+    "Pure-VAE": 1000,
+    "Pure-Transformer-AE": 1000,
+    "Pure-Contrastive-AE": 1000,
+    "Pure-Transformer-VAE": 1000,
+    "Pure-Contrastive-VAE": 1000,
+    "DPMM-Base": 1000,
+    "DPMM-Transformer": 1000,
+    "DPMM-Contrastive": 1000,
+    "Topic-Base": 1000,
+    "Topic-Transformer": 1000,
+    "Topic-Contrastive": 1000
+  },
+  "latent_dim": 10,
+  "lr": 0.001,
+  "batch_size": 128,
+  "seed": 42,
+  "data_type": "trajectory",
+  "dre_k": 10,
+  "early_stopping": false,
+  "patience": null,
+  "verbose_every": 100,
+  "models": [
+    "Pure-AE",
+    "Pure-VAE",
+    "Pure-Transformer-AE",
+    "Pure-Contrastive-AE",
+    "Pure-Transformer-VAE",
+    "Pure-Contrastive-VAE",
+    "DPMM-Base",
+    "DPMM-Transformer",
+    "DPMM-Contrastive",
+    "Topic-Base",
+    "Topic-Transformer",
+    "Topic-Contrastive"
+  ],
+  "model_configs": {
+    "Pure-AE": {
+      "series": "dpmm",
+      "class": "DPMMODEModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "latent_dim": 10,
+        "encoder_dims": [
+          256,
+          128
+        ],
+        "decoder_dims": [
+          128,
+          256
+        ],
+        "use_latent_dynamics": false,
+        "dpmm_warmup_ratio": 999.0,
+        "dropout_rate": 0.2,
+        "fit_weight_decay": 0,
+        "fit_epochs": 1000
+      }
+    },
+    "Pure-VAE": {
+      "series": "topic",
+      "class": "TopicODEModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "n_topics": 10,
+        "encoder_hidden": 128,
+        "use_ode": false,
+        "kl_weight": 1.0,
+        "encoder_drop": 0.1,
+        "fit_weight_decay": 0.001,
+        "fit_epochs": 1000
+      }
+    },
+    "Pure-Transformer-AE": {
+      "series": "dpmm",
+      "class": "DPMMODETransformerModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "latent_dim": 10,
+        "d_model": 128,
+        "decoder_dims": [
+          128,
+          256
+        ],
+        "use_latent_dynamics": false,
+        "dpmm_warmup_ratio": 999.0,
+        "dropout_rate": 0.2,
+        "nhead": 4,
+        "num_encoder_layers": 2,
+        "fit_weight_decay": 0,
+        "fit_epochs": 1000
+      }
+    },
+    "Pure-Contrastive-AE": {
+      "series": "dpmm",
+      "class": "DPMMODEContrastiveModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "latent_dim": 10,
+        "encoder_dims": [
+          256,
+          128
+        ],
+        "decoder_dims": [
+          128,
+          256
+        ],
+        "use_latent_dynamics": false,
+        "dpmm_warmup_ratio": 999.0,
+        "dropout_rate": 0.2,
+        "moco_weight": 0.1,
+        "fit_weight_decay": 0,
+        "fit_epochs": 1000
+      }
+    },
+    "Pure-Transformer-VAE": {
+      "series": "topic",
+      "class": "TopicODETransformerModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "n_topics": 10,
+        "d_model": 128,
+        "use_ode": false,
+        "kl_weight": 1.0,
+        "dropout": 0.1,
+        "nhead": 4,
+        "num_encoder_layers": 2,
+        "fit_weight_decay": 0.001,
+        "fit_epochs": 1000
+      }
+    },
+    "Pure-Contrastive-VAE": {
+      "series": "topic",
+      "class": "TopicODEContrastiveModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "n_topics": 10,
+        "encoder_hidden": 128,
+        "use_ode": false,
+        "kl_weight": 1.0,
+        "encoder_drop": 0.1,
+        "moco_weight": 0.1,
+        "fit_weight_decay": 0.001,
+        "fit_epochs": 1000
+      }
+    },
+    "DPMM-Base": {
+      "series": "dpmm",
+      "class": "DPMMODEModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "latent_dim": 10,
+        "encoder_dims": [
+          256,
+          128
+        ],
+        "decoder_dims": [
+          128,
+          256
+        ],
+        "use_latent_dynamics": false,
+        "dpmm_warmup_ratio": 0.9,
+        "dropout_rate": 0.2,
+        "fit_weight_decay": 0,
+        "fit_epochs": 1000
+      }
+    },
+    "DPMM-Transformer": {
+      "series": "dpmm",
+      "class": "DPMMODETransformerModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "latent_dim": 10,
+        "d_model": 128,
+        "decoder_dims": [
+          128,
+          256
+        ],
+        "use_latent_dynamics": false,
+        "dpmm_warmup_ratio": 0.9,
+        "dropout_rate": 0.2,
+        "nhead": 4,
+        "num_encoder_layers": 2,
+        "fit_weight_decay": 0,
+        "fit_epochs": 1000
+      }
+    },
+    "DPMM-Contrastive": {
+      "series": "dpmm",
+      "class": "DPMMODEContrastiveModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "latent_dim": 10,
+        "encoder_dims": [
+          256,
+          128
+        ],
+        "decoder_dims": [
+          128,
+          256
+        ],
+        "use_latent_dynamics": false,
+        "dpmm_warmup_ratio": 0.9,
+        "dropout_rate": 0.2,
+        "moco_weight": 0.1,
+        "fit_weight_decay": 0,
+        "fit_epochs": 1000
+      }
+    },
+    "Topic-Base": {
+      "series": "topic",
+      "class": "TopicODEModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "n_topics": 10,
+        "encoder_hidden": 128,
+        "use_ode": false,
+        "kl_weight": 0.01,
+        "encoder_drop": 0.0,
+        "fit_weight_decay": 0.001,
+        "fit_epochs": 1000
+      }
+    },
+    "Topic-Transformer": {
+      "series": "topic",
+      "class": "TopicODETransformerModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "n_topics": 10,
+        "d_model": 128,
+        "use_ode": false,
+        "kl_weight": 0.01,
+        "dropout": 0.0,
+        "nhead": 4,
+        "num_encoder_layers": 2,
+        "fit_weight_decay": 0.001,
+        "fit_epochs": 1000
+      }
+    },
+    "Topic-Contrastive": {
+      "series": "topic",
+      "class": "TopicODEContrastiveModel",
+      "lr": 0.001,
+      "epochs_requested": 600,
+      "epochs_trained": 1000,
+      "params": {
+        "n_topics": 10,
+        "encoder_hidden": 128,
+        "use_ode": false,
+        "kl_weight": 0.01,
+        "encoder_drop": 0.0,
+        "moco_weight": 0.1,
+        "fit_weight_decay": 0.001,
+        "fit_epochs": 1000
+      }
+    }
+  },
+  "metrics": [
+    "Model",
+    "Time_s",
+    "SecPerEpoch",
+    "PeakGPU_MB",
+    "NumParams",
+    "LR",
+    "Epochs",
+    "EpochsTrained",
+    "model_obj",
+    "NMI",
+    "ARI",
+    "ASW",
+    "DAV",
+    "CAL",
+    "COR",
+    "DRE_umap_distance_correlation",
+    "DRE_umap_Q_local",
+    "DRE_umap_Q_global",
+    "DRE_umap_K_max",
+    "DRE_umap_overall_quality",
+    "DRE_tsne_distance_correlation",
+    "DRE_tsne_Q_local",
+    "DRE_tsne_Q_global",
+    "DRE_tsne_K_max",
+    "DRE_tsne_overall_quality",
+    "LSE_manifold_dimensionality",
+    "LSE_spectral_decay_rate",
+    "LSE_participation_ratio",
+    "LSE_anisotropy_score",
+    "LSE_trajectory_directionality",
+    "LSE_noise_resilience",
+    "LSE_core_quality",
+    "LSE_overall_quality",
+    "DREX_trustworthiness",
+    "DREX_continuity",
+    "DREX_distance_spearman",
+    "DREX_distance_pearson",
+    "DREX_local_scale_quality",
+    "DREX_neighborhood_symmetry",
+    "DREX_overall_quality",
+    "LSEX_two_hop_connectivity",
+    "LSEX_radial_concentration",
+    "LSEX_local_curvature",
+    "LSEX_entropy_stability",
+    "LSEX_overall_quality",
+    "latent_mean_norm",
+    "latent_std_mean",
+    "latent_std_min",
+    "latent_std_max",
+    "latent_var_mean",
+    "latent_var_min",
+    "latent_var_max",
+    "latent_near_zero_dims",
+    "latent_pairwise_dist_mean",
+    "latent_pairwise_dist_std",
+    "recon_final",
+    "recon_prev_window",
+    "recon_rel_change_pct",
+    "total_loss_final",
+    "converged",
+    "window",
+    "Series",
+    "kl_final",
+    "kl_prev_window",
+    "kl_rel_change_pct"
+  ],
+  "cache_dir": "/home/zeyufu/Desktop/PanODE-LAB/benchmarks/benchmark_results/cache",
+  "cache_used": true,
+  "series": "topic"
+}

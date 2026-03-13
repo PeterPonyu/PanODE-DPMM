@@ -1,0 +1,33 @@
+{
+  "timestamp": "20260224_190855",
+  "script": "benchmark_crossdata.py",
+  "dataset": "blood_aged",
+  "data_path": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE120505_bloodAged.h5ad",
+  "data_type": "cluster",
+  "label_key": "cell_type",
+  "n_cells": 3000,
+  "n_genes": 3000,
+  "n_labels": 21,
+  "epochs_per_model": {
+    "Pure-Contrastive-VAE": 1000,
+    "Pure-Transformer-VAE": 1000,
+    "Pure-AE": 1000,
+    "Pure-Transformer-AE": 1000,
+    "Pure-Contrastive-AE": 1000,
+    "Pure-VAE": 1000
+  },
+  "lr": 0.001,
+  "batch_size": 128,
+  "latent_dim": 10,
+  "hvg": 3000,
+  "max_cells": 3000,
+  "seed": 1,
+  "models": [
+    "Pure-Contrastive-VAE",
+    "Pure-Transformer-VAE",
+    "Pure-AE",
+    "Pure-Transformer-AE",
+    "Pure-Contrastive-AE",
+    "Pure-VAE"
+  ]
+}

@@ -1,0 +1,23 @@
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Wilcoxon signed-rank tests on core metrics (DPMM series).} Pairwise structured vs.\ pure comparisons across 56 datasets. W/L/T = wins/losses/ties; Sig.\ at $\alpha{=}0.05$.}
+\label{tab:dpmm_wilcoxon_core}
+\begin{tabular}{llccccc}
+\toprule
+Structured vs Pure & Metric & W/L/T & $p$-value & Sig. & Cliff's $\delta$ & Effect \\
+\midrule
+DPMM-Base vs Pure-AE & ARI & 4/8/0 & 0.924 & No & -0.431 & medium \\
+DPMM-Base vs Pure-AE & ASW & 12/0/0 & 2.44e-04 & Yes & 1.000 & large \\
+DPMM-Base vs Pure-AE & DAV & 12/0/0 & 2.44e-04 & Yes & 1.000 & large \\
+DPMM-Base vs Pure-AE & NMI & 2/10/0 & 0.999 & No & -0.639 & large \\
+DPMM-Contrastive vs Pure-Contrastive-AE & ARI & 1/11/0 & 1.000 & No & -0.444 & medium \\
+DPMM-Contrastive vs Pure-Contrastive-AE & ASW & 12/0/0 & 2.44e-04 & Yes & 0.972 & large \\
+DPMM-Contrastive vs Pure-Contrastive-AE & DAV & 12/0/0 & 2.44e-04 & Yes & 1.000 & large \\
+DPMM-Contrastive vs Pure-Contrastive-AE & NMI & 0/12/0 & 1.000 & No & -0.403 & medium \\
+DPMM-Transformer vs Pure-Transformer-AE & ARI & 0/12/0 & 1.000 & No & -0.597 & large \\
+DPMM-Transformer vs Pure-Transformer-AE & ASW & 12/0/0 & 2.44e-04 & Yes & 0.944 & large \\
+DPMM-Transformer vs Pure-Transformer-AE & DAV & 12/0/0 & 2.44e-04 & Yes & 0.972 & large \\
+DPMM-Transformer vs Pure-Transformer-AE & NMI & 0/12/0 & 1.000 & No & -0.847 & large \\
+\bottomrule
+\end{tabular}
+\end{table}

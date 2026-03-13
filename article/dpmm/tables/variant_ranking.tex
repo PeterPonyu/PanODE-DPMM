@@ -1,0 +1,17 @@
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Individual variant ranking (DPMM series).} Models ranked by composite score across 56 datasets. Best value per column in bold.}
+\label{tab:dpmm_variant_ranking}
+\begin{tabular}{lccccc}
+\toprule
+Model & NMI & ARI & ASW & DAV $\downarrow$ & Score \\
+\midrule
+DPMM-Contrastive & 0.546 & 0.301 & 0.374 & 0.906 & \textbf{0.407} \\
+DPMM-Base & 0.506 & 0.320 & \textbf{0.374} & \textbf{0.868} & 0.400 \\
+Pure-Contrastive-AE & 0.600 & 0.396 & 0.201 & 1.432 & 0.399 \\
+Pure-AE & \textbf{0.609} & \textbf{0.406} & 0.165 & 1.624 & 0.393 \\
+Pure-Transformer-AE & 0.601 & 0.377 & 0.171 & 1.657 & 0.383 \\
+DPMM-Transformer & 0.475 & 0.250 & 0.289 & 1.029 & 0.338 \\
+\bottomrule
+\end{tabular}
+\end{table}

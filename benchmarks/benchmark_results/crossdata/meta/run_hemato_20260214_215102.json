@@ -1,0 +1,33 @@
+{
+  "timestamp": "20260214_215102",
+  "script": "benchmark_crossdata.py",
+  "dataset": "hemato",
+  "data_path": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/hemato.h5ad",
+  "data_type": "trajectory",
+  "label_key": "Cell type",
+  "n_cells": 3000,
+  "n_genes": 3000,
+  "n_labels": 22,
+  "epochs_per_model": {
+    "Pure-AE": 1000,
+    "Pure-Contrastive-AE": 1000,
+    "Pure-Transformer-AE": 1000,
+    "DPMM-Base": 1000,
+    "DPMM-Contrastive": 1000,
+    "DPMM-Transformer": 1000
+  },
+  "lr": 0.001,
+  "batch_size": 128,
+  "latent_dim": 10,
+  "hvg": 3000,
+  "max_cells": 3000,
+  "seed": 42,
+  "models": [
+    "Pure-AE",
+    "Pure-Contrastive-AE",
+    "Pure-Transformer-AE",
+    "DPMM-Base",
+    "DPMM-Contrastive",
+    "DPMM-Transformer"
+  ]
+}

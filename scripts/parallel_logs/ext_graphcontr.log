@@ -1,0 +1,3803 @@
+
+Available external models:
+Model                  Latent   Notes
+------------------------------------------------------------------------
+CellBLAST              10       VAE with adversarial batch correction (batch 
+GMVAE                  10       Geometric Manifold VAE (Euclidean mode)
+GMVAE-Poincare         10       GM-VAE with Poincaré ball latent (figure grou
+GMVAE-PGM              10       GM-VAE with PGM latent (figure group: GM-VAE 
+GMVAE-LearnablePGM     10       GM-VAE with learnable PGM (figure group: GM-V
+GMVAE-HW               10       GM-VAE with hyperbolic (HW) latent (figure gr
+SCALEX                 10       VAE with domain-specific batch normalization
+scDiffusion            64       Diffusion-based generative model
+siVAE                  10       Sparse interpretable VAE for GRN inference
+CLEAR                  128      MoCo contrastive learning (no decoder) [figur
+scDAC                  10       Deep AE with DPMM clustering
+scDeepCluster          10       ZINB AE + DEC clustering
+scDHMap                10       Hyperbolic deep embedding (Lorentz model)
+scGNN                  10       Graph neural network with kNN graph [figure g
+scGCC                  128      GAT + MoCo contrastive (requires torch_geomet
+scSMD                  10       ResNet CNN + manifold clustering
+VAE-DIP                10       VAE + DIP-VAE covariance regularization (iden
+VAE-TC                 10       VAE + total-correlation penalty (factorized l
+InfoVAE                10       Info-VAE: MMD between aggregated posterior an
+BetaVAE                10       Beta-VAE (beta=4) for stronger disentanglemen
+scVI                   10       Deep generative model with negative binomial 
+PeakVI                 10       Variational inference for scATAC-seq peaks (A
+PoissonVI              10       Poisson likelihood variant for scATAC-seq cou
+
+Model groups (for figure panels):
+  generative: ['CellBLAST', 'SCALEX', 'scDiffusion', 'siVAE', 'scDAC', 'scDeepCluster', 'scDHMap', 'scSMD']
+  gaussian_geometric: ['GMVAE', 'GMVAE-Poincare', 'GMVAE-PGM', 'GMVAE-LearnablePGM', 'GMVAE-HW']
+  disentanglement: ['VAE-DIP', 'VAE-TC', 'InfoVAE', 'BetaVAE']
+  graph_contrastive: ['CLEAR', 'scGCC', 'scGNN']
+  scvi_family: ['scVI', 'PeakVI', 'PoissonVI']
+
+  scVI family included: ['scVI', 'PeakVI', 'PoissonVI'] (will use registry epochs/patience)
+
+Group 'graph_contrastive': ['CLEAR', 'scGNN', 'scGCC']
+Output: experiments/results/external/graph_contrastive
+
+
+======================================================================
+EXTERNAL BASELINE BENCHMARK
+======================================================================
+Device     : cuda
+Models (3): ['CLEAR', 'scGNN', 'scGCC']
+Datasets   : 56 datasets
+Epochs     : 1000
+LR         : 0.001
+Batch size : 128
+Latent dim : 10
+Max cells  : 3000
+HVGs       : 2000
+Seed       : 42
+Patience   : 100
+DRE k      : 15
+Output     : experiments/results/external/graph_contrastive
+======================================================================
+
+
+======================================================================
+[1/56] Dataset: setty
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets/setty.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets/setty.h5ad...
+  Original shape: (5780, 27876)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_660551b21f5c96ee0309517d7af90a06.h5ad
+  Labels: using 'clusters' (10 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 92.75%, Lib size: 775+/-394, Max value: 1324
+  -> Standard normalization
+  Using 'cell_type' labels: 10 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.1452 | Val Loss:   5.2795
+Epoch  25/1000 | Train Loss:   3.8900 | Val Loss:   4.3525
+Epoch  50/1000 | Train Loss:   3.2317 | Val Loss:   3.8166
+Epoch  75/1000 | Train Loss:   2.9729 | Val Loss:   3.6369
+Epoch 100/1000 | Train Loss:   2.8638 | Val Loss:   3.5411
+Epoch 125/1000 | Train Loss:   2.7744 | Val Loss:   3.4573
+Epoch 150/1000 | Train Loss:   2.7253 | Val Loss:   3.4520
+Epoch 175/1000 | Train Loss:   2.6869 | Val Loss:   3.4139
+Epoch 200/1000 | Train Loss:   2.6650 | Val Loss:   3.4196
+Epoch 225/1000 | Train Loss:   2.6603 | Val Loss:   3.3693
+Epoch 250/1000 | Train Loss:   2.6537 | Val Loss:   3.3894
+Epoch 275/1000 | Train Loss:   2.6530 | Val Loss:   3.4130
+Epoch 300/1000 | Train Loss:   2.6546 | Val Loss:   3.3755
+Epoch 325/1000 | Train Loss:   2.6498 | Val Loss:   3.4193
+
+✓ Early stopping at epoch 347
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9220 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9392 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9306
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4877 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4698
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7415 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7484
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1956 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4592 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5670 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9991 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5552
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6411  ARI=0.4931  ASW=0.0745  |  71.2s (0.21s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: -0.033%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+Epoch   1/1000 | Train Loss:   6.2437 | Val Loss:   0.8139
+Epoch  25/1000 | Train Loss:   0.7916 | Val Loss:   0.7742
+Epoch  50/1000 | Train Loss:   0.7861 | Val Loss:   0.7725
+Epoch  75/1000 | Train Loss:   0.7867 | Val Loss:   0.7720
+Epoch 100/1000 | Train Loss:   0.7858 | Val Loss:   0.7720
+
+✓ Early stopping at epoch 102
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9769 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9794 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9781
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.8108 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.7176
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7997 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8771
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1129 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.7171 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6658 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9778 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6184
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.3705  ARI=0.1764  ASW=0.3253  |  15.6s (0.15s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: 0.1%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/setty_df.csv  (3 methods x 36 metrics)
+
+  Done: setty  (1/56)
+
+======================================================================
+[2/56] Dataset: endo
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets/endo.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets/endo.h5ad...
+  Original shape: (2531, 27998)
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_bfd212c9db7dd5bac66d54ee8a10d9f1.h5ad
+  Labels: using 'clusters' (7 types)
+Dataset statistics:
+  Cells: 2,531, Genes: 2,000
+  Sparsity: 87.74%, Lib size: 986+/-469, Max value: 2286
+  -> Standard normalization
+  Using 'cell_type' labels: 7 types
+
+Data split:
+  Train: 1,771 cells (70.0%)
+  Val:   379 cells (15.0%)
+  Test:  381 cells (15.1%)
+  Batch size: 128, Batches/epoch: 13
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.1807 | Val Loss:   5.3749
+Epoch  25/1000 | Train Loss:   4.0053 | Val Loss:   4.4848
+Epoch  50/1000 | Train Loss:   3.3781 | Val Loss:   3.9832
+Epoch  75/1000 | Train Loss:   3.0710 | Val Loss:   3.6910
+Epoch 100/1000 | Train Loss:   2.9130 | Val Loss:   3.6054
+Epoch 125/1000 | Train Loss:   2.8009 | Val Loss:   3.4457
+Epoch 150/1000 | Train Loss:   2.7518 | Val Loss:   3.4228
+Epoch 175/1000 | Train Loss:   2.7230 | Val Loss:   3.3915
+Epoch 200/1000 | Train Loss:   2.7063 | Val Loss:   3.3818
+Epoch 225/1000 | Train Loss:   2.6952 | Val Loss:   3.3793
+Epoch 250/1000 | Train Loss:   2.6929 | Val Loss:   3.3552
+Epoch 275/1000 | Train Loss:   2.6925 | Val Loss:   3.3654
+Epoch 300/1000 | Train Loss:   2.6895 | Val Loss:   3.3383
+Epoch 325/1000 | Train Loss:   2.6885 | Val Loss:   3.3572
+Epoch 350/1000 | Train Loss:   2.6895 | Val Loss:   3.3913
+Epoch 375/1000 | Train Loss:   2.6853 | Val Loss:   3.3699
+Epoch 400/1000 | Train Loss:   2.6883 | Val Loss:   3.3552
+Epoch 425/1000 | Train Loss:   2.6887 | Val Loss:   3.3680
+Epoch 450/1000 | Train Loss:   2.6852 | Val Loss:   3.3606
+
+✓ Early stopping at epoch 451
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=381, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9575 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9612 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9593
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.5637 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4961
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7453 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7805
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=381, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1944 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4560 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5870 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9995 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5592
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosionTraceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6198  ARI=0.4274  ASW=0.0898  |  157.4s (0.35s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: -0.058%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   6.0877 | Val Loss:   0.6990
+Epoch  25/1000 | Train Loss:   0.9283 | Val Loss:   0.8013
+Epoch  50/1000 | Train Loss:   0.9024 | Val Loss:   0.7937
+Epoch  75/1000 | Train Loss:   0.8850 | Val Loss:   0.7926
+Epoch 100/1000 | Train Loss:   0.8888 | Val Loss:   0.7926
+
+✓ Early stopping at epoch 102
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=381, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9769 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9771 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9770
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.8546 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.8799
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7657 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.9052
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=381, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1338 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.7221 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6452 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9775 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6197
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.2695  ARI=0.1155  ASW=0.3090  |  6.0s (0.06s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: -0.339%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/endo_df.csv  (3 methods x 36 metrics)
+
+  Done: endo  (2/56)
+
+======================================================================
+[3/56] Dataset: hemato
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets/hemato.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets/hemato.h5ad...
+  Original shape: (22602, 32288)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_da8c639cbdb59fef2f959dea28622547.h5ad
+  Labels: using 'Cell type' (22 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 81.89%, Lib size: 4744+/-2081, Max value: 17935
+  -> Extreme values: applying scaled normalization
+  Using 'cell_type' labels: 22 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.5871 | Val Loss:   5.8658
+Epoch  25/1000 | Train Loss:   4.2209 | Val Loss:   4.4583
+Epoch  50/1000 | Train Loss:   3.5003 | Val Loss:   3.8978
+Epoch  75/1000 | Train Loss:   3.1937 | Val Loss:   3.6126
+Epoch 100/1000 | Train Loss:   3.0179 | Val Loss:   3.4408
+Epoch 125/1000 | Train Loss:   2.9296 | Val Loss:   3.3731
+Epoch 150/1000 | Train Loss:   2.8777 | Val Loss:   3.3265
+Epoch 175/1000 | Train Loss:   2.8503 | Val Loss:   3.2948
+Epoch 200/1000 | Train Loss:   2.8422 | Val Loss:   3.2796
+Epoch 225/1000 | Train Loss:   2.8366 | Val Loss:   3.3099
+Epoch 250/1000 | Train Loss:   2.8309 | Val Loss:   3.2853
+Epoch 275/1000 | Train Loss:   2.8323 | Val Loss:   3.3000
+Epoch 300/1000 | Train Loss:   2.8229 | Val Loss:   3.2892
+Epoch 325/1000 | Train Loss:   2.8242 | Val Loss:   3.2952
+Epoch 350/1000 | Train Loss:   2.8265 | Val Loss:   3.2920
+
+✓ Early stopping at epoch 353
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9592 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9721 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9656
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4453 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4547
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7560 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7588
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1538 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4548 ★Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5862 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9986 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5483
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.5973  ARI=0.2591  ASW=0.0899  |  57.7s (0.16s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: 0.01%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.6668 | Val Loss:   0.6933
+Epoch  25/1000 | Train Loss:   1.1735 | Val Loss:   0.7883
+Epoch  50/1000 | Train Loss:   1.1160 | Val Loss:   0.7901
+Epoch  75/1000 | Train Loss:   1.1187 | Val Loss:   0.7902
+Epoch 100/1000 | Train Loss:   1.1066 | Val Loss:   0.7904
+
+✓ Early stopping at epoch 101
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9970 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9971 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9971
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.9113 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.9082
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.8575 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.9447
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.0960 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.7531 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6520 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9861 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6218
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.2418  ARI=0.0335  ASW=0.3722  |  8.2s (0.08s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: -0.197%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/hemato_df.csv  (3 methods x 36 metrics)
+
+  Done: hemato  (3/56)
+
+======================================================================
+[4/56] Dataset: dentate
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets/dentate.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets/dentate.h5ad...
+  Original shape: (18213, 27998)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_afdf4cbe7e825c51881b0929312c7b7f.h5ad
+  Labels: using 'Clusters' (14 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 91.37%, Lib size: 699+/-502, Max value: 645
+  -> Standard normalization
+  Using 'cell_type' labels: 14 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.0688 | Val Loss:   5.1833
+Epoch  25/1000 | Train Loss:   3.7866 | Val Loss:   4.2137
+Epoch  50/1000 | Train Loss:   3.2235 | Val Loss:   3.7314
+Epoch  75/1000 | Train Loss:   2.9892 | Val Loss:   3.5302
+Epoch 100/1000 | Train Loss:   2.8517 | Val Loss:   3.4577
+Epoch 125/1000 | Train Loss:   2.7795 | Val Loss:   3.3546
+Epoch 150/1000 | Train Loss:   2.7395 | Val Loss:   3.3274
+Epoch 175/1000 | Train Loss:   2.7199 | Val Loss:   3.3140
+Epoch 200/1000 | Train Loss:   2.7133 | Val Loss:   3.2976
+Epoch 225/1000 | Train Loss:   2.6999 | Val Loss:   3.2935
+Epoch 250/1000 | Train Loss:   2.7021 | Val Loss:   3.3171
+Epoch 275/1000 | Train Loss:   2.7033 | Val Loss:   3.3010
+Epoch 300/1000 | Train Loss:   2.7044 | Val Loss:   3.3154
+Epoch 325/1000 | Train Loss:   2.7031 | Val Loss:   3.3083
+Epoch 350/1000 | Train Loss:   2.7029 | Val Loss:   3.3183
+Epoch 375/1000 | Train Loss:   2.6991 | Val Loss:   3.2930
+Epoch 400/1000 | Train Loss:   2.6960 | Val Loss:   3.2860
+
+✓ Early stopping at epoch 409
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9677 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9738 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9707
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4684 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.5210
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7424 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7740
+  Quality level:          GoodTraceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1480 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4589 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5866 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9993 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5482
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.7548  ARI=0.5579  ASW=0.0925  |  69.3s (0.17s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: 0.024%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   2.0208 | Val Loss:   0.8641
+Epoch  25/1000 | Train Loss:   0.7970 | Val Loss:   0.7824
+Epoch  50/1000 | Train Loss:   0.7892 | Val Loss:   0.7734
+Epoch  75/1000 | Train Loss:   0.7807 | Val Loss:   0.7672
+Epoch 100/1000 | Train Loss:   0.7885 | Val Loss:   0.7672
+Epoch 125/1000 | Train Loss:   0.7835 | Val Loss:   0.7671
+
+✓ Early stopping at epoch 147
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9717 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9745 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9731
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.7949 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.7964
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.8109 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8869
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1131 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.7601 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6486 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9887 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6276
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.3823  ARI=0.1540  ASW=0.3197  |  20.0s (0.14s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: 0.331%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/dentate_df.csv  (3 methods x 36 metrics)
+
+  Done: dentate  (4/56)
+
+======================================================================
+[5/56] Dataset: lung
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE130148_LungHmDev.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE130148_LungHmDev.h5ad...
+  Original shape: (10360, 16327)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_6b5a19cf468636bf13e2565d95c0e960.h5ad
+  Labels: using 'celltype' (13 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 97.64%, Lib size: 111+/-168, Max value: 1828
+  -> High sparsity: applying conservative clipping
+  Using 'cell_type' labels: 13 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   4.4060 | Val Loss:   4.6264
+Epoch  25/1000 | Train Loss:   3.3998 | Val Loss:   4.0614
+Epoch  50/1000 | Train Loss:   2.9810 | Val Loss:   3.7282
+Epoch  75/1000 | Train Loss:   2.7946 | Val Loss:   3.6062
+Epoch 100/1000 | Train Loss:   2.7063 | Val Loss:   3.4869
+Epoch 125/1000 | Train Loss:   2.6593 | Val Loss:   3.4432
+Epoch 150/1000 | Train Loss:   2.6364 | Val Loss:   3.4727
+Epoch 175/1000 | Train Loss:   2.6244 | Val Loss:   3.4361
+Epoch 200/1000 | Train Loss:   2.6177 | Val Loss:   3.4613
+Epoch 225/1000 | Train Loss:   2.6148 | Val Loss:   3.4297
+Epoch 250/1000 | Train Loss:   2.6138 | Val Loss:   3.4337
+Epoch 275/1000 | Train Loss:   2.6110 | Val Loss:   3.4441
+Epoch 300/1000 | Train Loss:   2.6131 | Val Loss:   3.4113
+Epoch 325/1000 | Train Loss:   2.6123 | Val Loss:   3.3940
+Epoch 350/1000 | Train Loss:   2.6167 | Val Loss:   3.4309
+
+✓ Early stopping at epoch 363
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Trustworthiness:        0.8917 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.8929 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.8923
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.3794 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4227
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7393 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7031
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.2151 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4577 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5699 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9995 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5606
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6023  ARI=0.4071  ASW=0.0543  |  75.4s (0.21s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: -0.043%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   1.3079 | Val Loss:   0.8171
+Epoch  25/1000 | Train Loss:   0.8017 | Val Loss:   0.7901
+Epoch  50/1000 | Train Loss:   0.7852 | Val Loss:   0.7861
+Epoch  75/1000 | Train Loss:   0.7850 | Val Loss:   0.7823
+Epoch 100/1000 | Train Loss:   0.7894 | Val Loss:   0.7827
+Epoch 125/1000 | Train Loss:   0.7931 | Val Loss:   0.7827
+Epoch 150/1000 | Train Loss:   0.7936 | Val Loss:   0.7827
+
+✓ Early stopping at epoch 153
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9750 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9786 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9768
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.7578 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.7355
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7797 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8672
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1234 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6133 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6271 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9928 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5892
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.2849  ARI=0.0942  ASW=0.2594  |  11.2s (0.07s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: 0.246%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/lung_df.csv  (3 methods x 36 metrics)
+
+  Done: lung  (5/56)
+
+======================================================================
+[6/56] Dataset: blood_aged
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE120505_bloodAged.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE120505_bloodAged.h5ad...
+  Original shape: (14588, 14697)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_9e3d6e988740faa5dfcd025f260053cc.h5ad
+  Labels: using 'cell_type' (21 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 94.16%, Lib size: 718+/-858, Max value: 3451
+  -> Standard normalization
+  Using 'cell_type' labels: 21 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   4.8903 | Val Loss:   5.0167
+Epoch  25/1000 | Train Loss:   3.6928 | Val Loss:   4.1734
+Epoch  50/1000 | Train Loss:   3.1849 | Val Loss:   3.7795
+Epoch  75/1000 | Train Loss:   2.9669 | Val Loss:   3.6114
+Epoch 100/1000 | Train Loss:   2.8386 | Val Loss:   3.5382
+Epoch 125/1000 | Train Loss:   2.7715 | Val Loss:   3.4490
+Epoch 150/1000 | Train Loss:   2.7278 | Val Loss:   3.4300
+Epoch 175/1000 | Train Loss:   2.7180 | Val Loss:   3.3936
+Epoch 200/1000 | Train Loss:   2.7046 | Val Loss:   3.4258
+Epoch 225/1000 | Train Loss:   2.6983 | Val Loss:   3.4049
+Epoch 250/1000 | Train Loss:   2.6973 | Val Loss:   3.3966Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+Epoch 275/1000 | Train Loss:   2.6937 | Val Loss:   3.3754
+Epoch 300/1000 | Train Loss:   2.6959 | Val Loss:   3.3979
+Epoch 325/1000 | Train Loss:   2.7009 | Val Loss:   3.3884
+Epoch 350/1000 | Train Loss:   2.6968 | Val Loss:   3.3942
+Epoch 375/1000 | Train Loss:   2.6996 | Val Loss:   3.4001
+Epoch 400/1000 | Train Loss:   2.6950 | Val Loss:   3.4269
+Epoch 425/1000 | Train Loss:   2.6934 | Val Loss:   3.4048
+Epoch 450/1000 | Train Loss:   2.6949 | Val Loss:   3.3797
+Epoch 475/1000 | Train Loss:   2.6933 | Val Loss:   3.4165
+Epoch 500/1000 | Train Loss:   2.6991 | Val Loss:   3.4109
+
+✓ Early stopping at epoch 516
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.8918 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9199 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9059
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4913 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.5045
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7401 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7423
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1904 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4569 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5758 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9988 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5555
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6253  ARI=0.2672  ASW=0.0745  |  159.9s (0.31s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: -0.01%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   3.0789 | Val Loss:   0.7427
+Epoch  25/1000 | Train Loss:   0.7899 | Val Loss:   0.7764
+Epoch  50/1000 | Train Loss:   0.7820 | Val Loss:   0.7692
+Epoch  75/1000 | Train Loss:   0.7843 | Val Loss:   0.7688
+Epoch 100/1000 | Train Loss:   0.7836 | Val Loss:   0.7688
+
+✓ Early stopping at epoch 101
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9775 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9805 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9790
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.8563 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.7263
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.6758 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8659
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1100 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.7171 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6481 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9624 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6094
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.3744  ARI=0.0879  ASW=0.3558  |  11.8s (0.12s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: 0.107%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/blood_aged_df.csv  (3 methods x 36 metrics)
+
+  Done: blood_aged  (6/56)
+
+======================================================================
+[7/56] Dataset: hesc
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets/hESC_GSE144024.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets/hESC_GSE144024.h5ad...
+  Original shape: (9485, 20335)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_2dbc5b802914c21ca80bd903636777a6.h5ad
+  Labels: using 'cell_type' (13 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 88.29%, Lib size: 2248+/-1058, Max value: 1652
+  -> Standard normalization
+  Using 'cell_type' labels: 13 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+Epoch   1/1000 | Train Loss:   5.3973 | Val Loss:   5.4965
+Epoch  25/1000 | Train Loss:   3.9987 | Val Loss:   4.3276
+Epoch  50/1000 | Train Loss:   3.3168 | Val Loss:   3.7570
+Epoch  75/1000 | Train Loss:   3.0261 | Val Loss:   3.5382
+Epoch 100/1000 | Train Loss:   2.8996 | Val Loss:   3.4242
+Epoch 125/1000 | Train Loss:   2.8127 | Val Loss:   3.3157
+Epoch 150/1000 | Train Loss:   2.7587 | Val Loss:   3.2960
+Epoch 175/1000 | Train Loss:   2.7151 | Val Loss:   3.2810
+Epoch 200/1000 | Train Loss:   2.6980 | Val Loss:   3.2691
+Epoch 225/1000 | Train Loss:   2.6882 | Val Loss:   3.2511
+Epoch 250/1000 | Train Loss:   2.6802 | Val Loss:   3.2385
+Epoch 275/1000 | Train Loss:   2.6762 | Val Loss:   3.2254
+Epoch 300/1000 | Train Loss:   2.6812 | Val Loss:   3.2523
+Epoch 325/1000 | Train Loss:   2.6743 | Val Loss:   3.2387
+
+✓ Early stopping at epoch 347
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9339 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9497 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9418
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4779 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4725
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7476 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7539
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1796 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4598 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5895 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9987 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5569
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6093  ARI=0.3814  ASW=0.0845  |  54.2s (0.16s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: -0.021%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   2.9569 | Val Loss:   0.7445
+Epoch  25/1000 | Train Loss:   0.7933 | Val Loss:   0.7864
+Epoch  50/1000 | Train Loss:   0.7880 | Val Loss:   0.7683
+Epoch  75/1000 | Train Loss:   0.7821 | Val Loss:   0.7674
+Epoch 100/1000 | Train Loss:   0.7854 | Val Loss:   0.7674
+
+✓ Early stopping at epoch 101
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9820 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9713 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9767
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.6640 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.6724
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7768 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8406
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1104 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6430 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6607 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9764 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5976
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.3229  ARI=0.1199  ASW=0.3012  |  10.3s (0.10s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: 0.039%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/hesc_df.csv  (3 methods x 36 metrics)
+
+  Done: hesc  (7/56)
+
+======================================================================
+[8/56] Dataset: retina
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE165784_RetinaHmDev.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE165784_RetinaHmDev.h5ad...
+  Original shape: (11492, 15897)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_3a08129c3bb600c3066f763dfd5ee937.h5ad
+  Labels: using 'cell_type' (20 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 93.48%, Lib size: 830+/-769, Max value: 3930
+  -> Standard normalization
+  Using 'cell_type' labels: 20 types
+Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   4.8951 | Val Loss:   5.0652
+Epoch  25/1000 | Train Loss:   3.7095 | Val Loss:   4.1687
+Epoch  50/1000 | Train Loss:   3.1197 | Val Loss:   3.6929
+Epoch  75/1000 | Train Loss:   2.8860 | Val Loss:   3.4715
+Epoch 100/1000 | Train Loss:   2.7515 | Val Loss:   3.3714
+Epoch 125/1000 | Train Loss:   2.6892 | Val Loss:   3.2938
+Epoch 150/1000 | Train Loss:   2.6652 | Val Loss:   3.2849
+Epoch 175/1000 | Train Loss:   2.6415 | Val Loss:   3.2844
+Epoch 200/1000 | Train Loss:   2.6363 | Val Loss:   3.2566
+Epoch 225/1000 | Train Loss:   2.6384 | Val Loss:   3.2618
+Epoch 250/1000 | Train Loss:   2.6386 | Val Loss:   3.2606
+Epoch 275/1000 | Train Loss:   2.6353 | Val Loss:   3.2452
+Epoch 300/1000 | Train Loss:   2.6307 | Val Loss:   3.2631
+
+✓ Early stopping at epoch 307
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9222 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9321 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9271
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4091 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.3420
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7436 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7127
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1810 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4569 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5845 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9976 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5550
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6748  ARI=0.4048  ASW=0.0895  |  42.2s (0.14s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: -0.071%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   4.8259 | Val Loss:   0.7130
+Epoch  25/1000 | Train Loss:   0.7958 | Val Loss:   0.7744
+Epoch  50/1000 | Train Loss:   0.7839 | Val Loss:   0.7689
+Epoch  75/1000 | Train Loss:   0.7866 | Val Loss:   0.7686
+Epoch 100/1000 | Train Loss:   0.7882 | Val Loss:   0.7686
+
+✓ Early stopping at epoch 103
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9827 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9849 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9838
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.8224 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.6914
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7563 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8702
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1120 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.7309 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6418 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9784 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6158
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.3626  ARI=0.1064  ASW=0.3398  |  12.0s (0.12s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: 0.113%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/retina_df.csv  (3 methods x 36 metrics)
+
+  Done: retina  (8/56)
+
+======================================================================
+[9/56] Dataset: teeth
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE275119_TeethMmDev.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE275119_TeethMmDev.h5ad...
+  Original shape: (6764, 31053)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_bf3059f9db1136263a55d55910e63aa2.h5ad
+  Labels: using 'cell_type' (21 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 93.82%, Lib size: 568+/-725, Max value: 2454
+  -> Standard normalization
+  Using 'cell_type' labels: 21 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   4.7511 | Val Loss:   4.9159
+Epoch  25/1000 | Train Loss:   3.6634 | Val Loss:   4.0859
+Epoch  50/1000 | Train Loss:   3.1327 | Val Loss:   3.6573
+Epoch  75/1000 | Train Loss:   2.9325 | Val Loss:   3.4571
+Epoch 100/1000 | Train Loss:   2.8300 | Val Loss:   3.3919
+Epoch 125/1000 | Train Loss:   2.7318 | Val Loss:   3.3375
+Epoch 150/1000 | Train Loss:   2.7083 | Val Loss:   3.2834
+Epoch 175/1000 | Train Loss:   2.6769 | Val Loss:   3.2795
+Epoch 200/1000 | Train Loss:   2.6663 | Val Loss:   3.2725
+Epoch 225/1000 | Train Loss:   2.6631 | Val Loss:   3.2714
+Epoch 250/1000 | Train Loss:   2.6548 | Val Loss:   3.2662
+Epoch 275/1000 | Train Loss:   2.6533 | Val Loss:   3.2508
+Epoch 300/1000 | Train Loss:   2.6526 | Val Loss:   3.2665
+Epoch 325/1000 | Train Loss:   2.6507 | Val Loss:   3.2519
+Epoch 350/1000 | Train Loss:   2.6562 | Val Loss:   3.2466
+Epoch 375/1000 | Train Loss:   2.6519 | Val Loss:   3.2729
+
+✓ Early stopping at epoch 384
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9325 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9358 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9341
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4341 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4584
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7339 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7381
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1888 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4585 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5837 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9953 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5566
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.7291  ARI=0.4584  ASW=0.0901  |  67.4s (0.18s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: 0.026%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.6504 | Val Loss:   0.7535
+Epoch  25/1000 | Train Loss:   0.7936 | Val Loss:   0.7742
+Epoch  50/1000 | Train Loss:   0.7972 | Val Loss:   0.7709
+Epoch  75/1000 | Train Loss:   0.7935 | Val Loss:   0.7715
+Epoch 100/1000 | Train Loss:   0.7932 | Val Loss:   0.7714
+
+✓ Early stopping at epoch 101
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9781 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9661 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9721
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.5205 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.5001
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7253 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7770
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1130 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6082 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6542 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9773 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5882
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.4476  ARI=0.1850  ASW=0.3207  |  11.8s (0.12s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: -0.087%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/teeth_df.csv  (3 methods x 36 metrics)
+
+  Done: teeth  (9/56)
+
+======================================================================
+[10/56] Dataset: pituitary
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE142653pitHmDev.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE142653pitHmDev.h5ad...
+  Original shape: (5181, 24190)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_5777bfdf10f0e7da202a45f110f627f6.h5ad
+  Labels: using 'cell_type' (20 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 82.42%, Lib size: 7691+/-8393, Max value: 18742
+  -> Extreme values: applying scaled normalization
+  Using 'cell_type' labels: 20 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.0393 | Val Loss:   5.0997
+Epoch  25/1000 | Train Loss:   3.7178 | Val Loss:   4.1991
+Epoch  50/1000 | Train Loss:   3.1331 | Val Loss:   3.6852
+Epoch  75/1000 | Train Loss:   2.8994 | Val Loss:   3.4707
+Epoch 100/1000 | Train Loss:   2.7856 | Val Loss:   3.3682
+Epoch 125/1000 | Train Loss:   2.6989 | Val Loss:   3.2941
+Epoch 150/1000 | Train Loss:   2.6584 | Val Loss:   3.2298
+Epoch 175/1000 | Train Loss:   2.6350 | Val Loss:   3.2329
+Epoch 200/1000 | Train Loss:   2.6236 | Val Loss:   3.1966
+Epoch 225/1000 | Train Loss:   2.6247 | Val Loss:   3.1973
+Epoch 250/1000 | Train Loss:   2.6118 | Val Loss:   3.2165
+Epoch 275/1000 | Train Loss:   2.6119 | Val Loss:   3.2101
+Epoch 300/1000 | Train Loss:   2.6106 | Val Loss:   3.2071
+Epoch 325/1000 | Train Loss:   2.6127 | Val Loss:   3.1907
+Epoch 350/1000 | Train Loss:   2.6179 | Val Loss:   3.2129
+Epoch 375/1000 | Train Loss:   2.6113 | Val Loss:   3.1935
+
+✓ Early stopping at epoch 386
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9260 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9342 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9301
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4650 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4847
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7465 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7477
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1850 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4601 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5830 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9985 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5566
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6845  ARI=0.4880  ASW=0.0796  |  49.2s (0.13s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: 0.0%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   4.5512 | Val Loss:   0.7569
+Epoch  25/1000 | Train Loss:   0.7971 | Val Loss:   0.7732
+Epoch  50/1000 | Train Loss:   0.8008 | Val Loss:   0.7700
+Epoch  75/1000 | Train Loss:   0.7830 | Val Loss:   0.7698
+Epoch 100/1000 | Train Loss:   0.7909 | Val Loss:   0.7698
+
+✓ Early stopping at epoch 101
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9839 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9878 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9858
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.9020 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.9002
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.8507 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.9351
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1141 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6780 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6280 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9903 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6026
+  Quality level:                 Good
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive lossTraceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+======================================================================
+  NMI=0.3017  ARI=0.0907  ASW=0.3001  |  19.5s (0.19s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: -0.324%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/pituitary_df.csv  (3 methods x 36 metrics)
+
+  Done: pituitary  (10/56)
+
+======================================================================
+[11/56] Dataset: pansci_muscle
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE247719_PanSci_05_Muscle_adata.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE247719_PanSci_05_Muscle_adata.h5ad...
+  Original shape: (696410, 55416)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_47698373eedd4412e8e485763328a449.h5ad
+  Labels: using 'Main_cell_type' (20 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 98.03%, Lib size: 117+/-126, Max value: 225
+  -> High sparsity: applying conservative clipping
+  Using 'cell_type' labels: 20 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   4.4019 | Val Loss:   4.6182
+Epoch  25/1000 | Train Loss:   3.4488 | Val Loss:   4.0776
+Epoch  50/1000 | Train Loss:   3.0280 | Val Loss:   3.7493
+Epoch  75/1000 | Train Loss:   2.8612 | Val Loss:   3.6008
+Epoch 100/1000 | Train Loss:   2.7706 | Val Loss:   3.5509
+Epoch 125/1000 | Train Loss:   2.7014 | Val Loss:   3.4852
+Epoch 150/1000 | Train Loss:   2.6737 | Val Loss:   3.4476
+Epoch 175/1000 | Train Loss:   2.6630 | Val Loss:   3.4623
+Epoch 200/1000 | Train Loss:   2.6560 | Val Loss:   3.4569
+Epoch 225/1000 | Train Loss:   2.6595 | Val Loss:   3.4720
+Epoch 250/1000 | Train Loss:   2.6505 | Val Loss:   3.4981
+Epoch 275/1000 | Train Loss:   2.6559 | Val Loss:   3.4298
+
+✓ Early stopping at epoch 280
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.8891 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9105 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.8998
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.3946 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4131
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7477 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7091
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.2015 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4556 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5612 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9996 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5545
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.5737  ARI=0.1918  ASW=0.0463  |  75.4s (0.27s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: 0.013%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   1.6080 | Val Loss:   0.7543
+Epoch  25/1000 | Train Loss:   0.7907 | Val Loss:   0.7766
+Epoch  50/1000 | Train Loss:   0.7869 | Val Loss:   0.7741
+Epoch  75/1000 | Train Loss:   0.7862 | Val Loss:   0.7748
+Epoch 100/1000 | Train Loss:   0.7858 | Val Loss:   0.7748
+
+✓ Early stopping at epoch 101
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9815 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9720 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9767
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.6592 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.5176
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7703 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8129
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1134 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6209 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6518 ★
+    └─ PCA dominance in local neighborhoodsTraceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Neighbor entropy stability:    0.9890 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5938
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.4844  ARI=0.1781  ASW=0.3180  |  13.6s (0.13s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: 0.237%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/pansci_muscle_df.csv  (3 methods x 36 metrics)
+
+  Done: pansci_muscle  (11/56)
+
+======================================================================
+[12/56] Dataset: pansci_tcell
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE247719_PanSci_T_cell_adata.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets2/GSE247719_PanSci_T_cell_adata.h5ad...
+  Original shape: (957975, 55416)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_b5c819f0a3a886a641ca58201e5a7f47.h5ad
+  Labels: using 'Main_cell_type' (7 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 98.22%, Lib size: 70+/-75, Max value: 427
+  -> High sparsity: applying conservative clipping
+  Using 'cell_type' labels: 7 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   4.3169 | Val Loss:   4.5220
+Epoch  25/1000 | Train Loss:   3.4186 | Val Loss:   4.0801
+Epoch  50/1000 | Train Loss:   3.0054 | Val Loss:   3.8023
+Epoch  75/1000 | Train Loss:   2.8411 | Val Loss:   3.6765
+Epoch 100/1000 | Train Loss:   2.7361 | Val Loss:   3.5537
+Epoch 125/1000 | Train Loss:   2.6950 | Val Loss:   3.5425
+Epoch 150/1000 | Train Loss:   2.6821 | Val Loss:   3.5162
+Epoch 175/1000 | Train Loss:   2.6794 | Val Loss:   3.5185
+Epoch 200/1000 | Train Loss:   2.6814 | Val Loss:   3.5074
+Epoch 225/1000 | Train Loss:   2.6770 | Val Loss:   3.5100
+Epoch 250/1000 | Train Loss:   2.6736 | Val Loss:   3.5153
+Epoch 275/1000 | Train Loss:   2.6739 | Val Loss:   3.5225
+Epoch 300/1000 | Train Loss:   2.6763 | Val Loss:   3.5117
+Epoch 325/1000 | Train Loss:   2.6783 | Val Loss:   3.4707
+
+✓ Early stopping at epoch 344
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.7738 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.8119 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.7928
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.3021 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.3231
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7400 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.6240
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.2957 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4569 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5482 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9995 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5751
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.0706  ARI=0.0080  ASW=0.0317  |  65.6s (0.19s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: 0.095%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   1.3359 | Val Loss:   0.7960
+Epoch  25/1000 | Train Loss:   0.7803 | Val Loss:   0.7587
+Epoch  50/1000 | Train Loss:   0.7827 | Val Loss:   0.7569
+Epoch  75/1000 | Train Loss:   0.7794 | Val Loss:   0.7586
+Epoch 100/1000 | Train Loss:   0.7812 | Val Loss:   0.7580
+Epoch 125/1000 | Train Loss:   0.7799 | Val Loss:   0.7580
+Epoch 150/1000 | Train Loss:   0.7770 | Val Loss:   0.7580
+
+✓ Early stopping at epoch 150
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9221 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9443 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9332
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.7145 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.7235
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.8200 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8429
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1589 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6426 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6002 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9958 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5994
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.0340  ARI=-0.0001  ASW=0.1830  |  11.5s (0.08s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: -0.039%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/pansci_tcell_df.csv  (3 methods x 36 metrics)
+
+  Done: pansci_tcell  (12/56)
+
+======================================================================
+[13/56] Dataset: ifnHSPC
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets/ifnHSPC_GSE226824.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets/ifnHSPC_GSE226824.h5ad...
+  Original shape: (13310, 27998)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_415034521dc28fbf370b2a872db886e0.h5ad
+  WARNING: No label column found — DataSplitter will generate KMeans pseudo-labels
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 87.60%, Lib size: 1283+/-1070, Max value: 2043
+  -> Standard normalization
+  Generated KMeans pseudo-labels: 10 clusters
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.0669 | Val Loss:   5.0736
+Epoch  25/1000 | Train Loss:   3.6829 | Val Loss:   4.1623
+Epoch  50/1000 | Train Loss:   3.1399 | Val Loss:   3.7106
+Epoch  75/1000 | Train Loss:   2.9137 | Val Loss:   3.5183
+Epoch 100/1000 | Train Loss:   2.8113 | Val Loss:   3.4285
+Epoch 125/1000 | Train Loss:   2.7318 | Val Loss:   3.3507
+Epoch 150/1000 | Train Loss:   2.6776 | Val Loss:   3.2853
+Epoch 175/1000 | Train Loss:   2.6495 | Val Loss:   3.2675
+Epoch 200/1000 | Train Loss:   2.6372 | Val Loss:   3.2587
+Epoch 225/1000 | Train Loss:   2.6348 | Val Loss:   3.2660
+Epoch 250/1000 | Train Loss:   2.6342 | Val Loss:   3.2447
+Epoch 275/1000 | Train Loss:   2.6324 | Val Loss:   3.2745
+Epoch 300/1000 | Train Loss:   2.6309 | Val Loss:   3.2912
+Epoch 325/1000 | Train Loss:   2.6284 | Val Loss:   3.2464
+Epoch 350/1000 | Train Loss:   2.6299 | Val Loss:   3.2765
+Epoch 375/1000 | Train Loss:   2.6281 | Val Loss:   3.2500
+Epoch 400/1000 | Train Loss:   2.6278 | Val Loss:   3.2752
+Epoch 425/1000 | Train Loss:   2.6299 | Val Loss:   3.2530
+
+✓ Early stopping at epoch 447
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9221 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9232 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9226
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4711 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.5001
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7515 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7484
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1830 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4606 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5859 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9982 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5569
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6732  ARI=0.5196  ASW=0.0833  |  250.8s (0.56s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: -0.06%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   3.4007 | Val Loss:   0.7552
+Epoch  25/1000 | Train Loss:   0.8128 | Val Loss:   0.7854
+Epoch  50/1000 | Train Loss:   0.8045 | Val Loss:   0.7815
+Epoch  75/1000 | Train Loss:   0.8044 | Val Loss:   0.7815
+Epoch 100/1000 | Train Loss:   0.8011 | Val Loss:   0.7815
+
+✓ Early stopping at epoch 102
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9971 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9987 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9979
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.6234 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.5047
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.8399 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8270
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.0656 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.9027 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.9113 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9788 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.7146
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Locally linear structure (trajectory-like patches), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.1116  ARI=0.0297  ASW=0.5436  |  12.0s (0.12s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: -0.323%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/ifnHSPC_df.csv  (3 methods x 36 metrics)
+
+  Done: ifnHSPC  (13/56)
+
+======================================================================
+[14/56] Dataset: spine
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE167597_spineMm.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE167597_spineMm.h5ad...
+  Original shape: (16042, 21457)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_dffc020b9f0fd7180e0139cf891fcd7a.h5ad
+  WARNING: No label column found — DataSplitter will generate KMeans pseudo-labels
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 85.45%, Lib size: 1832+/-712, Max value: 4630
+  -> Standard normalization
+  Generated KMeans pseudo-labels: 10 clusters
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.1436 | Val Loss:   5.2659
+Epoch  25/1000 | Train Loss:   3.7834 | Val Loss:   4.1308
+Epoch  50/1000 | Train Loss:   3.1946 | Val Loss:   3.6211
+Epoch  75/1000 | Train Loss:   2.9445 | Val Loss:   3.3759
+Epoch 100/1000 | Train Loss:   2.8262 | Val Loss:   3.2589
+Epoch 125/1000 | Train Loss:   2.7628 | Val Loss:   3.2179
+Epoch 150/1000 | Train Loss:   2.7031 | Val Loss:   3.1693
+Epoch 175/1000 | Train Loss:   2.6718 | Val Loss:   3.1363
+Epoch 200/1000 | Train Loss:   2.6301 | Val Loss:   3.1063
+Epoch 225/1000 | Train Loss:   2.6139 | Val Loss:   3.0846
+Epoch 250/1000 | Train Loss:   2.6085 | Val Loss:   3.0825
+Epoch 275/1000 | Train Loss:   2.6086 | Val Loss:   3.0956
+Epoch 300/1000 | Train Loss:   2.6002 | Val Loss:   3.0741
+Epoch 325/1000 | Train Loss:   2.6010 | Val Loss:   3.0784
+Epoch 350/1000 | Train Loss:   2.5990 | Val Loss:   3.0826
+Epoch 375/1000 | Train Loss:   2.6010 | Val Loss:   3.0722
+Epoch 400/1000 | Train Loss:   2.5992 | Val Loss:   3.0900
+Epoch 425/1000 | Train Loss:   2.6010 | Val Loss:   3.0891
+Epoch 450/1000 | Train Loss:   2.5979 | Val Loss:   3.0798
+Epoch 475/1000 | Train Loss:   2.5954 | Val Loss:   3.0770
+Epoch 500/1000 | Train Loss:   2.6009 | Val Loss:   3.0944
+Epoch 525/1000 | Train Loss:   2.5973 | Val Loss:   3.0781
+Epoch 550/1000 | Train Loss:   2.6030 | Val Loss:   3.0822
+
+✓ Early stopping at epoch 554
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9772 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9691 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9731
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.3061 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4236
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7142 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7272
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1187 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4565 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6131 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9977 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5465
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.7830  ARI=0.6375  ASW=0.1348  |  98.0s (0.18s/ep, GPU 37MB, params 1,090,304)Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Converged: True  (recon delta: -0.029%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.2969 | Val Loss:   0.6937
+Epoch  25/1000 | Train Loss:   1.1910 | Val Loss:   0.7892
+Epoch  50/1000 | Train Loss:   1.1123 | Val Loss:   0.7868
+Epoch  75/1000 | Train Loss:   1.1384 | Val Loss:   0.7861
+Epoch 100/1000 | Train Loss:   1.1419 | Val Loss:   0.7864
+
+✓ Early stopping at epoch 101
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9958 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9974 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9966
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.9466 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.9223
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7967 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.9426
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.0936 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.7270 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6516 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9810 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6133
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.2341  ARI=0.0801  ASW=0.3867  |  7.3s (0.07s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: -0.169%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/spine_df.csv  (3 methods x 36 metrics)
+
+  Done: spine  (14/56)
+
+======================================================================
+[15/56] Dataset: hesc_times
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE192857_hESCHmTimes.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets/GSE192857_hESCHmTimes.h5ad...
+  Original shape: (11067, 33538)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_cc920fd84683b3f2cd785909d1b49e68.h5ad
+  WARNING: No label column found — DataSplitter will generate KMeans pseudo-labels
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 87.68%, Lib size: 982+/-723, Max value: 1529
+  -> Standard normalization
+  Generated KMeans pseudo-labels: 10 clusters
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.0352 | Val Loss:   5.1506
+Epoch  25/1000 | Train Loss:   3.7554 | Val Loss:   4.2835
+Epoch  50/1000 | Train Loss:   3.1613 | Val Loss:   3.8150
+Epoch  75/1000 | Train Loss:   2.9187 | Val Loss:   3.5923
+Epoch 100/1000 | Train Loss:   2.8060 | Val Loss:   3.4653
+Epoch 125/1000 | Train Loss:   2.7239 | Val Loss:   3.4179
+Epoch 150/1000 | Train Loss:   2.6676 | Val Loss:   3.3651
+Epoch 175/1000 | Train Loss:   2.6385 | Val Loss:   3.3265
+Epoch 200/1000 | Train Loss:   2.6228 | Val Loss:   3.3460
+Epoch 225/1000 | Train Loss:   2.6214 | Val Loss:   3.3437
+Epoch 250/1000 | Train Loss:   2.6145 | Val Loss:   3.3293
+Epoch 275/1000 | Train Loss:   2.6158 | Val Loss:   3.3444
+Epoch 300/1000 | Train Loss:   2.6172 | Val Loss:   3.3192
+Epoch 325/1000 | Train Loss:   2.6145 | Val Loss:   3.3158
+
+✓ Early stopping at epoch 335
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9432 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9483 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9458
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4300 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.5136
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7437 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7541
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1666 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4615 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5863 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9993 ★
+    └─ Uniformity of local distance distributionsTraceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+
+[Overall Assessment]
+  Mean quality score:            0.5534
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6944  ARI=0.5624  ASW=0.0835  |  60.4s (0.18s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: -0.128%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:  34.1209 | Val Loss:   4.1129
+Epoch  25/1000 | Train Loss:   0.8552 | Val Loss:   0.8453
+Epoch  50/1000 | Train Loss:   0.8015 | Val Loss:   0.7893
+Epoch  75/1000 | Train Loss:   0.7993 | Val Loss:   0.7807
+Epoch 100/1000 | Train Loss:   0.8020 | Val Loss:   0.7803
+Epoch 125/1000 | Train Loss:   0.7932 | Val Loss:   0.7812
+Epoch 150/1000 | Train Loss:   0.7952 | Val Loss:   0.7812
+Epoch 175/1000 | Train Loss:   0.8030 | Val Loss:   0.7811
+Epoch 200/1000 | Train Loss:   0.7962 | Val Loss:   0.7811
+
+✓ Early stopping at epoch 208
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9760 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9751 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9756
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.6515 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.6339
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.6217 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8056
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1000 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6674 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6681 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9601 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5989
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.3115  ARI=0.1366  ASW=0.3184  |  34.1s (0.16s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: 0.118%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/hesc_times_df.csv  (3 methods x 36 metrics)
+
+  Done: hesc_times  (15/56)
+
+======================================================================
+[16/56] Dataset: bm
+  Path: /home/zeyufu/Desktop/datasets/DevelopmentDatasets/bm_GSE120446.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/DevelopmentDatasets/bm_GSE120446.h5ad...
+  Original shape: (90653, 33694)
+  Subsampled to 3000 cells
+  No 'counts' layer found. X matrix: raw counts
+  Applied normalize_total + log1p
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_c89ce066546362c430b9155ef74b3d9f.h5ad
+  WARNING: No label column found — DataSplitter will generate KMeans pseudo-labels
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 96.03%, Lib size: 1630+/-2236, Max value: 15302
+  -> High sparsity: applying conservative clipping
+  Generated KMeans pseudo-labels: 10 clusters
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   4.9531 | Val Loss:   5.1312
+Epoch  25/1000 | Train Loss:   3.8889 | Val Loss:   4.2500
+Epoch  50/1000 | Train Loss:   3.3211 | Val Loss:   3.7844
+Epoch  75/1000 | Train Loss:   3.1013 | Val Loss:   3.6058
+Epoch 100/1000 | Train Loss:   2.9813 | Val Loss:   3.4989
+Epoch 125/1000 | Train Loss:   2.9277 | Val Loss:   3.4429
+Epoch 150/1000 | Train Loss:   2.8871 | Val Loss:   3.3981
+Epoch 175/1000 | Train Loss:   2.8905 | Val Loss:   3.3982
+Epoch 200/1000 | Train Loss:   2.8710 | Val Loss:   3.3914
+Epoch 225/1000 | Train Loss:   2.8688 | Val Loss:   3.3865
+Epoch 250/1000 | Train Loss:   2.8723 | Val Loss:   3.4058
+Epoch 275/1000 | Train Loss:   2.8683 | Val Loss:   3.3934
+Epoch 300/1000 | Train Loss:   2.8715 | Val Loss:   3.4327
+Epoch 325/1000 | Train Loss:   2.8687 | Val Loss:   3.3621
+Epoch 350/1000 | Train Loss:   2.8672 | Val Loss:   3.4087
+Epoch 375/1000 | Train Loss:   2.8748 | Val Loss:   3.3808
+Epoch 400/1000 | Train Loss:   2.8726 | Val Loss:   3.4423
+Epoch 425/1000 | Train Loss:   2.8730 | Val Loss:   3.3690
+
+✓ Early stopping at epoch 428
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9411 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9548 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9480
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4690 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4960
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7405 ★Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7582
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1648 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4601 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5839 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9982 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5518
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.7323  ARI=0.4706  ASW=0.1007  |  82.3s (0.19s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: -0.042%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   2.5122 | Val Loss:   0.7521
+Epoch  25/1000 | Train Loss:   0.7778 | Val Loss:   0.7630
+Epoch  50/1000 | Train Loss:   0.7777 | Val Loss:   0.7633
+Epoch  75/1000 | Train Loss:   0.7764 | Val Loss:   0.7631
+Epoch 100/1000 | Train Loss:   0.7748 | Val Loss:   0.7631
+
+✓ Early stopping at epoch 103
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9814 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9767 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9790
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.6083 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.5113
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7374 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7990
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.0975 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6820 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6731 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9728 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6063
+  Quality level:                 Good
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.4357  ARI=0.2527  ASW=0.3182  |  8.4s (0.08s/ep, GPU 21MB, params 64,640)
+  Converged: True  (recon delta: -0.057%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/bm_df.csv  (3 methods x 36 metrics)
+
+  Done: bm  (16/56)
+
+======================================================================
+[17/56] Dataset: irall
+  Path: /home/zeyufu/Desktop/datasets/extra_preprocessed/irall_prepped.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/extra_preprocessed/irall_prepped.h5ad...
+  Original shape: (12000, 18876)
+  Subsampled to 3000 cells
+  Found 'counts' layer: raw counts
+  Applied normalize_total + log1p from counts layer
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_acf052b8930bc226ffe78fafcf63dabc.h5ad
+  Labels: using 'cell_type' (12 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 85.09%, Lib size: 2616+/-1584, Max value: 3630
+  -> Standard normalization
+  Using 'cell_type' labels: 12 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.3998 | Val Loss:   5.6151
+Epoch  25/1000 | Train Loss:   4.0550 | Val Loss:   4.4033
+Epoch  50/1000 | Train Loss:   3.3983 | Val Loss:   3.8010
+Epoch  75/1000 | Train Loss:   3.1068 | Val Loss:   3.5313
+Epoch 100/1000 | Train Loss:   2.9677 | Val Loss:   3.3935
+Epoch 125/1000 | Train Loss:   2.8824 | Val Loss:   3.3253
+Epoch 150/1000 | Train Loss:   2.8212 | Val Loss:   3.2542
+Epoch 175/1000 | Train Loss:   2.7729 | Val Loss:   3.2119
+Epoch 200/1000 | Train Loss:   2.7371 | Val Loss:   3.2034
+Epoch 225/1000 | Train Loss:   2.7282 | Val Loss:   3.1846
+Epoch 250/1000 | Train Loss:   2.7187 | Val Loss:   3.1854
+Epoch 275/1000 | Train Loss:   2.7206 | Val Loss:   3.1693
+Epoch 300/1000 | Train Loss:   2.7116 | Val Loss:   3.1823
+Epoch 325/1000 | Train Loss:   2.7150 | Val Loss:   3.1798
+Epoch 350/1000 | Train Loss:   2.7155 | Val Loss:   3.1705
+Epoch 375/1000 | Train Loss:   2.7128 | Val Loss:   3.1648
+Epoch 400/1000 | Train Loss:   2.7127 | Val Loss:   3.1849
+
+✓ Early stopping at epoch 405
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)Traceback (most recent call last):
+  File "/home/zeyufu/Desktop/PanODE-LAB/experiments/run_external_benchmark.py", line 205, in train_external_model
+    model = factory(input_dim=splitter.n_var, **params)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 374, in create_scgcc_model
+    return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 199, in __init__
+    self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+                ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 93, in __init__
+    self.encoder_q = GATEncoder(num_genes, latent_dim, num_heads=heads, use_mlp=mlp)
+                     ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/zeyufu/Desktop/PanODE-LAB/eval_lib/baselines/models/scgcc_model.py", line 71, in __init__
+    raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+ImportError: torch_geometric required for scGCCModel (pip install torch-geometric).
+WARNING: adata.X seems to be already log-transformed.
+
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9564 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9601 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9582
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.3609 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.3123
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7145 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7104
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1512 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.4566 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.5989 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9956 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5506
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold, Poor radial concentration — possible mode collapse or explosion
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.5420  ARI=0.3856  ASW=0.1180  |  63.4s (0.16s/ep, GPU 37MB, params 1,090,304)
+  Converged: True  (recon delta: 0.048%)
+
+────────────────────────────────────────────────────────────
+  Training: scGNN  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   6.2898 | Val Loss:   0.6952
+Epoch  25/1000 | Train Loss:   1.3141 | Val Loss:   0.8093
+Epoch  50/1000 | Train Loss:   1.2325 | Val Loss:   0.8085
+Epoch  75/1000 | Train Loss:   1.2335 | Val Loss:   0.8103
+Epoch 100/1000 | Train Loss:   1.2398 | Val Loss:   0.8106
+
+✓ Early stopping at epoch 102
+
+✓ Training finished!
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9735 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9843 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9789
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.8291 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.8298
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7906 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8977
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1102 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6782 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6441 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9850 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6044
+  Quality level:                 Good
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.3141  ARI=0.1252  ASW=0.3347  |  18.9s (0.19s/ep, GPU 21MB, params 64,640)
+  Converged: False  (recon delta: -1.194%)
+
+────────────────────────────────────────────────────────────
+  Training: scGCC  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+  ERROR: torch_geometric required for scGCCModel (pip install torch-geometric).
+
+  Saved: experiments/results/external/graph_contrastive/tables/irall_df.csv  (3 methods x 36 metrics)
+
+  Done: irall  (17/56)
+
+======================================================================
+[18/56] Dataset: wtko
+  Path: /home/zeyufu/Desktop/datasets/extra_preprocessed/wtko_prepped.h5ad
+======================================================================
+
+Loading /home/zeyufu/Desktop/datasets/extra_preprocessed/wtko_prepped.h5ad...
+  Original shape: (10224, 15711)
+  Subsampled to 3000 cells
+  Found 'counts' layer: raw counts
+  Applied normalize_total + log1p from counts layer
+  Selected 2000 HVGs
+Saving preprocessed cache: experiments/results/external/graph_contrastive/cache/base_preproc_aa38637f8f3c472ad883184cc89f31b7.h5ad
+  Labels: using 'cell_type' (11 types)
+Dataset statistics:
+  Cells: 3,000, Genes: 2,000
+  Sparsity: 84.41%, Lib size: 2177+/-1695, Max value: 1480
+  -> Standard normalization
+  Using 'cell_type' labels: 11 types
+
+Data split:
+  Train: 2,100 cells (70.0%)
+  Val:   450 cells (15.0%)
+  Test:  450 cells (15.0%)
+  Batch size: 128, Batches/epoch: 16
+
+────────────────────────────────────────────────────────────
+  Training: CLEAR  (1000 ep, lr=0.001)
+────────────────────────────────────────────────────────────
+Epoch   1/1000 | Train Loss:   5.7660 | Val Loss:   5.8840
+Epoch  25/1000 | Train Loss:   4.2980 | Val Loss:   4.6468
+Epoch  50/1000 | Train Loss:   3.4948 | Val Loss:   3.9848
+Epoch  75/1000 | Train Loss:   3.1442 | Val Loss:   3.6495
+Epoch 100/1000 | Train Loss:   2.9989 | Val Loss:   3.5314
+Epoch 125/1000 | Train Loss:   2.9049 | Val Loss:   3.4298
+Epoch 150/1000 | Train Loss:   2.8446 | Val Loss:   3.3939
+Epoch 175/1000 | Train Loss:   2.7947 | Val Loss:   3.3385
+Epoch 200/1000 | Train Loss:   2.7659 | Val Loss:   3.3194
+Epoch 225/1000 | Train Loss:   2.7607 | Val Loss:   3.2917
+Epoch 250/1000 | Train Loss:   2.7532 | Val Loss:   3.3057
+Epoch 275/1000 | Train Loss:   2.7470 | Val Loss:   3.3191
+Epoch 300/1000 | Train Loss:   2.7473 | Val Loss:   3.3012

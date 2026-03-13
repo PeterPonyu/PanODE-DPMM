@@ -1,0 +1,17 @@
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{External win-rate summary (DPMM series).} Each variant is compared against 23 external baselines via Wilcoxon signed-rank tests across 56 datasets. Core win rate = fraction of core-metric comparisons significantly won. Best value per column in bold.}
+\label{tab:dpmm_external_winrate}
+\begin{tabular}{lccccc}
+\toprule
+Model & Total tests & Sig.\ (all) & Core sig. & Core total & Core win rate \\
+\midrule
+DPMM-Contrastive & 407 & 170 & \textbf{35} & 44 & \textbf{0.795} \\
+DPMM-Base & 407 & 176 & 31 & 44 & 0.705 \\
+Pure-Contrastive-AE & 407 & 148 & 30 & 44 & 0.682 \\
+Pure-Transformer-AE & 407 & 138 & 29 & 44 & 0.659 \\
+DPMM-Transformer & 407 & \textbf{191} & 28 & 44 & 0.636 \\
+Pure-AE & 407 & 138 & 28 & 44 & 0.636 \\
+\bottomrule
+\end{tabular}
+\end{table}
