@@ -19,6 +19,7 @@ is_cuda_oom       : fn    — detect CUDA out-of-memory exceptions
 """
 
 from models.dpmm_base import DPMMODEModel
+from models.dpmm_flow_matching import DPMMFlowMatchingModel
 try:
     from models.topic_base import TopicODEModel
 except ImportError:
@@ -83,7 +84,7 @@ MODELS = {
             'encoder_dims': [256, 128],
             'decoder_dims': [128, 256],
             'dropout_rate': 0.2,
-            'moco_weight': 0.1,
+            'moco_weight': 1.0,
             'fit_lr': 1e-3,
             'fit_weight_decay': 0,
             'fit_epochs': 1000,
@@ -130,7 +131,7 @@ MODELS = {
             'decoder_dims': [128, 256],
             'encoder_drop': 0.1,
             'kl_weight': 1.0,
-            'moco_weight': 0.1,
+            'moco_weight': 1.0,
             'fit_lr': 1e-3,
             'fit_weight_decay': 1e-3,
             'fit_epochs': 1000,
@@ -181,7 +182,25 @@ MODELS = {
             'decoder_dims': [128, 256],
             'dpmm_warmup_ratio': 0.9,
             'dropout_rate': 0.2,
-            'moco_weight': 0.1,
+            'moco_weight': 1.0,
+            'fit_lr': 1e-3,
+            'fit_weight_decay': 0,
+            'fit_epochs': 1000,
+        },
+        'series': 'dpmm',
+    },
+    'DPMM-FM': {
+        'class': DPMMFlowMatchingModel,
+        'params': {
+            'latent_dim': 10,
+            'encoder_dims': [256, 128],
+            'decoder_dims': [128, 256],
+            'dpmm_warmup_ratio': 0.8,
+            'dropout_rate': 0.2,
+            'flow_weight': 0.10,
+            'flow_noise_scale': 0.5,
+            'flow_after_dpmm': True,
+            'flow_hidden_dims': [128, 128],
             'fit_lr': 1e-3,
             'fit_weight_decay': 0,
             'fit_epochs': 1000,
@@ -225,7 +244,7 @@ MODELS = {
             'encoder_hidden': 128,
             'kl_weight': 0.01,
             'encoder_drop': 0.0,
-            'moco_weight': 0.1,
+            'moco_weight': 1.0,
             'fit_lr': 1e-3,
             'fit_weight_decay': 1e-3,
             'fit_epochs': 1000,
@@ -254,6 +273,7 @@ ABLATION_STEPS = {
         ('DPMM-Base',           'Base AE+DPMM'),
         ('DPMM-Transformer',    '+Transformer'),
         ('DPMM-Contrastive',    '+Contrastive'),
+        ('DPMM-FM',             '+Flow Matching'),
     ],
     'topic': [
         ('Topic-Base',            'Base VAE+Topic'),

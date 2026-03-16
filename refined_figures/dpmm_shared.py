@@ -9,23 +9,46 @@ from typing import Iterable
 import numpy as np
 import pandas as pd
 
+from benchmarks.figure_generators.common import (
+    ALL_BOXPLOT_METRICS_CORE,
+    ALL_BOXPLOT_METRICS_EXT,
+)
+
 ROOT = Path(__file__).resolve().parent.parent
 BIO_RESULTS_ROOT = ROOT / "benchmarks" / "biological_validation" / "results"
 DPMM_ABLATION_TABLE_DIR = ROOT / "experiments" / "results" / "dpmm" / "ablation" / "tables"
 DPMM_EXTERNAL_TABLE_DIR = ROOT / "experiments" / "results" / "dpmm" / "vs_external" / "tables"
 EXTERNAL_FULL_TABLE_DIR = ROOT / "experiments" / "results" / "external_full" / "tables"
 FULL_COMPARISON_TABLE_DIR = ROOT / "experiments" / "results" / "full_comparison_all" / "tables"
+DPMM_FM_CORE_ROOT = ROOT / "experiments" / "results" / "dpmm_fm_core"
+DPMM_FM_CORE_TABLE_DIR = DPMM_FM_CORE_ROOT / "tables"
+DPMM_FM_CORE_MODEL_DIR = DPMM_FM_CORE_ROOT / "models"
+DPMM_FM_SENSITIVITY_ROOT = ROOT / "experiments" / "results" / "dpmm_fm_sensitivity_core"
+DPMM_FM_SENSITIVITY_SUMMARY = DPMM_FM_SENSITIVITY_ROOT / "summary.csv"
+DPMM_SENSITIVITY_CSV = (
+    ROOT
+    / "benchmarks"
+    / "benchmark_results"
+    / "sensitivity"
+    / "csv"
+    / "dpmm"
+    / "results_sensitivity_20260218_195953.csv"
+)
+MOCO_WEIGHT1_CORE_ROOT = ROOT / "experiments" / "results" / "moco_weight1_core"
+MOCO_WEIGHT1_CORE_TABLE_DIR = MOCO_WEIGHT1_CORE_ROOT / "tables"
+MOCO_WEIGHT1_CORE_MODEL_DIR = MOCO_WEIGHT1_CORE_ROOT / "models"
 
 DPMM_ABLATION_MODELS = [
     "Pure-AE",
     "DPMM-Base",
-    "DPMM-Contrastive",
+    "DPMM-FM",
 ]
 DPMM_PRIOR_MODELS = [
-    "DPMM-Contrastive",
+    "DPMM-FM",
 ]
 BIO_DATASETS = ["setty", "endo", "dentate"]
 UMAP_DATASETS = ["setty", "endo", "dentate", "lung"]
+CORE_DATASETS = ["setty", "dentate", "lung", "endo"]
 
 SHORT_LABELS = {
     "Pure-AE": "P-AE",
@@ -35,6 +58,7 @@ SHORT_LABELS = {
     "Pure-Trans-AE": "T-AE",
     "Pure-Contr-AE": "C-AE",
     "DPMM-Base": "DPMM",
+    "DPMM-FM": "DPMM-FM",
     "DPMM-Transformer": "DPMM-T",
     "DPMM-Contrastive": "DPMM-C",
     "CellBLAST": "CB",
@@ -70,6 +94,7 @@ METHOD_COLORS = {
     "Pure-Trans-AE": "#7AA6C2",
     "Pure-Contr-AE": "#9BC0D6",
     "DPMM-Base": "#F28E2B",
+    "DPMM-FM": "#5C6BC0",
     "DPMM-Transformer": "#E15759",
     "DPMM-Contrastive": "#B07AA1",
     "CellBLAST": "#8DA0CB",
@@ -99,7 +124,7 @@ METHOD_COLORS = {
 
 EXTERNAL_METHOD_ORDER = [
     # Internal — proposed model only
-    "DPMM-Contrastive",
+    "DPMM-FM",
     # External baselines
     "scVI",
     "PeakVI",
@@ -137,6 +162,22 @@ EXTERNAL_METRICS = [
 ABLATION_METRICS = EXTERNAL_METRICS
 
 
+def _dedupe_metric_specs(specs: Iterable[tuple[str, str, bool]]) -> list[tuple[str, str, bool]]:
+    out: list[tuple[str, str, bool]] = []
+    seen: set[str] = set()
+    for metric_name, label, higher_is_better in specs:
+        if metric_name in seen:
+            continue
+        seen.add(metric_name)
+        out.append((metric_name, label, higher_is_better))
+    return out
+
+
+FULL_METRIC_SPECS = _dedupe_metric_specs(
+    list(ALL_BOXPLOT_METRICS_CORE) + list(ALL_BOXPLOT_METRICS_EXT)
+)
+
+
 def require_dpmm(series: str | None) -> str:
     """Validate that the refined pipeline is being run for the dpmm series."""
     normalized = (series or "dpmm").strip().lower()
@@ -170,6 +211,39 @@ def load_table_directory(table_dir: Path) -> dict[str, pd.DataFrame]:
     return out
 
 
+def preferred_ablation_table_dir() -> Path:
+    """Return the preferred ablation table directory for refined figures.
+
+    Prefer the dedicated rerun tables produced by the moco_weight=1.0
+    core-ablation script when available; otherwise fall back to the
+    full comparison tables.
+    """
+    if DPMM_FM_CORE_TABLE_DIR.exists() and any(DPMM_FM_CORE_TABLE_DIR.glob("*_df.csv")):
+        return DPMM_FM_CORE_TABLE_DIR
+    if MOCO_WEIGHT1_CORE_TABLE_DIR.exists() and any(MOCO_WEIGHT1_CORE_TABLE_DIR.glob("*_df.csv")):
+        return MOCO_WEIGHT1_CORE_TABLE_DIR
+    return FULL_COMPARISON_TABLE_DIR
+
+
+def preferred_core_model_dir(model_name: str) -> Path | None:
+    """Return the preferred model checkpoint directory for *model_name*."""
+    safe = _safe_model_name(model_name)
+    for root in (DPMM_FM_CORE_MODEL_DIR, MOCO_WEIGHT1_CORE_MODEL_DIR):
+        candidate = root / safe
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def preferred_target_model() -> str:
+    """Return the currently preferred final DPMM target model name."""
+    if DPMM_FM_CORE_TABLE_DIR.exists() and any(DPMM_FM_CORE_TABLE_DIR.glob("*_df.csv")):
+        return "DPMM-FM"
+    if MOCO_WEIGHT1_CORE_TABLE_DIR.exists() and any(MOCO_WEIGHT1_CORE_TABLE_DIR.glob("*_df.csv")):
+        return "DPMM-Contrastive"
+    return "DPMM-Base"
+
+
 # Mapping from short names in full_comparison_all to canonical names
 _FULL_COMP_RENAME = {
     "DPMM-Trans": "DPMM-Transformer",
@@ -187,19 +261,31 @@ def load_merged_external_tables() -> dict[str, pd.DataFrame]:
     Returns per-dataset DataFrames spanning 56 datasets × (23 external + 4 internal) methods.
     """
     ext_tables = load_table_directory(EXTERNAL_FULL_TABLE_DIR)
-    comp_tables = load_table_directory(FULL_COMPARISON_TABLE_DIR)
     merged: dict[str, pd.DataFrame] = {}
-    for dataset in sorted(set(ext_tables) | set(comp_tables)):
-        parts = []
-        if dataset in ext_tables:
-            parts.append(ext_tables[dataset])
-        if dataset in comp_tables:
-            df = comp_tables[dataset].copy()
-            df = df[df["method"].isin(_DPMM_KEEP)]
-            df["method"] = df["method"].replace(_FULL_COMP_RENAME)
-            parts.append(df)
-        if parts:
-            merged[dataset] = pd.concat(parts, ignore_index=True)
+
+    if DPMM_FM_CORE_TABLE_DIR.exists() and any(DPMM_FM_CORE_TABLE_DIR.glob("*_df.csv")):
+        fm_tables = load_table_directory(DPMM_FM_CORE_TABLE_DIR)
+        for dataset in sorted(set(ext_tables) & set(fm_tables)):
+            parts = [ext_tables[dataset]]
+            fm_df = fm_tables[dataset].copy()
+            fm_df = fm_df[fm_df["method"].isin({"DPMM-FM"})]
+            if not fm_df.empty:
+                parts.append(fm_df)
+            if parts:
+                merged[dataset] = pd.concat(parts, ignore_index=True)
+    else:
+        comp_tables = load_table_directory(FULL_COMPARISON_TABLE_DIR)
+        for dataset in sorted(set(ext_tables) | set(comp_tables)):
+            parts = []
+            if dataset in ext_tables:
+                parts.append(ext_tables[dataset])
+            if dataset in comp_tables:
+                df = comp_tables[dataset].copy()
+                df = df[df["method"].isin(_DPMM_KEEP)]
+                df["method"] = df["method"].replace(_FULL_COMP_RENAME)
+                parts.append(df)
+            if parts:
+                merged[dataset] = pd.concat(parts, ignore_index=True)
     if not merged:
         raise FileNotFoundError("No merged tables produced from external_full + full_comparison_all")
     return merged

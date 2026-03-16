@@ -1,84 +1,95 @@
-"""Refined Figure 4 — Training / Sweep UMAPs (multi-panel composed figure).
+"""Refined Figure 4 — deduplicated DPMM-family training dynamics.
 
-For each sweep parameter × representative dataset, produces KMeans-colored
-UMAP embedding plots showing how latent geometry evolves across sweep values.
-
-Data source: benchmarks/benchmark_results/sensitivity/csv/{series}/
-             benchmarks/benchmark_results/training/csv/{series}/
-             benchmarks/benchmark_results/preprocessing/csv/{series}/
-             + latent NPZ files
-
-Usage:
-    python -m refined_figures.fig04_training_umaps --series dpmm
+This figure intentionally drops the latent UMAP row so it no longer repeats
+the model-geometry story already covered in Figure 2.
 """
 
+from __future__ import annotations
+
 import argparse
+import json
 import sys
-import numpy as np
-import pandas as pd
+from pathlib import Path
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from pathlib import Path
-from sklearn.cluster import KMeans
+import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style, style_axes, add_panel_label, save_with_vcd,
-    bind_figure_region, LayoutRegion)
-from benchmarks.figure_generators.common import (
-    compute_umap, REPRESENTATIVE_DATASETS)
-from benchmarks.figure_generators.data_loaders import (
-    load_sensitivity_csv, load_training_csv, load_preprocessing_csv,
-    load_sweep_latents, parse_sweep_value)
-from refined_figures.dpmm_shared import require_dpmm
+from src.visualization import apply_style, save_with_vcd, bind_figure_region
+from refined_figures.dpmm_shared import (
+    require_dpmm,
+    preferred_core_model_dir,
+    preferred_target_model,
+)
 
 DPI = 300
+DYNAMICS_DIR = ROOT / "benchmarks" / "training_dynamics_results"
+_DATASET = "setty"
+_DISPLAY_LABELS = {
+    "Pure-AE": "AE",
+    "DPMM-Base": "DPMM",
+    "DPMM-FM": "DPMM-FM",
+    "DPMM-Contrastive": "DPMM-C",
+}
 
-_SENSITIVITY_PARAMS = {
-    "dpmm":  ["warmup_ratio", "latent_dim", "encoder_size", "dropout_rate",
-              "d_model", "nhead", "num_encoder_layers",
-              "moco_weight", "moco_temperature"],
-    "topic": ["kl_weight",    "latent_dim", "encoder_size", "dropout_rate"],
+_CURVE_STYLES = {
+    "train_loss": ("Total", "#455A64", 1.5),
+    "recon_loss": ("Recon", "#2E7D32", 1.3),
+    "dpmm_loss": ("DPMM", "#EF6C00", 1.2),
+    "flow_loss": ("Flow", "#5C6BC0", 1.2),
+    "moco_loss": ("MoCo", "#8E24AA", 1.2),
+    "contrastive_loss": ("MoCo", "#C62828", 1.2),
 }
 
 
-def _key_params_by_source(series):
-    return {
-        "sensitivity": _SENSITIVITY_PARAMS.get(series,
-                                               _SENSITIVITY_PARAMS["dpmm"]),
-        "training":    ["lr", "epochs", "batch_size", "weight_decay"],
-        "preprocessing": ["hvg_top_genes"],
-    }
+def _load_latest_history(model_name: str) -> dict | None:
+    safe = str(model_name).replace("/", "_").replace(" ", "_")
+    candidates = []
+    rerun_dir = preferred_core_model_dir(model_name)
+    if rerun_dir is not None and rerun_dir.exists():
+        candidates.extend(sorted(rerun_dir.glob(f"{safe}_{_DATASET}_*_history.json"), reverse=True))
+    candidates.extend(sorted(DYNAMICS_DIR.glob(f"{model_name}_{_DATASET}_*_history.json"), reverse=True))
+    candidates.extend(sorted(DYNAMICS_DIR.glob(f"{model_name}_{_DATASET}_history.json"), reverse=True))
+    if not candidates:
+        return None
+    with open(candidates[0], "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
-def _draw_kmeans_umap(ax, latent, title, n_clusters=8):
-    """Draw a KMeans-colored UMAP on given axes."""
-    if latent is None or len(latent) == 0:
+def _draw_history_panel(ax, model_name: str, show_ylabel: bool, show_legend: bool) -> None:
+    history = _load_latest_history(model_name)
+    if not history:
         ax.axis("off")
-        ax.text(0.5, 0.5, "N/A", ha="center", va="center", fontsize=10)
+        ax.text(0.5, 0.5, "No history", ha="center", va="center", fontsize=10)
         return
-    # Normalize display density across sweeps so preprocessing rows do not
-    # visually dominate just because those experiments saved many more cells.
-    target_points = 450 if len(latent) > 600 else len(latent)
-    if len(latent) > target_points:
-        idx = np.random.RandomState(0).choice(len(latent), target_points, replace=False)
-        latent = latent[idx]
-    emb = compute_umap(latent)
-    k = min(n_clusters, len(latent))
-    labels = KMeans(n_clusters=k, random_state=0, n_init=10).fit_predict(latent)
-    cmap = plt.colormaps["tab10"]
-    colors = [cmap(l / max(k - 1, 1)) for l in labels]
-    ax.scatter(emb[:, 0], emb[:, 1], c=colors, s=4.5, alpha=0.42,
-               rasterized=True)
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
-    ax.set_title(title, fontsize=9, pad=2, loc="left", fontweight="normal")
-    for sp in ax.spines.values():
-        sp.set_linewidth(0.3)
+
+    epochs = np.arange(1, len(history.get("train_loss", [])) + 1)
+    for key in ("train_loss", "recon_loss", "dpmm_loss", "flow_loss", "contrastive_loss", "moco_loss"):
+        vals = history.get(key)
+        if not vals or len(vals) != len(epochs):
+            continue
+        if key in {"dpmm_loss", "contrastive_loss", "moco_loss"} and np.allclose(vals, 0.0):
+            continue
+        label, color, lw = _CURVE_STYLES[key]
+        ax.plot(epochs, vals, color=color, linewidth=lw, label=label)
+
+    ax.set_xlim(1, max(len(epochs), 2))
+    ax.tick_params(axis="both", labelsize=8, length=2.5)
+    ax.grid(axis="y", alpha=0.16, linewidth=0.4)
+    ax.set_axisbelow(True)
+    ax.set_xlabel("epoch", fontsize=8.5)
+    if show_ylabel:
+        ax.set_ylabel("loss", fontsize=8.5)
+    for spine in ax.spines.values():
+        spine.set_linewidth(0.5)
+        spine.set_edgecolor("#90A4AE")
+    if show_legend:
+        ax.legend(loc="upper right", fontsize=7.2, frameon=False, ncol=1, handlelength=1.8)
+
 
 
 def generate(series, out_dir):
@@ -88,71 +99,25 @@ def generate(series, out_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
     apply_style()
 
-    params_by_source = _key_params_by_source(series)
-    loaders = {
-        "sensitivity":    load_sensitivity_csv,
-        "training":       load_training_csv,
-        "preprocessing":  load_preprocessing_csv,
-    }
+    model_order = ["Pure-AE", "DPMM-Base"]
+    target_model = preferred_target_model()
+    if target_model not in model_order:
+        model_order.append(target_model)
 
-    # Dynamically discover all sweep parameters (matching original fig4)
-    panels = []
-    for source, params in params_by_source.items():
-        try:
-            df = loaders[source](series)
-            if "Series" in df.columns:
-                df = df[df["Series"] == series]
-        except Exception:
-            continue
-        if "Sweep" not in df.columns:
-            continue
-        for param in params:
-            sub = df[df["Sweep"] == param]
-            if "SweepVal" not in sub.columns or len(sub) < 2:
-                continue
-            # Get model names sorted by sweep value, pick 4 representative
-            tmp = sub.copy()
-            tmp["_sv"] = pd.to_numeric(tmp["SweepVal"], errors="coerce")
-            tmp = (tmp.sort_values("_sv") if tmp["_sv"].notna().any()
-                   else tmp.sort_values("SweepVal"))
-            model_names = list(dict.fromkeys(tmp["Model"].dropna().tolist()))
-            if len(model_names) > 4:
-                idx = np.linspace(0, len(model_names) - 1, 4, dtype=int)
-                model_names = [model_names[i] for i in idx]
-            panels.append((source, param, model_names))
+    fig = plt.figure(figsize=(15.6, 4.9))
 
-    if not panels:
-        print("    No latent data for sweep UMAPs — skipping Fig 4")
-        return
+    root = bind_figure_region(fig, (0.055, 0.14, 0.985, 0.90))
+    cols = root.split_cols([1] * len(model_order), gap=0.05)
 
-    ds = REPRESENTATIVE_DATASETS[0]  # primary dataset
-    n_rows = len(panels)
-    n_cols = 4  # always show up to 4 sweep values
-    figw, figh = 14.4, 1.85 * n_rows + 0.40
-
-    fig = plt.figure(figsize=(figw, figh))
-    root = bind_figure_region(fig, (0.07, 0.03, 0.98, 0.97))
-    row_regions = root.split_rows(n_rows, gap=0.025)
-
-    for r_idx, (source, param, model_names) in enumerate(panels):
-        col_regions = row_regions[r_idx].split_cols(n_cols, gap=0.02)
-        # Load all sweep latents for this source+series, filtered by dataset
-        latent_tuples = load_sweep_latents(source, series,
-                                           model_names=model_names,
-                                           n_select=4,
-                                           dataset_filter=ds)
-        for c_idx in range(n_cols):
-            ax = col_regions[c_idx].add_axes(fig)
-            style_axes(ax, kind="umap")
-            if c_idx < len(latent_tuples):
-                mname, arr = latent_tuples[c_idx]
-                title = parse_sweep_value(mname)
-                title = f"{param}={title}" if title else mname
-                _draw_kmeans_umap(ax, arr, title)
-            else:
-                ax.axis("off")
-            if c_idx == 0:
-                ax.set_ylabel(param.replace("_", " ").title(), fontsize=9, fontweight="normal")
+    for idx, model_name in enumerate(model_order):
+        ax_top = cols[idx].add_axes(fig)
+        _draw_history_panel(
+            ax_top,
+            model_name,
+            show_ylabel=(idx == 0),
+            show_legend=(idx == len(model_order) - 1),
+        )
+        ax_top.set_title(_DISPLAY_LABELS.get(model_name, model_name), fontsize=11.2, pad=4, color="black")
 
     out_path = out_dir / f"Fig4_training_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)

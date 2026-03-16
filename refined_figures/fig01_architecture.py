@@ -1,10 +1,10 @@
-"""Refined Figure 1 — DPMM-MoCo-AE Architecture Overview.
+"""Refined Figure 1 — DPMM-FM Architecture Overview.
 
 Generates a publication-quality architecture diagram showing the proposed
-DPMM-MoCo-AE (DPMM-Contrastive) model using matplotlib patches.
+DPMM-FM model using matplotlib patches.
 
 Shows: Input → MLP Encoder → Latent → DPMM Prior → Decoder → Output
-with MoCo contrastive head highlighted.
+with latent flow-matching head highlighted.
 
 Data source: None (static architecture diagram)
 
@@ -75,23 +75,25 @@ C_ATTN = "#FFF9C4"     # Transformer attention
 C_ATTN_E = "#F9A825"
 C_CONTRA = "#FFEBEE"   # Contrastive
 C_CONTRA_E = "#C62828"
+C_FLOW = "#E8EAF6"     # Flow matching
+C_FLOW_E = "#5C6BC0"
 
 # ── Architecture specs per series ─────────────────────────────────────────────
 _ARCH = {
     "dpmm": {
         "prior_name": "DPMM",
         "prior_detail": "n_comp=50",
-        "latent_label": "z (32-d)",
-        "enc_dims": "256→128→32",
-        "dec_dims": "32→128→256",
+        "latent_label": "z (10-d)",
+        "enc_dims": "256→128→10",
+        "dec_dims": "10→128→256",
         "variants": [
             {
-                "name": "DPMM-MoCo-AE",
-                "subtitle": "MLP + DPMM prior + MoCo contrastive head · ~1.62M params",
+                "name": "DPMM-FM",
+                "subtitle": "MLP + DPMM prior + latent flow-matching head · ~1.64M params",
                 "encoder": "MLP Encoder",
-                "enc_sub": "256→128→32, BN·Mish·Drop",
-                "dec_sub": "32→128→256, BN·Mish·Drop",
-                "extra": ("MoCo Head", "q=4096, τ=0.2"),
+                "enc_sub": "256→128→10, BN·Mish·Drop",
+                "dec_sub": "10→128→256, BN·Mish·Drop",
+                "extra": ("Flow-Matching Head", "v(z_t,t) with sinusoidal time embedding"),
             },
         ],
     },
@@ -169,7 +171,7 @@ def _draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10):
         facecolor=color, edgecolor="none", linewidth=0,
         alpha=alpha, zorder=0)
     ax.add_patch(bg)
-    ax.text(x + w / 2, y + h + 0.11, label,
+    ax.text(x + w / 2, y + h + 0.07, label,
             ha="center", va="bottom", fontsize=10,
             fontweight="normal", color=color, zorder=1)
 
@@ -178,16 +180,16 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
                       latent_label, panel_letter=None):
     """Draw one model variant as a horizontal pipeline."""
     BW = 1.15   # Box width  (encoder / decoder)
-    BH = 0.48   # Box height
+    BH = 0.56   # Box height
     SBW = 0.62  # Small box width (input / output / latent)
-    SBH = 0.42  # Small box height
+    SBH = 0.46  # Small box height
     gap = 0.20
 
     # Variant title
-    ax.text(0.18, y_base + BH + 0.22, variant["name"],
+    ax.text(0.18, y_base + BH + 0.18, variant["name"],
             ha="left", va="bottom", fontsize=FONT_TITLE,
             fontweight="normal", color="black", zorder=5)
-    ax.text(0.18, y_base + BH + 0.15, variant["subtitle"],
+    ax.text(0.18, y_base + BH + 0.09, variant["subtitle"],
             ha="left", va="top", fontsize=FONT_SUBLABEL,
             color=C_MID_GREY, zorder=5)
 
@@ -199,7 +201,7 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
               facecolor=C_INPUT, edgecolor=C_INPUT_E, fontsize=FONT_SUBLABEL)
     if panel_letter:
         ax.text(x - 0.24, y_base + SBH / 2 + 0.30, f"({panel_letter})",
-                ha="center", va="center", fontsize=14, fontweight="bold",
+                ha="center", va="center", fontsize=14,
                 color="black", zorder=10)
 
     # Arrow → Encoder
@@ -228,7 +230,7 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
     x_mid_lat = x_lat + LBW / 2
     prior_y = y_base + BH + 0.22
     prior_w = 0.90
-    prior_h = 0.35
+    prior_h = 0.40
     _draw_box(ax, (x_mid_lat - prior_w / 2, prior_y), prior_w, prior_h,
               f"{prior_name} Prior", sublabel=prior_detail,
               facecolor=C_PRIOR, edgecolor=C_PRIOR_E, linewidth=1.0)
@@ -264,15 +266,24 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
     # Variant-specific extra module
     if variant["extra"]:
         extra_name, extra_sub = variant["extra"]
-        if "MoCo" in extra_name:
+        if "Flow" in extra_name:
+            ex_x = x_enc
+            ex_y = y_base - 0.44
+            _draw_box(ax, (ex_x, ex_y), BW + 0.18, 0.44, extra_name,
+                      sublabel=extra_sub,
+                      facecolor=C_FLOW, edgecolor=C_FLOW_E, linewidth=1.0)
+            _draw_arrow(ax, (x_lat + LBW / 2, y_base),
+                        (ex_x + (BW + 0.18) / 2, ex_y + 0.44),
+                        color=C_FLOW_E, linewidth=0.8)
+        elif "MoCo" in extra_name:
             # Place below encoder
             ex_x = x_enc
             ex_y = y_base - 0.44
-            _draw_box(ax, (ex_x, ex_y), BW, 0.40, extra_name,
+            _draw_box(ax, (ex_x, ex_y), BW, 0.44, extra_name,
                       sublabel=extra_sub,
                       facecolor=C_CONTRA, edgecolor=C_CONTRA_E, linewidth=1.0)
             _draw_arrow(ax, (x_enc + BW / 2, y_base),
-                        (ex_x + BW / 2, ex_y + 0.40),
+                        (ex_x + BW / 2, ex_y + 0.44),
                         color=C_CONTRA_E, linewidth=0.8)
         elif "Attention" in extra_name:
             # Place above encoder
@@ -300,18 +311,18 @@ def generate(series, out_dir):
     y_min = -0.38
     y_max = row_pitch * n_variants + 0.10
 
-    fig = plt.figure(figsize=(11.8, 3.6))
+    fig = plt.figure(figsize=(12.4, 4.5))
     ax = bind_figure_region(fig, (0.005, 0.06, 0.998, 0.96)).add_axes(fig)
     ax.set_xlim(-0.35, 5.42)
-    ax.set_ylim(-1.20, y_max)
+    ax.set_ylim(-1.32, y_max)
     ax.axis("off")
     ax.set_xticks([])
     ax.set_yticks([])
     fig.patch.set_facecolor(C_WHITE)
 
     # Draw stage backgrounds
-    stage_y = -0.28
-    stage_h = 1.60 - stage_y
+    stage_y = -0.34
+    stage_h = 1.66
     _draw_stage_bg(ax, (-0.10, stage_y), 0.80, stage_h,
                    "Input", C_INPUT_E, alpha=0.06)
     _draw_stage_bg(ax, (0.74, stage_y), 1.30, stage_h,
@@ -324,7 +335,7 @@ def generate(series, out_dir):
                    "Output", C_OUTPUT_E, alpha=0.06)
 
     # Draw the single variant
-    for i, variant in enumerate(variants):
+    for variant in variants:
         y_base = 0.14
         _draw_variant_row(
             ax, y_base, variant,
@@ -333,17 +344,34 @@ def generate(series, out_dir):
             latent_label=spec["latent_label"],
             panel_letter=None)
 
-    # ── Loss functions + training parameters (recovered from Next.js) ─────
-    info_y = -0.68
-    ax.text(2.55, info_y, (
-        "Loss:  L = L_recon (MSE) + lam_dpmm * L_DPMM (GMM NLL)"
-        " + lam_moco * L_CL (InfoNCE+Sym+Proto)"
-        "   [lam_dpmm=1.0, lam_moco=0.5]"
-    ), ha="center", va="top", fontsize=8, color="#455A64", zorder=5)
-    ax.text(2.55, info_y - 0.28, (
-        "Training:  AdamW, lr=1e-3, batch=128, dropout=0.2,"
-        " 400 ep, DPMM warmup=0.6, grad_clip=10.0, 3000 HVGs"
-    ), ha="center", va="top", fontsize=8, color="#455A64", zorder=5)
+    # ── Objective + training cards ────────────────────────────────────────
+    card_y = -1.00
+    left_card = FancyBboxPatch(
+        (0.12, card_y), 2.22, 0.44,
+        boxstyle="round,pad=0.04",
+        facecolor="#F7F9FB", edgecolor="#B0BEC5",
+        linewidth=0.6, zorder=4)
+    right_card = FancyBboxPatch(
+        (2.60, card_y), 2.28, 0.44,
+        boxstyle="round,pad=0.04",
+        facecolor="#F7F9FB", edgecolor="#B0BEC5",
+        linewidth=0.6, zorder=4)
+    ax.add_patch(left_card)
+    ax.add_patch(right_card)
+    ax.text(0.24, card_y + 0.35,
+        "Objective\n"
+        "reconstruction (MSE) · DPMM negative log-likelihood\n"
+        "latent flow matching after DPMM warmup\n"
+        "λ_dpmm = 1.0 · λ_flow = 0.10",
+        fontsize=7.7, color="#455A64", va="top", zorder=5,
+        linespacing=1.23)
+    ax.text(2.72, card_y + 0.35,
+        "Training setup\n"
+        "AdamW · lr = 1e-3 · batch = 128 · dropout = 0.2\n"
+        "1000 epochs · DPMM warmup = 0.8 · grad clip = 10.0\n"
+        "3000 HVGs · latent dim = 10 · FM head = 128→128 · noise scale = 0.5",
+        fontsize=7.7, color="#455A64", va="top", zorder=5,
+        linespacing=1.23)
 
     legend_items = [
         (C_INPUT, C_INPUT_E, "Input/Output"),
@@ -351,7 +379,7 @@ def generate(series, out_dir):
         (C_LAT, C_LAT_E, "Latent"),
         (C_PRIOR, C_PRIOR_E, "Prior"),
         (C_DEC, C_DEC_E, "Decoder"),
-        (C_CONTRA, C_CONTRA_E, "Contrastive"),
+        (C_FLOW, C_FLOW_E, "Flow Matching"),
     ]
     handles = [Patch(facecolor=fc, edgecolor=ec, label=label) for fc, ec, label in legend_items]
     fig.legend(handles=handles,

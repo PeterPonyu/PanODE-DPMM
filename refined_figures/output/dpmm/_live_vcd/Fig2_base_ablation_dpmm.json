@@ -74,72 +74,44 @@
     "max_annotations_complexity": 20,
     "complexity_score_threshold": 15.0
   },
-  "actions": [
-    {
-      "action_type": "increase_fontsize",
-      "target": "text",
-      "params": {
-        "min_body_pt": 7.0,
-        "increment_pt": 1.0
-      },
-      "priority": 1,
-      "description": "Increase font size of undersized text elements.  Body text should be at least 7 pt for legibility at print scale."
-    },
-    {
-      "action_type": "increase_text_contrast",
-      "target": "text",
-      "params": {
-        "min_contrast_ratio": 3.0
-      },
-      "priority": 1,
-      "description": "Darken or change text colour to meet minimum 3:1 contrast ratio against the background."
-    },
-    {
-      "action_type": "reduce_annotations",
-      "target": "annotations",
-      "params": {
-        "strategy": "tiered",
-        "drop_order": [
-          "redundant",
-          "secondary",
-          "primary"
-        ],
-        "min_label_chars": 12,
-        "preserve_sign_prefix": true
-      },
-      "priority": 1,
-      "description": "Reduce annotation density to prevent overlapping text. Remove redundant duplicates first, then secondary labels; preserve at least 12 chars and leading sign/arrow prefixes."
-    },
-    {
-      "action_type": "reduce_tick_labels",
-      "target": "ax@0x78abf9a83d90",
-      "params": {
-        "axis_name": "ax@0x78abf9a83d90",
-        "axis_kind": "ytick"
-      },
-      "priority": 2,
-      "description": "Reduce number of ytick labels in 'ax@0x78abf9a83d90' (density=45%)."
-    }
-  ],
-  "warnings": [
-    "[fontsize_too_small] 125 text(s) at 5.5pt \u2192 effective 5.2pt (min 5.5pt): '0.65', '0.56', '0.64' ... +122 more",
-    "[label_density_excess] Y-tick labels in 'ax@0x78abf9a83d90' 29 labels exceed policy cap 15 (max_len=17 chars)",
-    "[low_contrast_text] 2 text(s) with low contrast: 'DPMM' contrast=2.4:1; 'C-AE' contrast=1.9:1",
-    "[text_overlap] 'ytick: Occ. entropy' overlaps 'annotation: DPMM Partition'"
-  ],
+  "actions": [],
+  "warnings": [],
   "info": [
-    "[bold_usage] 13 text(s) use bold fontweight",
-    "[panel_complexity_excess] Panel 'ax@0x78abf9a83d90' complexity score 73.3 (threshold 15.0): 116 numeric labels (>30); 121 text elements (>20). Consider simplifying or splitting."
+    "[colorblind_confusable] In 'ARI \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'ASW \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'Cal\u2013H \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'Corr \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DAV \u2193': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DRE UMAP DistCorr \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DRE UMAP \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DRE tSNE DistCorr \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DRE tSNE Overall \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DREX Cont \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DREX LocScale \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DREX NbrSym \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DREX Overall \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DREX Pearson \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DREX Spear \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'DREX Trust \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSE Aniso \u2193': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSE Core \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSE ManDim \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSE NoiseR \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSE Overall \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSE PartRat \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSE SpDecay \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSE TrajDir \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSEX 2Hop \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSEX Entropy \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSEX LocCurv \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSEX Overall \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'LSEX RadConc \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
+    "[colorblind_confusable] In 'NMI \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)"
   ],
   "error": null,
   "counts_by_type": {
-    "fontsize_too_small": 1,
-    "label_density_excess": 1,
-    "low_contrast_text": 1,
-    "text_overlap": 1,
-    "bold_usage": 1,
-    "panel_complexity_excess": 1
+    "colorblind_confusable": 30
   },
-  "total_warnings": 4,
-  "total_info": 2
+  "total_warnings": 0,
+  "total_info": 30
 }

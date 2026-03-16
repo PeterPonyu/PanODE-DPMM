@@ -74,48 +74,15 @@
     "max_annotations_complexity": 20,
     "complexity_score_threshold": 15.0
   },
-  "actions": [
-    {
-      "action_type": "reduce_tick_labels",
-      "target": "ax@0x7a9ecc383d90",
-      "params": {
-        "axis_name": "ax@0x7a9ecc383d90",
-        "axis_kind": "xtick"
-      },
-      "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x7a9ecc383d90' (density=54%)."
-    },
-    {
-      "action_type": "reduce_tick_labels",
-      "target": "ax@0x7a9ed4755590",
-      "params": {
-        "axis_name": "ax@0x7a9ed4755590",
-        "axis_kind": "xtick"
-      },
-      "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x7a9ed4755590' (density=54%)."
-    },
-    {
-      "action_type": "reduce_tick_labels",
-      "target": "ax@0x7a9ed48a6ad0",
-      "params": {
-        "axis_name": "ax@0x7a9ed48a6ad0",
-        "axis_kind": "xtick"
-      },
-      "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x7a9ed48a6ad0' (density=54%)."
-    }
+  "actions": [],
+  "warnings": [],
+  "info": [
+    "[text_truncation] 'xtick: LINC01013' extends beyond figure border (bottom, 8px)"
   ],
-  "warnings": [
-    "[label_density_excess] X-tick labels in 'ax@0x7a9ecc383d90' 25 labels exceed policy cap 15 (max_len=8 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x7a9ed4755590' 25 labels exceed policy cap 15 (max_len=7 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x7a9ed48a6ad0' 25 labels exceed policy cap 15 (max_len=8 chars)"
-  ],
-  "info": [],
   "error": null,
   "counts_by_type": {
-    "label_density_excess": 3
+    "text_truncation": 1
   },
-  "total_warnings": 3,
-  "total_info": 0
+  "total_warnings": 0,
+  "total_info": 1
 }

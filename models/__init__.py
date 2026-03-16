@@ -40,6 +40,7 @@ from .encoders import (
 
 # DPMM Models
 from .dpmm_base import DPMMAutoEncoder
+from .dpmm_flow_matching import DPMMFlowMatchingModel
 from .dpmm_contrastive import DPMMContrastiveAutoEncoder
 from .dpmm_transformer import DPMMTransformerAutoEncoder
 
@@ -69,6 +70,7 @@ __all__ = [
     'create_topic_encoder',
     # DPMM Models
     'DPMMAutoEncoder',
+    'DPMMFlowMatchingModel',
     'DPMMContrastiveAutoEncoder',
     'DPMMTransformerAutoEncoder',
     # Pure-AE Models (no prior)

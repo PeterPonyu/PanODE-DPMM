@@ -396,7 +396,7 @@ class PureAEModel(BaseModel):
 
         best_loss = float('inf')
         patience_counter = 0
-        train_losses, recon_losses = [], []
+        train_losses, recon_losses, contrastive_losses = [], [], []
 
         if verbose_every is None or verbose_every < 1:
             verbose_every = 1
@@ -560,7 +560,7 @@ class PureAETransformerModel(BaseModel):
 
         best_loss = float('inf')
         patience_counter = 0
-        train_losses, recon_losses = [], []
+        train_losses, recon_losses, contrastive_losses = [], [], []
 
         if verbose_every is None or verbose_every < 1:
             verbose_every = 1
@@ -634,7 +634,7 @@ class PureAEContrastiveModel(BaseModel):
         decoder_dims: Optional[list] = None,
         dropout_rate: float = 0.2,
         norm_type: str = "bn",
-        moco_weight: float = 0.1,
+        moco_weight: float = 1.0,
         moco_queue_size: int = 4096,
         moco_momentum: float = 0.999,
         moco_temperature: float = 0.2,
@@ -778,14 +778,14 @@ class PureAEContrastiveModel(BaseModel):
 
         best_loss = float('inf')
         patience_counter = 0
-        train_losses, recon_losses = [], []
+        train_losses, recon_losses, contrastive_losses = [], [], []
 
         if verbose_every is None or verbose_every < 1:
             verbose_every = 1
 
         for epoch in range(epochs):
             self.train()
-            epoch_loss = epoch_recon = 0.0
+            epoch_loss = epoch_recon = epoch_contra = 0.0
             n_batches = 0
 
             for batch in train_loader:
@@ -801,21 +801,25 @@ class PureAEContrastiveModel(BaseModel):
                 optimizer.step()
                 epoch_loss += loss.item()
                 epoch_recon += loss_dict["recon_loss"].item()
+                if "contrastive_loss" in loss_dict:
+                    epoch_contra += loss_dict["contrastive_loss"].item()
                 n_batches += 1
 
             if n_batches == 0:
                 continue
             avg_loss = epoch_loss / n_batches
             avg_recon = epoch_recon / n_batches
+            avg_contra = epoch_contra / n_batches
             train_losses.append(avg_loss)
             recon_losses.append(avg_recon)
+            contrastive_losses.append(avg_contra)
 
             do_print = (verbose >= 1) and (
                 ((epoch + 1) % verbose_every == 0) or (epoch == 0) or (epoch + 1 == epochs)
             )
             if do_print:
                 print(f"Epoch {epoch+1:3d}/{epochs} [PureContrAE] | "
-                      f"Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f}")
+                      f"Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | Contra: {avg_contra:.4f}")
 
             if avg_loss < best_loss:
                 best_loss = avg_loss
@@ -832,4 +836,5 @@ class PureAEContrastiveModel(BaseModel):
         return {
             "train_loss": train_losses,
             "recon_loss": recon_losses,
+            "contrastive_loss": contrastive_losses,
         }

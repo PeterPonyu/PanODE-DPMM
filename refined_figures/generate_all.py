@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 """Generate the dpmm-only refined publication figures.
 
-Figure sequence (10 figures):
-  1  Architecture Overview
-  2  Paired DPMM Refinement (boxplots + UMAPs)
-  3  DPMM Posterior Distributions (PCA + ellipses, paired)
-  4  Sensitivity Analysis
-  5  Training UMAPs
-  6  Biological Heatmaps
-  7  Latent-Gene Correlation
-  8  Latent UMAP Projections
-  9  GO Enrichment
-  10 External Benchmark
+Figure sequence (7 figures):
+    1  DPMM-FM Architecture Overview
+    2  Final DPMM-only Validation (merged)
+    3  DPMM / FM Parameter Sensitivity
+    4  Deduplicated Training Dynamics
+    5  Biological Validation (importance + correlation heatmaps, merged)
+    6  UMAP Overlays + GO Enrichment (merged)
+    7  External Benchmark (full metrics)
 
 Usage:
     python -m refined_figures.generate_all
@@ -28,32 +25,24 @@ sys.path.insert(0, str(ROOT))
 
 from refined_figures.fig01_architecture import generate as gen_fig1
 from refined_figures.fig02_base_ablation import generate as gen_fig2
-from refined_figures.fig03_dpmm_distributions import generate as gen_fig3
-from refined_figures.fig03_sensitivity import generate as gen_fig4
-from refined_figures.fig04_training_umaps import generate as gen_fig5
-from refined_figures.fig06_biological import generate as gen_fig6
-from refined_figures.fig07_correlation import generate as gen_fig7
-from refined_figures.fig08_latent_umap import generate as gen_fig8
-from refined_figures.fig09_enrichment import generate as gen_fig9
-from refined_figures.fig10_external import generate as gen_fig10
+from refined_figures.fig03_sensitivity import generate as gen_fig3
+from refined_figures.fig04_training_umaps import generate as gen_fig4
+from refined_figures.fig05_biological_combined import generate as gen_fig5
+from refined_figures.fig06_umap_enrichment_combined import generate as gen_fig6
+from refined_figures.fig10_external import generate as gen_fig7
 from refined_figures.dpmm_shared import require_dpmm
 
 GENERATORS = {
-    "1":  ("Architecture Overview",        gen_fig1),
-    "2":  ("Paired DPMM Refinement",       gen_fig2),
-    "3":  ("DPMM Distributions",           gen_fig3),
-    "4":  ("Sensitivity Analysis",         gen_fig4),
-    "5":  ("Training UMAPs",               gen_fig5),
-    "6":  ("Biological Heatmaps",          gen_fig6),
-    "7":  ("Latent-Gene Corr.",            gen_fig7),
-    "8":  ("Latent UMAP Proj.",            gen_fig8),
-    "9":  ("GO Enrichment",                gen_fig9),
-    "10": ("External Benchmark",           gen_fig10),
+    "1":  ("Architecture Overview",           gen_fig1),
+    "2":  ("Final DPMM-only Validation",   gen_fig2),
+    "3":  ("DPMM / FM Parameter Sensitivity",   gen_fig3),
+    "4":  ("Deduplicated Training Dynamics",  gen_fig4),
+    "5":  ("Biological Validation",          gen_fig5),
+    "6":  ("UMAP + GO Enrichment",           gen_fig6),
+    "7":  ("External Benchmark (full metrics)",             gen_fig7),
 }
 
-LEGACY_ALIASES = {
-    "11": "10",   # old external benchmark number
-}
+LEGACY_ALIASES = {}
 
 
 def main():

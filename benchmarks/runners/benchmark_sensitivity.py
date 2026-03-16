@@ -20,7 +20,7 @@ Each DPMM variant has its own architecture-specific sweep:
   7) num_encoder_layers          ∈ {1, 2, 3, 4}
 
   ── DPMM-Contrastive specific ──
-  8) moco_weight                 ∈ {0.01, 0.05, 0.1, 0.5}
+    8) moco_weight                 ∈ {0.1, 0.5, 1.0, 2.0}
   9) moco_temperature            ∈ {0.05, 0.1, 0.2, 0.5}
 
   ── Topic-Base specific ──
@@ -32,7 +32,7 @@ Defaults (held constant unless being swept):
   encoder_hidden=128, encoder_dims=[256,128],
   dropout_rate=0.1, lr=1e-3, epochs=600, batch_size=128,
   d_model=128, nhead=4, num_encoder_layers=2,
-  moco_weight=0.1, moco_temperature=0.2
+    moco_weight=1.0, moco_temperature=0.2
 
 Outputs (under benchmark_results/sensitivity/):
   csv/{topic,dpmm}/   — per-series CSV with all metrics + efficiency
@@ -108,7 +108,7 @@ TRANS_NLAYERS_DEFAULT  = 2
 TRANS_DROP_DEFAULT     = 0.1
 
 # Contrastive-specific defaults
-CONT_MOCO_WEIGHT_DEFAULT = 0.1
+CONT_MOCO_WEIGHT_DEFAULT = 1.0
 CONT_MOCO_TEMP_DEFAULT   = 0.2
 CONT_DROP_DEFAULT        = 0.1
 
@@ -130,7 +130,7 @@ SWEEPS = {
     "nhead":                {"dpmm_trans": [1, 2, 4, 8]},
     "num_encoder_layers":   {"dpmm_trans": [1, 2, 3, 4]},
     # DPMM-Contrastive specific
-    "moco_weight":          {"dpmm_cont": [0.01, 0.05, 0.1, 0.5]},
+    "moco_weight":          {"dpmm_cont": [0.1, 0.5, 1.0, 2.0]},
     "moco_temperature":     {"dpmm_cont": [0.05, 0.1, 0.2, 0.5]},
 }
 

@@ -520,7 +520,7 @@ class DPMMODEContrastiveModel(BaseModel):
         kl_weight: float = 0.1,
         # Contrastive learning parameters
         use_moco: bool = True,
-        moco_weight: float = 0.5,
+        moco_weight: float = 1.0,
         moco_embedding_dim: int = 128,
         moco_queue_size: int = 4096,
         moco_momentum: float = 0.999,
@@ -1005,7 +1005,7 @@ def create_dpmmode_contrastive_model(input_dim: int, latent_dim: int = 32, **kwa
         n_components: DPMM components (20-100)
         dpmm_loss_type: 'nll', 'kl', 'energy', 'student_t', 'mmd', 'soft_nll'
         use_moco: Enable MoCo contrastive learning (default: True)
-        moco_weight: Contrastive loss weight (default: 0.5)
+        moco_weight: Contrastive loss weight (default: 1.0)
         moco_temperature: Contrastive temperature (default: 0.2)
     """
     return DPMMODEContrastiveModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)

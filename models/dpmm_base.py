@@ -613,6 +613,8 @@ class DPMMODEModel(BaseModel):
         """
         self.to(device)
         optimizer = torch.optim.AdamW(self.parameters(), lr=lr, weight_decay=weight_decay)
+        self.total_epochs = epochs
+        self.current_epoch = 0
         
         dpmm_warmup_epochs = int(epochs * self.dpmm_warmup_ratio)
         best_loss = float('inf')
@@ -625,11 +627,14 @@ class DPMMODEModel(BaseModel):
         kl_vae_losses = []
         recon_ae_losses = []
         recon_bottleneck_losses = []
+        flow_losses = []
+        has_flow_loss = False
 
         if verbose_every is None or verbose_every < 1:
             verbose_every = 1
 
         for epoch in range(epochs):
+            self.current_epoch = epoch
             if epoch < dpmm_warmup_epochs:
                 self.dpmm_fitted = False
             elif epoch == dpmm_warmup_epochs or (epoch - dpmm_warmup_epochs) % self.dpmm_refit_interval == 0:
@@ -649,6 +654,7 @@ class DPMMODEModel(BaseModel):
             epoch_kl_vae = 0.0
             epoch_recon_ae = 0.0
             epoch_recon_bottleneck = 0.0
+            epoch_flow = 0.0
             n_batches = 0
 
             for batch in train_loader:
@@ -680,6 +686,9 @@ class DPMMODEModel(BaseModel):
                     epoch_recon_ae += loss_dict["recon_ae"].item()
                 if "recon_bottleneck" in loss_dict:
                     epoch_recon_bottleneck += loss_dict["recon_bottleneck"].item()
+                if "flow_loss" in loss_dict:
+                    epoch_flow += loss_dict["flow_loss"].item()
+                    has_flow_loss = True
                 
                 n_batches += 1
 
@@ -693,6 +702,7 @@ class DPMMODEModel(BaseModel):
             avg_kl_vae = epoch_kl_vae / n_batches if self.use_vae else 0.0
             avg_recon_ae = epoch_recon_ae / n_batches
             avg_recon_bottleneck = epoch_recon_bottleneck / n_batches if self.ae.use_bottleneck else 0.0
+            avg_flow = epoch_flow / n_batches if has_flow_loss else 0.0
             
             # Record losses
             train_losses.append(avg_loss)
@@ -703,6 +713,8 @@ class DPMMODEModel(BaseModel):
             recon_ae_losses.append(avg_recon_ae)
             if self.ae.use_bottleneck:
                 recon_bottleneck_losses.append(avg_recon_bottleneck)
+            if has_flow_loss:
+                flow_losses.append(avg_flow)
 
             # Verbose logging
             do_print = (verbose >= 1) and (
@@ -719,6 +731,8 @@ class DPMMODEModel(BaseModel):
                 
                 if self.ae.use_bottleneck:
                     log_msg += f" | AE: {avg_recon_ae:.4f} | BN: {avg_recon_bottleneck:.4f}"
+                if has_flow_loss:
+                    log_msg += f" | FM: {avg_flow:.4f}"
                 
                 print(log_msg)
 
@@ -748,6 +762,8 @@ class DPMMODEModel(BaseModel):
         
         if self.ae.use_bottleneck:
             result["recon_bottleneck"] = recon_bottleneck_losses
+        if has_flow_loss:
+            result["flow_loss"] = flow_losses
         
         return result
 

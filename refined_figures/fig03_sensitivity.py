@@ -1,141 +1,160 @@
-"""Refined Figure 3 — Sensitivity Analysis (multi-panel composed figure).
+"""Refined Figure 3 — actual DPMM / FM parameter sensitivity.
 
-Loads sensitivity / training / preprocessing sweep CSVs and produces a
-composed grid of sweep-trend boxplots.  Each row = one hyperparameter sweep,
-each column = one core metric.
+Panels
+------
+(a) DPMM warmup-ratio sensitivity
+(b) DPMM latent-dimension sensitivity
+(c) FM flow-weight sensitivity
+(d) FM noise-scale sensitivity
 
-Data source: benchmarks/benchmark_results/sensitivity/csv/{series}/
-             benchmarks/benchmark_results/training/csv/{series}/
-             benchmarks/benchmark_results/preprocessing/csv/{series}/
-
-Usage:
-    python -m refined_figures.fig03_sensitivity --series dpmm
+Each panel shows within-sweep metric ranks after direction alignment, averaged
+across the four core datasets.
 """
+
+from __future__ import annotations
 
 import argparse
 import sys
-import re
-import numpy as np
-import pandas as pd
+from pathlib import Path
+
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-from pathlib import Path
+import matplotlib.patches as mpatches
+import numpy as np
+import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style, style_axes, add_panel_label, save_with_vcd,
-    bind_figure_region, LayoutRegion)
-from benchmarks.figure_generators.common import METRIC_DIRECTION
-from benchmarks.figure_generators.data_loaders import (
-    load_sensitivity_csv, load_training_csv, load_preprocessing_csv,
-    parse_sweep_value)
-from refined_figures.dpmm_shared import require_dpmm
+from src.visualization import apply_style, style_axes, save_with_vcd, bind_figure_region
+from refined_figures.dpmm_shared import (
+    CORE_DATASETS,
+    DPMM_FM_SENSITIVITY_SUMMARY,
+    DPMM_SENSITIVITY_CSV,
+    require_dpmm,
+)
 
 DPI = 300
 
-_CORE_METRICS_ALL = ["NMI", "ARI", "ASW", "DAV",
-                     "DRE_umap_overall_quality", "LSE_overall_quality"]
-_CORE_METRICS_TOPIC = ["NMI", "ARI", "ASW", "DAV"]
-_DISPLAY = {
-    "NMI": "NMI ↑", "ARI": "ARI ↑", "ASW": "ASW ↑", "DAV": "DAV ↓",
-    "DRE_umap_overall_quality": "DRE UMAP ↑",
-    "LSE_overall_quality": "LSE Overall ↑",
-}
-_EXCLUDED_SWEEPS = {"max_cells"}
-_SWEEP_PALETTE = [
-    "#4C78A8", "#6BAED6", "#9ECAE1", "#FDD49E", "#FDAE6B",
-    "#FD8D3C", "#E6550D", "#A63603",
+_METRICS = [
+    ("NMI", "NMI", True),
+    ("ARI", "ARI", True),
+    ("ASW", "ASW", True),
+    ("DAV", "DAV", False),
+    ("CAL", "CAL", True),
+    ("COR", "COR", True),
+    ("DRE_umap_overall_quality", "DRE-UMAP", True),
+    ("DRE_tsne_overall_quality", "DRE-tSNE", True),
+    ("LSE_overall_quality", "LSE", True),
+    ("DREX_overall_quality", "DREX", True),
+    ("LSEX_overall_quality", "LSEX", True),
+]
+
+_PANEL_SPECS = [
+    ("warmup_ratio", "DPMM warmup ratio", 0.9, "dpmm"),
+    ("latent_dim", "DPMM latent dim", 10, "dpmm"),
+    ("flow_weight", "FM flow weight", 0.10, "fm"),
+    ("flow_noise_scale", "FM noise scale", 0.50, "fm"),
 ]
 
 
-def _format_sweep_label(val_str):
+def _canonical_value(value) -> str:
     try:
-        val = float(val_str)
-        if val == 0:
-            return "0"
-        abs_val = abs(val)
-        if abs_val >= 1000 or (0 < abs_val < 0.01):
-            return f"{val:.0e}"
-        if val == int(val):
-            return str(int(val))
-        return f"{val:g}"
-    except (ValueError, TypeError):
-        return str(val_str)
+        numeric = float(value)
+    except Exception:
+        return str(value)
+    if abs(numeric - round(numeric)) < 1e-9:
+        return str(int(round(numeric)))
+    return f"{numeric:g}"
 
 
-def _draw_sweep_boxplot(ax, df, param_col, metric, show_title=True):
-    """Draw one sweep-trend boxplot."""
-    if metric not in df.columns:
-        ax.axis("off")
-        return
-    work = df.copy()
-    if param_col not in work.columns:
-        work[param_col] = work["Model"].map(parse_sweep_value)
-    numeric_param = pd.to_numeric(work[param_col], errors="coerce")
-    if numeric_param.notna().any():
-        work["_sort"] = numeric_param
-    else:
-        work["_sort"] = work[param_col].astype(str)
-    ordered = list(dict.fromkeys(
-        work.sort_values("_sort")[param_col].astype(str).tolist()))
-    n_sv = len(ordered)
-    if n_sv <= len(_SWEEP_PALETTE):
-        box_colors = _SWEEP_PALETTE[:n_sv]
-    else:
-        cmap = mpl.colormaps["RdYlBu_r"].resampled(n_sv)
-        box_colors = [cmap(i / max(n_sv - 1, 1)) for i in range(n_sv)]
+def _sort_value_keys(keys: list[str]) -> list[str]:
+    numeric = pd.to_numeric(pd.Series(keys), errors="coerce")
+    if numeric.notna().all():
+        ordered = [keys[idx] for idx in np.argsort(numeric.to_numpy())]
+        return ordered
+    return sorted(keys)
 
-    grouped = []
-    for sv in ordered:
-        vals = pd.to_numeric(
-            work.loc[work[param_col].astype(str) == sv, metric],
-            errors="coerce").dropna().values
-        grouped.append(vals)
-    if not any(len(g) > 0 for g in grouped):
-        ax.axis("off")
-        return
 
-    bp = ax.boxplot(grouped, positions=np.arange(len(ordered)),
-                    widths=0.55, patch_artist=True, showfliers=False,
-                    medianprops=dict(color="black", lw=1.2))
-    for j, patch in enumerate(bp["boxes"]):
-        c = box_colors[j] if j < len(box_colors) else "#6BAED6"
-        patch.set_facecolor(c)
-        patch.set_alpha(0.60)
-        patch.set_edgecolor("gray")
-        patch.set_linewidth(0.8)
+def _load_sensitivity_frame(csv_path: Path, source: str) -> pd.DataFrame:
+    if not csv_path.exists():
+        raise FileNotFoundError(f"Missing sensitivity CSV: {csv_path}")
+    usecols = {"Model", "method", "Sweep", "SweepVal", "Dataset", *[metric for metric, _, _ in _METRICS]}
+    df = pd.read_csv(csv_path, usecols=lambda col: col in usecols)
+    df = df[df["Dataset"].isin(CORE_DATASETS)].copy()
+    df["SweepValKey"] = df["SweepVal"].map(_canonical_value)
+    model_col = "Model" if "Model" in df.columns else "method"
+    if source == "dpmm":
+        model_names = df[model_col].astype(str).str.lower()
+        keep = model_names.str.contains("dpmm") & ~model_names.str.contains("trans|cont|contrast|flow")
+        df = df[keep].copy()
+    elif source == "fm":
+        df = df[df[model_col].astype(str).str.contains("DPMM-FM", na=False)].copy()
+    return df
 
-    rng = np.random.RandomState(42)
-    for j, vals in enumerate(grouped):
-        if len(vals) == 0:
+
+def _panel_rank_matrix(df: pd.DataFrame, sweep_name: str) -> tuple[np.ndarray, list[str]]:
+    sub = df[df["Sweep"] == sweep_name].copy()
+    value_keys = _sort_value_keys(sub["SweepValKey"].dropna().astype(str).unique().tolist())
+    raw = np.full((len(_METRICS), len(value_keys)), np.nan, dtype=float)
+
+    for col_idx, value_key in enumerate(value_keys):
+        value_df = sub[sub["SweepValKey"] == value_key]
+        for row_idx, (metric_name, _, higher_is_better) in enumerate(_METRICS):
+            vals = pd.to_numeric(value_df.get(metric_name), errors="coerce").dropna()
+            if vals.empty:
+                continue
+            aligned = float(vals.mean()) * (1.0 if higher_is_better else -1.0)
+            raw[row_idx, col_idx] = aligned
+
+    ranked = np.full_like(raw, np.nan)
+    for row_idx in range(raw.shape[0]):
+        row = raw[row_idx]
+        valid = np.isfinite(row)
+        if valid.sum() == 0:
             continue
-        jitter = rng.uniform(-0.20, 0.20, size=len(vals))
-        c = box_colors[j] if j < len(box_colors) else "#1F77B4"
-        ax.scatter(np.full(len(vals), j) + jitter, vals, s=7,
-                   color=c, edgecolors="black", linewidths=0.2,
-                   alpha=0.80, zorder=5)
+        if valid.sum() == 1:
+            ranked[row_idx, valid] = 1.0
+            continue
+        series = pd.Series(row[valid])
+        ranks = series.rank(method="average").to_numpy(dtype=float)
+        ranks = (ranks - ranks.min()) / max(ranks.max() - ranks.min(), 1e-12)
+        ranked[row_idx, valid] = ranks
 
-    if show_title:
-        title_text = _DISPLAY.get(metric, metric)
-        ax.set_title(title_text, fontsize=11, pad=2, loc="left",
-                     fontweight="normal")
-    else:
-        ax.set_title("")
-    ax.set_xticks(np.arange(len(ordered)))
-    ax.set_xticklabels([_format_sweep_label(v) for v in ordered],
-                       fontsize=9, rotation=0)
-    ax.tick_params(labelsize=9)
-    ax.grid(axis="y", alpha=0.2, lw=0.4)
+    return ranked, value_keys
 
-    ymin, ymax = ax.get_ylim()
-    pad = abs(ymax - ymin) * 0.08
-    ax.set_ylim(ymin - pad * 0.3, ymax + pad)
-    from matplotlib.ticker import MaxNLocator
-    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', prune='both'))
+
+def _draw_panel(ax, rank_matrix: np.ndarray, value_keys: list[str], title: str, default_value) -> any:
+    style_axes(ax, kind="heatmap")
+    im = ax.imshow(rank_matrix, aspect="auto", cmap="Blues", vmin=0.0, vmax=1.0)
+    ax.set_title(title, fontsize=11.4, loc="left", pad=4, color="black")
+    ax.set_yticks(range(len(_METRICS)))
+    ax.set_yticklabels([label for _, label, _ in _METRICS], fontsize=8.5, color="black")
+    ax.set_xticks(range(len(value_keys)))
+    ax.set_xticklabels(value_keys, fontsize=8.8, color="black")
+    ax.tick_params(axis="both", length=0, colors="black")
+    ax.set_xticks(np.arange(-0.5, len(value_keys), 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, len(_METRICS), 1), minor=True)
+    ax.grid(which="minor", color="white", linewidth=1.0)
+    ax.tick_params(which="minor", bottom=False, left=False)
+
+    default_key = _canonical_value(default_value)
+    if default_key in value_keys:
+        default_idx = value_keys.index(default_key)
+        ax.add_patch(
+            mpatches.Rectangle(
+                (default_idx - 0.5, -0.5),
+                1.0,
+                len(_METRICS),
+                fill=False,
+                edgecolor="black",
+                linewidth=1.4,
+                linestyle="--",
+            )
+        )
+    return im
+
 
 
 def generate(series, out_dir):
@@ -145,51 +164,36 @@ def generate(series, out_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
     apply_style()
 
-    core_metrics = _CORE_METRICS_ALL
-    n_cols = len(core_metrics)
+    dpmm_df = _load_sensitivity_frame(DPMM_SENSITIVITY_CSV, source="dpmm")
+    fm_df = _load_sensitivity_frame(DPMM_FM_SENSITIVITY_SUMMARY, source="fm")
 
-    all_sweeps = []
-    for loader, source in [
-        (load_sensitivity_csv, "sensitivity"),
-        (load_training_csv, "training"),
-        (load_preprocessing_csv, "preprocessing"),
-    ]:
-        try:
-            df = loader(series)
-            if "Series" in df.columns:
-                df = df[df["Series"] == series].copy()
-            if "Sweep" not in df.columns:
-                continue
-            for sweep_name in df["Sweep"].dropna().unique():
-                if sweep_name in _EXCLUDED_SWEEPS:
-                    continue
-                sub = df[df["Sweep"] == sweep_name].copy()
-                if "SweepVal" in sub.columns and len(sub) >= 2:
-                    all_sweeps.append((sweep_name, sub, source))
-        except Exception as e:
-            print(f"    Warning: {source}: {e}")
+    fig = plt.figure(figsize=(16.2, 10.4))
+    root = bind_figure_region(fig, (0.06, 0.08, 0.945, 0.95))
+    grid = root.grid(2, 2, wgap=0.08, hgap=0.12)
 
-    n_rows = len(all_sweeps)
-    if n_rows == 0:
-        print("    No sweep data found — skipping Fig 3")
-        return
+    image = None
+    for idx, (sweep_name, title, default_value, source) in enumerate(_PANEL_SPECS):
+        row, col = divmod(idx, 2)
+        ax = grid[row][col].add_axes(fig)
+        panel_df = dpmm_df if source == "dpmm" else fm_df
+        rank_matrix, value_keys = _panel_rank_matrix(panel_df, sweep_name)
+        image = _draw_panel(ax, rank_matrix, value_keys, title, default_value)
+        fig.text(
+            ax.get_position().x0 - 0.018,
+            ax.get_position().y1 + 0.008,
+            f"({chr(97 + idx)})",
+            fontsize=13,
+            ha="left",
+            va="bottom",
+            color="black",
+            transform=fig.transFigure,
+        )
 
-    figw = 15.5
-    figh = 1.75 * n_rows + 0.40
-    fig = plt.figure(figsize=(figw, figh))
-    root = bind_figure_region(fig, (0.07, 0.04, 0.98, 0.97))
-    row_regions = root.split_rows(n_rows, gap=0.025)
-
-    for r_idx, (sweep_name, sub_df, source) in enumerate(all_sweeps):
-        col_regions = row_regions[r_idx].split_cols(n_cols, gap=0.02)
-        for c_idx, metric in enumerate(core_metrics):
-            ax = col_regions[c_idx].add_axes(fig)
-            style_axes(ax, kind="boxplot")
-            _draw_sweep_boxplot(ax, sub_df, "SweepVal", metric, show_title=(r_idx == 0))
-            if c_idx == 0:
-                # Add sweep name as ylabel
-                ax.set_ylabel(sweep_name.replace("_", " ").title(),
-                              fontsize=10, fontweight="normal")
+    if image is not None:
+        cbar_ax = fig.add_axes([0.955, 0.20, 0.012, 0.56])
+        cbar = fig.colorbar(image, cax=cbar_ax)
+        cbar.ax.tick_params(labelsize=8.0, colors="black")
+        cbar.set_label("Within-sweep rank", fontsize=10.0, color="black")
 
     out_path = out_dir / f"Fig3_sensitivity_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)

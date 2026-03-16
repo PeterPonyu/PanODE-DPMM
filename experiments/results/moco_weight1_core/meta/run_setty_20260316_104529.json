@@ -1,0 +1,16 @@
+{
+  "timestamp": "20260316_104529",
+  "dataset": "setty",
+  "seed": 42,
+  "moco_weight": 1.0,
+  "models": [
+    "Pure-AE",
+    "Pure-Contrastive-AE",
+    "DPMM-Base",
+    "DPMM-Contrastive"
+  ],
+  "data_path": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/setty.h5ad",
+  "data_type": "trajectory",
+  "label_key": "clusters",
+  "rows": 4
+}

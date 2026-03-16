@@ -76,9 +76,16 @@
   },
   "actions": [],
   "warnings": [],
-  "info": [],
+  "info": [
+    "[legend_artist_masking] Legend masks 'line: Line2D(DPMM)' (2%, 2246 px\u00b2)",
+    "[legend_artist_masking] Legend masks 'line: Line2D(Total)' (2%, 3036 px\u00b2)",
+    "[title_label_size_mismatch] Title avg 11.2pt vs label avg 8.5pt (diff=2.7pt, max=2.0pt)"
+  ],
   "error": null,
-  "counts_by_type": {},
+  "counts_by_type": {
+    "legend_artist_masking": 2,
+    "title_label_size_mismatch": 1
+  },
   "total_warnings": 0,
-  "total_info": 0
+  "total_info": 3
 }

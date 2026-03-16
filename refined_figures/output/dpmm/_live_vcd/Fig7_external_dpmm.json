@@ -1,0 +1,115 @@
+{
+  "figure": "Fig7_external_dpmm",
+  "policy": {
+    "allowed_fonts": [
+      "Arial",
+      "DejaVu Sans",
+      "Helvetica",
+      "sans-serif"
+    ],
+    "min_body_pt": 5.5,
+    "min_dense_pt": 5.5,
+    "composed_scale": 0.95,
+    "max_title_label_diff": 2.0,
+    "max_xtick_labels": 30,
+    "max_ytick_labels": 25,
+    "heatmap_max_ticks": 15,
+    "bar_max_categories": 30,
+    "rotation_threshold": 15,
+    "preferred_locations": {
+      "line": [
+        "best",
+        "upper left"
+      ],
+      "bar": [
+        "upper right",
+        "upper left"
+      ],
+      "heatmap": [
+        "outside_right"
+      ],
+      "scatter": [
+        "upper left",
+        "best"
+      ],
+      "polar": [
+        "upper right"
+      ]
+    },
+    "max_legend_entries_inside": 6,
+    "legend_fontsize_min": 8,
+    "border_tolerance_px": 3.0,
+    "max_figsize": [
+      14.0,
+      10.0
+    ],
+    "figsize_increment": [
+      0.5,
+      0.5
+    ],
+    "max_annotations_per_axes": 5,
+    "max_heatmap_annotations": 50,
+    "annotation_min_fontsize": 8,
+    "target_height_width_ratio": 0.5,
+    "hspace_compact_target": 0.35,
+    "hspace_excess_threshold": 0.7,
+    "height_compact_min_inches": 4.0,
+    "min_label_display_chars": 12,
+    "label_ellipsis_mode": "end",
+    "protected_label_prefixes": [
+      "+",
+      "-",
+      "\u2191",
+      "\u2193",
+      "\u2212",
+      "\u2217"
+    ],
+    "annotation_drop_order": [
+      "redundant",
+      "secondary",
+      "primary"
+    ],
+    "max_legend_series": 10,
+    "max_numeric_bar_labels": 30,
+    "max_annotations_complexity": 20,
+    "complexity_score_threshold": 15.0
+  },
+  "actions": [],
+  "warnings": [],
+  "info": [
+    "[colorblind_confusable] In 'ax@0x784591405950': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784591969090': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7845919ed1d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784591d75a90': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784591e25bd0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784591fbe850': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7845920720d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x78459212de50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x78459228d310': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784592315450': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784592595590': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x78459264d6d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784592725810': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784592848a50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784592ac4b90': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784592b44cd0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784592dd0e10': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784592e58f50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784593033610': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784593381590': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7845935ad1d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x78459360d090': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7845937c1310': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784593845450': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784594259d10': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784594a0b110': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x784596ce6d50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7845a1abf110': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more"
+  ],
+  "error": null,
+  "counts_by_type": {
+    "colorblind_confusable": 28
+  },
+  "total_warnings": 0,
+  "total_info": 28
+}

@@ -1,0 +1,15 @@
+{
+  "timestamp": "20260316_114542",
+  "dataset": "dentate",
+  "seed": 42,
+  "target_model": "DPMM-FM",
+  "models": [
+    "Pure-AE",
+    "DPMM-Base",
+    "DPMM-FM"
+  ],
+  "data_path": "/home/zeyufu/Desktop/datasets/DevelopmentDatasets/dentate.h5ad",
+  "data_type": "cluster",
+  "label_key": "Clusters",
+  "rows": 3
+}
