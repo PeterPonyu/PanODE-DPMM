@@ -9,7 +9,7 @@ Prepares cancer and perturbation datasets for benchmarking by:
 4. Saving an enriched h5ad with 'cell_type' obs column
 
 Usage:
-    python scripts/prep_extra_datasets.py [--datasets melanoma tnbc_brain ...]
+    python scripts/prep_extra_datasets.py [--datasets tnbc_brain lbm_brain ...]
     python scripts/prep_extra_datasets.py --all
     python scripts/prep_extra_datasets.py --check-only
 """
@@ -53,16 +53,6 @@ EXTRA_CATALOG = {
         "note":        "Uses existing Leiden clusters from original analysis",
     },
     # ── Cancer datasets (raw, need Leiden) ───────────────────────────────────
-    "melanoma": {
-        "src":         "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE120575_melanomaHmCancer.h5ad",
-        "label_key":   "cell_type",      # Will be created from Leiden
-        "leiden_res":  0.5,
-        "data_type":   "cluster",
-        "species":     "human",
-        "domain":      "cancer",
-        "desc":        "Melanoma tumor microenvironment (cluster, 16k cells, Leiden pseudo-labels)",
-        "note":        "Leiden-based pseudo-labels from scRNA-seq tumor microenvironment",
-    },
     "tnbc_brain": {
         "src":         "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE143423_tnbc_CancerBrainHm.h5ad",
         "label_key":   "cell_type",

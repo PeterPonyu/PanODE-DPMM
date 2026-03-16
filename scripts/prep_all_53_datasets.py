@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-Full 53-Dataset Pre-processing Pipeline
------------------------------------------
-Prepares ALL datasets needed for the 53-dataset benchmark refresh.
+Full study-dataset pre-processing pipeline
+------------------------------------------
+Historical filename retained, but the active aligned study set now excludes
+``blood_stroke`` and therefore targets the current 54-dataset membership used
+after removing ``melanoma`` and ``blood_stroke`` from the benchmark cohort.
 
 Datasets are split into three tiers:
   1. **Core 16** (already have labels in SCRNA_16_DATASETS) — no prep needed
-  2. **Extra 8** (irall, wtko + 6 cancer) — handled by prep_extra_datasets.py
-  3. **New 29** (10 unregistered development + 22 unregistered cancer) — handled here
+    2. **Extra 7** (irall, wtko + 5 cancer) — handled by prep_extra_datasets.py
+    3. **New 28** (9 unregistered development + 19 cancer + raw-folder additions) — handled here
 
 For the new datasets, this script:
   1. Loads raw h5ad (no obs annotations or only 'batch')
@@ -113,14 +115,6 @@ NEW_CATALOG = {
         "species": "human",
         "domain": "development",
         "desc": "Human Alzheimer's disease (cluster, ~24k cells, Leiden pseudo-labels)",
-    },
-    "blood_stroke": {
-        "src": str(DATASETS_ROOT / "DevelopmentDatasets2/GSE225948_bloodMmStrokeDev.h5ad"),
-        "leiden_res": 0.5,
-        "data_type": "cluster",
-        "species": "mouse",
-        "domain": "development",
-        "desc": "Mouse blood stroke development (cluster, ~52k cells, Leiden pseudo-labels)",
     },
     # ═══════════════════════════════════════════════════════════════════════════
     # 10 CancerDatasets (unregistered, no labels)
@@ -241,7 +235,7 @@ NEW_CATALOG = {
         "domain": "cancer",
         "desc": "MCC tumor (cluster, ~7k cells, Leiden pseudo-labels)",
     },
-    # melanoma already in EXTRA_DATASET_REGISTRY
+    # melanoma intentionally excluded from the aligned study set
     "mm_cancer": {
         "src": str(DATASETS_ROOT / "CancerDatasets2/GSE124310_MMHmCancer.h5ad"),
         "leiden_res": 0.5,

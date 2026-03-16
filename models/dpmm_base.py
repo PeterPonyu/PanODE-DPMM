@@ -269,7 +269,7 @@ class DPMMODEModel(BaseModel):
             recon = (x_hat, x_le_hat)
         else:
             x_hat, z, _, _, mu, var = self.ae(x)
-            recon = (x_hat)
+            recon = (x_hat,)
         result = {"reconstruction": recon, "latent": z}
         if mu is not None:
             result["mu"] = mu

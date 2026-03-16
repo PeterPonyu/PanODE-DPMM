@@ -1,115 +1,138 @@
-"""Refined Figure 7 — Latent-Gene Correlation Heatmaps (composed figure).
+"""Refined Figure 6 — DPMM-MoCo-AE latent-gene correlation heatmaps."""
 
-Pearson correlation between latent dimensions and marker genes across
-representative datasets × prior models.
-
-Data source: benchmarks/biological_validation/results/
-
-Usage:
-    python -m refined_figures.fig07_correlation --series dpmm
-"""
+from __future__ import annotations
 
 import argparse
 import sys
-import numpy as np
+from pathlib import Path
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from pathlib import Path
+import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style, style_axes, add_panel_label, save_with_vcd,
-    bind_figure_region, LayoutRegion, add_colorbar_safe)
-from benchmarks.figure_generators.common import (
-    MODEL_SHORT_NAMES, REPRESENTATIVE_DATASETS,
-    PRIOR_MODELS_DPMM, PRIOR_MODELS_TOPIC, BIO_RESULTS)
+from src.visualization import apply_style, style_axes, add_panel_label, save_with_vcd, bind_figure_region
+from refined_figures.dpmm_shared import (
+    require_dpmm,
+    DPMM_PRIOR_MODELS,
+    BIO_DATASETS,
+    load_correlation_payload,
+    method_short_name,
+)
 
 DPI = 300
 
 
-def _load_correlation(ds_name, model_name):
-    """Load latent-gene correlation data."""
-    safe_model = model_name.replace("/", "_").replace(" ", "_")
-    bio_dir = BIO_RESULTS / ds_name / safe_model
-    for fname in ["latent_gene_correlation.npz", "correlation_matrix.npz",
-                  "pearson_correlation.npz"]:
-        p = bio_dir / fname
-        if p.exists():
-            data = np.load(p, allow_pickle=True)
-            corr = data.get("correlation", data.get("corr", None))
-            genes = data.get("genes", data.get("gene_names", None))
-            if corr is not None:
-                genes = genes if genes is not None else np.arange(corr.shape[1])
-                return corr, genes
-    return None, None
+def _prepare_matrix(matrix, gene_names, top_n: int = 25, max_components: int = 10):
+    """Select top *positively* correlated genes with balanced per-component allocation.
+    
+    Only positive Pearson r values are considered for gene selection so the
+    heatmap highlights genes that co-activate with each latent dimension.
+    Each component contributes a similar number of top genes.
+    Re-sort by dominant component for block-diagonal pattern.
+    """
+    if matrix is None or gene_names is None:
+        return None, None
+    matrix = np.asarray(matrix, dtype=float)
+    gene_names = np.asarray(gene_names).astype(str)
+    if matrix.ndim != 2 or matrix.size == 0:
+        return None, None
+    matrix = matrix[:max_components]
+    # Use positive correlation only (clamp negatives to 0 for ranking)
+    pos_mat = np.clip(matrix, 0, None)
+    n_comp = matrix.shape[0]
+    # Balanced per-component allocation
+    per_comp = max(top_n // n_comp, 1)
+    selected: set[int] = set()
+    for k in range(n_comp):
+        ranked = np.argsort(pos_mat[k])[::-1]
+        added = 0
+        for idx in ranked:
+            if pos_mat[k, idx] <= 0:
+                break
+            if idx not in selected:
+                selected.add(int(idx))
+                added += 1
+                if added >= per_comp:
+                    break
+    # Fill remaining budget from overall top (max positive r across comps)
+    if len(selected) < top_n:
+        score = np.nanmax(pos_mat, axis=0)
+        global_ranked = np.argsort(score)[::-1]
+        for idx in global_ranked:
+            if score[idx] <= 0:
+                break
+            if int(idx) not in selected:
+                selected.add(int(idx))
+                if len(selected) >= top_n:
+                    break
+    top_idx = sorted(selected)
+    # Re-sort by dominant component for block-diagonal pattern
+    def _sort_key(i):
+        dom = int(np.argmax(pos_mat[:, i]))
+        return (dom, -pos_mat[dom, i])
+    top_idx_sorted = sorted(top_idx, key=_sort_key)
+    return matrix[:, top_idx_sorted], gene_names[top_idx_sorted]
 
 
-def _draw_corr_heatmap(ax, corr, genes, title, top_n=30):
-    """Draw a latent-gene correlation heatmap showing top correlated genes."""
-    if corr is None:
+def _draw_correlation(ax, matrix, genes, title):
+    if matrix is None or genes is None:
         ax.axis("off")
-        ax.text(0.5, 0.5, "N/A", ha="center", va="center", fontsize=10)
-        return
-
-    # Select top genes by max absolute correlation across all components
-    max_abs = np.abs(corr).max(axis=0)
-    top_idx = np.argsort(max_abs)[-top_n:][::-1]
-    corr_sub = corr[:, top_idx]
-    gene_sub = np.array(genes)[top_idx] if hasattr(genes, '__len__') else top_idx
-
-    n_comp = min(corr_sub.shape[0], 10)  # Show at most 10 components
-    corr_show = corr_sub[:n_comp, :]
-
-    im = ax.imshow(corr_show, aspect="auto", cmap="RdBu_r",
-                   vmin=-1, vmax=1)
-    ax.set_yticks(range(n_comp))
-    ax.set_yticklabels([f"z{i}" for i in range(n_comp)], fontsize=8)
-    ax.set_xticks(range(len(gene_sub)))
-    ax.set_xticklabels(gene_sub, fontsize=6, rotation=90, ha="center")
-    ax.set_title(title, fontsize=10, pad=3, loc="left", fontweight="normal")
-    add_colorbar_safe(im, ax=ax, shrink=0.6, pad=0.02, label="Pearson r")
+        ax.text(0.5, 0.5, "No correlation data", ha="center", va="center", fontsize=9)
+        return None
+    im = ax.imshow(matrix, aspect="auto", cmap="YlOrRd", vmin=0, vmax=1)
+    ax.set_title(title, fontsize=11, loc="left", pad=2, fontweight="normal")
+    ax.set_yticks(range(matrix.shape[0]))
+    ax.set_yticklabels([f"Dim{i+1}" for i in range(matrix.shape[0])], fontsize=8)
+    ax.set_xticks(range(len(genes)))
+    ax.set_xticklabels([g[:8] for g in genes], fontsize=7, rotation=90, ha="center")
+    return im
 
 
 def generate(series, out_dir):
-    """Generate refined Figure 7."""
+    series = require_dpmm(series)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     apply_style()
 
-    prior_models = (PRIOR_MODELS_DPMM if series == "dpmm"
-                    else PRIOR_MODELS_TOPIC)
-    datasets = REPRESENTATIVE_DATASETS
-    n_rows = len(datasets)
-    n_cols = len(prior_models)
+    n_ds = len(BIO_DATASETS)
+    fig_w = max(14.0, 5.5 * n_ds + 1.0)
+    fig = plt.figure(figsize=(fig_w, 4.5))
+    root = bind_figure_region(fig, (0.06, 0.12, 0.90, 0.90))
+    grid = root.grid(1, n_ds, wgap=0.06, hgap=0.04)
 
-    fig = plt.figure(figsize=(17.0, 5.0 * n_rows + 1.0))
-    root = bind_figure_region(fig, (0.05, 0.05, 0.96, 0.95))
-    grid = root.grid(n_rows, n_cols, wgap=0.04, hgap=0.06)
+    heatmaps = []
+    axes = []
+    model_name = DPMM_PRIOR_MODELS[0]
+    for c_idx, dataset in enumerate(BIO_DATASETS):
+        ax = grid[0][c_idx].add_axes(fig)
+        style_axes(ax, kind="heatmap")
+        corr, genes = load_correlation_payload(model_name, dataset)
+        matrix, top_genes = _prepare_matrix(corr, genes)
+        im = _draw_correlation(ax, matrix, top_genes, f"{method_short_name(model_name)} — {dataset}")
+        if im is not None:
+            heatmaps.append(im)
+            axes.append(ax)
 
-    for r_idx, ds in enumerate(datasets):
-        for c_idx, model in enumerate(prior_models):
-            ax = grid[r_idx][c_idx].add_axes(fig)
-            style_axes(ax, kind="heatmap")
-            corr, genes = _load_correlation(ds, model)
-            short = MODEL_SHORT_NAMES.get(model, model)
-            title = f"{short} — {ds}"
-            _draw_corr_heatmap(ax, corr, genes, title)
-            if r_idx == 0 and c_idx == 0:
-                add_panel_label(ax, "a")
+    if heatmaps:
+        # Colorbar at right side
+        cbar_ax = fig.add_axes([0.92, 0.15, 0.010, 0.55])
+        cbar = fig.colorbar(heatmaps[-1], cax=cbar_ax)
+        cbar.ax.tick_params(labelsize=8)
+        cbar.set_label("Pearson r (positive)", fontsize=10)
 
-    out_path = out_dir / f"Fig7_correlation_{series}.png"
+    out_path = out_dir / f"Fig6_correlation_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)
     print(f"  ✓ {out_path.name}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", default="dpmm", choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "refined_figures" / "output" / args.series)
+    out = Path(args.output_dir) if args.output_dir else ROOT / "refined_figures" / "output" / "dpmm"
     generate(args.series, out)

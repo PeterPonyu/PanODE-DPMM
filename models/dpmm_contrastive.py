@@ -627,7 +627,7 @@ class DPMMODEContrastiveModel(BaseModel):
             recon = (x_hat, x_le_hat)
         else:
             x_hat, z, _, _, mu, var, moco_logits, moco_labels, z_aug_q, z_aug_k = self.ae(x)
-            recon = (x_hat)
+            recon = (x_hat,)
         
         result = {"reconstruction": recon, "latent": z}
         if mu is not None:

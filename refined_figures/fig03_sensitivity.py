@@ -33,6 +33,7 @@ from benchmarks.figure_generators.common import METRIC_DIRECTION
 from benchmarks.figure_generators.data_loaders import (
     load_sensitivity_csv, load_training_csv, load_preprocessing_csv,
     parse_sweep_value)
+from refined_figures.dpmm_shared import require_dpmm
 
 DPI = 300
 
@@ -66,7 +67,7 @@ def _format_sweep_label(val_str):
         return str(val_str)
 
 
-def _draw_sweep_boxplot(ax, df, param_col, metric):
+def _draw_sweep_boxplot(ax, df, param_col, metric, show_title=True):
     """Draw one sweep-trend boxplot."""
     if metric not in df.columns:
         ax.axis("off")
@@ -112,28 +113,23 @@ def _draw_sweep_boxplot(ax, df, param_col, metric):
     for j, vals in enumerate(grouped):
         if len(vals) == 0:
             continue
-        jitter = rng.uniform(-0.15, 0.15, size=len(vals))
+        jitter = rng.uniform(-0.20, 0.20, size=len(vals))
         c = box_colors[j] if j < len(box_colors) else "#1F77B4"
-        ax.scatter(np.full(len(vals), j) + jitter, vals, s=14,
+        ax.scatter(np.full(len(vals), j) + jitter, vals, s=7,
                    color=c, edgecolors="black", linewidths=0.2,
                    alpha=0.80, zorder=5)
 
-    title_text = _DISPLAY.get(metric, metric)
-    ax.set_title(title_text, fontsize=11, pad=2, loc="left",
-                 fontweight="normal")
+    if show_title:
+        title_text = _DISPLAY.get(metric, metric)
+        ax.set_title(title_text, fontsize=11, pad=2, loc="left",
+                     fontweight="normal")
+    else:
+        ax.set_title("")
     ax.set_xticks(np.arange(len(ordered)))
     ax.set_xticklabels([_format_sweep_label(v) for v in ordered],
                        fontsize=9, rotation=0)
     ax.tick_params(labelsize=9)
     ax.grid(axis="y", alpha=0.2, lw=0.4)
-
-    # Best marker
-    medians = [np.nanmedian(g) if len(g) else np.nan for g in grouped]
-    if any(pd.notna(m) for m in medians):
-        hb = METRIC_DIRECTION.get(metric, True)
-        best_i = int(np.nanargmax(medians) if hb else np.nanargmin(medians))
-        bp["boxes"][best_i].set_edgecolor("red")
-        bp["boxes"][best_i].set_linewidth(1.3)
 
     ymin, ymax = ax.get_ylim()
     pad = abs(ymax - ymin) * 0.08
@@ -144,14 +140,14 @@ def _draw_sweep_boxplot(ax, df, param_col, metric):
 
 def generate(series, out_dir):
     """Generate refined Figure 3."""
+    series = require_dpmm(series)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     apply_style()
 
-    core_metrics = _CORE_METRICS_TOPIC if series == "topic" else _CORE_METRICS_ALL
+    core_metrics = _CORE_METRICS_ALL
     n_cols = len(core_metrics)
 
-    # Collect all sweeps
     all_sweeps = []
     for loader, source in [
         (load_sensitivity_csv, "sensitivity"),
@@ -178,24 +174,22 @@ def generate(series, out_dir):
         print("    No sweep data found — skipping Fig 3")
         return
 
-    figw = 17.0
-    figh = 3.0 * n_rows + 1.0
+    figw = 15.5
+    figh = 1.75 * n_rows + 0.40
     fig = plt.figure(figsize=(figw, figh))
-    root = bind_figure_region(fig, (0.05, 0.03, 0.97, 0.96))
-    row_regions = root.split_rows(n_rows, gap=0.035)
+    root = bind_figure_region(fig, (0.07, 0.04, 0.98, 0.97))
+    row_regions = root.split_rows(n_rows, gap=0.025)
 
     for r_idx, (sweep_name, sub_df, source) in enumerate(all_sweeps):
         col_regions = row_regions[r_idx].split_cols(n_cols, gap=0.02)
         for c_idx, metric in enumerate(core_metrics):
             ax = col_regions[c_idx].add_axes(fig)
             style_axes(ax, kind="boxplot")
-            _draw_sweep_boxplot(ax, sub_df, "SweepVal", metric)
+            _draw_sweep_boxplot(ax, sub_df, "SweepVal", metric, show_title=(r_idx == 0))
             if c_idx == 0:
                 # Add sweep name as ylabel
                 ax.set_ylabel(sweep_name.replace("_", " ").title(),
-                              fontsize=10, fontweight="bold")
-            if r_idx == 0 and c_idx == 0:
-                add_panel_label(ax, "a")
+                              fontsize=10, fontweight="normal")
 
     out_path = out_dir / f"Fig3_sensitivity_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)
@@ -204,7 +198,7 @@ def generate(series, out_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", default="dpmm", choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
     out = (Path(args.output_dir) if args.output_dir

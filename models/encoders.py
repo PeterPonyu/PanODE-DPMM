@@ -73,7 +73,7 @@ class MLPEncoder(nn.Module):
             return z, mu, var
         else:
             z = self.output_proj(h)
-            return (z)
+            return (z,)
 
 
 class MLPLogisticNormalEncoder(nn.Module):
@@ -210,7 +210,7 @@ class MultiHeadProjectionEncoder(nn.Module):
             return z, mu, var
         else:
             z = self.output_proj(h)
-            return (z)
+            return (z,)
 
 
 class MultiHeadProjectionLogisticNormalEncoder(nn.Module):
@@ -353,7 +353,7 @@ class HybridMLPAttentionEncoder(nn.Module):
             return z, mu, var
         else:
             z = self.output_proj(h)
-            return (z)
+            return (z,)
 
 
 class HybridMLPAttentionLogisticNormalEncoder(nn.Module):

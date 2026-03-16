@@ -19,10 +19,11 @@ from pathlib import Path
 from collections import defaultdict
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-BASE = Path("/home/zeyufu/Desktop/PanODE-LAB/experiments/results/external")
+ROOT = Path(__file__).resolve().parent
+BASE = ROOT / "experiments" / "results" / "external"
 GROUPS = ["gaussian_geometric", "disentanglement", "graph_contrastive", "scvi_family", "generative"]
 
-OUT_BASE = Path("/home/zeyufu/Desktop/PanODE-LAB/experiments/results/external_full")
+OUT_BASE = ROOT / "experiments" / "results" / "external_full"
 OUT_TABLES = OUT_BASE / "tables"
 OUT_SERIES = OUT_BASE / "series"
 

@@ -29,6 +29,26 @@ from .vcd_core import (
 )
 
 
+def _resolve_tick_limit(
+    ax,
+    *,
+    default_limit: int | None,
+    heatmap_limit: int | None,
+) -> int | None:
+    """Return the active tick-count cap for *ax*.
+
+    Heatmaps can use a stricter cap than generic axes because both x- and
+    y-tick labels often carry dense categorical labels.
+    """
+    if default_limit is None and heatmap_limit is None:
+        return None
+
+    limit = default_limit
+    if ax.images and heatmap_limit is not None:
+        limit = heatmap_limit if limit is None else min(limit, heatmap_limit)
+    return limit
+
+
 # ===============================================================================
 # Pass 19: Font-size adequacy detection
 # ===============================================================================
@@ -279,7 +299,15 @@ def _check_font_policy(fig, renderer, infos,
 # Pass 22: Label density excess detection (colorbar-aware)
 # ===============================================================================
 
-def _check_label_density(fig, renderer, infos, density_threshold=0.70):
+def _check_label_density(
+    fig,
+    renderer,
+    infos,
+    density_threshold=0.70,
+    max_xtick_labels: int | None = None,
+    max_ytick_labels: int | None = None,
+    heatmap_max_ticks: int | None = None,
+):
     """Pass 22: Detect axes where tick labels consume too much of the axis width/height.
 
     For each axes, estimates the total display width of visible tick labels
@@ -310,6 +338,16 @@ def _check_label_density(fig, renderer, infos, density_threshold=0.70):
             continue
 
         title = ax.get_title() or f"ax@{id(ax):#x}"
+        xtick_limit = _resolve_tick_limit(
+            ax,
+            default_limit=max_xtick_labels,
+            heatmap_limit=heatmap_max_ticks,
+        )
+        ytick_limit = _resolve_tick_limit(
+            ax,
+            default_limit=max_ytick_labels,
+            heatmap_limit=heatmap_max_ticks,
+        )
 
         # -- X-tick label density --
         xtick_widths = []
@@ -326,13 +364,23 @@ def _check_label_density(fig, renderer, infos, density_threshold=0.70):
         if xtick_widths:
             total_w = sum(xtick_widths)
             ratio_x = total_w / ax_bb.width
-            if ratio_x > density_threshold:
+            exceeds_density = ratio_x > density_threshold
+            exceeds_count = xtick_limit is not None and len(xtick_widths) > xtick_limit
+            if exceeds_density or exceeds_count:
+                reasons = []
+                if exceeds_density:
+                    reasons.append(f"fill {ratio_x:.0%} of axis width")
+                if exceeds_count:
+                    reasons.append(
+                        f"{len(xtick_widths)} labels exceed policy cap {xtick_limit}"
+                    )
                 issues.append({
                     "type": "label_density_excess",
                     "severity": "warning",
                     "detail": (
-                        f"X-tick labels in '{title}' fill {ratio_x:.0%} of axis width "
-                        f"({len(xtick_widths)} labels, max_len={max_xtick_len} chars)"
+                        f"X-tick labels in '{title}' "
+                        f"{' and '.join(reasons)} "
+                        f"(max_len={max_xtick_len} chars)"
                     ),
                     "elements": [f"xtick_density:{title}"],
                     "axis_kind": "xtick",
@@ -357,13 +405,23 @@ def _check_label_density(fig, renderer, infos, density_threshold=0.70):
         if ytick_heights:
             total_h = sum(ytick_heights)
             ratio_y = total_h / ax_bb.height
-            if ratio_y > density_threshold:
+            exceeds_density = ratio_y > density_threshold
+            exceeds_count = ytick_limit is not None and len(ytick_heights) > ytick_limit
+            if exceeds_density or exceeds_count:
+                reasons = []
+                if exceeds_density:
+                    reasons.append(f"fill {ratio_y:.0%} of axis height")
+                if exceeds_count:
+                    reasons.append(
+                        f"{len(ytick_heights)} labels exceed policy cap {ytick_limit}"
+                    )
                 issues.append({
                     "type": "label_density_excess",
                     "severity": "warning",
                     "detail": (
-                        f"Y-tick labels in '{title}' fill {ratio_y:.0%} of axis height "
-                        f"({len(ytick_heights)} labels, max_len={max_ytick_len} chars)"
+                        f"Y-tick labels in '{title}' "
+                        f"{' and '.join(reasons)} "
+                        f"(max_len={max_ytick_len} chars)"
                     ),
                     "elements": [f"ytick_density:{title}"],
                     "axis_kind": "ytick",

@@ -5,18 +5,34 @@ Architecture / Model Hyperparameter Sensitivity Analysis
 Sweeps model-architecture hyperparameters (one-at-a-time, control-variable
 principle: all others held at default).
 
-Sweep dimensions (on Topic-Base and DPMM-Base):
-  1) kl_weight         (Topic)  ∈ {1.0, 0.5, 0.1, 0.01}
-  2) warmup_ratio      (DPMM)   ∈ {0.4, 0.6, 0.8, 0.9}
-  3) latent_dim / n_topics       ∈ {5, 10, 20, 50}
-  4) encoder_hidden     (Topic)  ∈ {64, 128, 256, 512}   (Topic MLP hidden)
-     encoder_dims       (DPMM)   ∈ {[128,64], [256,128], [512,256], [1024,512]}
-  5) dropout_rate                ∈ {0.0, 0.1, 0.2, 0.3}
+Each DPMM variant has its own architecture-specific sweep:
+  ── Shared sweeps (all 3 DPMM variants + Topic) ──
+  1) latent_dim                  ∈ {5, 10, 20, 50}
+  2) dropout_rate                ∈ {0.0, 0.1, 0.2, 0.3}
+
+  ── DPMM-Base specific ──
+  3) warmup_ratio                ∈ {0.4, 0.6, 0.8, 0.9}
+  4) encoder_size (enc+dec dims) ∈ {[128,64], [256,128], [512,256], [1024,512]}
+
+  ── DPMM-Transformer specific ──
+  5) d_model                     ∈ {64, 128, 256, 512}
+  6) nhead                       ∈ {1, 2, 4, 8}
+  7) num_encoder_layers          ∈ {1, 2, 3, 4}
+
+  ── DPMM-Contrastive specific ──
+  8) moco_weight                 ∈ {0.01, 0.05, 0.1, 0.5}
+  9) moco_temperature            ∈ {0.05, 0.1, 0.2, 0.5}
+
+  ── Topic-Base specific ──
+  10) kl_weight                  ∈ {1.0, 0.5, 0.1, 0.01}
+  11) encoder_size (hidden)      ∈ {64, 128, 256, 512}
 
 Defaults (held constant unless being swept):
-  kl_weight=0.01, warmup_ratio=0.6, latent_dim=10,
+  kl_weight=0.01, warmup_ratio=0.9, latent_dim=10,
   encoder_hidden=128, encoder_dims=[256,128],
-  dropout_rate=0.1, lr=1e-3, epochs=600, batch_size=128
+  dropout_rate=0.1, lr=1e-3, epochs=600, batch_size=128,
+  d_model=128, nhead=4, num_encoder_layers=2,
+  moco_weight=0.1, moco_temperature=0.2
 
 Outputs (under benchmark_results/sensitivity/):
   csv/{topic,dpmm}/   — per-series CSV with all metrics + efficiency
@@ -55,7 +71,12 @@ from utils.data import DataSplitter
 from utils.viz import plot_umap_grid, plot_all_metrics_barplot
 
 from models.dpmm_base import DPMMODEModel
-from models.topic_base import TopicODEModel
+from models.dpmm_transformer import DPMMODETransformerModel
+from models.dpmm_contrastive import DPMMODEContrastiveModel
+try:
+    from models.topic_base import TopicODEModel
+except ImportError:
+    TopicODEModel = None
 
 # ── defaults (optimal from prior experiments) ─────────────────────────────────
 DATA_PATH     = str(BASE_CONFIG.data_path)
@@ -80,16 +101,37 @@ DPMM_EDIMS_DEFAULT   = [256, 128]
 DPMM_DDIMS_DEFAULT   = [128, 256]
 DPMM_DROP_DEFAULT    = 0.1
 
+# Transformer-specific defaults
+TRANS_DMODEL_DEFAULT   = 128
+TRANS_NHEAD_DEFAULT    = 4
+TRANS_NLAYERS_DEFAULT  = 2
+TRANS_DROP_DEFAULT     = 0.1
+
+# Contrastive-specific defaults
+CONT_MOCO_WEIGHT_DEFAULT = 0.1
+CONT_MOCO_TEMP_DEFAULT   = 0.2
+CONT_DROP_DEFAULT        = 0.1
+
 # ── sweep grids ───────────────────────────────────────────────────────────────
 SWEEPS = {
-    "kl_weight":     {"topic": [1.0, 0.5, 0.1, 0.01]},
-    "warmup_ratio":  {"dpmm": [0.4, 0.6, 0.8, 0.9]},
+    # Shared sweeps (all architectures)
     "latent_dim":    {"both": [5, 10, 20, 50]},
+    "dropout_rate":  {"both": [0.0, 0.1, 0.2, 0.3]},
+    # Topic-Base specific
+    "kl_weight":     {"topic": [1.0, 0.5, 0.1, 0.01]},
     "encoder_size":  {
         "topic": [64, 128, 256, 512],
         "dpmm":  [[128, 64], [256, 128], [512, 256], [1024, 512]],
     },
-    "dropout_rate":  {"both": [0.0, 0.1, 0.2, 0.3]},
+    # DPMM-Base specific
+    "warmup_ratio":  {"dpmm": [0.4, 0.6, 0.8, 0.9]},
+    # DPMM-Transformer specific
+    "d_model":              {"dpmm_trans": [64, 128, 256, 512]},
+    "nhead":                {"dpmm_trans": [1, 2, 4, 8]},
+    "num_encoder_layers":   {"dpmm_trans": [1, 2, 3, 4]},
+    # DPMM-Contrastive specific
+    "moco_weight":          {"dpmm_cont": [0.01, 0.05, 0.1, 0.5]},
+    "moco_temperature":     {"dpmm_cont": [0.05, 0.1, 0.2, 0.5]},
 }
 
 
@@ -111,67 +153,162 @@ def _dpmm_cfg(latent_dim=LATENT_DIM, warmup_ratio=DPMM_WR_DEFAULT,
         encoder_dims=encoder_dims, decoder_dims=decoder_dims, dropout=dropout)
 
 
+def _trans_cfg(latent_dim=LATENT_DIM, d_model=TRANS_DMODEL_DEFAULT,
+               nhead=TRANS_NHEAD_DEFAULT, num_encoder_layers=TRANS_NLAYERS_DEFAULT,
+               dropout=TRANS_DROP_DEFAULT, warmup_ratio=DPMM_WR_DEFAULT):
+    """Return DPMM-Transformer architecture params."""
+    return {
+        "latent_dim": latent_dim,
+        "d_model": d_model,
+        "nhead": nhead,
+        "num_encoder_layers": num_encoder_layers,
+        "decoder_dims": list(DPMM_DDIMS_DEFAULT),
+        "dpmm_warmup_ratio": warmup_ratio,
+        "dropout_rate": dropout,
+    }
+
+
+def _cont_cfg(latent_dim=LATENT_DIM, moco_weight=CONT_MOCO_WEIGHT_DEFAULT,
+              moco_temperature=CONT_MOCO_TEMP_DEFAULT,
+              dropout=CONT_DROP_DEFAULT, warmup_ratio=DPMM_WR_DEFAULT):
+    """Return DPMM-Contrastive architecture params."""
+    return {
+        "latent_dim": latent_dim,
+        "encoder_dims": list(DPMM_EDIMS_DEFAULT),
+        "decoder_dims": list(DPMM_DDIMS_DEFAULT),
+        "dpmm_warmup_ratio": warmup_ratio,
+        "dropout_rate": dropout,
+        "moco_weight": moco_weight,
+        "moco_temperature": moco_temperature,
+    }
+
+
 def build_variants():
     """Build all sweep variants. Each sweep changes ONE param, rest at default."""
     variants = []
+    _has_topic = TopicODEModel is not None
 
     # ── 1. kl_weight (Topic only) ─────────────────────────────────────────────
-    for kl in SWEEPS["kl_weight"]["topic"]:
-        variants.append({
-            "name": f"Topic(kl={kl})", "series": "topic",
-            "sweep": "kl_weight", "sweep_val": kl,
-            "cls": TopicODEModel, "params": _topic_cfg(kl_weight=kl),
-        })
+    if _has_topic:
+        for kl in SWEEPS["kl_weight"]["topic"]:
+            variants.append({
+                "name": f"Topic(kl={kl})", "series": "topic",
+                "sweep": "kl_weight", "sweep_val": kl,
+                "cls": TopicODEModel, "params": _topic_cfg(kl_weight=kl),
+            })
 
-    # ── 2. warmup_ratio (DPMM only) ──────────────────────────────────────────
+    # ── 2. warmup_ratio (DPMM-Base only) ─────────────────────────────────────
     for wr in SWEEPS["warmup_ratio"]["dpmm"]:
         variants.append({
-            "name": f"DPMM(wr={wr})", "series": "dpmm",
+            "name": f"DPMM-Base(wr={wr})", "series": "dpmm",
             "sweep": "warmup_ratio", "sweep_val": wr,
             "cls": DPMMODEModel, "params": _dpmm_cfg(warmup_ratio=wr),
         })
 
-    # ── 3. latent_dim (both) ──────────────────────────────────────────────────
+    # ── 3. latent_dim (all: Topic, DPMM-Base, DPMM-Trans, DPMM-Cont) ────────
     for ld in SWEEPS["latent_dim"]["both"]:
+        if _has_topic:
+            variants.append({
+                "name": f"Topic(dim={ld})", "series": "topic",
+                "sweep": "latent_dim", "sweep_val": ld,
+                "cls": TopicODEModel, "params": _topic_cfg(latent_dim=ld),
+            })
         variants.append({
-            "name": f"Topic(dim={ld})", "series": "topic",
-            "sweep": "latent_dim", "sweep_val": ld,
-            "cls": TopicODEModel, "params": _topic_cfg(latent_dim=ld),
-        })
-        variants.append({
-            "name": f"DPMM(dim={ld})", "series": "dpmm",
+            "name": f"DPMM-Base(dim={ld})", "series": "dpmm",
             "sweep": "latent_dim", "sweep_val": ld,
             "cls": DPMMODEModel, "params": _dpmm_cfg(latent_dim=ld),
         })
-
-    # ── 4. encoder_size (both, concrete values) ──────────────────────────────
-    for eh in SWEEPS["encoder_size"]["topic"]:
         variants.append({
-            "name": f"Topic(hidden={eh})", "series": "topic",
-            "sweep": "encoder_size", "sweep_val": eh,
-            "cls": TopicODEModel, "params": _topic_cfg(encoder_hidden=eh),
+            "name": f"DPMM-Trans(dim={ld})", "series": "dpmm",
+            "sweep": "latent_dim", "sweep_val": ld,
+            "cls": DPMMODETransformerModel, "params": _trans_cfg(latent_dim=ld),
         })
+        variants.append({
+            "name": f"DPMM-Cont(dim={ld})", "series": "dpmm",
+            "sweep": "latent_dim", "sweep_val": ld,
+            "cls": DPMMODEContrastiveModel, "params": _cont_cfg(latent_dim=ld),
+        })
+
+    # ── 4. encoder_size (Topic + DPMM-Base) ──────────────────────────────────
+    if _has_topic:
+        for eh in SWEEPS["encoder_size"]["topic"]:
+            variants.append({
+                "name": f"Topic(hidden={eh})", "series": "topic",
+                "sweep": "encoder_size", "sweep_val": eh,
+                "cls": TopicODEModel, "params": _topic_cfg(encoder_hidden=eh),
+            })
     for edims in SWEEPS["encoder_size"]["dpmm"]:
         ddims = list(reversed(edims))
         tag = "x".join(str(d) for d in edims)
         variants.append({
-            "name": f"DPMM(enc={tag})", "series": "dpmm",
+            "name": f"DPMM-Base(enc={tag})", "series": "dpmm",
             "sweep": "encoder_size", "sweep_val": tag,
             "cls": DPMMODEModel,
             "params": _dpmm_cfg(encoder_dims=edims, decoder_dims=ddims),
         })
 
-    # ── 5. dropout_rate (both) ────────────────────────────────────────────────
+    # ── 5. dropout_rate (all) ─────────────────────────────────────────────────
     for dr in SWEEPS["dropout_rate"]["both"]:
+        if _has_topic:
+            variants.append({
+                "name": f"Topic(drop={dr})", "series": "topic",
+                "sweep": "dropout_rate", "sweep_val": dr,
+                "cls": TopicODEModel, "params": _topic_cfg(dropout=dr),
+            })
         variants.append({
-            "name": f"Topic(drop={dr})", "series": "topic",
-            "sweep": "dropout_rate", "sweep_val": dr,
-            "cls": TopicODEModel, "params": _topic_cfg(dropout=dr),
-        })
-        variants.append({
-            "name": f"DPMM(drop={dr})", "series": "dpmm",
+            "name": f"DPMM-Base(drop={dr})", "series": "dpmm",
             "sweep": "dropout_rate", "sweep_val": dr,
             "cls": DPMMODEModel, "params": _dpmm_cfg(dropout=dr),
+        })
+        variants.append({
+            "name": f"DPMM-Trans(drop={dr})", "series": "dpmm",
+            "sweep": "dropout_rate", "sweep_val": dr,
+            "cls": DPMMODETransformerModel, "params": _trans_cfg(dropout=dr),
+        })
+        variants.append({
+            "name": f"DPMM-Cont(drop={dr})", "series": "dpmm",
+            "sweep": "dropout_rate", "sweep_val": dr,
+            "cls": DPMMODEContrastiveModel, "params": _cont_cfg(dropout=dr),
+        })
+
+    # ── 6. d_model (DPMM-Transformer specific) ──────────────────────────────
+    for dm in SWEEPS["d_model"]["dpmm_trans"]:
+        variants.append({
+            "name": f"DPMM-Trans(d_model={dm})", "series": "dpmm",
+            "sweep": "d_model", "sweep_val": dm,
+            "cls": DPMMODETransformerModel, "params": _trans_cfg(d_model=dm),
+        })
+
+    # ── 7. nhead (DPMM-Transformer specific) ─────────────────────────────────
+    for nh in SWEEPS["nhead"]["dpmm_trans"]:
+        variants.append({
+            "name": f"DPMM-Trans(nhead={nh})", "series": "dpmm",
+            "sweep": "nhead", "sweep_val": nh,
+            "cls": DPMMODETransformerModel, "params": _trans_cfg(nhead=nh),
+        })
+
+    # ── 8. num_encoder_layers (DPMM-Transformer specific) ────────────────────
+    for nl in SWEEPS["num_encoder_layers"]["dpmm_trans"]:
+        variants.append({
+            "name": f"DPMM-Trans(layers={nl})", "series": "dpmm",
+            "sweep": "num_encoder_layers", "sweep_val": nl,
+            "cls": DPMMODETransformerModel, "params": _trans_cfg(num_encoder_layers=nl),
+        })
+
+    # ── 9. moco_weight (DPMM-Contrastive specific) ──────────────────────────
+    for mw in SWEEPS["moco_weight"]["dpmm_cont"]:
+        variants.append({
+            "name": f"DPMM-Cont(moco_w={mw})", "series": "dpmm",
+            "sweep": "moco_weight", "sweep_val": mw,
+            "cls": DPMMODEContrastiveModel, "params": _cont_cfg(moco_weight=mw),
+        })
+
+    # ── 10. moco_temperature (DPMM-Contrastive specific) ────────────────────
+    for mt in SWEEPS["moco_temperature"]["dpmm_cont"]:
+        variants.append({
+            "name": f"DPMM-Cont(moco_t={mt})", "series": "dpmm",
+            "sweep": "moco_temperature", "sweep_val": mt,
+            "cls": DPMMODEContrastiveModel, "params": _cont_cfg(moco_temperature=mt),
         })
 
     return variants
@@ -227,8 +364,12 @@ def main():
     print(f"Epochs : {args.epochs},  LR : {args.lr:.0e},  Batch : {BATCH_SIZE}")
     print(f"Defaults — Topic: kl={TOPIC_KL_DEFAULT}, hidden={TOPIC_HIDDEN_DEFAULT}, "
           f"drop={TOPIC_DROP_DEFAULT}")
-    print(f"Defaults — DPMM : wr={DPMM_WR_DEFAULT}, enc={DPMM_EDIMS_DEFAULT}, "
+    print(f"Defaults — DPMM-Base : wr={DPMM_WR_DEFAULT}, enc={DPMM_EDIMS_DEFAULT}, "
           f"drop={DPMM_DROP_DEFAULT}")
+    print(f"Defaults — DPMM-Trans: d_model={TRANS_DMODEL_DEFAULT}, nhead={TRANS_NHEAD_DEFAULT}, "
+          f"layers={TRANS_NLAYERS_DEFAULT}, drop={TRANS_DROP_DEFAULT}")
+    print(f"Defaults — DPMM-Cont : moco_w={CONT_MOCO_WEIGHT_DEFAULT}, "
+          f"moco_t={CONT_MOCO_TEMP_DEFAULT}, drop={CONT_DROP_DEFAULT}")
     print(f"Sweeps :")
     for sw, grid in SWEEPS.items():
         print(f"  {sw}: {grid}")
@@ -303,6 +444,13 @@ def main():
                 "dpmm_warmup_ratio": DPMM_WR_DEFAULT,
                 "dpmm_encoder_dims": DPMM_EDIMS_DEFAULT,
                 "dpmm_dropout": DPMM_DROP_DEFAULT,
+                "trans_d_model": TRANS_DMODEL_DEFAULT,
+                "trans_nhead": TRANS_NHEAD_DEFAULT,
+                "trans_num_encoder_layers": TRANS_NLAYERS_DEFAULT,
+                "trans_dropout": TRANS_DROP_DEFAULT,
+                "cont_moco_weight": CONT_MOCO_WEIGHT_DEFAULT,
+                "cont_moco_temperature": CONT_MOCO_TEMP_DEFAULT,
+                "cont_dropout": CONT_DROP_DEFAULT,
             },
             "sweeps": {k: v for k, v in SWEEPS.items()},
             "batch_size": BATCH_SIZE, "seed": args.seed,

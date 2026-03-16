@@ -19,14 +19,26 @@ is_cuda_oom       : fn    — detect CUDA out-of-memory exceptions
 """
 
 from models.dpmm_base import DPMMODEModel
-from models.topic_base import TopicODEModel
+try:
+    from models.topic_base import TopicODEModel
+except ImportError:
+    TopicODEModel = None
 from models.dpmm_contrastive import DPMMODEContrastiveModel
-from models.topic_contrastive import TopicODEContrastiveModel
+try:
+    from models.topic_contrastive import TopicODEContrastiveModel
+except ImportError:
+    TopicODEContrastiveModel = None
 from models.dpmm_transformer import DPMMODETransformerModel
-from models.topic_transformer import TopicODETransformerModel
+try:
+    from models.topic_transformer import TopicODETransformerModel
+except ImportError:
+    TopicODETransformerModel = None
 
 # Independent Pure baselines (NOT derived from DPMM or Topic classes)
-from models.pure_vae import PureVAEModel, PureVAETransformerModel, PureVAEContrastiveModel
+try:
+    from models.pure_vae import PureVAEModel, PureVAETransformerModel, PureVAEContrastiveModel
+except ImportError:
+    PureVAEModel = PureVAETransformerModel = PureVAEContrastiveModel = None
 from models.pure_ae import PureAEModel, PureAETransformerModel, PureAEContrastiveModel
 
 
@@ -151,6 +163,10 @@ MODELS = {
             'dropout_rate': 0.2,
             'nhead': 4,
             'num_encoder_layers': 2,
+            'dpmm_loss_weight': 0.1,
+            'dpmm_anneal_epochs': 100,
+            'var_reg_weight': 100.0,
+            'var_reg_min': 0.1,
             'fit_lr': 1e-3,
             'fit_weight_decay': 0,
             'fit_epochs': 1000,

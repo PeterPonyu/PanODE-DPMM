@@ -24,6 +24,13 @@ DATASET_REGISTRY = {
         "species": "human",
         "desc": "Lung development (cluster, ~10360 cells, 13 types)",
     },
+    "lung_fetal": {
+        "path": str(DATASETS_ROOT / "DevelopmentDatasets" / "lung.h5ad"),
+        "data_type": "cluster",
+        "label_key": "clusters",
+        "species": "human",
+        "desc": "Fetal lung atlas (cluster, ~24.9k cells, 14 types)",
+    },
     "endo": {
         "path": str(DATASETS_ROOT / "DevelopmentDatasets" / "endo.h5ad"),
         "data_type": "mixed",
@@ -97,6 +104,46 @@ DATASET_REGISTRY = {
 }
 
 
+# ── Additional four-folder datasets used in the 54-dataset study set ────────
+# These come from the same four canonical raw-data folders but were not part of
+# the original 12-dataset core registry. They are intentionally kept separate so
+# default benchmark runs still target the original core set.
+FOUR_FOLDER_ADDITIONAL_REGISTRY = {
+    "bm": {
+        "path": str(DATASETS_ROOT / "DevelopmentDatasets" / "bm_GSE120446.h5ad"),
+        "data_type": "cluster",
+        "label_key": "cell_type",
+        "species": "human",
+        "domain": "development",
+        "desc": "Bone marrow reference (cluster, ~90.7k cells, unlabeled raw reference)",
+    },
+    "hesc_times": {
+        "path": str(DATASETS_ROOT / "DevelopmentDatasets" / "GSE192857_hESCHmTimes.h5ad"),
+        "data_type": "trajectory",
+        "label_key": "cell_type",
+        "species": "human",
+        "domain": "development",
+        "desc": "hESC time-course (trajectory, ~11.1k cells, unlabeled raw reference)",
+    },
+    "ifnHSPC": {
+        "path": str(DATASETS_ROOT / "DevelopmentDatasets" / "ifnHSPC_GSE226824.h5ad"),
+        "data_type": "cluster",
+        "label_key": "cell_type",
+        "species": "human",
+        "domain": "development",
+        "desc": "IFN-HSPC response (cluster, ~13.3k cells, unlabeled raw reference)",
+    },
+    "spine": {
+        "path": str(DATASETS_ROOT / "DevelopmentDatasets" / "GSE167597_spineMm.h5ad"),
+        "data_type": "cluster",
+        "label_key": "cell_type",
+        "species": "mouse",
+        "domain": "development",
+        "desc": "Mouse spine development (cluster, ~16.0k cells, unlabeled raw reference)",
+    },
+}
+
+
 # ── Extra / sample datasets (run after prep_extra_datasets.py) ───────────────
 EXTRA_DATASETS_ROOT = Path("/home/zeyufu/Desktop/datasets/extra_preprocessed")
 
@@ -119,14 +166,6 @@ EXTRA_DATASET_REGISTRY = {
         "desc": "WT vs KO perturbation (cluster, ~10k cells, leiden pseudo-labels)",
     },
     # -- Cancer TME datasets (leiden pseudo-labels) ------------------------
-    "melanoma": {
-        "path": str(EXTRA_DATASETS_ROOT / "melanoma_prepped.h5ad"),
-        "data_type": "cluster",
-        "label_key": "cell_type",
-        "species": "human",
-        "domain": "cancer",
-        "desc": "Melanoma tumor microenvironment (cluster, ~16k cells, leiden-based)",
-    },
     "tnbc_brain": {
         "path": str(EXTRA_DATASETS_ROOT / "tnbc_brain_prepped.h5ad"),
         "data_type": "cluster",
@@ -245,14 +284,6 @@ EXPANDED_DATASET_REGISTRY = {
         "species": "human",
         "domain": "development",
         "desc": "Human Alzheimer's disease (cluster, ~24k cells, leiden-based)",
-    },
-    "blood_stroke": {
-        "path": str(EXTRA_DATASETS_ROOT / "blood_stroke_prepped.h5ad"),
-        "data_type": "cluster",
-        "label_key": "cell_type",
-        "species": "mouse",
-        "domain": "development",
-        "desc": "Mouse blood stroke (cluster, ~52k cells, leiden-based)",
     },
     # -- Cancer datasets (CancerDatasets, leiden pseudo-labels) -----------------
     "scc": {
@@ -434,11 +465,16 @@ EXPANDED_DATASET_REGISTRY = {
     },
 }
 
-# Combined registry (main + extra + expanded)
-ALL_DATASET_REGISTRY = {**DATASET_REGISTRY, **EXTRA_DATASET_REGISTRY, **EXPANDED_DATASET_REGISTRY}
+# Combined registry (main + four-folder additions + extra + expanded)
+ALL_DATASET_REGISTRY = {
+    **DATASET_REGISTRY,
+    **FOUR_FOLDER_ADDITIONAL_REGISTRY,
+    **EXTRA_DATASET_REGISTRY,
+    **EXPANDED_DATASET_REGISTRY,
+}
 
 # Groupings for targeted experiments
-_CANCER_ORIGINAL = ["melanoma", "tnbc_brain", "lbm_brain", "hepatoblastoma", "bc_ec", "bcc"]
+_CANCER_ORIGINAL = ["tnbc_brain", "lbm_brain", "hepatoblastoma", "bc_ec", "bcc"]
 _CANCER_EXPANDED = [
     "scc", "lung_adre", "aml_pbmc", "bm_all", "bc_stroma", "gastric",
     "tcell_cancer", "nk_lymphoma", "breast_cancer", "bcell_all",
@@ -448,11 +484,12 @@ _CANCER_EXPANDED = [
 ]
 _DEV_EXPANDED = [
     "hesc_hspc_cd8", "lsk_batch", "hsc_aged", "bm_niche", "lps_mm",
-    "progastin", "urine", "astrocytes_sci", "ad_hm", "blood_stroke",
+    "progastin", "urine", "astrocytes_sci", "ad_hm",
 ]
 
 DATASET_GROUPS = {
     "core":            list(DATASET_REGISTRY.keys()),                  # original 12
+    "four_folder_extra": list(FOUR_FOLDER_ADDITIONAL_REGISTRY.keys()), # additional raw-folder study datasets
     "disease":         ["irall"],
     "perturbation":    ["wtko"],
     "cancer":          _CANCER_ORIGINAL,
@@ -460,7 +497,7 @@ DATASET_GROUPS = {
     "dev_expanded":    _DEV_EXPANDED,
     "extra":           list(EXTRA_DATASET_REGISTRY.keys()),
     "expanded":        list(EXPANDED_DATASET_REGISTRY.keys()),
-    "sample_cancer":   ["melanoma", "tnbc_brain", "lbm_brain", "bc_ec"],  # small/fast
+    "sample_cancer":   ["tnbc_brain", "lbm_brain", "bc_ec"],  # small/fast
     "all":             list(ALL_DATASET_REGISTRY.keys()),
 }
 

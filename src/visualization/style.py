@@ -14,6 +14,7 @@ Ported from CLOP-DiT geometry system, adapted for PanODE-DPMM/Topic.
 
 from __future__ import annotations
 
+from dataclasses import asdict, is_dataclass
 import json
 import logging
 import os
@@ -345,6 +346,81 @@ def is_vcd_enabled(default: bool = True) -> bool:
     return raw.strip().lower() not in {"0", "false", "no", "off"}
 
 
+def _build_panode_vcd_policy():
+    """Return the PanODE Matplotlib VCD policy, or ``None`` if unavailable."""
+    try:
+        from vcd import FigurePolicy
+    except Exception:
+        return None
+
+    font_family = str(VIS_STYLE.get("font.family", "sans-serif"))
+    allowed_fonts = {font_family, "sans-serif"}
+    allowed_fonts.update(str(name) for name in VIS_STYLE.get("font.sans-serif", []))
+
+    return FigurePolicy(
+        allowed_fonts=allowed_fonts,
+        min_body_pt=5.5,
+        min_dense_pt=5.5,
+        composed_scale=0.95,
+        max_title_label_diff=2.0,
+        max_xtick_labels=30,
+        max_ytick_labels=25,
+        heatmap_max_ticks=15,
+        bar_max_categories=30,
+        rotation_threshold=15,
+        max_legend_entries_inside=6,
+        legend_fontsize_min=8,
+        border_tolerance_px=3.0,
+        max_annotations_per_axes=5,
+        max_heatmap_annotations=50,
+        annotation_min_fontsize=8,
+        target_height_width_ratio=0.50,
+        hspace_compact_target=0.35,
+        hspace_excess_threshold=0.70,
+        height_compact_min_inches=4.0,
+        min_label_display_chars=12,
+        max_legend_series=10,
+        max_numeric_bar_labels=30,
+        max_annotations_complexity=20,
+        complexity_score_threshold=15.0,
+    )
+
+
+def _jsonify_vcd_object(value):
+    """Convert dataclasses/sets/tuples into JSON-safe structures."""
+    if is_dataclass(value):
+        return _jsonify_vcd_object(asdict(value))
+    if isinstance(value, dict):
+        return {str(k): _jsonify_vcd_object(v) for k, v in value.items()}
+    if isinstance(value, set):
+        return [_jsonify_vcd_object(v) for v in sorted(value, key=str)]
+    if isinstance(value, (list, tuple)):
+        return [_jsonify_vcd_object(v) for v in value]
+    return value
+
+
+def _ensure_vcd_import_paths() -> None:
+    import sys
+
+    root = Path(__file__).resolve().parents[2]
+    scripts = root / "scripts"
+    for entry in (root, scripts):
+        entry_str = str(entry)
+        if entry_str not in sys.path:
+            sys.path.insert(0, entry_str)
+
+
+def _run_vcd_audit(fig: plt.Figure, label: str):
+    """Run live VCD using the PanODE Matplotlib policy."""
+    _ensure_vcd_import_paths()
+    from vcd import detect_all_conflicts, diagnose
+
+    policy = _build_panode_vcd_policy()
+    issues = detect_all_conflicts(fig, label=label, verbose=False, policy=policy)
+    actions = diagnose(issues)
+    return issues, actions, policy
+
+
 def _safe_artist_bbox(artist, renderer) -> Bbox | None:
     if artist is None or not getattr(artist, "get_visible", lambda: True)():
         return None
@@ -481,6 +557,8 @@ def save_with_vcd(
     live_vcd_dir.mkdir(parents=True, exist_ok=True)
     live_vcd_payload = {
         "figure": basename,
+        "policy": None,
+        "actions": [],
         "warnings": [],
         "info": [],
         "error": None,
@@ -488,13 +566,10 @@ def save_with_vcd(
     effective_run_vcd = bool(run_vcd) and is_vcd_enabled(default=True)
     if effective_run_vcd:
         try:
-            import sys
-            _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
-            if str(_scripts) not in sys.path:
-                sys.path.insert(0, str(_scripts))
-            from vcd import detect_all_conflicts
-            issues = detect_all_conflicts(fig, label=basename, verbose=False)
+            issues, actions, policy = _run_vcd_audit(fig, basename)
             warnings_only, info_only, issue_counts = _summarize_vcd_issues(issues)
+            live_vcd_payload["policy"] = _jsonify_vcd_object(policy)
+            live_vcd_payload["actions"] = _jsonify_vcd_object(actions)
             live_vcd_payload["warnings"] = [_format_vcd_issue(x) for x in warnings_only]
             live_vcd_payload["info"] = [_format_vcd_issue(x) for x in info_only]
             live_vcd_payload["counts_by_type"] = dict(issue_counts)
@@ -527,12 +602,7 @@ def run_vcd_check(fig: plt.Figure, label: str) -> None:
     if not is_vcd_enabled(default=True):
         return
     try:
-        import sys
-        _scripts = Path(__file__).resolve().parent.parent.parent / "scripts"
-        if str(_scripts) not in sys.path:
-            sys.path.insert(0, str(_scripts))
-        from vcd import detect_all_conflicts
-        issues = detect_all_conflicts(fig, label=label, verbose=False)
+        issues, _, _ = _run_vcd_audit(fig, label)
         warnings_only, info_only, issue_counts = _summarize_vcd_issues(issues)
         _log_vcd_issues(logger, label, warnings_only, info_only, issue_counts)
     except Exception:

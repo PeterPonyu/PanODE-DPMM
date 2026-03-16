@@ -52,20 +52,19 @@ pdflatex main && bibtex main && pdflatex main && pdflatex main
 
 Requirements: `pdflatex`, `bibtex`, and the SN class/bst in each folder (already copied from `sn-template/`). Figures must exist under `benchmarks/paper_figures/{dpmm,topic}/`. To regenerate figures from the latest benchmark data, activate the project conda environment and run `./scripts/refresh_figures.sh`; see **docs/DATA_FLOW.md** for the full pipeline (benchmark_results + experiments → paper figures → manuscripts). Bibliography: each series uses a project-specific `sn-bibliography.bib` (single-cell, VAE, DPMM/topic, metrics); replace with your own citations before submission.
 
-## Figure numbering (both series)
+## Figure numbering (dpmm refresh)
 
 | Fig | Title | Content |
 |-----|--------|--------|
 | 1 | Architecture | Model architecture diagrams |
-| 2 | Base ablation | Workflow, UMAPs, core/extended metrics, efficiency |
-| 3 | Sensitivity | Hyperparameter sweep boxplots |
-| 4 | UMAP sweep | UMAP evolution across sweeps |
-| 5 | Cross-dataset | Metric trade-off scatter + convex hulls |
-| 6 | Biological | Gene-importance / $\beta$ heatmaps |
-| 7 | Correlation | Latent–gene Pearson heatmaps |
-| 8 | UMAP | Cell-type and gene-expression UMAPs |
-| 9 | Enrichment | GO Biological Process bar charts |
-| 10 | External | External benchmark + significance |
+| 2 | Base ablation | 4-model ablation UMAPs + eight key metrics |
+| 3 | Sensitivity | Compact matched hyperparameter sweep boxplots |
+| 4 | UMAP sweep | UMAP evolution across the matched sweeps |
+| 5 | Biological | Gene-importance heatmaps |
+| 6 | Correlation | Latent–gene Pearson heatmaps |
+| 7 | UMAP | Top-gene-expression UMAP overlays |
+| 8 | Enrichment | GO Biological Process summaries |
+| 9 | External | DPMM vs. external benchmark metric grid |
 
 See `docs/FIGURE_POLICY.md` and `benchmarks/paper_figures/README.md` for data sources, style, and regeneration.
 
@@ -75,4 +74,4 @@ For journal submission, use a single `.tex` file (no `\input`). Attach figures s
 
 ## Data flow and figure freshness
 
-- **Paper figures** (Fig1–Fig10) are produced by `./scripts/refresh_figures.sh` from **benchmarks/benchmark_results/** only. **Experiments/results/** hold the newest comparison outputs (per-metric plots, composed_metrics); use them for narrative refinement and blueprint updates; see **docs/DATA_FLOW.md** for how benchmark and experiment outputs fit together and how to keep manuscript figures and text in sync.
+- **Refined dpmm figures** (Fig1–Fig9) are produced from the refreshed `refined_figures/` pipeline. The current figure set combines **benchmarks/benchmark_results/** with experiment-side outputs under **experiments/results/dpmm/** and **experiments/results/dpmm/vs_external/** where appropriate. See **docs/DATA_FLOW.md** for how benchmark and experiment outputs fit together and how to keep manuscript figures and text in sync.

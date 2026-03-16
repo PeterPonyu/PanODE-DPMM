@@ -17,7 +17,7 @@ python benchmarks/benchmark_extra_sample.py --all --seed 42
 
 # Run a specific subset of datasets + models:
 python benchmarks/benchmark_extra_sample.py \
-    --datasets melanoma tnbc_brain lbm_brain bc_ec \
+    --datasets tnbc_brain lbm_brain bc_ec bcc \
     --models DPMM-Base DPMM-Contrastive Topic-Base Topic-Transformer Topic-Contrastive \
     --seed 42
 

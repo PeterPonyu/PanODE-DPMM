@@ -1,13 +1,10 @@
-"""Refined Figure 1 — Architecture Overview (CLOP-DiT style).
+"""Refined Figure 1 — DPMM-MoCo-AE Architecture Overview.
 
-Generates a publication-quality architecture diagram showing all three
-variants side-by-side using matplotlib patches.
+Generates a publication-quality architecture diagram showing the proposed
+DPMM-MoCo-AE (DPMM-Contrastive) model using matplotlib patches.
 
-  DPMM series: DPMM-Base | DPMM-Transformer | DPMM-Contrastive
-  Topic series: Topic-Base | Topic-Transformer | Topic-Contrastive
-
-Each variant shows: Input → Encoder → Latent → Structured Prior → Decoder → Output
-with variant-specific modules highlighted.
+Shows: Input → MLP Encoder → Latent → DPMM Prior → Decoder → Output
+with MoCo contrastive head highlighted.
 
 Data source: None (static architecture diagram)
 
@@ -20,7 +17,7 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -29,6 +26,7 @@ sys.path.insert(0, str(ROOT))
 from src.visualization import (
     apply_style, add_panel_label, save_with_vcd,
     bind_figure_region, COLORS)
+from refined_figures.dpmm_shared import require_dpmm
 
 apply_style()
 matplotlib.rcParams.update({
@@ -88,24 +86,11 @@ _ARCH = {
         "dec_dims": "32→128→256",
         "variants": [
             {
-                "name": "DPMM-Base",
-                "subtitle": "MLP encoder + online DPMM refitting",
+                "name": "DPMM-MoCo-AE",
+                "subtitle": "MLP + DPMM prior + MoCo contrastive head · ~1.62M params",
                 "encoder": "MLP Encoder",
-                "enc_sub": "256→128→32",
-                "extra": None,
-            },
-            {
-                "name": "DPMM-Transformer",
-                "subtitle": "Multi-head projection encoder",
-                "encoder": "MH Proj. Enc.",
-                "enc_sub": "8 tokens, d=128\n4 heads, 2 layers",
-                "extra": ("Self-Attention", "cross-attn agg."),
-            },
-            {
-                "name": "DPMM-Contrastive",
-                "subtitle": "MoCo projection head",
-                "encoder": "MLP Encoder",
-                "enc_sub": "256→128→32",
+                "enc_sub": "256→128→32, BN·Mish·Drop",
+                "dec_sub": "32→128→256, BN·Mish·Drop",
                 "extra": ("MoCo Head", "q=4096, τ=0.2"),
             },
         ],
@@ -155,7 +140,7 @@ def _draw_box(ax, xy, w, h, label, sublabel=None, facecolor=C_WHITE,
         facecolor=facecolor, edgecolor=edgecolor,
         linewidth=linewidth, zorder=zorder, mutation_scale=0.5)
     ax.add_patch(box)
-    weight = "bold" if bold else "normal"
+    weight = "normal"
     y_off = h * 0.12 if sublabel else 0
     ax.text(x + w / 2, y + h / 2 + y_off, label,
             ha="center", va="center", fontsize=fontsize,
@@ -184,7 +169,7 @@ def _draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10):
         facecolor=color, edgecolor="none", linewidth=0,
         alpha=alpha, zorder=0)
     ax.add_patch(bg)
-    ax.text(x + w / 2, y + h + 0.02, label,
+    ax.text(x + w / 2, y + h + 0.11, label,
             ha="center", va="bottom", fontsize=10,
             fontweight="normal", color=color, zorder=1)
 
@@ -192,28 +177,29 @@ def _draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10):
 def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
                       latent_label, panel_letter=None):
     """Draw one model variant as a horizontal pipeline."""
-    BW = 1.00   # Box width
-    BH = 0.50   # Box height
-    SBW = 0.70  # Small box width
-    SBH = 0.45  # Small box height
-    gap = 0.15
+    BW = 1.15   # Box width  (encoder / decoder)
+    BH = 0.48   # Box height
+    SBW = 0.62  # Small box width (input / output / latent)
+    SBH = 0.42  # Small box height
+    gap = 0.20
 
     # Variant title
-    ax.text(0.0, y_base + BH + 0.08, variant["name"],
+    ax.text(0.18, y_base + BH + 0.22, variant["name"],
             ha="left", va="bottom", fontsize=FONT_TITLE,
-            fontweight="bold", color="black", zorder=5)
-    ax.text(0.0, y_base + BH + 0.02, variant["subtitle"],
+            fontweight="normal", color="black", zorder=5)
+    ax.text(0.18, y_base + BH + 0.15, variant["subtitle"],
             ha="left", va="top", fontsize=FONT_SUBLABEL,
             color=C_MID_GREY, zorder=5)
 
     x = 0.0
 
     # Input box
-    _draw_box(ax, (x, y_base), SBW, SBH, "Gene\nExpression",
+    _draw_box(ax, (x, y_base), SBW, SBH, "Gene Expr.",
+              sublabel="x, log1p norm.",
               facecolor=C_INPUT, edgecolor=C_INPUT_E, fontsize=FONT_SUBLABEL)
     if panel_letter:
-        ax.text(x - 0.08, y_base + SBH + 0.15, f"({panel_letter})",
-                ha="left", va="bottom", fontsize=14, fontweight="bold",
+        ax.text(x - 0.24, y_base + SBH / 2 + 0.30, f"({panel_letter})",
+                ha="center", va="center", fontsize=14, fontweight="bold",
                 color="black", zorder=10)
 
     # Arrow → Encoder
@@ -234,11 +220,12 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
                 (x_lat, y_base + BH / 2), color=C_LAT_E)
 
     # Latent box
-    _draw_box(ax, (x_lat, y_base), SBW + 0.1, SBH, latent_label,
+    LBW = SBW + 0.12
+    _draw_box(ax, (x_lat, y_base), LBW, SBH, latent_label,
               facecolor=C_LAT, edgecolor=C_LAT_E)
 
     # Arrow → Prior (dashed upward)
-    x_mid_lat = x_lat + (SBW + 0.1) / 2
+    x_mid_lat = x_lat + LBW / 2
     prior_y = y_base + BH + 0.22
     prior_w = 0.90
     prior_h = 0.35
@@ -253,14 +240,15 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
     ax.add_patch(prior_arrow)
 
     # Arrow → Decoder
-    x_end_lat = x_lat + SBW + 0.1
+    x_end_lat = x_lat + LBW
     x_dec = x_end_lat + gap
     _draw_arrow(ax, (x_end_lat, y_base + SBH / 2),
                 (x_dec, y_base + BH / 2), color=C_DEC_E)
 
     # Decoder box
     _draw_box(ax, (x_dec, y_base), BW, BH, "Decoder",
-              sublabel="MLP", facecolor=C_DEC, edgecolor=C_DEC_E, linewidth=1.3)
+              sublabel=variant.get("dec_sub", "MLP"),
+              facecolor=C_DEC, edgecolor=C_DEC_E, linewidth=1.3)
 
     # Arrow → Output
     x_end_dec = x_dec + BW
@@ -269,7 +257,8 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
                 (x_out, y_base + BH / 2), color=C_OUTPUT_E)
 
     # Output box
-    _draw_box(ax, (x_out, y_base), SBW, SBH, "Recon.\nOutput",
+    _draw_box(ax, (x_out, y_base), SBW, SBH, "Recon.",
+              sublabel="x_hat, MSE",
               facecolor=C_OUTPUT, edgecolor=C_OUTPUT_E, fontsize=FONT_SUBLABEL)
 
     # Variant-specific extra module
@@ -278,7 +267,7 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
         if "MoCo" in extra_name:
             # Place below encoder
             ex_x = x_enc
-            ex_y = y_base - 0.55
+            ex_y = y_base - 0.44
             _draw_box(ax, (ex_x, ex_y), BW, 0.40, extra_name,
                       sublabel=extra_sub,
                       facecolor=C_CONTRA, edgecolor=C_CONTRA_E, linewidth=1.0)
@@ -288,7 +277,7 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
         elif "Attention" in extra_name:
             # Place above encoder
             ex_x = x_enc + 0.05
-            ex_y = y_base + BH + 0.22
+            ex_y = y_base + BH + 0.42
             ex_w = BW - 0.10
             _draw_box(ax, (ex_x, ex_y), ex_w, 0.30, extra_name,
                       sublabel=extra_sub,
@@ -300,65 +289,81 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
 
 def generate(series, out_dir):
     """Generate refined Figure 1 — architecture overview."""
+    series = require_dpmm(series)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     spec = _ARCH[series]
     variants = spec["variants"]
     n_variants = len(variants)
+    row_pitch = 1.70
+    y_min = -0.38
+    y_max = row_pitch * n_variants + 0.10
 
-    fig = plt.figure(figsize=(10.0, 3.2 * n_variants))
-    ax = bind_figure_region(fig, (0.01, 0.02, 0.99, 0.97)).add_axes(fig)
-    ax.set_xlim(-0.20, 6.80)
-    ax.set_ylim(-1.0, 3.2 * n_variants + 0.3)
+    fig = plt.figure(figsize=(11.8, 3.6))
+    ax = bind_figure_region(fig, (0.005, 0.06, 0.998, 0.96)).add_axes(fig)
+    ax.set_xlim(-0.35, 5.42)
+    ax.set_ylim(-1.20, y_max)
     ax.axis("off")
     ax.set_xticks([])
     ax.set_yticks([])
     fig.patch.set_facecolor(C_WHITE)
 
     # Draw stage backgrounds
-    _draw_stage_bg(ax, (-0.10, -0.80), 1.00, 3.2 * n_variants + 0.8,
+    stage_y = -0.28
+    stage_h = 1.60 - stage_y
+    _draw_stage_bg(ax, (-0.10, stage_y), 0.80, stage_h,
                    "Input", C_INPUT_E, alpha=0.06)
-    _draw_stage_bg(ax, (1.00, -0.80), 1.40, 3.2 * n_variants + 0.8,
+    _draw_stage_bg(ax, (0.74, stage_y), 1.30, stage_h,
                    "Encoder", C_ENC_E, alpha=0.06)
-    _draw_stage_bg(ax, (2.55, -0.80), 1.20, 3.2 * n_variants + 0.8,
+    _draw_stage_bg(ax, (2.08, stage_y), 0.94, stage_h,
                    "Latent + Prior", C_LAT_E, alpha=0.06)
-    _draw_stage_bg(ax, (3.85, -0.80), 1.40, 3.2 * n_variants + 0.8,
+    _draw_stage_bg(ax, (3.06, stage_y), 1.30, stage_h,
                    "Decoder", C_DEC_E, alpha=0.06)
-    _draw_stage_bg(ax, (5.40, -0.80), 1.20, 3.2 * n_variants + 0.8,
+    _draw_stage_bg(ax, (4.40, stage_y), 0.78, stage_h,
                    "Output", C_OUTPUT_E, alpha=0.06)
 
-    # Draw each variant from top to bottom
-    letters = "abc"
+    # Draw the single variant
     for i, variant in enumerate(variants):
-        y_base = (n_variants - 1 - i) * 3.2 + 0.2
+        y_base = 0.14
         _draw_variant_row(
             ax, y_base, variant,
             prior_name=spec["prior_name"],
             prior_detail=spec["prior_detail"],
             latent_label=spec["latent_label"],
-            panel_letter=letters[i] if i < len(letters) else None)
+            panel_letter=None)
 
-    # Legend
+    # ── Loss functions + training parameters (recovered from Next.js) ─────
+    info_y = -0.68
+    ax.text(2.55, info_y, (
+        "Loss:  L = L_recon (MSE) + lam_dpmm * L_DPMM (GMM NLL)"
+        " + lam_moco * L_CL (InfoNCE+Sym+Proto)"
+        "   [lam_dpmm=1.0, lam_moco=0.5]"
+    ), ha="center", va="top", fontsize=8, color="#455A64", zorder=5)
+    ax.text(2.55, info_y - 0.28, (
+        "Training:  AdamW, lr=1e-3, batch=128, dropout=0.2,"
+        " 400 ep, DPMM warmup=0.6, grad_clip=10.0, 3000 HVGs"
+    ), ha="center", va="top", fontsize=8, color="#455A64", zorder=5)
+
     legend_items = [
         (C_INPUT, C_INPUT_E, "Input/Output"),
         (C_ENC, C_ENC_E, "Encoder"),
         (C_LAT, C_LAT_E, "Latent"),
         (C_PRIOR, C_PRIOR_E, "Prior"),
         (C_DEC, C_DEC_E, "Decoder"),
-        (C_ATTN, C_ATTN_E, "Attention"),
         (C_CONTRA, C_CONTRA_E, "Contrastive"),
     ]
-    lx = 0.5
-    ly = -0.70
-    for fc, ec, label in legend_items:
-        box = FancyBboxPatch(
-            (lx, ly), 0.18, 0.14, boxstyle="round,pad=0.02",
-            facecolor=fc, edgecolor=ec, linewidth=0.6, zorder=5)
-        ax.add_patch(box)
-        ax.text(lx + 0.22, ly + 0.06, label,
-                fontsize=FONT_SUBLABEL, va="center", color=ec, zorder=5)
-        lx += 0.90
+    handles = [Patch(facecolor=fc, edgecolor=ec, label=label) for fc, ec, label in legend_items]
+    fig.legend(handles=handles,
+               labels=[x[2] for x in legend_items],
+               loc="lower center",
+               bbox_to_anchor=(0.5, 0.001),
+               ncol=len(legend_items),
+               frameon=False,
+               fontsize=8.6,
+               handlelength=1.0,
+               handletextpad=0.35,
+               columnspacing=0.75)
 
     out_path = out_dir / f"Fig1_architecture_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)
@@ -367,7 +372,7 @@ def generate(series, out_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", default="dpmm", choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
     out = (Path(args.output_dir) if args.output_dir

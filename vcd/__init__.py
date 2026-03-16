@@ -119,9 +119,11 @@ def detect_all_conflicts(
     label: str = "",
     verbose: bool = True,
     text_overlap_tol_px: float = 2.5,
-    border_tol_px: float = 2.0,
+    border_tol_px: float | None = None,
     artist_overlap_min_px2: float = 200.0,
     text_artist_overlap_min_px2: float = 150.0,
+    *,
+    policy: FigurePolicy | None = None,
 ):
     """Run all visual conflict detection passes on a matplotlib figure.
 
@@ -158,13 +160,26 @@ def detect_all_conflicts(
     except Exception:
         return []
 
+    effective_policy = DEFAULT_POLICY if policy is None else policy
+    resolved_border_tol_px = (
+        float(effective_policy.border_tolerance_px)
+        if border_tol_px is None
+        else float(border_tol_px)
+    )
+
     fig_bb = _fig_bbox(fig)
     infos = _collect_artists(fig, renderer)
 
     issues = []
     # ── Layer 2: figure-level passes (1-11) ──
     issues.extend(_check_text_overlaps(infos, text_overlap_tol_px))
-    issues.extend(_check_truncation(infos, fig_bb, border_tol_px, fig=fig, renderer=renderer))
+    issues.extend(_check_truncation(
+        infos,
+        fig_bb,
+        resolved_border_tol_px,
+        fig=fig,
+        renderer=renderer,
+    ))
     issues.extend(_check_artist_content_overlap(infos, artist_overlap_min_px2))
     issues.extend(_check_text_vs_artist_overlap(
         infos, text_overlap_tol_px, text_artist_overlap_min_px2))
@@ -184,27 +199,39 @@ def detect_all_conflicts(
     issues.extend(_check_colorbar_internal(fig, renderer))
     issues.extend(_check_legend_internal(fig, renderer))
     # Pass 16: significance brackets
-    issues.extend(_check_significance_brackets(fig, renderer, border_tol_px))
+    issues.extend(_check_significance_brackets(fig, renderer, resolved_border_tol_px))
     # Pass 17: colorbar-vs-data overlap
     issues.extend(_check_colorbar_data_overlap(fig, renderer))
     # Pass 18: legend crowding auto-fix
-    issues.extend(_check_legend_crowding_autofix(fig, renderer))
+    issues.extend(_check_legend_crowding_autofix(
+        fig,
+        renderer,
+        max_entries_inside=effective_policy.max_legend_entries_inside,
+        min_fontsize=effective_policy.legend_fontsize_min,
+    ))
     # Pass 19: font-size adequacy
     issues.extend(_check_fontsize_adequacy(
         fig, renderer, infos,
-        min_pt=MIN_PT, composed_scale=COMPOSED_SCALE,
-        dense_label_min_pt=DENSE_LABEL_MIN_PT))
+        min_pt=effective_policy.min_body_pt,
+        composed_scale=effective_policy.composed_scale,
+        dense_label_min_pt=effective_policy.min_dense_pt,
+    ))
     # Pass 20: tick/spine overlap (NEW)
     issues.extend(_check_tick_spine_overlap(fig, renderer))
     # Pass 21: font policy (NEW)
     issues.extend(_check_font_policy(
         fig, renderer, infos,
-        allowed_families=ALLOWED_FONT_FAMILIES,
-        max_title_label_diff=MAX_TITLE_LABEL_SIZE_DIFF))
+        allowed_families=effective_policy.allowed_fonts,
+        max_title_label_diff=effective_policy.max_title_label_diff,
+    ))
     # Pass 22: label density excess
     issues.extend(_check_label_density(
         fig, renderer, infos,
-        density_threshold=LABEL_DENSITY_THRESHOLD))
+        density_threshold=LABEL_DENSITY_THRESHOLD,
+        max_xtick_labels=effective_policy.max_xtick_labels,
+        max_ytick_labels=effective_policy.max_ytick_labels,
+        heatmap_max_ticks=effective_policy.heatmap_max_ticks,
+    ))
 
     # ── Layer 3: perceptual passes (23-26) ──
     # Pass 23: contrast check
@@ -244,10 +271,11 @@ def detect_all_conflicts(
     # Pass 31: panel complexity excess
     issues.extend(_check_panel_complexity(
         fig, renderer,
-        max_legend_series=MAX_LEGEND_SERIES,
-        max_numeric_labels=MAX_NUMERIC_BAR_LABELS,
-        max_annotations=MAX_ANNOTATIONS_COMPLEXITY,
-        score_threshold=COMPLEXITY_SCORE_THRESHOLD))
+        max_legend_series=effective_policy.max_legend_series,
+        max_numeric_labels=effective_policy.max_numeric_bar_labels,
+        max_annotations=effective_policy.max_annotations_complexity,
+        score_threshold=effective_policy.complexity_score_threshold,
+    ))
 
     # ── Layer 2 continued: new layout passes (32-33) ──
     # Pass 32: cross-axes text overlap (xlabel vs title between rows)

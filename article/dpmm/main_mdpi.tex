@@ -146,29 +146,17 @@ DPMM-Contrastive & 0.604 & 0.394 & \textbf{0.483} & \textbf{0.801} & 0.683 & 0.5
 
 The DPMM prior introduces a clear \emph{geometry-for-concordance trade-off}. Pure-AE achieves the highest NMI (0.654) and ARI (0.468), yet its geometry is the weakest of all models (ASW 0.176, DAV 1.592). DPMM-Contrastive raises ASW by 174.6\% (0.176 $\to$ 0.483) and lowers DAV by 49.7\% (1.592 $\to$ 0.801), at a controlled cost of $-$7.6\% NMI and $-$15.7\% ARI. The composite score shows that geometry gains dominate: DPMM-Contrastive (0.494) exceeds Pure-AE (0.433) by 14.2\%. DPMM-Transformer sacrifices the most concordance ($-$24.4\% NMI) to become the DRE/LSE specialist, improving projection fidelity by 38.7\% and latent structure by 44.4\% over Pure-AE.
 
-\subsection{Cross-Dataset Patterns}
-Figure~\ref{fig:crossdataset} presents per-dataset metric scatter plots, revealing the geometry--concordance trade-off at dataset granularity.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{Fig5_crossdataset_dpmm}
-\caption{\textbf{Cross-dataset metric relationships.} Per-dataset scatter plots for all six internal models across 56 datasets. Each point is one dataset; model identity is encoded by color. Panels include concordance--geometry pairs (NMI vs.\ ASW, ARI vs.\ DAV) and projection-fidelity pairs (ASW vs.\ DRE-UMAP, DRE vs.\ LSE). DPMM variants consistently occupy the high-geometry quadrant across datasets.}
-\label{fig:crossdataset}
-\end{figure}
-
-The scatter plots confirm that the geometry advantage is not driven by a few outlier datasets. DPMM variants (especially DPMM-Contrastive) consistently occupy the high-ASW, low-DAV quadrant across the full dataset range, while Pure-AE points cluster in the high-NMI, low-ASW region. The DRE-vs-LSE panel shows DPMM-Transformer forming a distinct cluster at the upper-right frontier of projection fidelity.
-
 \subsection{Internal Ablation}
 Figure~\ref{fig:ablation} presents the curated ablation analysis with four organized panels.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{Fig2_base_ablation_dpmm}
-\caption{\textbf{Internal ablation: DPMM vs.\ prior-free baselines.} Panel~A: per-dataset UMAP embeddings for all six models, colored by dataset identity. Panel~B: core metric boxplots (NMI, ARI, ASW, DAV, DRE-UMAP, LSE) across 12 core datasets; red-bordered boxes mark the best median. Panel~C: extended metrics (25 sub-metrics from CAL, COR, DREX, LSEX, and additional DRE/LSE components). Panel~D: computational efficiency (sec/epoch, GPU memory, parameter count).}
+\caption{\textbf{Internal ablation: Pure-AE vs.\ DPMM variants.} Panel~A: compact 2$\times$2 cross-dataset UMAPs for the four ablation models, colored by representative dataset identity. Panel~B: eight key metric boxplots (NMI, ARI, ASW, DAV, CAL, DRE-UMAP, DRE-tSNE, LSE) across the dpmm ablation experiment; red-bordered boxes mark the best median.}
 \label{fig:ablation}
 \end{figure}
 
-The ablation confirms the strength profile quantitatively. In Panel~B, DPMM-Contrastive achieves the best ASW and DAV medians across datasets, while DPMM-Transformer dominates DRE-UMAP and LSE---the two projection-fidelity metrics where the structured prior provides the largest advantage. Pure-AE leads on NMI and ARI, consistent with the concordance side of the trade-off. The 25 extended metrics in Panel~C reinforce this pattern: DPMM-Transformer achieves the best median on DREX overall, trustworthiness, and continuity, while DPMM-Contrastive leads on LSEX radial concentration and two-hop connectivity.
+The ablation confirms the strength profile quantitatively. In Panel~B, DPMM-Contrastive achieves the strongest ASW and DAV medians across datasets, while DPMM-Transformer dominates DRE-UMAP, DRE-tSNE, and LSE---the three projection-fidelity metrics where the structured prior offers the clearest structural advantage. Pure-AE still leads on NMI and ARI, making the trade-off explicit rather than hidden in a sprawling multi-panel layout.
 
 \subsection{Statistical Validation}
 Table~\ref{tab:dpmm_wilcoxon_core} presents pairwise Wilcoxon signed-rank tests confirming which improvements are statistically significant.
@@ -183,7 +171,7 @@ Figure~\ref{fig:sensitivity} shows hyperparameter sensitivity for DPMM-Base.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{Fig3_sensitivity_dpmm}
-\caption{\textbf{Hyperparameter sensitivity (DPMM-Base).} Nine hyperparameters swept across 12 datasets and six core metrics. Red-bordered boxes indicate the best-performing sweep value per metric.}
+\caption{\textbf{Hyperparameter sensitivity (DPMM-Base).} Four matched sweeps (warmup ratio, latent dimension, training epochs, and HVG count) across the six core metrics. Red-bordered boxes indicate the best-performing sweep value per metric.}
 \label{fig:sensitivity}
 \end{figure}
 
@@ -193,50 +181,50 @@ Figure~\ref{fig:umap-sweep} shows UMAP embedding evolution across sweeps.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{Fig4_training_dpmm}
-\caption{\textbf{UMAP evolution across hyperparameter sweeps.} Embedding grids for three representative datasets (setty, endo, dentate).}
+\caption{\textbf{UMAP evolution across matched hyperparameter sweeps.} Compact embedding grids for the same four sweep families shown in Fig.~\ref{fig:sensitivity}, using representative latents from the setty dataset.}
 \label{fig:umap-sweep}
 \end{figure}
 
 \subsection{Biological Validation}
-To assess whether the improved geometry carries biological meaning, we perform perturbation-based gene-importance analysis, latent--gene correlation mapping, and Gene Ontology enrichment on two representative developmental datasets (endoderm, dentate gyrus).
+To assess whether the improved geometry carries biological meaning, we perform perturbation-based gene-importance analysis, latent--gene correlation mapping, UMAP overlay inspection, and Gene Ontology enrichment on three representative datasets (setty, endoderm, dentate gyrus).
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig6_biological_dpmm}
-\caption{\textbf{Biological validation: perturbation gene-importance heatmaps.} Z-scored perturbation importance per latent component across representative datasets (endo, dentate). Each column is a top salient gene; rows are latent components.}
+\includegraphics[width=\textwidth]{Fig5_biological_dpmm}
+\caption{\textbf{Biological validation: perturbation gene-importance heatmaps.} Top salient genes per latent component across setty, endoderm, and dentate gyrus for the three DPMM variants.}
 \label{fig:bio}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig7_correlation_dpmm}
-\caption{\textbf{Latent--gene Pearson correlation heatmaps.} Top 30 genes per component by $|r|$ across three datasets. Block-diagonal structure indicates that each component tracks a distinct expression program.}
+\includegraphics[width=\textwidth]{Fig6_correlation_dpmm}
+\caption{\textbf{Latent--gene Pearson correlation heatmaps.} Top correlated genes per component across the same three datasets. Block-structured correlation patterns indicate that each latent dimension tracks a distinct expression program.}
 \label{fig:corr}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig8_umap_dpmm}
-\caption{\textbf{Latent UMAP projections.} Component UMAP projections with cell-type overlays and top gene-expression overlays.}
+\includegraphics[width=\textwidth]{Fig7_umap_dpmm}
+\caption{\textbf{Latent UMAP overlays.} Precomputed UMAPs colored by the strongest top-gene expression signal for each DPMM variant and representative dataset.}
 \label{fig:umap}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig9_enrichment_dpmm}
-\caption{\textbf{GO Biological Process enrichment.} Top 20 salient genes per component submitted to Fisher's exact test with Bonferroni correction ($p < 0.05$).}
+\includegraphics[width=\textwidth]{Fig8_enrichment_dpmm}
+\caption{\textbf{GO Biological Process enrichment.} Best component-wise enrichment summary per DPMM variant and dataset, ranked by adjusted $p$-value.}
 \label{fig:enrichment}
 \end{figure}
 
-Figures~\ref{fig:bio}--\ref{fig:enrichment} show that the DPMM latent components align with biologically coherent gene programs. Perturbation-based importance (Fig.~\ref{fig:bio}) identifies distinct gene sets per component; latent--gene correlations (Fig.~\ref{fig:corr}) confirm that individual components track specific expression patterns (top 30 genes per component by $|r|$). UMAP projections (Fig.~\ref{fig:umap}) demonstrate that DPMM components separate known cell types spatially. GO enrichment (Fig.~\ref{fig:enrichment}) confirms significance: the top 20 salient genes per component yield enriched biological-process terms at Bonferroni-corrected $p < 0.05$, indicating that the geometry improvements driven by the DPMM prior translate directly to meaningful biological structure rather than arbitrary partitioning.
+Figures~\ref{fig:bio}--\ref{fig:enrichment} show that the DPMM latent components align with biologically coherent gene programs. Perturbation-based importance (Fig.~\ref{fig:bio}) identifies distinct gene sets per component; latent--gene correlations (Fig.~\ref{fig:corr}) confirm that individual components track specific expression patterns. The UMAP overlays (Fig.~\ref{fig:umap}) show that these signals localize to coherent regions of the latent manifold, while the enrichment summary (Fig.~\ref{fig:enrichment}) highlights statistically supported biological-process terms rather than arbitrary partitioning.
 
 \subsection{External Benchmark}
-Figure~\ref{fig:external} presents the unified external comparison, with internal ablation, external baselines, extended metrics, efficiency, and composite ranking in a single organized layout.
+Figure~\ref{fig:external} presents the dpmm-vs-external experiment summary across eight key metrics spanning concordance, geometry, and latent-structure quality.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig10_external_dpmm}
-\caption{\textbf{External benchmark.} Comprehensive comparison against 11 competitive baselines across 12 core datasets. Panel~B: core metric boxplots for the six internal variants (left) and the best DPMM variant vs.\ external baselines (right). Panel~C: 24 extended metrics (DREX, LSEX, DRE, LSE sub-metrics) for the external comparison. Panel~D: computational efficiency. Panel~E: composite ranking bar chart with all models sorted by overall score.}
+\includegraphics[width=\textwidth]{Fig9_external_dpmm}
+\caption{\textbf{External benchmark.} Two-row metric grid comparing the four internal dpmm ablation models against external baselines across NMI, ARI, ASW, DAV, CAL, DRE-UMAP, DRE-tSNE, and LSE. Methods are grouped with internal models first and external baselines ordered by family.}
 \label{fig:external}
 \end{figure}
 

@@ -262,6 +262,12 @@ def load_pairwise_wilcoxon_external():
 # Latent / NPZ loaders
 # ═══════════════════════════════════════════════════════════════════════════════
 
+_CROSS_LATENT_ALIASES = {
+    "Pure-Trans-AE": "Pure-Transformer-AE",
+    "Pure-Contr-AE": "Pure-Contrastive-AE",
+}
+
+
 def load_cross_latent(model_name, dataset):
     """Load latest crossdata latent npz for one model on one dataset."""
     safe = safe_model_name(model_name)
@@ -269,6 +275,11 @@ def load_cross_latent(model_name, dataset):
     if not lat_dir.exists():
         return None
     files = sorted(lat_dir.glob(f"{safe}_{dataset}_*.npz"), reverse=True)
+    if not files:
+        alias = _CROSS_LATENT_ALIASES.get(model_name)
+        if alias:
+            safe2 = safe_model_name(alias)
+            files = sorted(lat_dir.glob(f"{safe2}_{dataset}_*.npz"), reverse=True)
     if not files:
         return None
     data = np.load(files[0])

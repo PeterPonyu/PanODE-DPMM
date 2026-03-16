@@ -166,7 +166,11 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         use_bottleneck: bool = False,
         bottleneck_dim: Optional[int] = None,
         use_vae: bool = False,
-        kl_weight: float = 0.1):
+        kl_weight: float = 0.1,
+        # Anti-collapse mechanisms for transformer encoder
+        dpmm_anneal_epochs: int = 100,
+        var_reg_weight: float = 10.0,
+        var_reg_min: float = 0.01):
         super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=[d_model], model_name=model_name)
         
         self.encoder_type = encoder_type
@@ -197,6 +201,10 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         self.recon_loss_fn = nn.MSELoss()
         self.use_vae = use_vae
         self.kl_weight = kl_weight
+        self.dpmm_anneal_epochs = dpmm_anneal_epochs
+        self.var_reg_weight = var_reg_weight
+        self.var_reg_min = var_reg_min
+        self._current_dpmm_weight = 0.0
 
         # Safety guard: VAE Gaussian prior N(0,I) conflicts with DPMM clustering prior
         if self.use_vae and self.dpmm_loss_weight > 0:
@@ -216,6 +224,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             z = mu
         else:
             z = self.ae.encode_ae(x)
+        return z
 
     def extract_latent(self, data_loader, device='cuda', return_reconstructions: bool = False):
         """Extract latent representations."""
@@ -250,7 +259,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             recon = (x_hat, x_le_hat)
         else:
             x_hat, z, _, _, mu, var = self.ae(x)
-            recon = (x_hat)
+            recon = (x_hat,)
         
         result = {"reconstruction": recon, "latent": z}
         if mu is not None:
@@ -297,7 +306,14 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             kl_vae = self._kl_gaussian_free_bits(outputs["mu"], outputs["var"], free_bits=0.1)
             loss_dict["kl_vae"] = kl_vae
         
-        total = recon + self.dpmm_loss_weight * dpmm + kl_weight * kl_vae
+        # Latent variance regularization: prevent per-dim collapse
+        z = outputs["latent"]
+        var_per_dim = z.var(dim=0)  # [latent_dim]
+        shortfall = torch.clamp(self.var_reg_min - var_per_dim, min=0)
+        var_reg = self.var_reg_weight * shortfall.mean()
+        loss_dict["var_reg"] = var_reg
+
+        total = recon + self._current_dpmm_weight * dpmm + kl_weight * kl_vae + var_reg
         loss_dict["total_loss"] = total
         
         return loss_dict
@@ -309,7 +325,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         precisions_cholesky = torch.as_tensor(bgm.precisions_cholesky_, dtype=torch.float32, device=device)
         weights = torch.as_tensor(bgm.weights_, dtype=torch.float32, device=device)
         
-        precisions_cholesky = torch.clamp(precisions_cholesky, min=1e-6, max=1e6)
+        precisions_cholesky = torch.clamp(precisions_cholesky, min=1e-6, max=10.0)
         
         self.dpmm_params = {
             "means": means,
@@ -338,7 +354,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         log_prob = torch.logsumexp(log_gauss + log_weights, dim=1)
         
         nll = -log_prob
-        return torch.clamp(nll.mean(), min=0.0)
+        return torch.clamp(nll.mean(), min=0.0, max=5.0)
     
     def _kl_gaussian(self, mu: torch.Tensor, var: torch.Tensor) -> torch.Tensor:
         """KL divergence for Gaussian"""
@@ -417,8 +433,16 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
 
         for epoch in range(epochs):
             
+            # DPMM annealing: gradual ramp after warmup to prevent collapse
             if epoch < dpmm_warmup_epochs:
                 self.dpmm_fitted = False
+                self._current_dpmm_weight = 0.0
+            else:
+                anneal_progress = min(1.0, (epoch - dpmm_warmup_epochs) / max(1, self.dpmm_anneal_epochs))
+                self._current_dpmm_weight = self.dpmm_loss_weight * anneal_progress
+
+            if epoch < dpmm_warmup_epochs:
+                pass  # no DPMM fitting during warmup
             elif epoch == dpmm_warmup_epochs or (epoch - dpmm_warmup_epochs) % self.dpmm_refit_interval == 0:
                 if verbose >= 1 and ((epoch + 1) % verbose_every == 0 or epoch == 0):
                     print(f"Epoch {epoch+1}: Refitting DPMM...")

@@ -1,0 +1,2 @@
+The figure 2 a should be refined into more datasets that explicitly selected by you, and visualize, This panels columns are the base mode series class, from the pure distribution to Transformer attention mechamism based and the Contrastive learning based. Add a low alpha color back ground rect to clearly distinguish them. 
+And so as the panel b, the metrics should be shown fully not only several overall metrics could be aligned better and grouped into several classed like the clustering, dre (tsne and umap) and lse series, make full use of the space. 

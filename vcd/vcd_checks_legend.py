@@ -353,13 +353,20 @@ def _check_legend_internal(fig, renderer, tol_px=1.0, tight_bb=None):
     return issues
 
 
-def _check_legend_crowding_autofix(fig, renderer, auto_fix=True):
+def _check_legend_crowding_autofix(
+        fig,
+        renderer,
+        auto_fix=True,
+        max_entries_inside: int = 6,
+        min_fontsize: float = 8.0,
+):
     """Pass 18: Detect and optionally auto-fix legend crowding.
 
     For each axes legend:
       1. Check if legend entries overlap each other.
       2. If auto_fix and overlap detected, try ``loc='best'`` relocation.
-      3. If legend has >6 entries and font > 8pt, shrink by 1pt.
+            3. If legend has more than *max_entries_inside* entries and font is
+                 above *min_fontsize*, shrink by 1pt.
 
     Returns list of issue dicts.
     """
@@ -400,10 +407,10 @@ def _check_legend_crowding_autofix(fig, renderer, auto_fix=True):
 
         fixed = False
         if has_crowding and auto_fix:
-            if len(texts) > 6:
+            if len(texts) > max_entries_inside:
                 for t in texts:
                     current_fs = t.get_fontsize()
-                    if current_fs > 8:
+                    if current_fs > min_fontsize:
                         t.set_fontsize(current_fs - 1)
                         fixed = True
             try:

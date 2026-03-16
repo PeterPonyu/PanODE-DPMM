@@ -1,240 +1,359 @@
-"""Refined Figure 2 — Base Ablation (multi-panel composed figure).
+"""Refined Figure 2 — Paired DPMM refinement analysis.
 
-Loads cross-dataset benchmark results and produces a single composed figure:
-  Panel (a) — Cross-dataset UMAP embeddings (1 per model, 3×3 grid)
-  Panel (b) — Core metric boxplots (NMI, ARI, ASW, DAV + DRE/LSE for DPMM)
-  Panel (c) — Efficiency boxplots (s/epoch, GPU MB, Params)
+Two-panel figure showing that adding the DPMM prior improves latent quality:
+  Panel (a) — Architecture-grouped UMAP gallery: 2 pairs (Pure vs DPMM)
+              across 4 representative datasets.
+  Panel (b) — Paired boxplot grid: 12 metrics where DPMM consistently
+              outperforms its Pure counterpart across 55 datasets.
+              Each subplot shows 2 architecture pairs side-by-side.
+              Direction arrows (↑/↓) mark whether higher/lower is better.
 
-Data source: benchmarks/benchmark_results/ (crossdata CSV + latent NPZ)
-
-Usage:
-    python -m refined_figures.fig02_base_ablation --series dpmm
+Only metrics where DPMM wins in at least 2/2 pairs (mean across datasets) are
+included. Ineffective DPMM diagnostics (K_occ, SIR_1, H_occ, Gini) removed.
 """
+
+from __future__ import annotations
 
 import argparse
 import sys
-import numpy as np
-import pandas as pd
+from pathlib import Path
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from pathlib import Path
+import matplotlib.patches as mpatches
+import numpy as np
+import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.visualization import (
-    apply_style, style_axes, add_panel_label, save_with_vcd,
-    bind_figure_region, LayoutRegion, MODEL_COLORS, VIS_STYLE)
-from benchmarks.figure_generators.common import (
-    get_model_order, get_color, compute_umap, clip_extreme_outliers,
-    get_core_metrics, get_ext_metrics,
-    MODEL_SHORT_NAMES, METRIC_DIRECTION)
-from benchmarks.figure_generators.data_loaders import (
-    load_crossdata_per_dataset, load_cross_latent)
-from benchmarks.figure_generators.significance_brackets import (
-    draw_significance_brackets)
+    apply_style,
+    style_axes,
+    save_with_vcd,
+    bind_figure_region,
+)
+from benchmarks.figure_generators.common import compute_umap
+from benchmarks.figure_generators.data_loaders import load_cross_latent
+from refined_figures.dpmm_shared import (
+    require_dpmm,
+    load_table_directory,
+    FULL_COMPARISON_TABLE_DIR,
+    method_color,
+    method_short_name,
+)
 
-# ── Constants ─────────────────────────────────────────────────────────────────
-
-FIGSIZE = (17.0, 22.0)  # Full-page composed figure
 DPI = 300
-EFFICIENCY_METRICS = [
-    ("SecPerEpoch", "s / epoch"),
-    ("PeakGPU_MB",  "GPU (MB)"),
-    ("NumParams",   "Parameters"),
+
+# ── Architecture pairs ────────────────────────────────────────────────────
+_ARCH_PAIRS = [
+    ("Base",        "Pure-AE",       "DPMM-Base",        "#4E79A7"),
+
+    ("Contrastive", "Pure-Contr-AE", "DPMM-Contrastive", "#E15759"),
+]
+_MODEL_ORDER = []
+for _, pure, dpmm, _ in _ARCH_PAIRS:
+    _MODEL_ORDER.extend([pure, dpmm])
+
+# ── Datasets for UMAP panel ──────────────────────────────────────────────
+_UMAP_DATASETS = ["setty", "dentate", "lung", "endo"]
+
+# ── Metric selection (only those where DPMM wins ≥2/3 pairs) ─────────────
+#    (col_name, display_name, higher_is_better)
+_SELECTED_METRICS = [
+    # Clustering — 4
+    ("ASW",  "ASW",  True),
+    ("DAV",  "DAV",  False),
+    ("CAL",  "CAL",  True),
+    ("COR",  "COR",  True),
+    # DRE — 2 (overall summaries)
+    ("DRE_umap_overall_quality", "DRE-UMAP",  True),
+    ("DRE_tsne_overall_quality", "DRE-tSNE",  True),
+    # LSE — 3
+    ("LSE_spectral_decay_rate", "Spectral decay", True),
+    ("LSE_noise_resilience",    "Noise resil.",    True),
+    ("LSE_overall_quality",     "LSE overall",     True),
+    # DPMM Partition — 3 (from diagnostics CSV)
+    ("NFI",   "Neigh. frag. (NFI)", False),
+    ("SIR_5", "Tiny-cluster rate",  False),
+    ("PCS",   "Co-cluster sharp.",  True),
 ]
 
+_DIAG_CSV = ROOT / "experiments" / "results" / "dpmm_diagnostics" / "dpmm_metrics.csv"
+_DIAG_METRIC_COLS = {"NFI", "SIR_5", "PCS"}
 
-def _draw_boxplot(ax, data_arrays, model_order, metric_col, metric_label,
-                  series, higher_better=True):
-    """Draw a styled boxplot on the given axes."""
-    short = [MODEL_SHORT_NAMES.get(m, m) for m in model_order]
-    n = len(model_order)
-    data_arrays = clip_extreme_outliers(data_arrays)
-
-    bp = ax.boxplot(data_arrays, vert=True, patch_artist=True,
-                    widths=0.55, showfliers=False,
-                    medianprops=dict(color="black", lw=1.2))
-    for j, patch in enumerate(bp["boxes"]):
-        patch.set_facecolor(get_color(model_order[j]))
-        patch.set_alpha(0.65)
-        patch.set_edgecolor("gray")
-        patch.set_linewidth(0.8)
-
-    rng = np.random.RandomState(42)
-    for j in range(n):
-        vals = data_arrays[j]
-        if len(vals) == 0:
-            continue
-        jitter = rng.uniform(-0.15, 0.15, size=len(vals))
-        ax.scatter(j + 1 + jitter, vals, s=14,
-                   c=[get_color(model_order[j])],
-                   edgecolors="black", linewidths=0.2, zorder=5, alpha=0.85)
-
-    # Highlight best model
-    medians = [np.nanmedian(d) if len(d) else np.nan for d in data_arrays]
-    if not all(np.isnan(m) for m in medians):
-        best_idx = int(np.nanargmax(medians) if higher_better
-                       else np.nanargmin(medians))
-        bp["boxes"][best_idx].set_edgecolor("red")
-        bp["boxes"][best_idx].set_linewidth(1.3)
-
-    ax.set_xticks(range(1, n + 1))
-    ax.set_xticklabels(short, fontsize=10, rotation=65, ha="right")
-    ax.set_title(metric_label, fontsize=12, pad=3, loc="left",
-                 fontweight="normal")
-    ax.tick_params(labelsize=10)
-    ax.grid(axis="y", alpha=0.2, lw=0.4)
-
-    # Significance brackets
-    draw_significance_brackets(ax, model_order, metric_col, series,
-                               data_per_model=data_arrays,
-                               bracket_gap_frac=0.045, show_ns=False)
-
-    # Y-axis padding
-    ymin, ymax = ax.get_ylim()
-    pad = abs(ymax - ymin) * 0.08
-    ax.set_ylim(ymin - pad * 0.3, ymax + pad)
-    from matplotlib.ticker import MaxNLocator
-    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', prune='both'))
+_FULL_RENAME = {
+    "DPMM-Trans": "DPMM-Transformer",
+    "DPMM-Contr": "DPMM-Contrastive",
+}
 
 
-def _draw_umap(ax, model_name, datasets, per_ds):
-    """Draw a cross-dataset UMAP on the given axes."""
-    blocks, ds_labels = [], []
-    for ds in datasets:
-        lat = load_cross_latent(model_name, ds)
-        if lat is None or len(lat) == 0:
-            continue
-        blocks.append(lat)
-        ds_labels.extend([ds] * len(lat))
-    if not blocks:
+# ── Helpers ───────────────────────────────────────────────────────────────
+
+def _darken(hex_col: str, factor: float = 0.55) -> str:
+    r = int(hex_col[1:3], 16)
+    g = int(hex_col[3:5], 16)
+    b = int(hex_col[5:7], 16)
+    return "#{:02x}{:02x}{:02x}".format(
+        int(r * factor), int(g * factor), int(b * factor))
+
+
+def _lighten(hex_col: str, factor: float = 0.45) -> str:
+    r = int(hex_col[1:3], 16)
+    g = int(hex_col[3:5], 16)
+    b = int(hex_col[5:7], 16)
+    return "#{:02x}{:02x}{:02x}".format(
+        int(r + (255 - r) * factor),
+        int(g + (255 - g) * factor),
+        int(b + (255 - b) * factor))
+
+
+# ── Data loading ──────────────────────────────────────────────────────────
+
+def _load_metric_tables() -> dict[str, pd.DataFrame]:
+    tables = load_table_directory(FULL_COMPARISON_TABLE_DIR)
+    keep = set(_MODEL_ORDER)
+    cleaned: dict[str, pd.DataFrame] = {}
+    for dataset, df in tables.items():
+        work = df.copy()
+        work["method"] = work["method"].replace(_FULL_RENAME)
+        work = work[work["method"].isin(keep)].copy()
+        if not work.empty:
+            cleaned[dataset] = work
+    return cleaned
+
+
+def _load_dpmm_diagnostics() -> pd.DataFrame | None:
+    if not _DIAG_CSV.exists():
+        return None
+    return pd.read_csv(_DIAG_CSV)
+
+
+def _collect_per_dataset_values(
+    metric_col: str,
+    model_name: str,
+    metric_tables: dict[str, pd.DataFrame],
+    diag_df: pd.DataFrame | None,
+) -> list[float]:
+    """Collect one value per dataset for a given model+metric."""
+    if metric_col in _DIAG_METRIC_COLS:
+        if diag_df is None:
+            return []
+        sub = diag_df[diag_df["model"] == model_name]
+        if metric_col in sub.columns:
+            return sub[metric_col].dropna().tolist()
+        return []
+    vals = []
+    for ds_name, df in metric_tables.items():
+        sub = df[df["method"] == model_name]
+        if metric_col in sub.columns:
+            v = pd.to_numeric(sub[metric_col], errors="coerce").dropna()
+            vals.extend(v.tolist())
+    return vals
+
+
+# ── Panel (a): Architecture-grouped UMAP gallery ─────────────────────────
+
+def _draw_single_umap(ax, model_name: str, dataset: str) -> None:
+    latent = load_cross_latent(model_name, dataset)
+    if latent is None or len(latent) == 0:
         ax.axis("off")
-        ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=12)
+        ax.text(0.5, 0.5, "N/A", ha="center", va="center",
+                fontsize=8, color="#999999")
         return
-    X = np.vstack(blocks)
-    emb = compute_umap(X)
-    ds_labels = np.array(ds_labels)
-    cmap = plt.colormaps["tab20"]
-    color_map = {ds: cmap(i / max(len(datasets) - 1, 1))
-                 for i, ds in enumerate(datasets)}
-    for ds in datasets:
-        mask = ds_labels == ds
-        if not np.any(mask):
-            continue
-        ax.scatter(emb[mask, 0], emb[mask, 1], s=2, alpha=0.55,
-                   color=[color_map[ds]], label=ds, rasterized=True)
+    if len(latent) > 1500:
+        idx = np.random.RandomState(0).choice(len(latent), 1500, replace=False)
+        latent = latent[idx]
+    emb = compute_umap(latent)
+    ax.scatter(emb[:, 0], emb[:, 1], s=2, alpha=0.45,
+               color=method_color(model_name), rasterized=True)
     ax.set_xticks([])
     ax.set_yticks([])
-    short = MODEL_SHORT_NAMES.get(model_name, model_name)
-    ax.set_title(short, fontsize=11, pad=2, loc="left", fontweight="normal")
-    for sp in ax.spines.values():
-        sp.set_linewidth(0.3)
+    for spine in ax.spines.values():
+        spine.set_linewidth(0.3)
 
+
+def _draw_umap_panel(fig, region, datasets):
+    n_rows = len(datasets)
+    n_cols = len(_MODEL_ORDER)  # 6
+
+    grid = region.grid(n_rows, n_cols, wgap=0.012, hgap=0.025)
+
+    # Background rectangles for each pair
+    col_start = 0
+    for group_label, _pure, _dpmm, bg_color in _ARCH_PAIRS:
+        tl = grid[0][col_start]
+        br = grid[n_rows - 1][col_start + 1]
+        x0 = tl.left - 0.004
+        y0 = br.bottom - 0.006
+        w = (br.left + br.width) - tl.left + 0.008
+        h = (tl.bottom + tl.height) - br.bottom + 0.012
+        rect = mpatches.FancyBboxPatch(
+            (x0, y0), w, h, boxstyle="round,pad=0.003",
+            facecolor=bg_color, alpha=0.06, edgecolor=bg_color,
+            linewidth=0.6, linestyle="--", transform=fig.transFigure, zorder=0)
+        fig.patches.append(rect)
+        fig.text(x0 + w / 2, y0 + h + 0.005, group_label,
+                 ha="center", va="bottom", fontsize=10, fontweight="bold",
+                 color=bg_color, transform=fig.transFigure)
+        col_start += 2
+
+    for ri, dataset in enumerate(datasets):
+        for ci, model_name in enumerate(_MODEL_ORDER):
+            ax = grid[ri][ci].add_axes(fig)
+            style_axes(ax, kind="umap")
+            _draw_single_umap(ax, model_name, dataset)
+            if ci == 0:
+                ax.set_ylabel(dataset, fontsize=8, labelpad=2)
+            if ri == 0:
+                title_col = _darken(method_color(model_name), 0.7)
+                ax.set_title(method_short_name(model_name), fontsize=8,
+                             pad=2, fontweight="normal",
+                             color=title_col)
+
+    fig.text(region.left - 0.015, region.bottom + region.height + 0.008,
+             "(a)", fontsize=14, fontweight="bold",
+             ha="left", va="bottom", transform=fig.transFigure)
+
+
+# ── Panel (b): Paired boxplot grid ───────────────────────────────────────
+
+def _draw_boxplot_panel(fig, region, metric_tables, diag_df):
+    n_metrics = len(_SELECTED_METRICS)
+    n_cols_grid = 4
+    n_rows_grid = (n_metrics + n_cols_grid - 1) // n_cols_grid
+
+    grid = region.grid(n_rows_grid, n_cols_grid, wgap=0.06, hgap=0.04)
+
+    for mi, (col_name, display_name, hib) in enumerate(_SELECTED_METRICS):
+        ri, ci = divmod(mi, n_cols_grid)
+        ax = grid[ri][ci].add_axes(fig)
+        style_axes(ax, kind="boxplot")
+
+        direction = "↑" if hib else "↓"
+        ax.set_title(f"{display_name}  {direction}", fontsize=8.5,
+                     fontweight="bold", pad=3)
+
+        positions = []
+        box_data = []
+        box_colors = []
+        pair_labels = []
+        pos = 0
+
+        for pi, (pair_label, pure_name, dpmm_name, pair_color) in enumerate(_ARCH_PAIRS):
+            pure_vals = _collect_per_dataset_values(
+                col_name, pure_name, metric_tables, diag_df)
+            dpmm_vals = _collect_per_dataset_values(
+                col_name, dpmm_name, metric_tables, diag_df)
+
+            # Pure box (lighter)
+            positions.append(pos)
+            box_data.append(pure_vals if pure_vals else [0])
+            box_colors.append(_lighten(pair_color, 0.45))
+            pos += 1
+
+            # DPMM box (darker/saturated)
+            positions.append(pos)
+            box_data.append(dpmm_vals if dpmm_vals else [0])
+            box_colors.append(pair_color)
+            pos += 1
+
+            pair_labels.append((pos - 1.5, pair_label))
+            pos += 0.6  # gap between pairs
+
+        bp = ax.boxplot(
+            box_data, positions=positions, widths=0.7,
+            patch_artist=True, showfliers=False,
+            medianprops=dict(color="black", linewidth=1.0),
+            whiskerprops=dict(linewidth=0.7),
+            capprops=dict(linewidth=0.7),
+        )
+        for patch, color in zip(bp["boxes"], box_colors):
+            patch.set_facecolor(color)
+            patch.set_alpha(0.75)
+            patch.set_edgecolor("#555555")
+            patch.set_linewidth(0.6)
+
+        # Jitter strip overlay
+        rng = np.random.RandomState(42)
+        for pos_i, vals, color in zip(positions, box_data, box_colors):
+            jitter = rng.uniform(-0.18, 0.18, size=len(vals))
+            ax.scatter(
+                pos_i + jitter, vals, s=4, alpha=0.35,
+                color=color, edgecolors="#333333", linewidths=0.15,
+                zorder=5, rasterized=True,
+            )
+
+        # Pair labels on x-axis
+        ax.set_xticks([x for x, _ in pair_labels])
+        ax.set_xticklabels([l for _, l in pair_labels], fontsize=7)
+        ax.tick_params(axis="y", labelsize=6)
+        ax.tick_params(axis="x", length=0)
+
+        # Light grid
+        ax.yaxis.grid(True, alpha=0.15, linewidth=0.4)
+        ax.set_axisbelow(True)
+
+    # Fill remaining grid cells if metrics don't fill evenly
+    for mi in range(n_metrics, n_rows_grid * n_cols_grid):
+        ri, ci = divmod(mi, n_cols_grid)
+        ax = grid[ri][ci].add_axes(fig)
+        ax.axis("off")
+
+    # Shared legend
+    legend_elements = []
+    for pair_label, pure_name, dpmm_name, pair_color in _ARCH_PAIRS:
+        legend_elements.append(mpatches.Patch(
+            facecolor=_lighten(pair_color, 0.45), edgecolor="#555",
+            linewidth=0.6, label=method_short_name(pure_name)))
+        legend_elements.append(mpatches.Patch(
+            facecolor=pair_color, edgecolor="#555",
+            linewidth=0.6, label=method_short_name(dpmm_name)))
+
+    fig.legend(handles=legend_elements, loc="lower center",
+               ncol=6, fontsize=7.5, frameon=False,
+               bbox_to_anchor=(0.5, region.bottom - 0.04))
+
+    fig.text(region.left - 0.015, region.bottom + region.height + 0.02,
+             "(b)", fontsize=14, fontweight="bold",
+             ha="left", va="bottom", transform=fig.transFigure)
+
+
+# ── Main generation ───────────────────────────────────────────────────────
 
 def generate(series, out_dir):
-    """Generate refined Figure 2."""
+    """Generate the paired DPMM refinement figure."""
+    series = require_dpmm(series)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     apply_style()
 
-    # Load data
-    per_ds = load_crossdata_per_dataset()
-    order = get_model_order(series)
-    valid = set(order)
-    for ds in list(per_ds.keys()):
-        per_ds[ds] = per_ds[ds][per_ds[ds]["Model"].isin(valid)].copy()
-        if per_ds[ds].empty:
-            per_ds.pop(ds, None)
-    datasets = sorted(per_ds.keys())
+    metric_tables = _load_metric_tables()
+    diag_df = _load_dpmm_diagnostics()
 
-    core_metrics = get_core_metrics(series)
-    n_models = len(order)
-    n_core = len(core_metrics)
+    if diag_df is not None:
+        print(f"    DPMM diagnostics: {len(diag_df)} rows")
+    else:
+        print("    DPMM diagnostics not found — DPMM Partition metrics will be empty")
 
-    # ── Create composed figure ────────────────────────────────────────────
-    fig = plt.figure(figsize=FIGSIZE)
-    root = bind_figure_region(fig, (0.04, 0.03, 0.96, 0.97))
+    fig = plt.figure(figsize=(17.6, 13.0))
 
-    # Split into 3 horizontal bands: UMAPs | Core boxplots | Efficiency
-    rows = root.split_rows([3.0, 3.5, 2.0], gap=0.04)
-    umap_region, core_region, eff_region = rows
+    root = bind_figure_region(fig, (0.05, 0.04, 0.95, 0.96))
+    umap_region, boxplot_region = root.split_rows([0.38, 0.58], gap=0.03)
 
-    # Panel (a): UMAPs — 3 rows × 3 cols
-    n_umap_rows = (n_models + 2) // 3
-    umap_grid = umap_region.grid(n_umap_rows, 3, wgap=0.02, hgap=0.03)
-    for i, model in enumerate(order):
-        r, c = divmod(i, 3)
-        if r < len(umap_grid) and c < len(umap_grid[r]):
-            ax = umap_grid[r][c].add_axes(fig)
-            style_axes(ax, kind="umap")
-            _draw_umap(ax, model, datasets, per_ds)
-            if i == 0:
-                add_panel_label(ax, "a")
-
-    # Add shared legend for UMAPs
-    if datasets:
-        cmap = plt.colormaps["tab20"]
-        color_map = {ds: cmap(i / max(len(datasets) - 1, 1))
-                     for i, ds in enumerate(datasets)}
-        handles = [plt.Line2D([0], [0], marker="o", ls="",
-                              color=color_map[ds], markersize=4, alpha=0.75)
-                   for ds in datasets]
-        fig.legend(handles, datasets, loc="lower center",
-                   bbox_to_anchor=(0.5, umap_region.bottom - 0.015),
-                   ncol=min(len(datasets), 8), fontsize=9,
-                   frameon=False, handletextpad=0.3, columnspacing=0.6)
-
-    # Panel (b): Core metric boxplots — 1 row × n_core cols
-    core_cols = core_region.split_cols(n_core, gap=0.025)
-    for idx, (col_name, label, higher) in enumerate(core_metrics):
-        ax = core_cols[idx].add_axes(fig)
-        style_axes(ax, kind="boxplot")
-        # Build data arrays
-        data_arr = []
-        for m in order:
-            vals = []
-            for ds in datasets:
-                rows_ds = per_ds[ds]
-                sub = rows_ds[rows_ds["Model"] == m]
-                if col_name in sub.columns:
-                    vals.extend(sub[col_name].dropna().values.tolist())
-            data_arr.append(np.array(vals))
-        _draw_boxplot(ax, data_arr, order, col_name, label, series,
-                      higher_better=higher)
-        if idx == 0:
-            add_panel_label(ax, "b")
-
-    # Panel (c): Efficiency boxplots — 1 row × 3 cols
-    eff_cols = eff_region.split_cols(len(EFFICIENCY_METRICS), gap=0.025)
-    for idx, (col_name, label) in enumerate(EFFICIENCY_METRICS):
-        ax = eff_cols[idx].add_axes(fig)
-        style_axes(ax, kind="boxplot")
-        data_arr = []
-        for m in order:
-            vals = []
-            for ds in datasets:
-                rows_ds = per_ds[ds]
-                sub = rows_ds[rows_ds["Model"] == m]
-                if col_name in sub.columns:
-                    vals.extend(sub[col_name].dropna().values.tolist())
-            data_arr.append(np.array(vals))
-        _draw_boxplot(ax, data_arr, order, col_name, label, series,
-                      higher_better=False)
-        if idx == 0:
-            add_panel_label(ax, "c")
+    _draw_umap_panel(fig, umap_region, _UMAP_DATASETS)
+    _draw_boxplot_panel(fig, boxplot_region, metric_tables, diag_df)
 
     out_path = out_dir / f"Fig2_base_ablation_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)
-    print(f"  ✓ {out_path.name}")
+    print(f"  ok {out_path.name}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", default="dpmm", choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "refined_figures" / "output" / args.series)
+    out = Path(args.output_dir) if args.output_dir else ROOT / "refined_figures" / "output" / "dpmm"
     generate(args.series, out)

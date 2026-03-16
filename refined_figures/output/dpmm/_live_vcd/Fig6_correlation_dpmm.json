@@ -1,0 +1,121 @@
+{
+  "figure": "Fig6_correlation_dpmm",
+  "policy": {
+    "allowed_fonts": [
+      "Arial",
+      "DejaVu Sans",
+      "Helvetica",
+      "sans-serif"
+    ],
+    "min_body_pt": 5.5,
+    "min_dense_pt": 5.5,
+    "composed_scale": 0.95,
+    "max_title_label_diff": 2.0,
+    "max_xtick_labels": 30,
+    "max_ytick_labels": 25,
+    "heatmap_max_ticks": 15,
+    "bar_max_categories": 30,
+    "rotation_threshold": 15,
+    "preferred_locations": {
+      "line": [
+        "best",
+        "upper left"
+      ],
+      "bar": [
+        "upper right",
+        "upper left"
+      ],
+      "heatmap": [
+        "outside_right"
+      ],
+      "scatter": [
+        "upper left",
+        "best"
+      ],
+      "polar": [
+        "upper right"
+      ]
+    },
+    "max_legend_entries_inside": 6,
+    "legend_fontsize_min": 8,
+    "border_tolerance_px": 3.0,
+    "max_figsize": [
+      14.0,
+      10.0
+    ],
+    "figsize_increment": [
+      0.5,
+      0.5
+    ],
+    "max_annotations_per_axes": 5,
+    "max_heatmap_annotations": 50,
+    "annotation_min_fontsize": 8,
+    "target_height_width_ratio": 0.5,
+    "hspace_compact_target": 0.35,
+    "hspace_excess_threshold": 0.7,
+    "height_compact_min_inches": 4.0,
+    "min_label_display_chars": 12,
+    "label_ellipsis_mode": "end",
+    "protected_label_prefixes": [
+      "+",
+      "-",
+      "\u2191",
+      "\u2193",
+      "\u2212",
+      "\u2217"
+    ],
+    "annotation_drop_order": [
+      "redundant",
+      "secondary",
+      "primary"
+    ],
+    "max_legend_series": 10,
+    "max_numeric_bar_labels": 30,
+    "max_annotations_complexity": 20,
+    "complexity_score_threshold": 15.0
+  },
+  "actions": [
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7a9ed4540cd0",
+      "params": {
+        "axis_name": "ax@0x7a9ed4540cd0",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7a9ed4540cd0' (density=54%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7a9ed45d3750",
+      "params": {
+        "axis_name": "ax@0x7a9ed45d3750",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7a9ed45d3750' (density=54%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7a9ed4662350",
+      "params": {
+        "axis_name": "ax@0x7a9ed4662350",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7a9ed4662350' (density=54%)."
+    }
+  ],
+  "warnings": [
+    "[label_density_excess] X-tick labels in 'ax@0x7a9ed4540cd0' 25 labels exceed policy cap 15 (max_len=7 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7a9ed45d3750' 25 labels exceed policy cap 15 (max_len=8 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7a9ed4662350' 25 labels exceed policy cap 15 (max_len=7 chars)"
+  ],
+  "info": [],
+  "error": null,
+  "counts_by_type": {
+    "label_density_excess": 3
+  },
+  "total_warnings": 3,
+  "total_info": 0
+}

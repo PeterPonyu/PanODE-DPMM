@@ -1,153 +1,113 @@
-"""Refined Figure 9 — GO Enrichment Dot Plots (composed figure).
+"""Refined Figure 8 — DPMM-MoCo-AE GO enrichment summaries."""
 
-Gene Ontology enrichment results for perturbation and beta-decoder gene sets,
-across representative datasets × prior models.
-
-Data source: experiments/results/ (bio-validation enrichment data)
-
-Usage:
-    python -m refined_figures.fig09_enrichment --series dpmm
-"""
+from __future__ import annotations
 
 import argparse
 import sys
-import json
-import numpy as np
-import pandas as pd
+from pathlib import Path
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from pathlib import Path
+import numpy as np
+import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style, style_axes, add_panel_label, save_with_vcd,
-    bind_figure_region, LayoutRegion)
-from benchmarks.figure_generators.common import (
-    MODEL_SHORT_NAMES, REPRESENTATIVE_DATASETS,
-    PRIOR_MODELS_DPMM, PRIOR_MODELS_TOPIC, BIO_RESULTS)
+from src.visualization import apply_style, style_axes, add_panel_label, save_with_vcd, bind_figure_region
+from refined_figures.dpmm_shared import (
+    require_dpmm,
+    DPMM_PRIOR_MODELS,
+    BIO_DATASETS,
+    load_best_enrichment,
+    parse_overlap_count,
+    method_short_name,
+)
 
 DPI = 300
 
 
-def _load_enrichment(ds_name, model_name, method="perturbation"):
-    """Load GO enrichment results."""
-    safe_model = model_name.replace("/", "_").replace(" ", "_")
-    bio_dir = BIO_RESULTS / ds_name / safe_model
-    for fname in [f"go_enrichment_{method}.csv",
-                  f"enrichment_{method}.csv",
-                  "go_enrichment.csv",
-                  "enrichment_results.csv"]:
-        p = bio_dir / fname
-        if p.exists():
-            return pd.read_csv(p)
-    # Try JSON format
-    for fname in [f"go_enrichment_{method}.json",
-                  "go_enrichment.json"]:
-        p = bio_dir / fname
-        if p.exists():
-            with open(p) as f:
-                data = json.load(f)
-            if isinstance(data, list):
-                return pd.DataFrame(data)
-            elif isinstance(data, dict) and "results" in data:
-                return pd.DataFrame(data["results"])
-    return None
+def _truncate_term(value: str, max_chars: int = 52) -> str:
+    value = str(value)
+    return value if len(value) <= max_chars else value[: max_chars - 1] + "…"
 
 
-def _draw_enrichment_dotplot(ax, enrich_df, title, top_n=15):
-    """Draw a GO enrichment dot plot."""
-    if enrich_df is None or len(enrich_df) == 0:
+def _draw_enrichment(ax, df: pd.DataFrame | None, component: str | None, title: str):
+    if df is None or df.empty:
         ax.axis("off")
-        ax.text(0.5, 0.5, "N/A", ha="center", va="center", fontsize=10)
+        ax.text(0.5, 0.5, "No enrichment data", ha="center", va="center", fontsize=9)
         return
 
-    # Find p-value and term columns
-    pval_col = None
-    for c in ["p_value", "pvalue", "p.adjust", "Adjusted P-value",
-              "padj", "FDR", "qvalue"]:
-        if c in enrich_df.columns:
-            pval_col = c
-            break
-    term_col = None
-    for c in ["Term", "name", "Description", "GO_term", "term_name"]:
-        if c in enrich_df.columns:
-            term_col = c
-            break
-    count_col = None
-    for c in ["Count", "gene_count", "Overlap", "n_genes", "size"]:
-        if c in enrich_df.columns:
-            count_col = c
-            break
-
-    if pval_col is None or term_col is None:
+    p_col = next((c for c in ["Adjusted P-value", "p.adjust", "padj", "qvalue"] if c in df.columns), None)
+    term_col = next((c for c in ["Term", "Description", "name", "term_name"] if c in df.columns), None)
+    overlap_col = next((c for c in ["Overlap", "Count", "gene_count", "size"] if c in df.columns), None)
+    if p_col is None or term_col is None:
         ax.axis("off")
-        ax.text(0.5, 0.5, "Missing columns", ha="center", va="center",
-                fontsize=8)
+        ax.text(0.5, 0.5, "Missing enrichment columns", ha="center", va="center", fontsize=8)
         return
 
-    df = enrich_df.nsmallest(top_n, pval_col).copy()
-    df["_neg_log_p"] = -np.log10(df[pval_col].clip(lower=1e-300))
-    terms = df[term_col].values
-    # Truncate long term names
-    terms = [t[:45] + "…" if len(str(t)) > 45 else str(t) for t in terms]
-    y_pos = np.arange(len(terms))
+    work = df.copy()
+    work[p_col] = pd.to_numeric(work[p_col], errors="coerce")
+    work = work.dropna(subset=[p_col]).nsmallest(9, p_col)
+    if work.empty:
+        ax.axis("off")
+        ax.text(0.5, 0.5, "No significant terms", ha="center", va="center", fontsize=8)
+        return
 
-    sizes = 40
-    if count_col and count_col in df.columns:
-        counts = pd.to_numeric(df[count_col], errors="coerce").fillna(1)
-        sizes = 20 + counts / counts.max() * 80
+    terms = [_truncate_term(val) for val in work[term_col].astype(str)]
+    score = -np.log10(work[p_col].clip(lower=1e-300))
+    if overlap_col is not None:
+        sizes = np.array([parse_overlap_count(val) for val in work[overlap_col]], dtype=float)
+        sizes = 20 + (sizes / max(sizes.max(), 1.0)) * 70
+    else:
+        sizes = np.full(len(work), 40.0)
 
-    sc = ax.scatter(df["_neg_log_p"].values, y_pos, s=sizes,
-                    c=df["_neg_log_p"].values, cmap="YlOrRd",
-                    edgecolors="black", linewidths=0.3, zorder=5)
-    ax.set_yticks(y_pos)
-    ax.set_yticklabels(terms, fontsize=7)
-    ax.set_xlabel("-log₁₀(p)", fontsize=9)
-    ax.set_title(title, fontsize=10, pad=3, loc="left", fontweight="normal")
+    ypos = np.arange(len(work))
+    ax.scatter(score, ypos, s=sizes, c=score, cmap="magma_r", edgecolors="black", linewidths=0.3)
+    # Annotate term labels right of each dot instead of ytick labels
+    ax.set_yticks([])
+    for i, (x, y, term) in enumerate(zip(score, ypos, terms)):
+        ax.annotate(term, (x, y), xytext=(6, 0), textcoords="offset points",
+                    fontsize=7, va="center", ha="left", clip_on=False)
+    ax.set_xlabel("-log10(adj p)", fontsize=9)
+    # Extend xlim to accommodate text annotations — start from data, not 0
+    x_min = max(float(score.min()) - 0.5, 0)
+    ax.set_xlim(left=x_min, right=max(float(score.max()) * 2.0, x_min + 1.0))
+    suffix = f" (c{component})" if component is not None else ""
+    ax.set_title(f"{title}{suffix}", fontsize=10.5, loc="left", pad=2, fontweight="normal")
     ax.invert_yaxis()
-    ax.grid(axis="x", alpha=0.2, lw=0.4)
+    ax.grid(axis="x", alpha=0.18, lw=0.4)
 
 
 def generate(series, out_dir):
-    """Generate refined Figure 9."""
+    series = require_dpmm(series)
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     apply_style()
 
-    prior_models = (PRIOR_MODELS_DPMM if series == "dpmm"
-                    else PRIOR_MODELS_TOPIC)
-    datasets = REPRESENTATIVE_DATASETS
-    n_rows = len(datasets)
-    n_cols = len(prior_models)
+    n_ds = len(BIO_DATASETS)
+    fig_w = max(14.0, 5.5 * n_ds + 2.0)
+    fig = plt.figure(figsize=(fig_w, 4.8))
+    root = bind_figure_region(fig, (0.04, 0.12, 0.96, 0.90))
+    grid = root.grid(1, n_ds, wgap=0.05, hgap=0.04)
 
-    fig = plt.figure(figsize=(17.0, 5.5 * n_rows + 1.0))
-    root = bind_figure_region(fig, (0.12, 0.04, 0.96, 0.95))
-    grid = root.grid(n_rows, n_cols, wgap=0.06, hgap=0.06)
+    model_name = DPMM_PRIOR_MODELS[0]
+    for c_idx, dataset in enumerate(BIO_DATASETS):
+        ax = grid[0][c_idx].add_axes(fig)
+        style_axes(ax, kind="default")
+        enrich_df, component = load_best_enrichment(model_name, dataset)
+        _draw_enrichment(ax, enrich_df, component, f"{method_short_name(model_name)} — {dataset}")
 
-    for r_idx, ds in enumerate(datasets):
-        for c_idx, model in enumerate(prior_models):
-            ax = grid[r_idx][c_idx].add_axes(fig)
-            style_axes(ax, kind="default")
-            enrich_df = _load_enrichment(ds, model)
-            short = MODEL_SHORT_NAMES.get(model, model)
-            title = f"{short} — {ds}"
-            _draw_enrichment_dotplot(ax, enrich_df, title)
-            if r_idx == 0 and c_idx == 0:
-                add_panel_label(ax, "a")
-
-    out_path = out_dir / f"Fig9_enrichment_{series}.png"
+    out_path = out_dir / f"Fig8_enrichment_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)
     print(f"  ✓ {out_path.name}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", default="dpmm", choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "refined_figures" / "output" / args.series)
+    out = Path(args.output_dir) if args.output_dir else ROOT / "refined_figures" / "output" / "dpmm"
     generate(args.series, out)
