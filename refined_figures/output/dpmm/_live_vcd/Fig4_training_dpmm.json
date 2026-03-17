@@ -75,17 +75,17 @@
     "complexity_score_threshold": 15.0
   },
   "actions": [],
-  "warnings": [],
+  "warnings": [
+    "[legend_artist_masking] Legend masks 'ytick: 15' (93%, 220 px\u00b2)"
+  ],
   "info": [
-    "[legend_artist_masking] Legend masks 'line: Line2D(DPMM)' (2%, 2246 px\u00b2)",
-    "[legend_artist_masking] Legend masks 'line: Line2D(Total)' (2%, 3036 px\u00b2)",
-    "[title_label_size_mismatch] Title avg 11.2pt vs label avg 8.5pt (diff=2.7pt, max=2.0pt)"
+    "[title_label_size_mismatch] Title avg 13.0pt vs label avg 10.5pt (diff=2.5pt, max=2.0pt)"
   ],
   "error": null,
   "counts_by_type": {
-    "legend_artist_masking": 2,
+    "legend_artist_masking": 1,
     "title_label_size_mismatch": 1
   },
-  "total_warnings": 0,
-  "total_info": 3
+  "total_warnings": 1,
+  "total_info": 1
 }

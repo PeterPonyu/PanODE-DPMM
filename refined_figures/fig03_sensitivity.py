@@ -8,7 +8,7 @@ Panels
 (d) FM noise-scale sensitivity
 
 Each panel shows within-sweep metric ranks after direction alignment, averaged
-across the four core datasets.
+across an expanded 8-dataset sensitivity set.
 """
 
 from __future__ import annotations
@@ -29,9 +29,9 @@ sys.path.insert(0, str(ROOT))
 
 from src.visualization import apply_style, style_axes, save_with_vcd, bind_figure_region
 from refined_figures.dpmm_shared import (
-    CORE_DATASETS,
     DPMM_FM_SENSITIVITY_SUMMARY,
     DPMM_SENSITIVITY_CSV,
+    SENSITIVITY_DATASETS,
     require_dpmm,
 )
 
@@ -82,7 +82,7 @@ def _load_sensitivity_frame(csv_path: Path, source: str) -> pd.DataFrame:
         raise FileNotFoundError(f"Missing sensitivity CSV: {csv_path}")
     usecols = {"Model", "method", "Sweep", "SweepVal", "Dataset", *[metric for metric, _, _ in _METRICS]}
     df = pd.read_csv(csv_path, usecols=lambda col: col in usecols)
-    df = df[df["Dataset"].isin(CORE_DATASETS)].copy()
+    df = df[df["Dataset"].isin(SENSITIVITY_DATASETS)].copy()
     df["SweepValKey"] = df["SweepVal"].map(_canonical_value)
     model_col = "Model" if "Model" in df.columns else "method"
     if source == "dpmm":
@@ -128,11 +128,11 @@ def _panel_rank_matrix(df: pd.DataFrame, sweep_name: str) -> tuple[np.ndarray, l
 def _draw_panel(ax, rank_matrix: np.ndarray, value_keys: list[str], title: str, default_value) -> any:
     style_axes(ax, kind="heatmap")
     im = ax.imshow(rank_matrix, aspect="auto", cmap="Blues", vmin=0.0, vmax=1.0)
-    ax.set_title(title, fontsize=11.4, loc="left", pad=4, color="black")
+    ax.set_title(title, fontsize=13.0, loc="left", pad=4, color="black")
     ax.set_yticks(range(len(_METRICS)))
-    ax.set_yticklabels([label for _, label, _ in _METRICS], fontsize=8.5, color="black")
+    ax.set_yticklabels([label for _, label, _ in _METRICS], fontsize=10.5, color="black")
     ax.set_xticks(range(len(value_keys)))
-    ax.set_xticklabels(value_keys, fontsize=8.8, color="black")
+    ax.set_xticklabels(value_keys, fontsize=10.5, color="black")
     ax.tick_params(axis="both", length=0, colors="black")
     ax.set_xticks(np.arange(-0.5, len(value_keys), 1), minor=True)
     ax.set_yticks(np.arange(-0.5, len(_METRICS), 1), minor=True)
@@ -167,8 +167,8 @@ def generate(series, out_dir):
     dpmm_df = _load_sensitivity_frame(DPMM_SENSITIVITY_CSV, source="dpmm")
     fm_df = _load_sensitivity_frame(DPMM_FM_SENSITIVITY_SUMMARY, source="fm")
 
-    fig = plt.figure(figsize=(16.2, 10.4))
-    root = bind_figure_region(fig, (0.06, 0.08, 0.945, 0.95))
+    fig = plt.figure(figsize=(12.0, 8.5))
+    root = bind_figure_region(fig, (0.07, 0.09, 0.935, 0.95))
     grid = root.grid(2, 2, wgap=0.08, hgap=0.12)
 
     image = None
@@ -182,7 +182,8 @@ def generate(series, out_dir):
             ax.get_position().x0 - 0.018,
             ax.get_position().y1 + 0.008,
             f"({chr(97 + idx)})",
-            fontsize=13,
+            fontsize=14,
+            fontweight="bold",
             ha="left",
             va="bottom",
             color="black",
@@ -190,10 +191,10 @@ def generate(series, out_dir):
         )
 
     if image is not None:
-        cbar_ax = fig.add_axes([0.955, 0.20, 0.012, 0.56])
+        cbar_ax = fig.add_axes([0.945, 0.09, 0.012, 0.28])
         cbar = fig.colorbar(image, cax=cbar_ax)
-        cbar.ax.tick_params(labelsize=8.0, colors="black")
-        cbar.set_label("Within-sweep rank", fontsize=10.0, color="black")
+        cbar.ax.tick_params(labelsize=9.5, colors="black")
+        cbar.set_label("Within-sweep rank", fontsize=11.0, color="black")
 
     out_path = out_dir / f"Fig3_sensitivity_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)

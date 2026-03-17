@@ -34,9 +34,9 @@ from benchmarks.data_utils import load_or_preprocess_adata
 from benchmarks.dataset_registry import ALL_DATASET_REGISTRY
 from benchmarks.model_registry import MODELS
 from benchmarks.train_utils import train_and_evaluate
+from refined_figures.dpmm_shared import SENSITIVITY_DATASETS
 from utils.data import DataSplitter
 
-CORE_DATASETS = ["setty", "dentate", "lung", "endo"]
 RESULTS_ROOT = ROOT / "experiments" / "results" / "dpmm_fm_sensitivity_core"
 TABLE_DIR = RESULTS_ROOT / "tables"
 META_DIR = RESULTS_ROOT / "meta"
@@ -148,7 +148,7 @@ def run_dataset(ds_key: str, seed: int, epochs: int, verbose_every: int) -> list
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run DPMM-FM parameter sensitivity on the core datasets")
-    parser.add_argument("--datasets", nargs="+", default=CORE_DATASETS, choices=sorted(ALL_DATASET_REGISTRY.keys()))
+    parser.add_argument("--datasets", nargs="+", default=SENSITIVITY_DATASETS, choices=sorted(ALL_DATASET_REGISTRY.keys()))
     parser.add_argument("--seed", type=int, default=BASE_CONFIG.seed)
     parser.add_argument("--epochs", type=int, default=800)
     parser.add_argument("--verbose-every", type=int, default=250)

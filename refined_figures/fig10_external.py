@@ -85,19 +85,17 @@ def _draw_metric_boxplot(ax, arrays: list[np.ndarray], methods: list[str], metri
         )
 
     ax.set_xticks(range(1, len(methods) + 1))
-    ax.set_xticklabels([_EXTERNAL_TICK_LABELS.get(m, method_short_name(m)) for m in methods], fontsize=7.2, rotation=90, ha="center", color="black")
-    ax.set_title(metric_label, fontsize=10.2, loc="left", pad=2, fontweight="normal", color="black")
-    ax.tick_params(labelsize=8.0, colors="black")
+    ax.set_xticklabels([_EXTERNAL_TICK_LABELS.get(m, method_short_name(m)) for m in methods], fontsize=12.0, rotation=90, ha="center", color="black")
+    ax.set_title(metric_label, fontsize=15.0, loc="left", pad=3, fontweight="normal", color="black")
+    ax.tick_params(labelsize=12.0, colors="black")
     ax.grid(axis="y", alpha=0.20, lw=0.4)
     ymin, ymax = ax.get_ylim()
     pad = (ymax - ymin) * 0.10 if ymax > ymin else 0.1
     ax.set_ylim(ymin - pad * 0.20, ymax + pad)
     ax.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
-    if metric_name.upper() == "CAL":
-        formatter = ScalarFormatter(useMathText=True)
-        formatter.set_scientific(True)
-        formatter.set_powerlimits((0, 0))
-        ax.yaxis.set_major_formatter(formatter)
+    fmt = ScalarFormatter(useMathText=True)
+    fmt.set_powerlimits((-2, 3))
+    ax.yaxis.set_major_formatter(fmt)
 
 
 def generate(series, out_dir):
@@ -114,9 +112,9 @@ def generate(series, out_dir):
 
     n_cols = 5
     n_rows = (len(metrics) + n_cols - 1) // n_cols
-    fig = plt.figure(figsize=(27.0, 23.5))
-    root = bind_figure_region(fig, (0.025, 0.05, 0.995, 0.945))
-    grid = root.grid(n_rows, n_cols, wgap=0.05, hgap=0.08)
+    fig = plt.figure(figsize=(16.0, 14.0))
+    root = bind_figure_region(fig, (0.035, 0.06, 0.985, 0.935))
+    grid = root.grid(n_rows, n_cols, wgap=0.035, hgap=0.065)
 
     legend_handles = [Patch(facecolor=method_color(name), edgecolor="#666666", label=name)
                       for name in methods]
@@ -124,10 +122,10 @@ def generate(series, out_dir):
         handles=legend_handles,
         labels=methods,
         loc="upper center",
-        bbox_to_anchor=(0.5, 0.975),
+        bbox_to_anchor=(0.5, 0.998),
         ncol=10,
         frameon=False,
-        fontsize=8.0,
+        fontsize=12.0,
         handlelength=1.1,
         handletextpad=0.35,
         columnspacing=0.8,

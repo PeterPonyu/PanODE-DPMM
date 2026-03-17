@@ -7,11 +7,34 @@ learned DPMM latent distribution.
 Design
 ------
 - backbone: same encoder/decoder + DPMM prior as ``DPMMODEModel``
-- extra head: time-conditioned latent velocity field
+- extra head: time-conditioned latent velocity field (conditional OT FM)
 - training: reconstruction + DPMM loss + flow-matching loss
 - activation: flow loss can be delayed until DPMM fitting has started so the
-  vector field regularizes the *clustered* latent space rather than the raw AE
+  vector field regularises the *clustered* latent space rather than the raw AE
   warmup manifold
+
+Two-stage motivation (brainstorm)
+---------------------------------
+The FM learns the complete noise-to-data transport path t ∈ [0, 1]:
+
+    z_t = (1-t)·ε + t·z_real,   v*(z_t, t) = z_real - ε
+
+At *inference* the FM is used as a **latent smoother** rather than a pure
+generative prior:
+
+1. Encode a real cell:  z_real = encoder(x)
+2. Perturb at a high time-step t₀ ∈ [0.7, 0.9]:
+       z_{t₀} = (1 - t₀)·ε + t₀·z_real
+3. Euler-integrate the learned velocity field from t₀ → 1.0
+4. The result z_smooth is projected back onto the data manifold
+
+``t₀`` controls the smoothing intensity:
+  - t₀ → 1.0: near-identity (only posterior noise removed)
+  - t₀ → 0.0: full generation from noise (cell identity lost)
+
+When ``flow_detach_target=True`` the encoder is effectively frozen during
+FM training (two-stage / decoupled mode).  When ``False`` (default) encoder
+and FM co-adapt (joint mode).
 """
 
 from __future__ import annotations
@@ -19,6 +42,7 @@ from __future__ import annotations
 import math
 from typing import Dict, Optional
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -111,6 +135,8 @@ class DPMMFlowMatchingModel(DPMMODEModel):
         flow_detach_target: bool = False,
         flow_dropout: float = 0.05,
         flow_integration_steps: int = 16,
+        flow_t0: float = 0.8,
+        flow_smoothing: bool = True,
         **kwargs,
     ):
         super().__init__(
@@ -139,6 +165,8 @@ class DPMMFlowMatchingModel(DPMMODEModel):
         self.flow_after_dpmm = bool(flow_after_dpmm)
         self.flow_detach_target = bool(flow_detach_target)
         self.flow_integration_steps = int(flow_integration_steps)
+        self.flow_t0 = float(flow_t0)
+        self.flow_smoothing = bool(flow_smoothing)
         self.flow_field = LatentFlowField(
             latent_dim=latent_dim,
             time_embed_dim=flow_time_dim,
@@ -189,6 +217,104 @@ class DPMMFlowMatchingModel(DPMMODEModel):
             dt = float(times[idx + 1] - times[idx])
             z = z + dt * self.flow_field(z, t)
         return z
+
+    # ------------------------------------------------------------------
+    # Latent smoothing (brainstorm §B: partial-path FM inference)
+    # ------------------------------------------------------------------
+
+    @torch.no_grad()
+    def smooth_latent(
+        self,
+        z_real: torch.Tensor,
+        t0: Optional[float] = None,
+        steps: Optional[int] = None,
+    ) -> torch.Tensor:
+        """Smooth encoder latents by partial FM integration from *t0* → 1.0.
+
+        Instead of generating new samples from noise (``sample_latent_prior``),
+        this method starts from an existing encoder output perturbed to
+        time-step *t0* on the OT interpolation path and integrates only the
+        remaining segment of the velocity field.
+
+        Parameters
+        ----------
+        z_real : Tensor [N, latent_dim]
+            Raw encoder output (already on the correct device).
+        t0 : float, optional
+            Starting time-step.  Higher → less smoothing.
+            Default: ``self.flow_t0`` (set at init, typically 0.8).
+        steps : int, optional
+            Number of Euler steps for the *t0 → 1* segment.
+            Default: ``self.flow_integration_steps``.
+
+        Returns
+        -------
+        z_smooth : Tensor [N, latent_dim]
+        """
+        t0 = float(t0 if t0 is not None else self.flow_t0)
+        n_steps = int(steps or self.flow_integration_steps)
+        n = z_real.size(0)
+        device = z_real.device
+
+        # Perturb to the OT midpoint at t0:
+        #   z_{t0} = (1 - t0) * ε + t0 * z_real
+        eps = torch.randn_like(z_real) * self.flow_noise_scale
+        z = (1.0 - t0) * eps + t0 * z_real
+
+        # Euler integration from t0 → 1.0
+        times = torch.linspace(t0, 1.0, n_steps + 1, device=device)
+        for idx in range(n_steps):
+            t_vec = torch.full((n,), float(times[idx]), device=device)
+            dt = float(times[idx + 1] - times[idx])
+            z = z + dt * self.flow_field(z, t_vec)
+        return z
+
+    # ------------------------------------------------------------------
+    # Override extract_latent to optionally apply FM smoothing
+    # ------------------------------------------------------------------
+
+    def extract_latent(
+        self,
+        data_loader,
+        device: str = "cuda",
+        return_reconstructions: bool = False,
+        smooth: Optional[bool] = None,
+        t0: Optional[float] = None,
+        **kwargs,
+    ):
+        """Extract latent representations, optionally FM-smoothed.
+
+        Parameters
+        ----------
+        smooth : bool or None
+            If ``True``, apply ``smooth_latent`` to every batch.
+            If ``None`` (default), uses ``self.flow_smoothing``.
+        t0 : float or None
+            Override for smoothing start time.
+        """
+        use_smooth = smooth if smooth is not None else self.flow_smoothing
+        # If smoothing is off or FM has not been trained, fall back to base
+        if not use_smooth or not self._flow_active():
+            return super().extract_latent(
+                data_loader, device=device,
+                return_reconstructions=return_reconstructions, **kwargs)
+
+        self.eval()
+        self.to(device)
+        latents, recons = [], []
+        with torch.no_grad():
+            for batch_data in data_loader:
+                x, batch_kwargs = self._prepare_batch(batch_data, device)
+                z_raw = self.encode(x, **batch_kwargs)
+                z_smooth = self.smooth_latent(z_raw, t0=t0)
+                latents.append(z_smooth.cpu().numpy())
+                if return_reconstructions:
+                    recons.append(self.decode(z_smooth).cpu().numpy())
+
+        result = {"latent": np.concatenate(latents, axis=0)}
+        if return_reconstructions:
+            result["reconstruction"] = np.concatenate(recons, axis=0)
+        return result
 
 
 def create_dpmm_fm_model(input_dim: int, latent_dim: int = 32, **kwargs) -> DPMMFlowMatchingModel:

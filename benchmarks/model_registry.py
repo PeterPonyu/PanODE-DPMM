@@ -201,6 +201,8 @@ MODELS = {
             'flow_noise_scale': 0.5,
             'flow_after_dpmm': True,
             'flow_hidden_dims': [128, 128],
+            'flow_t0': 0.8,
+            'flow_smoothing': True,
             'fit_lr': 1e-3,
             'fit_weight_decay': 0,
             'fit_epochs': 1000,

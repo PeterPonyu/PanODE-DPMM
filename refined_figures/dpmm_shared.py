@@ -49,6 +49,16 @@ DPMM_PRIOR_MODELS = [
 BIO_DATASETS = ["setty", "endo", "dentate"]
 UMAP_DATASETS = ["setty", "endo", "dentate", "lung"]
 CORE_DATASETS = ["setty", "dentate", "lung", "endo"]
+SENSITIVITY_DATASETS = [
+    "setty",
+    "dentate",
+    "lung",
+    "endo",
+    "hemato",
+    "hesc",
+    "retina",
+    "pituitary",
+]
 
 SHORT_LABELS = {
     "Pure-AE": "P-AE",

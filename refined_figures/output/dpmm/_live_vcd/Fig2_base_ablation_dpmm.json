@@ -74,9 +74,62 @@
     "max_annotations_complexity": 20,
     "complexity_score_threshold": 15.0
   },
-  "actions": [],
-  "warnings": [],
+  "actions": [
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "xticks",
+      "params": {
+        "strategy": "maxn",
+        "max_labels": 6
+      },
+      "priority": 1,
+      "description": "Reduce the number of x-axis tick labels to avoid overlap. Consider using MaxNLocator or manually selecting key ticks."
+    },
+    {
+      "action_type": "rotate_labels",
+      "target": "xticks",
+      "params": {
+        "rotation": 45,
+        "ha": "right"
+      },
+      "priority": 2,
+      "description": "Rotate x-axis tick labels to reduce horizontal footprint."
+    }
+  ],
+  "warnings": [
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'",
+    "[text_overlap] 'xtick: DPMM' overlaps 'xtick: DPMM-FM'"
+  ],
   "info": [
+    "[bold_usage] 2 text(s) use bold fontweight",
     "[colorblind_confusable] In 'ARI \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
     "[colorblind_confusable] In 'ASW \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
     "[colorblind_confusable] In 'Cal\u2013H \u2191': 1 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=4.9)",
@@ -110,8 +163,10 @@
   ],
   "error": null,
   "counts_by_type": {
+    "text_overlap": 30,
+    "bold_usage": 1,
     "colorblind_confusable": 30
   },
-  "total_warnings": 0,
-  "total_info": 30
+  "total_warnings": 30,
+  "total_info": 31
 }

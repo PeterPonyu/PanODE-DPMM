@@ -74,42 +74,386 @@
     "max_annotations_complexity": 20,
     "complexity_score_threshold": 15.0
   },
-  "actions": [],
-  "warnings": [],
+  "actions": [
+    {
+      "action_type": "reduce_subplots_per_row",
+      "target": "figure",
+      "params": {
+        "preferred_max_cols": 2,
+        "axes_key": "ax@0x7dd1168a7110",
+        "axis_kind": "xtick"
+      },
+      "priority": 1,
+      "description": "Reduce subplots per row to give xtick labels more width (density=98% > 90%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd1168a7110",
+      "params": {
+        "axis_name": "ax@0x7dd1168a7110",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd1168a7110' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd116927250",
+      "params": {
+        "axis_name": "ax@0x7dd116927250",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd116927250' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd116b9b390",
+      "params": {
+        "axis_name": "ax@0x7dd116b9b390",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd116b9b390' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd116c134d0",
+      "params": {
+        "axis_name": "ax@0x7dd116c134d0",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd116c134d0' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd116e8b610",
+      "params": {
+        "axis_name": "ax@0x7dd116e8b610",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd116e8b610' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd117107750",
+      "params": {
+        "axis_name": "ax@0x7dd117107750",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd117107750' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd11718b890",
+      "params": {
+        "axis_name": "ax@0x7dd11718b890",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd11718b890' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd1173f39d0",
+      "params": {
+        "axis_name": "ax@0x7dd1173f39d0",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd1173f39d0' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd11746fb10",
+      "params": {
+        "axis_name": "ax@0x7dd11746fb10",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd11746fb10' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd1176e7c50",
+      "params": {
+        "axis_name": "ax@0x7dd1176e7c50",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd1176e7c50' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd117767d90",
+      "params": {
+        "axis_name": "ax@0x7dd117767d90",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd117767d90' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd1179d3ed0",
+      "params": {
+        "axis_name": "ax@0x7dd1179d3ed0",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd1179d3ed0' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd117ac0050",
+      "params": {
+        "axis_name": "ax@0x7dd117ac0050",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd117ac0050' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd117b38190",
+      "params": {
+        "axis_name": "ax@0x7dd117b38190",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd117b38190' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd117db02d0",
+      "params": {
+        "axis_name": "ax@0x7dd117db02d0",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd117db02d0' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd117e28410",
+      "params": {
+        "axis_name": "ax@0x7dd117e28410",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd117e28410' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd1180a0550",
+      "params": {
+        "axis_name": "ax@0x7dd1180a0550",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd1180a0550' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd118120690",
+      "params": {
+        "axis_name": "ax@0x7dd118120690",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd118120690' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd1183947d0",
+      "params": {
+        "axis_name": "ax@0x7dd1183947d0",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd1183947d0' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd118608910",
+      "params": {
+        "axis_name": "ax@0x7dd118608910",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd118608910' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd118688a50",
+      "params": {
+        "axis_name": "ax@0x7dd118688a50",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd118688a50' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd1188f4b90",
+      "params": {
+        "axis_name": "ax@0x7dd1188f4b90",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd1188f4b90' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd118970cd0",
+      "params": {
+        "axis_name": "ax@0x7dd118970cd0",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd118970cd0' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd118be8e10",
+      "params": {
+        "axis_name": "ax@0x7dd118be8e10",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd118be8e10' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd118c5cf50",
+      "params": {
+        "axis_name": "ax@0x7dd118c5cf50",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd118c5cf50' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd118ed9090",
+      "params": {
+        "axis_name": "ax@0x7dd118ed9090",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd118ed9090' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd118f50f50",
+      "params": {
+        "axis_name": "ax@0x7dd118f50f50",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd118f50f50' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd11917aad0",
+      "params": {
+        "axis_name": "ax@0x7dd11917aad0",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd11917aad0' (density=98%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd11939bc50",
+      "params": {
+        "axis_name": "ax@0x7dd11939bc50",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd11939bc50' (density=110%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7dd1198eb230",
+      "params": {
+        "axis_name": "ax@0x7dd1198eb230",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7dd1198eb230' (density=110%)."
+    }
+  ],
+  "warnings": [
+    "[label_density_excess] X-tick labels in 'ax@0x7dd1168a7110' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd116927250' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd116b9b390' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd116c134d0' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd116e8b610' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd117107750' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd11718b890' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd1173f39d0' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd11746fb10' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd1176e7c50' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd117767d90' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd1179d3ed0' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd117ac0050' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd117b38190' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd117db02d0' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd117e28410' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd1180a0550' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd118120690' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd1183947d0' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd118608910' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd118688a50' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd1188f4b90' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd118970cd0' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd118be8e10' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd118c5cf50' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd118ed9090' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd118f50f50' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd11917aad0' fill 98% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd11939bc50' fill 110% of axis width (max_len=2 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7dd1198eb230' fill 110% of axis width (max_len=2 chars)"
+  ],
   "info": [
-    "[colorblind_confusable] In 'ax@0x784591405950': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784591969090': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x7845919ed1d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784591d75a90': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784591e25bd0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784591fbe850': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x7845920720d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x78459212de50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x78459228d310': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784592315450': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784592595590': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x78459264d6d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784592725810': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784592848a50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784592ac4b90': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784592b44cd0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784592dd0e10': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784592e58f50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784593033610': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784593381590': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x7845935ad1d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x78459360d090': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x7845937c1310': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784593845450': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784594259d10': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784594a0b110': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x784596ce6d50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
-    "[colorblind_confusable] In 'ax@0x7845a1abf110': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more"
+    "[colorblind_confusable] In 'ax@0x7dd1168a7110': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd116927250': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd116b9b390': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd116c134d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd116e8b610': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd117107750': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd11718b890': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd1173f39d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd11746fb10': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd1176e7c50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd117767d90': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd1179d3ed0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd117ac0050': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd117b38190': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd117db02d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd117e28410': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd1180a0550': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd118120690': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd1183947d0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd118608910': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd118688a50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd1188f4b90': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd118970cd0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd118be8e10': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd118c5cf50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd118ed9090': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd118f50f50': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more",
+    "[colorblind_confusable] In 'ax@0x7dd11917aad0': 14 colour pair(s) may be confusable under deuteranopia: 'patch' vs 'patch' (\u0394E=9.0); 'patch' vs 'patch' (\u0394E=3.9); 'patch' vs 'patch' (\u0394E=10.0) ... +11 more"
   ],
   "error": null,
   "counts_by_type": {
+    "label_density_excess": 30,
     "colorblind_confusable": 28
   },
-  "total_warnings": 0,
+  "total_warnings": 30,
   "total_info": 28
 }

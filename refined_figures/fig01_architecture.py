@@ -37,9 +37,9 @@ matplotlib.rcParams.update({
 DPI = 300
 
 # ── Font sizes (matching CLOP-DiT) ───────────────────────────────────────────
-FONT_LABEL = 11
-FONT_SUBLABEL = 9
-FONT_TITLE = 12
+FONT_LABEL = 13.0
+FONT_SUBLABEL = 10.5
+FONT_TITLE = 14.5
 
 # ── Colour palette ───────────────────────────────────────────────────────────
 C_WHITE = "#FFFFFF"
@@ -89,11 +89,11 @@ _ARCH = {
         "variants": [
             {
                 "name": "DPMM-FM",
-                "subtitle": "MLP + DPMM prior + latent flow-matching head · ~1.64M params",
+                "subtitle": "MLP autoencoder + DPMM prior\nlatent flow-matching regularization · ~1.64M params",
                 "encoder": "MLP Encoder",
-                "enc_sub": "256→128→10, BN·Mish·Drop",
-                "dec_sub": "10→128→256, BN·Mish·Drop",
-                "extra": ("Flow-Matching Head", "v(z_t,t) with sinusoidal time embedding"),
+                "enc_sub": "256→128→10\nBN · Mish · Drop",
+                "dec_sub": "10→128→256\nBN · Mish · Drop",
+                "extra": ("Flow-Matching Head", "velocity field + time embedding"),
             },
         ],
     },
@@ -150,7 +150,7 @@ def _draw_box(ax, xy, w, h, label, sublabel=None, facecolor=C_WHITE,
     if sublabel:
         ax.text(x + w / 2, y + h / 2 - h * 0.22, sublabel,
                 ha="center", va="center", fontsize=sublabel_size,
-                color=C_MID_GREY, zorder=zorder + 1)
+                color=C_MID_GREY, zorder=zorder + 1, linespacing=1.05)
     return box
 
 
@@ -171,26 +171,26 @@ def _draw_stage_bg(ax, xy, w, h, label, color, alpha=0.10):
         facecolor=color, edgecolor="none", linewidth=0,
         alpha=alpha, zorder=0)
     ax.add_patch(bg)
-    ax.text(x + w / 2, y + h + 0.07, label,
-            ha="center", va="bottom", fontsize=10,
+    ax.text(x + w / 2, y + h - 0.10, label,
+            ha="center", va="top", fontsize=11.5,
             fontweight="normal", color=color, zorder=1)
 
 
 def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
                       latent_label, panel_letter=None):
     """Draw one model variant as a horizontal pipeline."""
-    BW = 1.15   # Box width  (encoder / decoder)
+    BW = 1.18   # Box width  (encoder / decoder)
     BH = 0.56   # Box height
-    SBW = 0.62  # Small box width (input / output / latent)
+    SBW = 0.66  # Small box width (input / output / latent)
     SBH = 0.46  # Small box height
-    gap = 0.20
+    gap = 0.24
 
     # Variant title
     ax.text(0.18, y_base + BH + 0.18, variant["name"],
             ha="left", va="bottom", fontsize=FONT_TITLE,
             fontweight="normal", color="black", zorder=5)
-    ax.text(0.18, y_base + BH + 0.09, variant["subtitle"],
-            ha="left", va="top", fontsize=FONT_SUBLABEL,
+    ax.text(0.18, y_base + BH + 0.10, variant["subtitle"],
+            ha="left", va="top", fontsize=10.0,
             color=C_MID_GREY, zorder=5)
 
     x = 0.0
@@ -207,7 +207,7 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
     # Arrow → Encoder
     x_end_input = x + SBW
     x_enc = x_end_input + gap
-    _draw_arrow(ax, (x_end_input, y_base + SBH / 2),
+    _draw_arrow(ax, (x_end_input, y_base + BH / 2),
                 (x_enc, y_base + BH / 2), color=C_ENC_E)
 
     # Encoder box
@@ -244,7 +244,7 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
     # Arrow → Decoder
     x_end_lat = x_lat + LBW
     x_dec = x_end_lat + gap
-    _draw_arrow(ax, (x_end_lat, y_base + SBH / 2),
+    _draw_arrow(ax, (x_end_lat, y_base + BH / 2),
                 (x_dec, y_base + BH / 2), color=C_DEC_E)
 
     # Decoder box
@@ -267,13 +267,15 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
     if variant["extra"]:
         extra_name, extra_sub = variant["extra"]
         if "Flow" in extra_name:
-            ex_x = x_enc
+            flow_w = BW + 0.24
+            flow_cx = x_lat + LBW / 2
+            ex_x = flow_cx - flow_w / 2
             ex_y = y_base - 0.44
-            _draw_box(ax, (ex_x, ex_y), BW + 0.18, 0.44, extra_name,
+            _draw_box(ax, (ex_x, ex_y), flow_w, 0.46, extra_name,
                       sublabel=extra_sub,
                       facecolor=C_FLOW, edgecolor=C_FLOW_E, linewidth=1.0)
-            _draw_arrow(ax, (x_lat + LBW / 2, y_base),
-                        (ex_x + (BW + 0.18) / 2, ex_y + 0.44),
+            _draw_arrow(ax, (flow_cx, y_base),
+                        (flow_cx, ex_y + 0.46),
                         color=C_FLOW_E, linewidth=0.8)
         elif "MoCo" in extra_name:
             # Place below encoder
@@ -311,10 +313,10 @@ def generate(series, out_dir):
     y_min = -0.38
     y_max = row_pitch * n_variants + 0.10
 
-    fig = plt.figure(figsize=(12.4, 4.5))
+    fig = plt.figure(figsize=(13.6, 5.2))
     ax = bind_figure_region(fig, (0.005, 0.06, 0.998, 0.96)).add_axes(fig)
-    ax.set_xlim(-0.35, 5.42)
-    ax.set_ylim(-1.32, y_max)
+    ax.set_xlim(-0.35, 5.75)
+    ax.set_ylim(-1.10, y_max)
     ax.axis("off")
     ax.set_xticks([])
     ax.set_yticks([])
@@ -322,7 +324,7 @@ def generate(series, out_dir):
 
     # Draw stage backgrounds
     stage_y = -0.34
-    stage_h = 1.66
+    stage_h = 1.72
     _draw_stage_bg(ax, (-0.10, stage_y), 0.80, stage_h,
                    "Input", C_INPUT_E, alpha=0.06)
     _draw_stage_bg(ax, (0.74, stage_y), 1.30, stage_h,
@@ -345,33 +347,31 @@ def generate(series, out_dir):
             panel_letter=None)
 
     # ── Objective + training cards ────────────────────────────────────────
-    card_y = -1.00
+    card_y = -0.82
     left_card = FancyBboxPatch(
-        (0.12, card_y), 2.22, 0.44,
+        (0.12, card_y), 1.90, 0.38,
         boxstyle="round,pad=0.04",
         facecolor="#F7F9FB", edgecolor="#B0BEC5",
         linewidth=0.6, zorder=4)
     right_card = FancyBboxPatch(
-        (2.60, card_y), 2.28, 0.44,
+        (2.18, card_y), 2.10, 0.38,
         boxstyle="round,pad=0.04",
         facecolor="#F7F9FB", edgecolor="#B0BEC5",
         linewidth=0.6, zorder=4)
     ax.add_patch(left_card)
     ax.add_patch(right_card)
-    ax.text(0.24, card_y + 0.35,
+    ax.text(0.22, card_y + 0.32,
         "Objective\n"
-        "reconstruction (MSE) · DPMM negative log-likelihood\n"
-        "latent flow matching after DPMM warmup\n"
-        "λ_dpmm = 1.0 · λ_flow = 0.10",
-        fontsize=7.7, color="#455A64", va="top", zorder=5,
-        linespacing=1.23)
-    ax.text(2.72, card_y + 0.35,
+        "• reconstruction + DPMM prior\n"
+        "• latent flow regularization after warmup",
+        fontsize=10.0, color="#455A64", va="top", zorder=5,
+        linespacing=1.20)
+    ax.text(2.28, card_y + 0.32,
         "Training setup\n"
-        "AdamW · lr = 1e-3 · batch = 128 · dropout = 0.2\n"
-        "1000 epochs · DPMM warmup = 0.8 · grad clip = 10.0\n"
-        "3000 HVGs · latent dim = 10 · FM head = 128→128 · noise scale = 0.5",
-        fontsize=7.7, color="#455A64", va="top", zorder=5,
-        linespacing=1.23)
+        "• AdamW, lr = 1e-3, batch = 128\n"
+        "• 1000 epochs, warmup = 0.8, latent = 10",
+        fontsize=10.0, color="#455A64", va="top", zorder=5,
+        linespacing=1.20)
 
     legend_items = [
         (C_INPUT, C_INPUT_E, "Input/Output"),
@@ -388,7 +388,7 @@ def generate(series, out_dir):
                bbox_to_anchor=(0.5, 0.001),
                ncol=len(legend_items),
                frameon=False,
-               fontsize=8.6,
+               fontsize=10.5,
                handlelength=1.0,
                handletextpad=0.35,
                columnspacing=0.75)

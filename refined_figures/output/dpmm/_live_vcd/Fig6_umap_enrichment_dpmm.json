@@ -76,9 +76,17 @@
   },
   "actions": [],
   "warnings": [],
-  "info": [],
+  "info": [
+    "[bold_usage] 2 text(s) use bold fontweight",
+    "[text_truncation] 'xlabel: -log10(adj p)' extends beyond figure border (bottom, 4px)",
+    "[text_truncation] 'xlabel: -log10(adj p)' extends beyond figure border (bottom, 4px)",
+    "[text_truncation] 'xlabel: -log10(adj p)' extends beyond figure border (bottom, 4px)"
+  ],
   "error": null,
-  "counts_by_type": {},
+  "counts_by_type": {
+    "bold_usage": 1,
+    "text_truncation": 3
+  },
   "total_warnings": 0,
-  "total_info": 0
+  "total_info": 4
 }

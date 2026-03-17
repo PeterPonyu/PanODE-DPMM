@@ -75,10 +75,20 @@
     "complexity_score_threshold": 15.0
   },
   "actions": [],
-  "warnings": [],
-  "info": [],
+  "warnings": [
+    "[panel_label_text_overlap] Panel label '(a)' overlaps text 'title: DPMM warmup ratio' (27 px\u00b2)",
+    "[panel_label_text_overlap] Panel label '(b)' overlaps text 'title: DPMM latent dim' (40 px\u00b2)",
+    "[panel_label_text_overlap] Panel label '(c)' overlaps text 'title: FM flow weight' (26 px\u00b2)",
+    "[panel_label_text_overlap] Panel label '(d)' overlaps text 'title: FM noise scale' (40 px\u00b2)"
+  ],
+  "info": [
+    "[bold_usage] 4 text(s) use bold fontweight"
+  ],
   "error": null,
-  "counts_by_type": {},
-  "total_warnings": 0,
-  "total_info": 0
+  "counts_by_type": {
+    "panel_label_text_overlap": 4,
+    "bold_usage": 1
+  },
+  "total_warnings": 4,
+  "total_info": 1
 }

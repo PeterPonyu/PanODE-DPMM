@@ -15,6 +15,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.lines import Line2D
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -28,7 +29,7 @@ from refined_figures.dpmm_shared import (
 
 DPI = 300
 DYNAMICS_DIR = ROOT / "benchmarks" / "training_dynamics_results"
-_DATASET = "setty"
+_DATASETS = ["setty", "dentate", "lung", "endo"]
 _DISPLAY_LABELS = {
     "Pure-AE": "AE",
     "DPMM-Base": "DPMM",
@@ -46,22 +47,22 @@ _CURVE_STYLES = {
 }
 
 
-def _load_latest_history(model_name: str) -> dict | None:
+def _load_latest_history(model_name: str, dataset: str) -> dict | None:
     safe = str(model_name).replace("/", "_").replace(" ", "_")
     candidates = []
     rerun_dir = preferred_core_model_dir(model_name)
     if rerun_dir is not None and rerun_dir.exists():
-        candidates.extend(sorted(rerun_dir.glob(f"{safe}_{_DATASET}_*_history.json"), reverse=True))
-    candidates.extend(sorted(DYNAMICS_DIR.glob(f"{model_name}_{_DATASET}_*_history.json"), reverse=True))
-    candidates.extend(sorted(DYNAMICS_DIR.glob(f"{model_name}_{_DATASET}_history.json"), reverse=True))
+        candidates.extend(sorted(rerun_dir.glob(f"{safe}_{dataset}_*_history.json"), reverse=True))
+    candidates.extend(sorted(DYNAMICS_DIR.glob(f"{model_name}_{dataset}_*_history.json"), reverse=True))
+    candidates.extend(sorted(DYNAMICS_DIR.glob(f"{model_name}_{dataset}_history.json"), reverse=True))
     if not candidates:
         return None
     with open(candidates[0], "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-def _draw_history_panel(ax, model_name: str, show_ylabel: bool, show_legend: bool) -> None:
-    history = _load_latest_history(model_name)
+def _draw_history_panel(ax, model_name: str, dataset: str, show_ylabel: bool, show_xlabel: bool) -> None:
+    history = _load_latest_history(model_name, dataset)
     if not history:
         ax.axis("off")
         ax.text(0.5, 0.5, "No history", ha="center", va="center", fontsize=10)
@@ -78,17 +79,16 @@ def _draw_history_panel(ax, model_name: str, show_ylabel: bool, show_legend: boo
         ax.plot(epochs, vals, color=color, linewidth=lw, label=label)
 
     ax.set_xlim(1, max(len(epochs), 2))
-    ax.tick_params(axis="both", labelsize=8, length=2.5)
+    ax.tick_params(axis="both", labelsize=10, length=2.5)
     ax.grid(axis="y", alpha=0.16, linewidth=0.4)
     ax.set_axisbelow(True)
-    ax.set_xlabel("epoch", fontsize=8.5)
+    if show_xlabel:
+        ax.set_xlabel("epoch", fontsize=10.5, color="black")
     if show_ylabel:
-        ax.set_ylabel("loss", fontsize=8.5)
+        ax.set_ylabel("loss", fontsize=10.5, color="black")
     for spine in ax.spines.values():
         spine.set_linewidth(0.5)
         spine.set_edgecolor("#90A4AE")
-    if show_legend:
-        ax.legend(loc="upper right", fontsize=7.2, frameon=False, ncol=1, handlelength=1.8)
 
 
 
@@ -104,20 +104,43 @@ def generate(series, out_dir):
     if target_model not in model_order:
         model_order.append(target_model)
 
-    fig = plt.figure(figsize=(15.6, 4.9))
+    fig = plt.figure(figsize=(12.0, 9.0))
 
-    root = bind_figure_region(fig, (0.055, 0.14, 0.985, 0.90))
-    cols = root.split_cols([1] * len(model_order), gap=0.05)
+    root = bind_figure_region(fig, (0.105, 0.10, 0.975, 0.92))
+    grid = root.grid(len(_DATASETS), len(model_order), wgap=0.06, hgap=0.11)
 
-    for idx, model_name in enumerate(model_order):
-        ax_top = cols[idx].add_axes(fig)
-        _draw_history_panel(
-            ax_top,
-            model_name,
-            show_ylabel=(idx == 0),
-            show_legend=(idx == len(model_order) - 1),
-        )
-        ax_top.set_title(_DISPLAY_LABELS.get(model_name, model_name), fontsize=11.2, pad=4, color="black")
+    legend_handles = [
+        Line2D([0], [0], color=color, lw=lw, label=label)
+        for key, (label, color, lw) in _CURVE_STYLES.items()
+        if key in {"train_loss", "recon_loss", "dpmm_loss", "flow_loss"}
+    ]
+    fig.legend(
+        handles=legend_handles,
+        loc="upper center",
+        bbox_to_anchor=(0.53, 0.985),
+        ncol=4,
+        frameon=False,
+        fontsize=10,
+        handlelength=1.8,
+        columnspacing=0.9,
+    )
+
+    for ridx, dataset in enumerate(_DATASETS):
+        row_axes = []
+        for cidx, model_name in enumerate(model_order):
+            ax = grid[ridx][cidx].add_axes(fig)
+            row_axes.append(ax)
+            _draw_history_panel(
+                ax,
+                model_name,
+                dataset,
+                show_ylabel=(cidx == 0),
+                show_xlabel=(ridx == len(_DATASETS) - 1),
+            )
+            if ridx == 0:
+                ax.set_title(_DISPLAY_LABELS.get(model_name, model_name), fontsize=13, pad=4, color="black")
+        mid_y = row_axes[0].get_position().y0 + row_axes[0].get_position().height / 2
+        fig.text(root.left - 0.060, mid_y, dataset, ha="right", va="center", fontsize=12.0, color="black")
 
     out_path = out_dir / f"Fig4_training_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)

@@ -74,15 +74,133 @@
     "max_annotations_complexity": 20,
     "complexity_score_threshold": 15.0
   },
-  "actions": [],
-  "warnings": [],
+  "actions": [
+    {
+      "action_type": "increase_bottom_margin",
+      "target": "figure",
+      "params": {
+        "subplots_adjust": {
+          "bottom": 0.15
+        }
+      },
+      "priority": 1,
+      "description": "Increase bottom margin so that x-axis labels and tick labels are not clipped at the figure edge."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7471eb8cc410",
+      "params": {
+        "axis_name": "ax@0x7471eb8cc410",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7471eb8cc410' (density=85%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7471eb95e710",
+      "params": {
+        "axis_name": "ax@0x7471eb95e710",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7471eb95e710' (density=85%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7471eb9fa0d0",
+      "params": {
+        "axis_name": "ax@0x7471eb9fa0d0",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7471eb9fa0d0' (density=85%)."
+    },
+    {
+      "action_type": "rotate_labels",
+      "target": "ax@0x7471eb9fa0d0",
+      "params": {
+        "axis_name": "ax@0x7471eb9fa0d0"
+      },
+      "priority": 2,
+      "description": "Rotate x-tick labels in 'ax@0x7471eb9fa0d0' (max_len=12 chars)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7471ebd2d450",
+      "params": {
+        "axis_name": "ax@0x7471ebd2d450",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7471ebd2d450' (density=85%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7471ebd2e850",
+      "params": {
+        "axis_name": "ax@0x7471ebd2e850",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7471ebd2e850' (density=85%)."
+    },
+    {
+      "action_type": "rotate_labels",
+      "target": "ax@0x7471ebd2e850",
+      "params": {
+        "axis_name": "ax@0x7471ebd2e850"
+      },
+      "priority": 2,
+      "description": "Rotate x-tick labels in 'ax@0x7471ebd2e850' (max_len=13 chars)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x7471ec056660",
+      "params": {
+        "axis_name": "ax@0x7471ec056660",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x7471ec056660' (density=85%)."
+    },
+    {
+      "action_type": "rotate_labels",
+      "target": "ax@0x7471ec056660",
+      "params": {
+        "axis_name": "ax@0x7471ec056660"
+      },
+      "priority": 2,
+      "description": "Rotate x-tick labels in 'ax@0x7471ec056660' (max_len=18 chars)."
+    },
+    {
+      "action_type": "increase_figsize_height",
+      "target": "figure",
+      "params": {
+        "delta_height": 0.5
+      },
+      "priority": 2,
+      "description": "Increase figure height to accommodate bottom-edge text."
+    }
+  ],
+  "warnings": [
+    "[label_density_excess] X-tick labels in 'ax@0x7471eb8cc410' 24 labels exceed policy cap 15 (max_len=8 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7471eb95e710' 24 labels exceed policy cap 15 (max_len=8 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7471eb9fa0d0' 24 labels exceed policy cap 15 (max_len=12 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7471ebd2d450' 24 labels exceed policy cap 15 (max_len=8 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7471ebd2e850' 24 labels exceed policy cap 15 (max_len=13 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x7471ec056660' 24 labels exceed policy cap 15 (max_len=18 chars)",
+    "[text_truncation] 'xtick: RP11-524N5.1' extends beyond figure border (bottom, 22px)"
+  ],
   "info": [
-    "[text_truncation] 'xtick: LINC01013' extends beyond figure border (bottom, 8px)"
+    "[bold_usage] 2 text(s) use bold fontweight"
   ],
   "error": null,
   "counts_by_type": {
-    "text_truncation": 1
+    "label_density_excess": 6,
+    "text_truncation": 1,
+    "bold_usage": 1
   },
-  "total_warnings": 0,
+  "total_warnings": 7,
   "total_info": 1
 }
