@@ -36,7 +36,7 @@ from refined_figures.dpmm_shared import (
 
 DPI = 300
 N_COMP = 4
-ENRICHMENT_TERMS = 20
+ENRICHMENT_TERMS = 15
 
 
 # ── UMAP drawing helpers ─────────────────────────────────────────────────
@@ -108,7 +108,7 @@ def _draw_gene_row(axes, payload, dataset):
 
 # ── Enrichment drawing helper ────────────────────────────────────────────
 
-def _format_term(value: str, width: int = 30) -> str:
+def _format_term(value: str, width: int = 32) -> str:
     value = " ".join(str(value).split())
     if len(value) > width:
         return value[:width - 1] + "\u2026"
@@ -151,11 +151,14 @@ def _draw_enrichment(ax, df, component, title):
     ax.set_yticks(ypos)
     ax.set_yticklabels([])
     ax.tick_params(axis="y", length=0, pad=0)
+    # Remove left/right spines so term text is not truncated by the frame
+    ax.spines["left"].set_visible(False)
+    ax.spines["right"].set_visible(False)
     # Place term labels adjacent to each dot's x position
     for i, term in enumerate(terms):
         ax.annotate(term, xy=(float(score.iloc[i]), ypos[i]),
                     xytext=(-10, 0), textcoords='offset points',
-                    fontsize=11.5, ha='right', va='center', clip_on=False)
+                    fontsize=10.0, ha='right', va='center', clip_on=False)
     ax.set_title(f"{title}{suffix}", fontsize=17.0, loc="left", pad=8,
                  fontweight="normal", color="black")
     ax.set_xlabel("-log10(adj p)", fontsize=15, color="black")
@@ -183,7 +186,7 @@ def generate(series, out_dir):
 
     fig = plt.figure(figsize=(18, 12))
     root = bind_figure_region(fig, (0.04, 0.04, 0.96, 0.97))
-    panel_a_region, panel_b_region = root.split_rows([0.26, 0.68], gap=0.035)
+    panel_a_region, panel_b_region = root.split_rows([0.32, 0.62], gap=0.035)
 
     # ── Panel (a): UMAP overlays ──────────────────────────────────────
     grid_a = panel_a_region.grid(2, total_umap_cols, wgap=0.012, hgap=0.06)
@@ -224,8 +227,8 @@ def generate(series, out_dir):
              ha="left", va="bottom", transform=fig.transFigure)
 
     # ── Panel (b): GO enrichment — side-by-side columns ───────────────
-    panel_b_inset = panel_b_region.inset(left=0.18)
-    grid_b = panel_b_inset.grid(1, n_ds, wgap=0.16)
+    panel_b_inset = panel_b_region.inset(left=0.12)
+    grid_b = panel_b_inset.grid(1, n_ds, wgap=0.10)
     for c_idx, dataset in enumerate(BIO_DATASETS):
         ax = grid_b[0][c_idx].add_axes(fig)
         enrich_df, component = load_best_enrichment(model_name, dataset)

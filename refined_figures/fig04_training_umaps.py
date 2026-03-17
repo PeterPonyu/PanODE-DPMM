@@ -107,7 +107,7 @@ def generate(series, out_dir):
     fig = plt.figure(figsize=(12.0, 9.0))
 
     root = bind_figure_region(fig, (0.105, 0.10, 0.975, 0.92))
-    grid = root.grid(len(_DATASETS), len(model_order), wgap=0.06, hgap=0.11)
+    grid = root.grid(len(_DATASETS), len(model_order), wgap=0.06, hgap=0.09)
 
     legend_handles = [
         Line2D([0], [0], color=color, lw=lw, label=label)

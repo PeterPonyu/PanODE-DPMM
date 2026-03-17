@@ -185,13 +185,13 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
     SBH = 0.46  # Small box height
     gap = 0.24
 
-    # Variant title
-    ax.text(0.18, y_base + BH + 0.18, variant["name"],
+    # Variant title — placed above prior box to avoid overlap
+    ax.text(0.18, y_base + BH + 0.50, variant["name"],
             ha="left", va="bottom", fontsize=FONT_TITLE,
             fontweight="normal", color="black", zorder=5)
-    ax.text(0.18, y_base + BH + 0.10, variant["subtitle"],
+    ax.text(0.18, y_base + BH + 0.44, variant["subtitle"],
             ha="left", va="top", fontsize=10.0,
-            color=C_MID_GREY, zorder=5)
+            color=C_MID_GREY, zorder=5, linespacing=1.15)
 
     x = 0.0
 
@@ -313,8 +313,8 @@ def generate(series, out_dir):
     y_min = -0.38
     y_max = row_pitch * n_variants + 0.10
 
-    fig = plt.figure(figsize=(13.6, 5.2))
-    ax = bind_figure_region(fig, (0.005, 0.06, 0.998, 0.96)).add_axes(fig)
+    fig = plt.figure(figsize=(13.6, 4.4))
+    ax = bind_figure_region(fig, (0.005, 0.06, 0.998, 0.99)).add_axes(fig)
     ax.set_xlim(-0.35, 5.75)
     ax.set_ylim(-1.10, y_max)
     ax.axis("off")
@@ -323,18 +323,18 @@ def generate(series, out_dir):
     fig.patch.set_facecolor(C_WHITE)
 
     # Draw stage backgrounds
-    stage_y = -0.34
-    stage_h = 1.72
+    stage_y = -0.42
+    stage_h = 1.86
     _draw_stage_bg(ax, (-0.10, stage_y), 0.80, stage_h,
-                   "Input", C_INPUT_E, alpha=0.06)
+                   "Input", C_INPUT_E, alpha=0.07)
     _draw_stage_bg(ax, (0.74, stage_y), 1.30, stage_h,
-                   "Encoder", C_ENC_E, alpha=0.06)
+                   "Encoder", C_ENC_E, alpha=0.07)
     _draw_stage_bg(ax, (2.08, stage_y), 0.94, stage_h,
-                   "Latent + Prior", C_LAT_E, alpha=0.06)
+                   "Latent + Prior", C_LAT_E, alpha=0.07)
     _draw_stage_bg(ax, (3.06, stage_y), 1.30, stage_h,
-                   "Decoder", C_DEC_E, alpha=0.06)
+                   "Decoder", C_DEC_E, alpha=0.07)
     _draw_stage_bg(ax, (4.40, stage_y), 0.78, stage_h,
-                   "Output", C_OUTPUT_E, alpha=0.06)
+                   "Output", C_OUTPUT_E, alpha=0.07)
 
     # Draw the single variant
     for variant in variants:
@@ -349,12 +349,12 @@ def generate(series, out_dir):
     # ── Objective + training cards ────────────────────────────────────────
     card_y = -0.82
     left_card = FancyBboxPatch(
-        (0.12, card_y), 1.90, 0.38,
+        (0.12, card_y), 2.00, 0.42,
         boxstyle="round,pad=0.04",
         facecolor="#F7F9FB", edgecolor="#B0BEC5",
         linewidth=0.6, zorder=4)
     right_card = FancyBboxPatch(
-        (2.18, card_y), 2.10, 0.38,
+        (2.28, card_y), 2.30, 0.42,
         boxstyle="round,pad=0.04",
         facecolor="#F7F9FB", edgecolor="#B0BEC5",
         linewidth=0.6, zorder=4)
@@ -362,15 +362,15 @@ def generate(series, out_dir):
     ax.add_patch(right_card)
     ax.text(0.22, card_y + 0.32,
         "Objective\n"
-        "• reconstruction + DPMM prior\n"
-        "• latent flow regularization after warmup",
-        fontsize=10.0, color="#455A64", va="top", zorder=5,
+        r"• $\mathcal{L} = \mathcal{L}_{recon} + \mathcal{L}_{DPMM} + \lambda_{FM} \mathcal{L}_{flow}$" "\n"
+        "• DPMM prior after warmup; FM velocity reg.",
+        fontsize=10.5, color="#455A64", va="top", zorder=5,
         linespacing=1.20)
     ax.text(2.28, card_y + 0.32,
         "Training setup\n"
-        "• AdamW, lr = 1e-3, batch = 128\n"
-        "• 1000 epochs, warmup = 0.8, latent = 10",
-        fontsize=10.0, color="#455A64", va="top", zorder=5,
+        r"• AdamW, lr = $10^{-3}$, batch = 128" "\n"
+        r"• 1000 ep, warmup $\tau$=0.8, $d_z$=10, $\lambda_{FM}$=0.1",
+        fontsize=10.5, color="#455A64", va="top", zorder=5,
         linespacing=1.20)
 
     legend_items = [

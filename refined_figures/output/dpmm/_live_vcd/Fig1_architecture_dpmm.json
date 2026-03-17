@@ -93,7 +93,7 @@
     }
   ],
   "warnings": [
-    "[text_overlap] 'annotation: Latent + Prior' overlaps 'annotation: DPMM Prior'"
+    "[text_overlap] 'annotation: Input' overlaps 'annotation: DPMM-FM'"
   ],
   "info": [
     "[annotation_data_overlap] Text 'annotation: 10\u2192128\u2192256\nBN \u00b7 Mish \u00b7 Drop' overlaps content 'patch: FancyBboxPatch' (2426 px\u00b2)",
@@ -116,15 +116,13 @@
     "[annotation_data_overlap] Text 'annotation: Latent + Prior' overlaps content 'patch: FancyBboxPatch' (918 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: MLP Encoder' overlaps content 'patch: FancyBboxPatch' (1349 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: MLP Encoder' overlaps content 'patch: FancyBboxPatch' (1349 px\u00b2)",
-    "[annotation_data_overlap] Text 'annotation: MLP autoencoder + DPMM prior\nlatent flow-matching ' overlaps content 'patch: FancyBboxPatch' (212 px\u00b2)",
-    "[annotation_data_overlap] Text 'annotation: MLP autoencoder + DPMM prior\nlatent flow-matching ' overlaps content 'patch: FancyBboxPatch' (2894 px\u00b2)",
-    "[annotation_data_overlap] Text 'annotation: MLP autoencoder + DPMM prior\nlatent flow-matching ' overlaps content 'patch: FancyBboxPatch' (2999 px\u00b2)",
-    "[annotation_data_overlap] Text 'annotation: MLP autoencoder + DPMM prior\nlatent flow-matching ' overlaps content 'patch: FancyBboxPatch' (4920 px\u00b2)",
-    "[annotation_data_overlap] Text 'annotation: Objective\n\u2022 reconstruction + DPMM prior\n\u2022 latent f' overlaps content 'patch: FancyBboxPatch' (9895 px\u00b2)",
+    "[annotation_data_overlap] Text 'annotation: MLP autoencoder + DPMM prior\nlatent flow-matching ' overlaps content 'patch: FancyBboxPatch' (2831 px\u00b2)",
+    "[annotation_data_overlap] Text 'annotation: MLP autoencoder + DPMM prior\nlatent flow-matching ' overlaps content 'patch: FancyBboxPatch' (4813 px\u00b2)",
+    "[annotation_data_overlap] Text 'annotation: Objective\n\u2022 $\\mathcal{L} = \\mathcal{L}_{recon} + \\' overlaps content 'patch: FancyBboxPatch' (13292 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: Output' overlaps content 'patch: FancyBboxPatch' (435 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: Recon.' overlaps content 'patch: FancyBboxPatch' (374 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: Recon.' overlaps content 'patch: FancyBboxPatch' (374 px\u00b2)",
-    "[annotation_data_overlap] Text 'annotation: Training setup\n\u2022 AdamW, lr = 1e-3, batch = 128\n\u2022 1' overlaps content 'patch: FancyBboxPatch' (10278 px\u00b2)",
+    "[annotation_data_overlap] Text 'annotation: Training setup\n\u2022 AdamW, lr = $10^{-3}$, batch = 12' overlaps content 'patch: FancyBboxPatch' (13070 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: n_comp=50' overlaps content 'patch: FancyBboxPatch' (658 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: n_comp=50' overlaps content 'patch: FancyBboxPatch' (658 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: velocity field + time embedding' overlaps content 'patch: FancyBboxPatch' (1522 px\u00b2)",
@@ -140,8 +138,8 @@
   "error": null,
   "counts_by_type": {
     "text_overlap": 1,
-    "annotation_data_overlap": 40
+    "annotation_data_overlap": 38
   },
   "total_warnings": 1,
-  "total_info": 40
+  "total_info": 38
 }

@@ -88,90 +88,90 @@
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x7471eb8cc410",
+      "target": "ax@0x752ae9a14410",
       "params": {
-        "axis_name": "ax@0x7471eb8cc410",
+        "axis_name": "ax@0x752ae9a14410",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x7471eb8cc410' (density=85%)."
+      "description": "Reduce number of xtick labels in 'ax@0x752ae9a14410' (density=80%)."
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x7471eb95e710",
+      "target": "ax@0x752ae9aaa710",
       "params": {
-        "axis_name": "ax@0x7471eb95e710",
+        "axis_name": "ax@0x752ae9aaa710",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x7471eb95e710' (density=85%)."
+      "description": "Reduce number of xtick labels in 'ax@0x752ae9aaa710' (density=80%)."
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x7471eb9fa0d0",
+      "target": "ax@0x752ae9b420d0",
       "params": {
-        "axis_name": "ax@0x7471eb9fa0d0",
+        "axis_name": "ax@0x752ae9b420d0",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x7471eb9fa0d0' (density=85%)."
+      "description": "Reduce number of xtick labels in 'ax@0x752ae9b420d0' (density=80%)."
     },
     {
       "action_type": "rotate_labels",
-      "target": "ax@0x7471eb9fa0d0",
+      "target": "ax@0x752ae9b420d0",
       "params": {
-        "axis_name": "ax@0x7471eb9fa0d0"
+        "axis_name": "ax@0x752ae9b420d0"
       },
       "priority": 2,
-      "description": "Rotate x-tick labels in 'ax@0x7471eb9fa0d0' (max_len=12 chars)."
+      "description": "Rotate x-tick labels in 'ax@0x752ae9b420d0' (max_len=12 chars)."
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x7471ebd2d450",
+      "target": "ax@0x752ae9e75450",
       "params": {
-        "axis_name": "ax@0x7471ebd2d450",
+        "axis_name": "ax@0x752ae9e75450",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x7471ebd2d450' (density=85%)."
+      "description": "Reduce number of xtick labels in 'ax@0x752ae9e75450' (density=80%)."
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x7471ebd2e850",
+      "target": "ax@0x752ae9e76850",
       "params": {
-        "axis_name": "ax@0x7471ebd2e850",
+        "axis_name": "ax@0x752ae9e76850",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x7471ebd2e850' (density=85%)."
+      "description": "Reduce number of xtick labels in 'ax@0x752ae9e76850' (density=80%)."
     },
     {
       "action_type": "rotate_labels",
-      "target": "ax@0x7471ebd2e850",
+      "target": "ax@0x752ae9e76850",
       "params": {
-        "axis_name": "ax@0x7471ebd2e850"
+        "axis_name": "ax@0x752ae9e76850"
       },
       "priority": 2,
-      "description": "Rotate x-tick labels in 'ax@0x7471ebd2e850' (max_len=13 chars)."
+      "description": "Rotate x-tick labels in 'ax@0x752ae9e76850' (max_len=13 chars)."
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x7471ec056660",
+      "target": "ax@0x752aea1c6660",
       "params": {
-        "axis_name": "ax@0x7471ec056660",
+        "axis_name": "ax@0x752aea1c6660",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x7471ec056660' (density=85%)."
+      "description": "Reduce number of xtick labels in 'ax@0x752aea1c6660' (density=80%)."
     },
     {
       "action_type": "rotate_labels",
-      "target": "ax@0x7471ec056660",
+      "target": "ax@0x752aea1c6660",
       "params": {
-        "axis_name": "ax@0x7471ec056660"
+        "axis_name": "ax@0x752aea1c6660"
       },
       "priority": 2,
-      "description": "Rotate x-tick labels in 'ax@0x7471ec056660' (max_len=18 chars)."
+      "description": "Rotate x-tick labels in 'ax@0x752aea1c6660' (max_len=18 chars)."
     },
     {
       "action_type": "increase_figsize_height",
@@ -184,12 +184,12 @@
     }
   ],
   "warnings": [
-    "[label_density_excess] X-tick labels in 'ax@0x7471eb8cc410' 24 labels exceed policy cap 15 (max_len=8 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x7471eb95e710' 24 labels exceed policy cap 15 (max_len=8 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x7471eb9fa0d0' 24 labels exceed policy cap 15 (max_len=12 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x7471ebd2d450' 24 labels exceed policy cap 15 (max_len=8 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x7471ebd2e850' 24 labels exceed policy cap 15 (max_len=13 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x7471ec056660' 24 labels exceed policy cap 15 (max_len=18 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x752ae9a14410' 24 labels exceed policy cap 15 (max_len=8 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x752ae9aaa710' 24 labels exceed policy cap 15 (max_len=8 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x752ae9b420d0' 24 labels exceed policy cap 15 (max_len=12 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x752ae9e75450' 24 labels exceed policy cap 15 (max_len=8 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x752ae9e76850' 24 labels exceed policy cap 15 (max_len=13 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x752aea1c6660' 24 labels exceed policy cap 15 (max_len=18 chars)",
     "[text_truncation] 'xtick: RP11-524N5.1' extends beyond figure border (bottom, 22px)"
   ],
   "info": [

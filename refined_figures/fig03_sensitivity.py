@@ -168,7 +168,7 @@ def generate(series, out_dir):
     fm_df = _load_sensitivity_frame(DPMM_FM_SENSITIVITY_SUMMARY, source="fm")
 
     fig = plt.figure(figsize=(12.0, 8.5))
-    root = bind_figure_region(fig, (0.07, 0.09, 0.935, 0.95))
+    root = bind_figure_region(fig, (0.08, 0.09, 0.935, 0.93))
     grid = root.grid(2, 2, wgap=0.08, hgap=0.12)
 
     image = None
@@ -179,8 +179,8 @@ def generate(series, out_dir):
         rank_matrix, value_keys = _panel_rank_matrix(panel_df, sweep_name)
         image = _draw_panel(ax, rank_matrix, value_keys, title, default_value)
         fig.text(
-            ax.get_position().x0 - 0.018,
-            ax.get_position().y1 + 0.008,
+            ax.get_position().x0 - 0.025,
+            ax.get_position().y1 + 0.018,
             f"({chr(97 + idx)})",
             fontsize=14,
             fontweight="bold",

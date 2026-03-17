@@ -167,7 +167,7 @@ def generate(series, out_dir):
 
     fig_w = max(16.0, 5.0 * n_ds + 1.5)
     fig = plt.figure(figsize=(fig_w, 10.0))
-    root = bind_figure_region(fig, (0.06, 0.08, 0.88, 0.95))
+    root = bind_figure_region(fig, (0.06, 0.08, 0.92, 0.95))
 
     # Split into two rows: panel (a) importance, panel (b) correlation
     panel_a, panel_b = root.split_rows([0.40, 0.40], gap=0.17)
@@ -185,7 +185,7 @@ def generate(series, out_dir):
             imp_heatmaps.append(im)
 
     if imp_heatmaps:
-        cbar_ax = fig.add_axes([0.91, 0.56, 0.012, 0.23])
+        cbar_ax = fig.add_axes([0.94, 0.56, 0.012, 0.23])
         cbar = fig.colorbar(imp_heatmaps[-1], cax=cbar_ax)
         cbar.ax.tick_params(labelsize=10.0, colors="black")
         cbar.set_label("Importance (z)", fontsize=11.5, color="black")
@@ -207,7 +207,7 @@ def generate(series, out_dir):
             corr_heatmaps.append(im)
 
     if corr_heatmaps:
-        cbar_ax = fig.add_axes([0.91, 0.12, 0.012, 0.23])
+        cbar_ax = fig.add_axes([0.94, 0.12, 0.012, 0.23])
         cbar = fig.colorbar(corr_heatmaps[-1], cax=cbar_ax)
         cbar.ax.tick_params(labelsize=10.0, colors="black")
         cbar.set_label("Pearson r", fontsize=11.5, color="black")

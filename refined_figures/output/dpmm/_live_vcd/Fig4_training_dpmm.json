@@ -74,18 +74,50 @@
     "max_annotations_complexity": 20,
     "complexity_score_threshold": 15.0
   },
-  "actions": [],
+  "actions": [
+    {
+      "action_type": "increase_hspace",
+      "target": "figure",
+      "params": {
+        "delta": 0.08
+      },
+      "priority": 1,
+      "description": "Increase vertical spacing (hspace) between subplot rows to prevent text from adjacent panels from overlapping (e.g. xlabel vs title between rows)."
+    },
+    {
+      "action_type": "increase_wspace",
+      "target": "figure",
+      "params": {
+        "delta": 0.05
+      },
+      "priority": 2,
+      "description": "Increase horizontal spacing (wspace) between subplot columns to prevent text from adjacent panels from overlapping (e.g. ylabel vs ylabel between columns)."
+    },
+    {
+      "action_type": "increase_figsize",
+      "target": "figure",
+      "params": {
+        "delta_width": 0.5,
+        "delta_height": 0.5
+      },
+      "priority": 3,
+      "description": "Enlarge the overall figure to give inter-panel text elements more room."
+    }
+  ],
   "warnings": [
-    "[legend_artist_masking] Legend masks 'ytick: 15' (93%, 220 px\u00b2)"
+    "[cross_axes_text_overlap] ytick '\u22125' (axes 7) overlaps ytick '15' (axes 10) -- 79 px\u00b2; consider increasing hspace/wspace",
+    "[cross_axes_text_overlap] ytick '\u22125' (axes 8) overlaps ytick '15' (axes 11) -- 74 px\u00b2; consider increasing hspace/wspace",
+    "[legend_artist_masking] Legend masks 'ytick: 15' (100%, 238 px\u00b2)"
   ],
   "info": [
     "[title_label_size_mismatch] Title avg 13.0pt vs label avg 10.5pt (diff=2.5pt, max=2.0pt)"
   ],
   "error": null,
   "counts_by_type": {
+    "cross_axes_text_overlap": 2,
     "legend_artist_masking": 1,
     "title_label_size_mismatch": 1
   },
-  "total_warnings": 1,
+  "total_warnings": 3,
   "total_info": 1
 }

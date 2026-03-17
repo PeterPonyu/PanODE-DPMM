@@ -1,0 +1,999 @@
+nohup: ignoring input
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/Desktop/PanODE-DPMM/models/dpmm_base.py:333: UserWarning: Creating a tensor from a list of numpy.ndarrays is extremely slow. Please consider converting the list to a single numpy.ndarray with numpy.array() before converting to a tensor. (Triggered internally at /pytorch/torch/csrc/utils/tensor_new.cpp:253.)
+  weight_concentration = torch.as_tensor(bgm.weight_concentration_, dtype=torch.float32, device=device)
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+Loading cached preprocessed data: /home/zeyufu/Desktop/PanODE-DPMM/benchmarks/benchmark_results/cache/base_preproc_75a1f314c3193865b02009b7f5ac16e9.h5ad
+
+========================================================================
+Dataset: hemato  |  target = DPMM-FM  |  models = ['Pure-AE', 'DPMM-Base', 'DPMM-FM']
+========================================================================
+
+--- Pure-AE on hemato ---
+
+============================================================
+Training: Pure-AE
+============================================================
+Epoch   1/1000 [PureAE] | Loss: 1.6748
+Epoch 200/1000 [PureAE] | Loss: 0.1835
+Epoch 400/1000 [PureAE] | Loss: 0.1328
+Epoch 600/1000 [PureAE] | Loss: 0.1288
+Epoch 800/1000 [PureAE] | Loss: 0.1286
+Epoch 1000/1000 [PureAE] | Loss: 0.1287
+  Convergence: Δ%=+0.01%  (last 50 ep)  ✓ CONVERGED
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9451 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9659 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9555
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4770 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4793
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7936 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7694
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1426 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6401 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6086 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9974 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5972
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6109 ARI=0.3217 ASW=0.1538 | 578.5s (0.58s/ep, GPU 0MB, params 1,615,430)
+
+--- DPMM-Base on hemato ---
+
+============================================================
+Training: DPMM-Base
+============================================================
+Epoch   1/1000 [Phase1-Warmup] | Loss: 1.6620 | Recon: 1.6620 | DPMM: 0.0000
+Epoch 200/1000 [Phase1-Warmup] | Loss: 0.1833 | Recon: 0.1833 | DPMM: 0.0000
+Epoch 400/1000 [Phase1-Warmup] | Loss: 0.1327 | Recon: 0.1327 | DPMM: 0.0000
+Epoch 600/1000 [Phase1-Warmup] | Loss: 0.1286 | Recon: 0.1286 | DPMM: 0.0000
+Epoch 800/1000 [Phase1-Warmup] | Loss: 0.1280 | Recon: 0.1280 | DPMM: 0.0000
+Epoch 1000/1000 [Phase1-DPMM[kl]] | Loss: 0.1417 | Recon: 0.1417 | DPMM: 0.0000
+  Convergence: Δ%=-3.99%  (last 50 ep)  ✗ NOT converged
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9760 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9847 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9804
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.7555 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4748
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.8205 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8320
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1144 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.8612 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6353 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9916 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6506
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.5532 ARI=0.2754 ASW=0.3757 | 248.6s (0.25s/ep, GPU 0MB, params 1,615,430)
+
+--- DPMM-FM on hemato ---
+
+============================================================
+Training: DPMM-FM
+============================================================
+Epoch   1/1000 [Phase1-Warmup] | Loss: 1.6685 | Recon: 1.6685 | DPMM: 0.0000 | FM: 0.0000
+Epoch 200/1000 [Phase1-Warmup] | Loss: 0.1831 | Recon: 0.1831 | DPMM: 0.0000 | FM: 0.0000
+Epoch 400/1000 [Phase1-Warmup] | Loss: 0.1335 | Recon: 0.1335 | DPMM: 0.0000 | FM: 0.0000
+Epoch 600/1000 [Phase1-Warmup] | Loss: 0.1293 | Recon: 0.1293 | DPMM: 0.0000 | FM: 0.0000
+Epoch 800/1000 [Phase1-Warmup] | Loss: 0.1280 | Recon: 0.1280 | DPMM: 0.0000 | FM: 0.0000
+Epoch 1000/1000 [Phase1-DPMM[kl]] | Loss: 0.1532 | Recon: 0.1370 | DPMM: 0.0000 | FM: 0.1621
+  Convergence: Δ%=-1.66%  (last 50 ep)  ✗ NOT converged
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9697 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9806 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9751
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.8104 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.6921
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7858 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+
+  Mean quality score:     0.8690
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1251 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.9637 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6474 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9936 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6825
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.4738 ARI=0.1653 ASW=0.2231 | 224.2s (0.22s/ep, GPU 0MB, params 1,639,248)
+Loading cached preprocessed data: /home/zeyufu/Desktop/PanODE-DPMM/benchmarks/benchmark_results/cache/base_preproc_f234074d989f42b2b15cba4fc573ea61.h5ad
+
+========================================================================
+Dataset: hesc  |  target = DPMM-FM  |  models = ['Pure-AE', 'DPMM-Base', 'DPMM-FM']
+========================================================================
+
+--- Pure-AE on hesc ---
+
+============================================================
+Training: Pure-AE
+============================================================
+Epoch   1/1000 [PureAE] | Loss: 1.4789
+Epoch 200/1000 [PureAE] | Loss: 0.2116
+Epoch 400/1000 [PureAE] | Loss: 0.1712
+Epoch 600/1000 [PureAE] | Loss: 0.1679
+Epoch 800/1000 [PureAE] | Loss: 0.1674
+Epoch 1000/1000 [PureAE] | Loss: 0.1668
+  Convergence: Δ%=+0.01%  (last 50 ep)  ✓ CONVERGED
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9249 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9591 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9420
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.5829 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.5723
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7968 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7963
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1540 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6724 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6058 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9975 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6074
+  Quality level:                 Good
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.5766 ARI=0.3601 ASW=0.1477 | 186.5s (0.19s/ep, GPU 0MB, params 1,615,430)
+
+--- DPMM-Base on hesc ---
+
+============================================================
+Training: DPMM-Base
+============================================================
+Epoch   1/1000 [Phase1-Warmup] | Loss: 1.4733 | Recon: 1.4733 | DPMM: 0.0000
+Epoch 200/1000 [Phase1-Warmup] | Loss: 0.2113 | Recon: 0.2113 | DPMM: 0.0000
+Epoch 400/1000 [Phase1-Warmup] | Loss: 0.1719 | Recon: 0.1719 | DPMM: 0.0000
+Epoch 600/1000 [Phase1-Warmup] | Loss: 0.1684 | Recon: 0.1684 | DPMM: 0.0000
+Epoch 800/1000 [Phase1-Warmup] | Loss: 0.1676 | Recon: 0.1676 | DPMM: 0.0000
+Epoch 1000/1000 [Phase1-DPMM[kl]] | Loss: 0.1818 | Recon: 0.1818 | DPMM: 0.0000
+  Convergence: Δ%=-5.53%  (last 50 ep)  ✗ NOT converged
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9700 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9785 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9742
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.7618 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.6369
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.8097 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8552
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1202 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.7446 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6433 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9932 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6253
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.4868 ARI=0.2823 ASW=0.2853 | 323.6s (0.32s/ep, GPU 0MB, params 1,615,430)
+
+--- DPMM-FM on hesc ---
+
+============================================================
+Training: DPMM-FM
+============================================================
+Epoch   1/1000 [Phase1-Warmup] | Loss: 1.4804 | Recon: 1.4804 | DPMM: 0.0000 | FM: 0.0000
+Epoch 200/1000 [Phase1-Warmup] | Loss: 0.2114 | Recon: 0.2114 | DPMM: 0.0000 | FM: 0.0000/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+
+Epoch 400/1000 [Phase1-Warmup] | Loss: 0.1717 | Recon: 0.1717 | DPMM: 0.0000 | FM: 0.0000
+Epoch 600/1000 [Phase1-Warmup] | Loss: 0.1678 | Recon: 0.1678 | DPMM: 0.0000 | FM: 0.0000
+Epoch 800/1000 [Phase1-Warmup] | Loss: 0.1673 | Recon: 0.1673 | DPMM: 0.0000 | FM: 0.0000
+Epoch 1000/1000 [Phase1-DPMM[kl]] | Loss: 0.1872 | Recon: 0.1754 | DPMM: 0.0000 | FM: 0.1183
+  Convergence: Δ%=-2.05%  (last 50 ep)  ✗ NOT converged
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9109 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9430 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9270
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.8538 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.8530
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7878 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8792
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1637 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6301 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6057 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9928 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5981
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.2723 ARI=0.0680 ASW=0.2694 | 355.5s (0.36s/ep, GPU 0MB, params 1,639,248)
+Loading cached preprocessed data: /home/zeyufu/Desktop/PanODE-DPMM/benchmarks/benchmark_results/cache/base_preproc_5235efe57783c5f553da366369be14bd.h5ad
+
+========================================================================
+Dataset: retina  |  target = DPMM-FM  |  models = ['Pure-AE', 'DPMM-Base', 'DPMM-FM']
+========================================================================
+
+--- Pure-AE on retina ---
+
+============================================================
+Training: Pure-AE
+============================================================
+Epoch   1/1000 [PureAE] | Loss: 1.5143
+Epoch 200/1000 [PureAE] | Loss: 0.2903
+Epoch 400/1000 [PureAE] | Loss: 0.2620
+Epoch 600/1000 [PureAE] | Loss: 0.2594
+Epoch 800/1000 [PureAE] | Loss: 0.2567
+Epoch 1000/1000 [PureAE] | Loss: 0.2564
+  Convergence: Δ%=-0.16%  (last 50 ep)  ✓ CONVERGED
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9422 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9494 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9458
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.6423 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.6465
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7846 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8185
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1570 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6217 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6031 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9949 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5942
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6956 ARI=0.4020 ASW=0.1598 | 280.1s (0.28s/ep, GPU 0MB, params 1,615,430)
+
+--- DPMM-Base on retina ---
+
+============================================================
+Training: DPMM-Base
+============================================================
+Epoch   1/1000 [Phase1-Warmup] | Loss: 1.5106 | Recon: 1.5106 | DPMM: 0.0000
+Epoch 200/1000 [Phase1-Warmup] | Loss: 0.2898 | Recon: 0.2898 | DPMM: 0.0000
+Epoch 400/1000 [Phase1-Warmup] | Loss: 0.2625 | Recon: 0.2625 | DPMM: 0.0000
+Epoch 600/1000 [Phase1-Warmup] | Loss: 0.2588 | Recon: 0.2588 | DPMM: 0.0000
+Epoch 800/1000 [Phase1-Warmup] | Loss: 0.2569 | Recon: 0.2569 | DPMM: 0.0000
+Epoch 1000/1000 [Phase1-DPMM[kl]] | Loss: 0.2736 | Recon: 0.2736 | DPMM: 0.0000
+  Convergence: Δ%=-4.68%  (last 50 ep)  ✗ NOT converged
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9746 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9821 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9784
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.7008 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.5707
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.8068 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8356
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity.../home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1151 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.9799 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6441 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9882 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6819
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.6610 ARI=0.5201 ASW=0.4073 | 215.9s (0.22s/ep, GPU 0MB, params 1,615,430)
+
+--- DPMM-FM on retina ---
+
+============================================================
+Training: DPMM-FM
+============================================================
+Epoch   1/1000 [Phase1-Warmup] | Loss: 1.5093 | Recon: 1.5093 | DPMM: 0.0000 | FM: 0.0000
+Epoch 200/1000 [Phase1-Warmup] | Loss: 0.2892 | Recon: 0.2892 | DPMM: 0.0000 | FM: 0.0000
+Epoch 400/1000 [Phase1-Warmup] | Loss: 0.2624 | Recon: 0.2624 | DPMM: 0.0000 | FM: 0.0000
+Epoch 600/1000 [Phase1-Warmup] | Loss: 0.2589 | Recon: 0.2589 | DPMM: 0.0000 | FM: 0.0000
+Epoch 800/1000 [Phase1-Warmup] | Loss: 0.2573 | Recon: 0.2573 | DPMM: 0.0000 | FM: 0.0000
+Epoch 1000/1000 [Phase1-DPMM[kl]] | Loss: 0.2813 | Recon: 0.2666 | DPMM: 0.0000 | FM: 0.1463
+  Convergence: Δ%=-1.77%  (last 50 ep)  ✗ NOT converged
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9367 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9599 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9483
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.8701 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.9281
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7819 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.9042
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1473 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.7237 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6255 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9940 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6226
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.4021 ARI=0.1488 ASW=0.1689 | 316.0s (0.32s/ep, GPU 0MB, params 1,639,248)
+Loading cached preprocessed data: /home/zeyufu/Desktop/PanODE-DPMM/benchmarks/benchmark_results/cache/base_preproc_4b68e2efd3ca0f7ac762f18a23cb5252.h5ad
+
+========================================================================
+Dataset: pituitary  |  target = DPMM-FM  |  models = ['Pure-AE', 'DPMM-Base', 'DPMM-FM']
+========================================================================
+
+--- Pure-AE on pituitary ---
+
+============================================================
+Training: Pure-AE
+============================================================
+Epoch   1/1000 [PureAE] | Loss: 1.6557
+Epoch 200/1000 [PureAE] | Loss: 0.3405
+Epoch 400/1000 [PureAE] | Loss: 0.3217
+Epoch 600/1000 [PureAE] | Loss: 0.3197
+Epoch 800/1000 [PureAE] | Loss: 0.3190
+Epoch 1000/1000 [PureAE] | Loss: 0.3167
+  Convergence: Δ%=+0.00%  (last 50 ep)  ✓ CONVERGED
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9321 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9386 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9353
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.4354 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.4281
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7828 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.7420
+  Quality level:          Good
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1587 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.6093 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6065 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9971 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.5929
+  Quality level:                 Fair
+
+  Strengths: Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Consider adjusting latent dimensionality or model capacity, Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.7175 ARI=0.5176 ASW=0.1472 | 267.7s (0.27s/ep, GPU 0MB, params 1,615,430)
+
+--- DPMM-Base on pituitary ---
+
+============================================================
+Training: DPMM-Base
+============================================================
+Epoch   1/1000 [Phase1-Warmup] | Loss: 1.6509 | Recon: 1.6509 | DPMM: 0.0000
+Epoch 200/1000 [Phase1-Warmup] | Loss: 0.3404 | Recon: 0.3404 | DPMM: 0.0000
+Epoch 400/1000 [Phase1-Warmup] | Loss: 0.3220 | Recon: 0.3220 | DPMM: 0.0000
+Epoch 600/1000 [Phase1-Warmup] | Loss: 0.3200 | Recon: 0.3200 | DPMM: 0.0000/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+/home/zeyufu/miniconda3/lib/python3.13/site-packages/sklearn/mixture/_base.py:293: ConvergenceWarning: Best performing initialization did not converge. Try different init parameters, or increase max_iter, tol, or check for degenerate data.
+  warnings.warn(
+
+Epoch 800/1000 [Phase1-Warmup] | Loss: 0.3194 | Recon: 0.3194 | DPMM: 0.0000
+Epoch 1000/1000 [Phase1-DPMM[kl]] | Loss: 0.3413 | Recon: 0.3413 | DPMM: 0.0000
+  Convergence: Δ%=-5.92%  (last 50 ep)  ✗ NOT converged
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9661 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9739 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9700
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.8160 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.7855
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.8078 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8865
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1208 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.9673 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6551 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9913 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6836
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.5735 ARI=0.2929 ASW=0.2316 | 207.1s (0.21s/ep, GPU 0MB, params 1,615,430)
+
+--- DPMM-FM on pituitary ---
+
+============================================================
+Training: DPMM-FM
+============================================================
+Epoch   1/1000 [Phase1-Warmup] | Loss: 1.6552 | Recon: 1.6552 | DPMM: 0.0000 | FM: 0.0000
+Epoch 200/1000 [Phase1-Warmup] | Loss: 0.3395 | Recon: 0.3395 | DPMM: 0.0000 | FM: 0.0000
+Epoch 400/1000 [Phase1-Warmup] | Loss: 0.3222 | Recon: 0.3222 | DPMM: 0.0000 | FM: 0.0000
+Epoch 600/1000 [Phase1-Warmup] | Loss: 0.3206 | Recon: 0.3206 | DPMM: 0.0000 | FM: 0.0000
+Epoch 800/1000 [Phase1-Warmup] | Loss: 0.3186 | Recon: 0.3186 | DPMM: 0.0000 | FM: 0.0000
+Epoch 1000/1000 [Phase1-DPMM[kl]] | Loss: 0.3482 | Recon: 0.3307 | DPMM: 0.0000 | FM: 0.1753
+  Convergence: Δ%=-1.35%  (last 50 ep)  ✗ NOT converged
+Starting extended DR evaluation (n_samples=450, k=15)...
+Computing trustworthiness...
+Computing continuity...
+Computing distance correlations...
+Computing local scale quality...
+
+============================================================
+       Extended Dimensionality Reduction Quality (DREX)
+============================================================
+
+[Neighborhood Preservation]
+  Trustworthiness:        0.9362 ★
+    └─ Low-D preserves high-D neighborhoods
+  Continuity:             0.9599 ★
+    └─ High-D neighborhoods continued in low-D
+  Neighborhood symmetry:  0.9480
+    └─ Bidirectional consistency (mean of above)
+
+[Distance Preservation]
+  Distance Spearman:      0.7914 ★
+    └─ Rank correlation of pairwise distances
+  Distance Pearson:       0.7036
+    └─ Linear correlation of pairwise distances
+
+[Local Geometry]
+  Local scale quality:    0.7826 ★
+    └─ Consistency of local distance ratios
+
+[Overall Assessment]
+  Mean quality score:     0.8536
+  Quality level:          Excellent
+============================================================
+Starting extended latent space evaluation (n_samples=450, k=15)...
+Computing two-hop connectivity...
+Computing radial concentration quality...
+Computing local curvature linearity...
+Computing neighbor entropy stability...
+
+======================================================================
+       Extended Latent Space Quality Evaluation (LSEX)
+======================================================================
+
+[Graph Connectivity]
+  Two-hop connectivity:          0.1446 ★
+    └─ kNN 2-hop reachability fraction
+
+[Radial Distribution]
+  Radial concentration quality:  0.7314 ★
+    └─ Healthy spread around centroid (no collapse / explosion)
+
+[Local Geometry]
+  Local curvature linearity:     0.6354 ★
+    └─ PCA dominance in local neighborhoods
+  Neighbor entropy stability:    0.9946 ★
+    └─ Uniformity of local distance distributions
+
+[Overall Assessment]
+  Mean quality score:            0.6265
+  Quality level:                 Good
+
+  Strengths: Healthy radial distribution (no mode collapse), Uniform local geometry (stable entropy)
+  Weaknesses: Low graph connectivity — fragmented manifold
+  Recommendations: Increase neighborhood size or use stronger contrastive loss
+======================================================================
+  NMI=0.5366 ARI=0.2232 ASW=0.2468 | 216.0s (0.22s/ep, GPU 0MB, params 1,639,248)
+
+Saved summary: /home/zeyufu/Desktop/PanODE-DPMM/experiments/results/dpmm_fm_core/summary.csv
+Tables: ['/home/zeyufu/Desktop/PanODE-DPMM/experiments/results/dpmm_fm_core/tables/hemato_df.csv', '/home/zeyufu/Desktop/PanODE-DPMM/experiments/results/dpmm_fm_core/tables/hesc_df.csv', '/home/zeyufu/Desktop/PanODE-DPMM/experiments/results/dpmm_fm_core/tables/retina_df.csv', '/home/zeyufu/Desktop/PanODE-DPMM/experiments/results/dpmm_fm_core/tables/pituitary_df.csv']
+Total time: 57.5 min

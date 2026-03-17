@@ -110,10 +110,29 @@ def compute_all(datasets=None, models=None, force=False):
 
             K = corr.shape[0]
 
-            # Top-1 positively correlated gene per component
-            # Use positive correlation only (not absolute) to identify
-            # genes that increase with component activation.
-            top_gene_idx = np.argmax(corr, axis=1)  # [K]
+            # Top-1 positively correlated gene per component (unique)
+            # Greedy assignment: iterate components by descending max
+            # correlation, pick the best gene not yet claimed.
+            top_gene_idx = np.full(K, -1, dtype=int)
+            claimed = set()
+            corr_work = corr.copy()
+            for _ in range(K):
+                # Find (component, gene) with highest remaining value
+                best_comp, best_gene = -1, -1
+                best_val = -np.inf
+                for ki in range(K):
+                    if top_gene_idx[ki] != -1:
+                        continue
+                    for gi in np.argsort(-corr_work[ki]):
+                        if gi not in claimed:
+                            if corr_work[ki, gi] > best_val:
+                                best_val = corr_work[ki, gi]
+                                best_comp, best_gene = ki, gi
+                            break
+                if best_comp == -1:
+                    break
+                top_gene_idx[best_comp] = best_gene
+                claimed.add(best_gene)
             top_gene_names = np.array(
                 [str(corr_genes[i]) for i in top_gene_idx]
                 if corr_genes is not None
