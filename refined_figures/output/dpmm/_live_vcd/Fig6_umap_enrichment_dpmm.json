@@ -95,11 +95,9 @@
     }
   ],
   "warnings": [
-    "[cross_panel_spillover] Text 'central nervous system neuron ' from axes 26 spills into axes 25 (183 px\u00b2)",
-    "[cross_panel_spillover] Text 'nervous system development (GO' from axes 26 spills into axes 25 (386 px\u00b2)",
-    "[cross_panel_spillover] Text 'regulation of filopodium assem' from axes 26 spills into axes 25 (134 px\u00b2)",
-    "[cross_panel_spillover] Text 'regulation of mesenchymal stem' from axes 26 spills into axes 25 (239 px\u00b2)",
-    "[cross_panel_spillover] Text 'regulation of microtubule poly' from axes 26 spills into axes 25 (90 px\u00b2)"
+    "[cross_panel_spillover] Text 'central nervous system neur\u2026' from axes 26 spills into axes 25 (67 px\u00b2)",
+    "[cross_panel_spillover] Text 'nervous system development \u2026' from axes 26 spills into axes 25 (242 px\u00b2)",
+    "[cross_panel_spillover] Text 'regulation of mesenchymal s\u2026' from axes 26 spills into axes 25 (125 px\u00b2)"
   ],
   "info": [
     "[bold_usage] 2 text(s) use bold fontweight",
@@ -109,10 +107,10 @@
   ],
   "error": null,
   "counts_by_type": {
-    "cross_panel_spillover": 5,
+    "cross_panel_spillover": 3,
     "bold_usage": 1,
     "text_truncation": 3
   },
-  "total_warnings": 5,
+  "total_warnings": 3,
   "total_info": 4
 }

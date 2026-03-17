@@ -185,11 +185,11 @@ def _draw_variant_row(ax, y_base, variant, prior_name, prior_detail,
     SBH = 0.46  # Small box height
     gap = 0.24
 
-    # Variant title — placed above prior box to avoid overlap
-    ax.text(0.18, y_base + BH + 0.50, variant["name"],
+    # Variant title — shifted right to avoid masking blue Input stage
+    ax.text(0.80, y_base + BH + 0.50, variant["name"],
             ha="left", va="bottom", fontsize=FONT_TITLE,
             fontweight="normal", color="black", zorder=5)
-    ax.text(0.18, y_base + BH + 0.44, variant["subtitle"],
+    ax.text(0.80, y_base + BH + 0.44, variant["subtitle"],
             ha="left", va="top", fontsize=10.0,
             color=C_MID_GREY, zorder=5, linespacing=1.15)
 

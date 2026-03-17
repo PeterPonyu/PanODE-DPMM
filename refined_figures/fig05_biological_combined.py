@@ -131,11 +131,11 @@ def _draw_importance(ax, matrix, genes, title):
     vlim = max(abs(matrix.min()), abs(matrix.max()), 1.0)
     im = ax.imshow(matrix, aspect="auto", cmap="RdBu_r",
                    interpolation="nearest", vmin=-vlim, vmax=vlim)
-    ax.set_title(title, fontsize=14.0, loc="left", pad=4, fontweight="normal", color="black")
+    ax.set_title(title, fontsize=15.0, loc="left", pad=4, fontweight="normal", color="black")
     ax.set_yticks(range(matrix.shape[0]))
-    ax.set_yticklabels([f"Dim{i+1}" for i in range(matrix.shape[0])], fontsize=11.5, color="black")
+    ax.set_yticklabels([f"Dim{i+1}" for i in range(matrix.shape[0])], fontsize=12.5, color="black")
     ax.set_xticks(range(len(genes)))
-    ax.set_xticklabels(_full_gene_labels(genes), fontsize=10.2, rotation=90, ha="center", color="black")
+    ax.set_xticklabels(_full_gene_labels(genes), fontsize=11.5, rotation=90, ha="center", color="black")
     return im
 
 
@@ -145,11 +145,11 @@ def _draw_correlation(ax, matrix, genes, title):
         ax.text(0.5, 0.5, "No correlation data", ha="center", va="center", fontsize=9)
         return None
     im = ax.imshow(matrix, aspect="auto", cmap="YlOrRd", vmin=0, vmax=1)
-    ax.set_title(title, fontsize=14.0, loc="left", pad=4, fontweight="normal", color="black")
+    ax.set_title(title, fontsize=15.0, loc="left", pad=4, fontweight="normal", color="black")
     ax.set_yticks(range(matrix.shape[0]))
-    ax.set_yticklabels([f"Dim{i+1}" for i in range(matrix.shape[0])], fontsize=11.5, color="black")
+    ax.set_yticklabels([f"Dim{i+1}" for i in range(matrix.shape[0])], fontsize=12.5, color="black")
     ax.set_xticks(range(len(genes)))
-    ax.set_xticklabels(_full_gene_labels(genes), fontsize=10.2, rotation=90, ha="center", color="black")
+    ax.set_xticklabels(_full_gene_labels(genes), fontsize=11.5, rotation=90, ha="center", color="black")
     return im
 
 
@@ -167,10 +167,10 @@ def generate(series, out_dir):
 
     fig_w = max(16.0, 5.0 * n_ds + 1.5)
     fig = plt.figure(figsize=(fig_w, 10.0))
-    root = bind_figure_region(fig, (0.06, 0.08, 0.92, 0.95))
+    root = bind_figure_region(fig, (0.06, 0.06, 0.92, 0.96))
 
     # Split into two rows: panel (a) importance, panel (b) correlation
-    panel_a, panel_b = root.split_rows([0.40, 0.40], gap=0.17)
+    panel_a, panel_b = root.split_rows([0.42, 0.42], gap=0.14)
 
     # ── Panel (a): Importance heatmaps ────────────────────────────────
     grid_a = panel_a.grid(1, n_ds, wgap=0.05, hgap=0.04)
@@ -187,8 +187,8 @@ def generate(series, out_dir):
     if imp_heatmaps:
         cbar_ax = fig.add_axes([0.94, 0.56, 0.012, 0.23])
         cbar = fig.colorbar(imp_heatmaps[-1], cax=cbar_ax)
-        cbar.ax.tick_params(labelsize=10.0, colors="black")
-        cbar.set_label("Importance (z)", fontsize=11.5, color="black")
+        cbar.ax.tick_params(labelsize=11.0, colors="black")
+        cbar.set_label("Importance (z)", fontsize=12.5, color="black")
 
     fig.text(panel_a.left - 0.03, panel_a.bottom + panel_a.height + 0.005,
              "(a)", fontsize=14, fontweight="bold",
@@ -209,8 +209,8 @@ def generate(series, out_dir):
     if corr_heatmaps:
         cbar_ax = fig.add_axes([0.94, 0.12, 0.012, 0.23])
         cbar = fig.colorbar(corr_heatmaps[-1], cax=cbar_ax)
-        cbar.ax.tick_params(labelsize=10.0, colors="black")
-        cbar.set_label("Pearson r", fontsize=11.5, color="black")
+        cbar.ax.tick_params(labelsize=11.0, colors="black")
+        cbar.set_label("Pearson r", fontsize=12.5, color="black")
 
     fig.text(panel_b.left - 0.03, panel_b.bottom + panel_b.height + 0.005,
              "(b)", fontsize=14, fontweight="bold",

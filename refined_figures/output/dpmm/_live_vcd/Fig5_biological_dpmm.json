@@ -76,6 +76,25 @@
   },
   "actions": [
     {
+      "action_type": "increase_hspace",
+      "target": "figure",
+      "params": {
+        "delta": 0.08
+      },
+      "priority": 1,
+      "description": "Increase vertical spacing (hspace) between subplot rows to prevent text from adjacent panels from overlapping (e.g. xlabel vs title between rows)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "xticks",
+      "params": {
+        "strategy": "maxn",
+        "max_labels": 6
+      },
+      "priority": 1,
+      "description": "Reduce the number of x-axis tick labels to avoid overlap. Consider using MaxNLocator or manually selecting key ticks."
+    },
+    {
       "action_type": "increase_bottom_margin",
       "target": "figure",
       "params": {
@@ -87,91 +106,110 @@
       "description": "Increase bottom margin so that x-axis labels and tick labels are not clipped at the figure edge."
     },
     {
-      "action_type": "reduce_tick_labels",
-      "target": "ax@0x752ae9a14410",
+      "action_type": "increase_wspace",
+      "target": "figure",
       "params": {
-        "axis_name": "ax@0x752ae9a14410",
-        "axis_kind": "xtick"
+        "delta": 0.05
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x752ae9a14410' (density=80%)."
+      "description": "Increase horizontal spacing (wspace) between subplot columns to prevent text from adjacent panels from overlapping (e.g. ylabel vs ylabel between columns)."
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x752ae9aaa710",
+      "target": "ax@0x73d4252c0410",
       "params": {
-        "axis_name": "ax@0x752ae9aaa710",
+        "axis_name": "ax@0x73d4252c0410",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x752ae9aaa710' (density=80%)."
+      "description": "Reduce number of xtick labels in 'ax@0x73d4252c0410' (density=86%)."
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x752ae9b420d0",
+      "target": "ax@0x73d4254160d0",
       "params": {
-        "axis_name": "ax@0x752ae9b420d0",
+        "axis_name": "ax@0x73d4254160d0",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x752ae9b420d0' (density=80%)."
+      "description": "Reduce number of xtick labels in 'ax@0x73d4254160d0' (density=86%)."
+    },
+    {
+      "action_type": "reduce_tick_labels",
+      "target": "ax@0x73d42553fd90",
+      "params": {
+        "axis_name": "ax@0x73d42553fd90",
+        "axis_kind": "xtick"
+      },
+      "priority": 2,
+      "description": "Reduce number of xtick labels in 'ax@0x73d42553fd90' (density=86%)."
     },
     {
       "action_type": "rotate_labels",
-      "target": "ax@0x752ae9b420d0",
+      "target": "ax@0x73d42553fd90",
       "params": {
-        "axis_name": "ax@0x752ae9b420d0"
+        "axis_name": "ax@0x73d42553fd90"
       },
       "priority": 2,
-      "description": "Rotate x-tick labels in 'ax@0x752ae9b420d0' (max_len=12 chars)."
+      "description": "Rotate x-tick labels in 'ax@0x73d42553fd90' (max_len=12 chars)."
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x752ae9e75450",
+      "target": "ax@0x73d4255dafd0",
       "params": {
-        "axis_name": "ax@0x752ae9e75450",
+        "axis_name": "ax@0x73d4255dafd0",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x752ae9e75450' (density=80%)."
+      "description": "Reduce number of xtick labels in 'ax@0x73d4255dafd0' (density=86%)."
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x752ae9e76850",
+      "target": "ax@0x73d4255f4410",
       "params": {
-        "axis_name": "ax@0x752ae9e76850",
+        "axis_name": "ax@0x73d4255f4410",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x752ae9e76850' (density=80%)."
+      "description": "Reduce number of xtick labels in 'ax@0x73d4255f4410' (density=86%)."
     },
     {
       "action_type": "rotate_labels",
-      "target": "ax@0x752ae9e76850",
+      "target": "ax@0x73d4255f4410",
       "params": {
-        "axis_name": "ax@0x752ae9e76850"
+        "axis_name": "ax@0x73d4255f4410"
       },
       "priority": 2,
-      "description": "Rotate x-tick labels in 'ax@0x752ae9e76850' (max_len=13 chars)."
+      "description": "Rotate x-tick labels in 'ax@0x73d4255f4410' (max_len=13 chars)."
     },
     {
       "action_type": "reduce_tick_labels",
-      "target": "ax@0x752aea1c6660",
+      "target": "ax@0x73d4259201a0",
       "params": {
-        "axis_name": "ax@0x752aea1c6660",
+        "axis_name": "ax@0x73d4259201a0",
         "axis_kind": "xtick"
       },
       "priority": 2,
-      "description": "Reduce number of xtick labels in 'ax@0x752aea1c6660' (density=80%)."
+      "description": "Reduce number of xtick labels in 'ax@0x73d4259201a0' (density=86%)."
     },
     {
       "action_type": "rotate_labels",
-      "target": "ax@0x752aea1c6660",
+      "target": "ax@0x73d4259201a0",
       "params": {
-        "axis_name": "ax@0x752aea1c6660"
+        "axis_name": "ax@0x73d4259201a0"
       },
       "priority": 2,
-      "description": "Rotate x-tick labels in 'ax@0x752aea1c6660' (max_len=18 chars)."
+      "description": "Rotate x-tick labels in 'ax@0x73d4259201a0' (max_len=18 chars)."
+    },
+    {
+      "action_type": "rotate_labels",
+      "target": "xticks",
+      "params": {
+        "rotation": 45,
+        "ha": "right"
+      },
+      "priority": 2,
+      "description": "Rotate x-axis tick labels to reduce horizontal footprint."
     },
     {
       "action_type": "increase_figsize_height",
@@ -181,26 +219,59 @@
       },
       "priority": 2,
       "description": "Increase figure height to accommodate bottom-edge text."
+    },
+    {
+      "action_type": "increase_figsize",
+      "target": "figure",
+      "params": {
+        "delta_width": 0.5,
+        "delta_height": 0.5
+      },
+      "priority": 3,
+      "description": "Enlarge the overall figure to give inter-panel text elements more room."
     }
   ],
   "warnings": [
-    "[label_density_excess] X-tick labels in 'ax@0x752ae9a14410' 24 labels exceed policy cap 15 (max_len=8 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x752ae9aaa710' 24 labels exceed policy cap 15 (max_len=8 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x752ae9b420d0' 24 labels exceed policy cap 15 (max_len=12 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x752ae9e75450' 24 labels exceed policy cap 15 (max_len=8 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x752ae9e76850' 24 labels exceed policy cap 15 (max_len=13 chars)",
-    "[label_density_excess] X-tick labels in 'ax@0x752aea1c6660' 24 labels exceed policy cap 15 (max_len=18 chars)",
-    "[text_truncation] 'xtick: RP11-524N5.1' extends beyond figure border (bottom, 22px)"
+    "[cross_axes_text_overlap] xtick 'XXbac-BPG157A10.21' (axes 0) overlaps title 'DPMM-FM \u2014 setty' (axes 4) -- 285 px\u00b2; consider increasing hspace/wspace",
+    "[label_density_excess] X-tick labels in 'ax@0x73d4252c0410' 24 labels exceed policy cap 15 (max_len=8 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x73d4254160d0' 24 labels exceed policy cap 15 (max_len=8 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x73d42553fd90' 24 labels exceed policy cap 15 (max_len=12 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x73d4255dafd0' 24 labels exceed policy cap 15 (max_len=8 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x73d4255f4410' 24 labels exceed policy cap 15 (max_len=13 chars)",
+    "[label_density_excess] X-tick labels in 'ax@0x73d4259201a0' 24 labels exceed policy cap 15 (max_len=18 chars)",
+    "[text_overlap] 'xtick: XXbac-BPG157A10.21' overlaps 'title: DPMM-FM \u2014 setty'",
+    "[text_truncation] 'xtick: Gadd45a' extends beyond figure border (bottom, 15px)",
+    "[text_truncation] 'xtick: LINC01013' extends beyond figure border (bottom, 30px)",
+    "[text_truncation] 'xtick: Ppp1r14a' extends beyond figure border (bottom, 19px)",
+    "[text_truncation] 'xtick: RP11-524N5.1' extends beyond figure border (bottom, 54px)"
   ],
   "info": [
-    "[bold_usage] 2 text(s) use bold fontweight"
+    "[bold_usage] 2 text(s) use bold fontweight",
+    "[text_truncation] 'xtick: AKAP12' extends beyond figure border (bottom, 9px)",
+    "[text_truncation] 'xtick: ARPP21' extends beyond figure border (bottom, 10px)",
+    "[text_truncation] 'xtick: HMHB1' extends beyond figure border (bottom, 5px)",
+    "[text_truncation] 'xtick: LAPTM5' extends beyond figure border (bottom, 11px)",
+    "[text_truncation] 'xtick: MT-ND2' extends beyond figure border (bottom, 9px)",
+    "[text_truncation] 'xtick: MT-ND4' extends beyond figure border (bottom, 9px)",
+    "[text_truncation] 'xtick: Neurod2' extends beyond figure border (bottom, 10px)",
+    "[text_truncation] 'xtick: Neurog3' extends beyond figure border (bottom, 11px)",
+    "[text_truncation] 'xtick: RPS4Y2' extends beyond figure border (bottom, 10px)",
+    "[text_truncation] 'xtick: S100A4' extends beyond figure border (bottom, 6px)",
+    "[text_truncation] 'xtick: Serpinh1' extends beyond figure border (bottom, 13px)",
+    "[text_truncation] 'xtick: Slc9a3r1' extends beyond figure border (bottom, 12px)",
+    "[text_truncation] 'xtick: Tmsb10' extends beyond figure border (bottom, 7px)",
+    "[text_truncation] 'xtick: Tmsb4x' extends beyond figure border (bottom, 6px)",
+    "[text_truncation] 'xtick: VPREB1' extends beyond figure border (bottom, 12px)",
+    "[text_truncation] 'xtick: VPREB3' extends beyond figure border (bottom, 12px)"
   ],
   "error": null,
   "counts_by_type": {
+    "cross_axes_text_overlap": 1,
     "label_density_excess": 6,
-    "text_truncation": 1,
+    "text_overlap": 1,
+    "text_truncation": 20,
     "bold_usage": 1
   },
-  "total_warnings": 7,
-  "total_info": 1
+  "total_warnings": 12,
+  "total_info": 17
 }

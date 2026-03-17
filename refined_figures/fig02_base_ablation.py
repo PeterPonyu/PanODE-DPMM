@@ -241,7 +241,7 @@ def _draw_boxplot_panel(fig, region, metric_tables):
 
         # Stepwise ablation labels on x-axis
         ax.set_xticks(positions)
-        ax.set_xticklabels(tick_labels, fontsize=8, rotation=40, ha="right", color="black")
+        ax.set_xticklabels(tick_labels, fontsize=8, rotation=25, ha="right", color="black")
         ax.tick_params(axis="y", labelsize=10, colors="black")
         ax.tick_params(axis="x", length=0)
 

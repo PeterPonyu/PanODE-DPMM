@@ -74,27 +74,8 @@
     "max_annotations_complexity": 20,
     "complexity_score_threshold": 15.0
   },
-  "actions": [
-    {
-      "action_type": "reduce_annotations",
-      "target": "annotations",
-      "params": {
-        "strategy": "tiered",
-        "drop_order": [
-          "redundant",
-          "secondary",
-          "primary"
-        ],
-        "min_label_chars": 12,
-        "preserve_sign_prefix": true
-      },
-      "priority": 1,
-      "description": "Reduce annotation density to prevent overlapping text. Remove redundant duplicates first, then secondary labels; preserve at least 12 chars and leading sign/arrow prefixes."
-    }
-  ],
-  "warnings": [
-    "[text_overlap] 'annotation: Input' overlaps 'annotation: DPMM-FM'"
-  ],
+  "actions": [],
+  "warnings": [],
   "info": [
     "[annotation_data_overlap] Text 'annotation: 10\u2192128\u2192256\nBN \u00b7 Mish \u00b7 Drop' overlaps content 'patch: FancyBboxPatch' (2426 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: 10\u2192128\u2192256\nBN \u00b7 Mish \u00b7 Drop' overlaps content 'patch: FancyBboxPatch' (2426 px\u00b2)",
@@ -116,8 +97,8 @@
     "[annotation_data_overlap] Text 'annotation: Latent + Prior' overlaps content 'patch: FancyBboxPatch' (918 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: MLP Encoder' overlaps content 'patch: FancyBboxPatch' (1349 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: MLP Encoder' overlaps content 'patch: FancyBboxPatch' (1349 px\u00b2)",
-    "[annotation_data_overlap] Text 'annotation: MLP autoencoder + DPMM prior\nlatent flow-matching ' overlaps content 'patch: FancyBboxPatch' (2831 px\u00b2)",
-    "[annotation_data_overlap] Text 'annotation: MLP autoencoder + DPMM prior\nlatent flow-matching ' overlaps content 'patch: FancyBboxPatch' (4813 px\u00b2)",
+    "[annotation_data_overlap] Text 'annotation: MLP autoencoder + DPMM prior\nlatent flow-matching ' overlaps content 'patch: FancyBboxPatch' (6760 px\u00b2)",
+    "[annotation_data_overlap] Text 'annotation: MLP autoencoder + DPMM prior\nlatent flow-matching ' overlaps content 'patch: FancyBboxPatch' (883 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: Objective\n\u2022 $\\mathcal{L} = \\mathcal{L}_{recon} + \\' overlaps content 'patch: FancyBboxPatch' (13292 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: Output' overlaps content 'patch: FancyBboxPatch' (435 px\u00b2)",
     "[annotation_data_overlap] Text 'annotation: Recon.' overlaps content 'patch: FancyBboxPatch' (374 px\u00b2)",
@@ -137,9 +118,8 @@
   ],
   "error": null,
   "counts_by_type": {
-    "text_overlap": 1,
     "annotation_data_overlap": 38
   },
-  "total_warnings": 1,
+  "total_warnings": 0,
   "total_info": 38
 }
