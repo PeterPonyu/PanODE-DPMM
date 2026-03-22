@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 """Generate the dpmm-only refined publication figures.
 
-Figure sequence (7 figures):
+Figure sequence (5 figures):
     1  DPMM-FM Architecture Overview
-    2  Final DPMM-only Validation (merged)
-    3  DPMM / FM Parameter Sensitivity
-    4  Deduplicated Training Dynamics
-    5  Biological Validation (importance + correlation heatmaps, merged)
-    6  UMAP Overlays + GO Enrichment (merged)
-    7  External Benchmark (full metrics)
+    2  Final DPMM-only Validation (UMAP + boxplots)
+    3  Sensitivity + Training Dynamics (merged)
+    4  Biological Validation Full (importance + correlation + UMAP + enrichment)
+    5  External Benchmark (full metrics)
 
 Usage:
     python -m refined_figures.generate_all
@@ -25,21 +23,17 @@ sys.path.insert(0, str(ROOT))
 
 from refined_figures.fig01_architecture import generate as gen_fig1
 from refined_figures.fig02_base_ablation import generate as gen_fig2
-from refined_figures.fig03_sensitivity import generate as gen_fig3
-from refined_figures.fig04_training_umaps import generate as gen_fig4
-from refined_figures.fig05_biological_combined import generate as gen_fig5
-from refined_figures.fig06_umap_enrichment_combined import generate as gen_fig6
-from refined_figures.fig10_external import generate as gen_fig7
+from refined_figures.fig03_sensitivity_training import generate as gen_fig3
+from refined_figures.fig04_biological_full import generate as gen_fig4
+from refined_figures.fig05_external import generate as gen_fig5
 from refined_figures.dpmm_shared import require_dpmm
 
 GENERATORS = {
-    "1":  ("Architecture Overview",           gen_fig1),
-    "2":  ("Final DPMM-only Validation",   gen_fig2),
-    "3":  ("DPMM / FM Parameter Sensitivity",   gen_fig3),
-    "4":  ("Deduplicated Training Dynamics",  gen_fig4),
-    "5":  ("Biological Validation",          gen_fig5),
-    "6":  ("UMAP + GO Enrichment",           gen_fig6),
-    "7":  ("External Benchmark (full metrics)",             gen_fig7),
+    "1":  ("Architecture Overview",                gen_fig1),
+    "2":  ("Final DPMM-only Validation",           gen_fig2),
+    "3":  ("Sensitivity + Training Dynamics",      gen_fig3),
+    "4":  ("Biological Validation Full",           gen_fig4),
+    "5":  ("External Benchmark (full metrics)",    gen_fig5),
 }
 
 LEGACY_ALIASES = {}

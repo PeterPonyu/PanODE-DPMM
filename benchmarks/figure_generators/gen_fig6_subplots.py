@@ -36,7 +36,7 @@ from benchmarks.figure_generators.subplot_style import (
     FONTSIZE_ANNOTATION, FONTSIZE_CAPTION)
 from benchmarks.figure_generators.common import (
     compute_umap, MODEL_SHORT_NAMES,
-    PRIOR_MODELS_DPMM, PRIOR_MODELS_TOPIC,
+    PRIOR_MODELS_DPMM,
     REPRESENTATIVE_DATASETS, BIO_RESULTS
 )
 from benchmarks.figure_generators.data_loaders import (
@@ -175,12 +175,12 @@ def gen_heatmap(md, comp_prefix, ds_name, model, out_path, top_genes=30):
 
     The raw perturbation importance is z-scored column-wise (across
     components per gene) so that universally important genes get z≈0
-    while topic/component-specific genes stand out.  A diverging
-    colormap (``RdBu_r``) shows positive (topic-specific) vs. negative
+    while component-specific genes stand out.  A diverging
+    colormap (``RdBu_r``) shows positive (component-specific) vs. negative
     (suppressed) z-scores.
 
     Gene selection: top genes are chosen based on the *maximum z-score*
-    across components, which naturally favours topic-specific genes.
+    across components, which naturally favours component-specific genes.
     """
     short = MODEL_SHORT_NAMES.get(model, model)
     importance = md["importance"]
@@ -188,13 +188,13 @@ def gen_heatmap(md, comp_prefix, ds_name, model, out_path, top_genes=30):
     n_comp = min(importance.shape[0], 10)
 
     # Column-wise z-score: for each gene, subtract mean across components
-    # and divide by std.  Genes equally important in all topics → z ≈ 0.
+    # and divide by std.  Genes equally important in all components → z ≈ 0.
     imp = importance[:n_comp, :]
     mu = imp.mean(axis=0, keepdims=True)
     sd = imp.std(axis=0, keepdims=True) + 1e-12
     imp_z = (imp - mu) / sd
 
-    # Select top genes by max z-score (topic-specific importance)
+    # Select top genes by max z-score (component-specific importance)
     top_idx = set()
     for k in range(n_comp):
         top_idx.update(np.argsort(imp_z[k])[::-1][:top_genes])
@@ -203,7 +203,7 @@ def gen_heatmap(md, comp_prefix, ds_name, model, out_path, top_genes=30):
                             key=lambda i: -imp_z.max(axis=0)[i])[:top_genes]
     # Re-sort by dominant component (argmax) then by magnitude within that
     # component → creates a block-diagonal pattern that directly reveals
-    # which genes characterise each topic/component.
+    # which genes characterise each component.
     def _sort_key_imp(i):
         dom = int(np.argmax(imp_z[:, i]))
         return (dom, -imp_z[dom, i])
@@ -244,75 +244,6 @@ def gen_heatmap(md, comp_prefix, ds_name, model, out_path, top_genes=30):
     cb.set_ticklabels([f"{-vlim:.1f}", "0", f"{vlim:.1f}"])
     cb.outline.set_linewidth(0.4)
     # Check for text overlaps before saving
-    save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
-
-
-def gen_beta_heatmap(beta, gene_names, ds_name, model, out_path,
-                     top_genes=30):
-    """Generate a Topic decoder-weight (beta) heatmap.
-
-    Unique to Topic models: each row is a topic, each column a gene,
-    and the value is the softmax probability from the decoder.  We use
-    log-scale (``log₁₀ β``) so that the large dynamic range (1e-8 to
-    ~0.2) is visible.
-
-    Gene selection: top genes per topic by raw beta, union across all
-    topics, sorted by max beta.
-    """
-    short = MODEL_SHORT_NAMES.get(model, model)
-    n_comp = min(beta.shape[0], 10)
-    beta_sub = beta[:n_comp, :]
-
-    # Select top genes per topic by raw beta → union, then rank by max beta
-    top_idx = set()
-    for k in range(n_comp):
-        top_idx.update(np.argsort(beta_sub[k])[::-1][:top_genes])
-    top_idx_ranked = sorted(top_idx,
-                            key=lambda i: -beta_sub.max(axis=0)[i])[:top_genes]
-    # Re-sort by dominant topic then by beta magnitude within that topic
-    # → block-diagonal layout: Topic-1 genes | Topic-2 genes | …
-    def _sort_key_beta(i):
-        dom = int(np.argmax(beta_sub[:, i]))
-        return (dom, -beta_sub[dom, i])
-    top_idx = sorted(top_idx_ranked, key=_sort_key_beta)
-    sub_beta = beta_sub[:, top_idx]
-    sub_genes = ([str(gene_names[i]) for i in top_idx]
-                 if gene_names is not None
-                 else [f"g{i}" for i in top_idx])
-
-    # Log-scale for visibility
-    log_beta = np.log10(sub_beta + 1e-15)
-
-    fig_w = FIGSIZE_HEATMAP[0] * 2.5
-    fig_h = FIGSIZE_HEATMAP[1] * 1.5
-    fig = plt.figure(figsize=(fig_w, fig_h))
-    layout = bind_figure_region(fig, (0.08, 0.10, 0.95, 0.92))
-    ax = layout.add_axes(fig)
-    style_axes(ax)
-    im = ax.imshow(log_beta, aspect="auto", cmap="viridis",
-                   interpolation="nearest")
-    ax.set_yticks(range(n_comp))
-    ax.set_yticklabels([f"Topic{k+1}" for k in range(n_comp)],
-                       fontsize=FONTSIZE_TITLE + 1)
-    ax.set_xticks(range(len(sub_genes)))
-    # Truncate long gene names to 8 chars to reduce overlap
-    display_genes = [g[:8] for g in sub_genes]
-    ax.set_xticklabels(display_genes, rotation=90, ha="center",
-                       fontsize=max(FONTSIZE_TICK - 1, 12))
-    ax.set_title(f"{short} \u2014 {ds_name}  (decoder \u03B2)",
-                 fontsize=FONTSIZE_TITLE + 1, loc="left",
-                 fontweight="normal")
-    # Colorbar placed OUTSIDE the heatmap to avoid overlapping data
-    from mpl_toolkits.axes_grid1 import make_axes_locatable
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="3%", pad=0.12)
-    cb = fig.colorbar(im, cax=cax, orientation="vertical")
-    cb.ax.tick_params(labelsize=FONTSIZE_TICK, length=2, pad=1)
-    vmin, vmax = im.get_clim()
-    cb.set_ticks([vmin, vmax])
-    cb.set_ticklabels([f"{vmin:.1f}", f"{vmax:.1f}"])
-    cb.outline.set_linewidth(0.4)
-    cb.set_label("log\u2081\u2080 \u03B2", fontsize=FONTSIZE_ANNOTATION, labelpad=3)
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
 
@@ -580,8 +511,8 @@ def generate(series, out_dir):
     sub_dir.mkdir(parents=True, exist_ok=True)
     apply_subplot_style()
 
-    models = PRIOR_MODELS_TOPIC if series == "topic" else PRIOR_MODELS_DPMM
-    comp_prefix = "Topic" if series == "topic" else "Dim"
+    models = PRIOR_MODELS_DPMM
+    comp_prefix = "Dim"
     results_dir = BIO_RESULTS
 
     bio_datasets = _discover_bio_datasets(models, results_dir)
@@ -607,43 +538,8 @@ def generate(series, out_dir):
             ds_heat.append({"file": fname, "model": model})
         heatmap_files[ds_name] = ds_heat
 
-    # Panel C — Topic decoder beta heatmaps (topic series only)
-    # For datasets WITHOUT a beta.npz (e.g. setty has no saved checkpoint),
-    # fall back to the importance matrix which has the same (K × G) shape.
-    beta_files = {}
-    if series == "topic":
-        for model in avail_models:
-            safe_m = model.replace("/", "_")
-            for ds_name in REPRESENTATIVE_DATASETS:
-                beta_path = results_dir / f"{model}_{ds_name}_beta.npz"
-                if beta_path.exists():
-                    bd = np.load(beta_path, allow_pickle=True)
-                    beta = bd["beta"]
-                    gn = bd.get("gene_names")
-                    fname = f"beta_{ds_name}_{safe_m}.png"
-                    gen_beta_heatmap(beta, gn, ds_name, model, sub_dir / fname)
-                    beta_files.setdefault(ds_name, []).append(
-                        {"file": fname, "model": model})
-                else:
-                    # Fallback: use importance (K × G, perturbation-based)
-                    # as a proxy for decoder weight structure
-                    imp_path = results_dir / f"{model}_{ds_name}_importance.npz"
-                    if not imp_path.exists():
-                        continue
-                    impd = np.load(imp_path, allow_pickle=True)
-                    importance = impd["importance"]  # (K, G)
-                    gn = impd.get("gene_names")
-                    # Softmax-normalise row-wise to mimic beta semantics
-                    imp_norm = np.exp(importance - importance.max(axis=1, keepdims=True))
-                    imp_norm /= imp_norm.sum(axis=1, keepdims=True) + 1e-15
-                    fname = f"beta_{ds_name}_{safe_m}.png"
-                    gen_beta_heatmap(imp_norm, gn, ds_name, model, sub_dir / fname)
-                    beta_files.setdefault(ds_name, []).append(
-                        {"file": fname, "model": model})
-
     manifest = build_manifest(sub_dir, {
         "panelA": heatmap_files,
-        "panelC_beta": beta_files,
         "models": avail_models,
         # Keep canonical order: setty, endo, dentate
         "datasets": [d for d in REPRESENTATIVE_DATASETS if d in bio_datasets],
@@ -653,7 +549,7 @@ def generate(series, out_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Figure 6 subplots")
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
     out = (Path(args.output_dir) if args.output_dir

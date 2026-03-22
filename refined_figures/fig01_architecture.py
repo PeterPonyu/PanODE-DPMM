@@ -97,36 +97,6 @@ _ARCH = {
             },
         ],
     },
-    "topic": {
-        "prior_name": "Dirichlet",
-        "prior_detail": "n_topics=10",
-        "latent_label": "θ (simplex)",
-        "enc_dims": "128→128→K",
-        "dec_dims": "β: K×V",
-        "variants": [
-            {
-                "name": "Topic-Base",
-                "subtitle": "Logistic-Normal encoder + KL reg.",
-                "encoder": "LogNorm Enc.",
-                "enc_sub": "128→128→(μ, σ²)",
-                "extra": None,
-            },
-            {
-                "name": "Topic-Transformer",
-                "subtitle": "Cell-as-token + self-attention",
-                "encoder": "Cell-Token Enc.",
-                "enc_sub": "d=128, 4 heads\n2 layers",
-                "extra": ("Self-Attention", "token aggregation"),
-            },
-            {
-                "name": "Topic-Contrastive",
-                "subtitle": "MoCo for topic representations",
-                "encoder": "LogNorm Enc.",
-                "enc_sub": "128→128→(μ, σ²)",
-                "extra": ("MoCo Head", "topic contrast"),
-            },
-        ],
-    },
 }
 
 
@@ -385,7 +355,7 @@ def generate(series, out_dir):
     fig.legend(handles=handles,
                labels=[x[2] for x in legend_items],
                loc="lower center",
-               bbox_to_anchor=(0.5, 0.001),
+               bbox_to_anchor=(0.5, 0.02),
                ncol=len(legend_items),
                frameon=False,
                fontsize=10.5,

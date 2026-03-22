@@ -39,12 +39,10 @@ _FONT_CFG = {
     "axes.spines.right": False,
 }
 
-# 12-color palette: 6 warm (DPMM/AE) + 6 cool (Topic/VAE)
+# 6-color palette: 3 cool (Pure-AE) + 3 warm (DPMM)
 _PALETTE_12 = [
     "#4C72B0", "#5DA5DA", "#7EB8DA",   # Pure-AE, Pure-Tfm-AE, Pure-Ctr-AE
     "#DD8452", "#E8A07E", "#C44E52",   # DPMM-Base, DPMM-Ctr, DPMM-Tfm
-    "#55A868", "#8CC68B", "#B8D8B8",   # Pure-VAE, Pure-Tfm-VAE, Pure-Ctr-VAE
-    "#8172B3", "#A899CC", "#937DB0",   # Topic-Base, Topic-Ctr, Topic-Tfm
 ]
 
 
@@ -304,7 +302,7 @@ def plot_core_metrics_barplot(df, save_path, title="Benchmark Results",
         df: DataFrame with ``Model`` column + metric columns.
         save_path: Output path (extension overridden by *figformat*).
         title: Suptitle text.
-        series: ``"all"`` / ``"dpmm"`` / ``"topic"`` — controls canonical
+        series: ``"all"`` / ``"dpmm"`` — controls canonical
             model ordering via ``paper_style.sort_df_by_model_order``.
         no_title: If True, omit *suptitle* (useful for compositing).
         figformat: ``"png"`` | ``"pdf"`` | ``"svg"``.

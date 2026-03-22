@@ -32,7 +32,6 @@ BIO_RESULTS = BIO_RESULTS_DIR
 REPRESENTATIVE_DATASETS = ["setty", "endo", "dentate"]
 ALL_MODELS = [
     "DPMM-Base", "DPMM-Contrastive", "DPMM-Transformer",
-    "Topic-Base", "Topic-Contrastive", "Topic-Transformer",
 ]
 
 

@@ -23,7 +23,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="setty")
     parser.add_argument("--max-cells", type=int, nargs="+", default=[500, 1000, 2000, 3000, 5000])
-    parser.add_argument("--models", type=str, nargs="+", default=["DPMM-Base", "Topic-Base", "Pure-AE"])
+    parser.add_argument("--models", type=str, nargs="+", default=["DPMM-Base", "Pure-AE"])
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 

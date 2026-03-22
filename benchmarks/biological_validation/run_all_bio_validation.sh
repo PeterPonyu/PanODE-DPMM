@@ -22,12 +22,6 @@ declare -A SERIES_MAP=(
   ["DPMM-Base"]="dpmm"
   ["DPMM-Transformer"]="dpmm"
   ["DPMM-Contrastive"]="dpmm"
-  ["Pure-VAE"]="topic"
-  ["Pure-Transformer-VAE"]="topic"
-  ["Pure-Contrastive-VAE"]="topic"
-  ["Topic-Base"]="topic"
-  ["Topic-Transformer"]="topic"
-  ["Topic-Contrastive"]="topic"
 )
 
 cd "$ROOT"

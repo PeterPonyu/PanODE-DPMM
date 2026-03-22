@@ -16,7 +16,7 @@ import React from "react";
 
 interface FigureContainerProps {
   figureId: string;       // e.g. "figure2"
-  series: string;         // "dpmm" | "topic"
+  series: string;         // "dpmm"
   maxWidthPx?: number;    // default 670 (≈17cm at 96dpi, maximum print width)
   minHeightPx?: number;   // default 0 — height is content-fitted; max is 21cm at DPR=3
   children: React.ReactNode;

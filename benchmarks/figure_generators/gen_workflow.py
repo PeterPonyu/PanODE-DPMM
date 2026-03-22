@@ -211,14 +211,14 @@ def gen_workflow_png(
 def get_workflow_steps(fig_num: int, series: str = "dpmm") -> list[dict]:
     """Return workflow step definitions appropriate for *fig_num* and *series*.
 
-    Series-aware: adjusts model names and metric counts for DPMM vs Topic.
+    Series-aware: adjusts model names and metric counts for DPMM.
     """
-    is_dpmm = series == "dpmm"
-    model_family = "DPMM" if is_dpmm else "Topic"
-    baseline_family = "Pure-AE" if is_dpmm else "Pure-VAE"
-    base_model = "DPMM-Base" if is_dpmm else "Topic-Base"
-    n_metrics = "41" if is_dpmm else "6"
-    n_core = "6" if is_dpmm else "4"
+    is_dpmm = True
+    model_family = "DPMM"
+    baseline_family = "Pure-AE"
+    base_model = "DPMM-Base"
+    n_metrics = "41"
+    n_core = "6"
 
     STEPS: dict[int, list[dict]] = {
         2: [

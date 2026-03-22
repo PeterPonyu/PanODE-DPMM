@@ -83,7 +83,7 @@ def main():
     parser.add_argument("--target", type=str, default="lung",
                         choices=list(DATASET_REGISTRY.keys()))
     parser.add_argument("--models", type=str, nargs="+",
-                        default=["DPMM-Base", "Topic-Base", "Pure-AE"])
+                        default=["DPMM-Base", "Pure-AE"])
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 

@@ -1,6 +1,6 @@
 \begin{table}[!htbp]
 \centering
-\caption{\textbf{Runtime analysis (DPMM series).} Mean training time, throughput, peak GPU memory, and parameter count across 56 datasets. Best value per column in bold.}
+\caption{\textbf{Runtime analysis.} Mean training time, throughput, peak GPU memory, and parameter count across 56 datasets. Best value per column in bold.}
 \label{tab:dpmm_runtime}
 \begin{tabular}{lcccc}
 \toprule
@@ -8,10 +8,6 @@ Model & Time (s) & Sec/Epoch & GPU (MB) & Params \\
 \midrule
 Pure-AE & \textbf{46.4} & \textbf{0.0464} & \textbf{922.4} & \textbf{1,615,430} \\
 DPMM-Base & 50.5 & 0.0505 & 1025.5 & 1,615,430 \\
-Pure-Transformer-AE & 101.6 & 0.1016 & 1020.3 & 4,214,978 \\
-DPMM-Transformer & 101.6 & 0.1016 & 1035.0 & 4,214,978 \\
-Pure-Contrastive-AE & 115.8 & 0.1158 & 987.7 & 1,619,786 \\
-DPMM-Contrastive & 122.3 & 0.1223 & 1026.7 & 1,619,786 \\
 \bottomrule
 \end{tabular}
 \end{table}

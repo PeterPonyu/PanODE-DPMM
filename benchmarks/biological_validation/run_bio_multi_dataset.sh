@@ -17,14 +17,11 @@ mkdir -p "$RESULTS_DIR" "$MODELS_DIR"
 # Representative datasets for Figure 6
 DATASETS=("setty" "endo" "dentate")
 
-# Prior-based models (6 models total — both series)
+# Prior-based models (DPMM series)
 declare -A SERIES_MAP=(
   ["DPMM-Base"]="dpmm"
   ["DPMM-Transformer"]="dpmm"
   ["DPMM-Contrastive"]="dpmm"
-  ["Topic-Base"]="topic"
-  ["Topic-Transformer"]="topic"
-  ["Topic-Contrastive"]="topic"
 )
 
 cd "$ROOT"

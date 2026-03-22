@@ -76,42 +76,6 @@ class MLPEncoder(nn.Module):
             return (z,)
 
 
-class MLPLogisticNormalEncoder(nn.Module):
-    """MLP encoder for Topic Model (outputs mu, var for logistic-normal)."""
-    def __init__(
-        self,
-        input_dim: int,
-        n_topics: int,
-        hidden_dim: int = 128,
-        num_layers: int = 2,
-        dropout: float = 0.1,
-        var_eps: float = 1e-4,
-        use_residual: bool = False):
-        super().__init__()
-        self.var_eps = var_eps
-        
-        if use_residual:
-            self.encoder = ResidualMLP(input_dim, hidden_dim, hidden_dim, num_layers, dropout)
-        else:
-            layers = [input_dim] + [hidden_dim] * num_layers
-            self.encoder = MLP(layers, dropout)
-        
-        self.mu_head = nn.Linear(hidden_dim, n_topics)
-        self.var_head = nn.Linear(hidden_dim, n_topics)
-        nn.init.constant_(self.var_head.bias, 0.5)
-        
-        self.apply(weight_init)
-    
-    def forward(self, x: torch.Tensor, x_norm: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
-        x_input = x_norm if x_norm is not None else torch.log1p(x)
-        h = self.encoder(x_input)
-        
-        mu = self.mu_head(h)
-        var = F.softplus(self.var_head(h)) + self.var_eps
-        
-        return mu, var
-
-
 # =============================================================================
 # MULTI-HEAD PROJECTION TRANSFORMER
 # =============================================================================
@@ -213,73 +177,6 @@ class MultiHeadProjectionEncoder(nn.Module):
             return (z,)
 
 
-class MultiHeadProjectionLogisticNormalEncoder(nn.Module):
-    """Multi-Head Projection Encoder for Topic Models."""
-    def __init__(
-        self,
-        input_dim: int,
-        n_topics: int,
-        d_model: int = 128,
-        nhead: int = 4,
-        num_layers: int = 2,
-        dim_feedforward: int = 256,
-        dropout: float = 0.1,
-        num_tokens: int = 8,
-        var_eps: float = 1e-4):
-        super().__init__()
-        self.var_eps = var_eps
-        self.num_tokens = num_tokens
-        
-        # Multiple projection heads
-        self.projection_heads = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(input_dim, d_model),
-                nn.LayerNorm(d_model),
-                nn.GELU(),
-                nn.Dropout(dropout))
-            for _ in range(num_tokens)
-        ])
-        
-        self.token_embeddings = nn.Parameter(torch.randn(1, num_tokens, d_model) * 0.02)
-        
-        encoder_layer = nn.TransformerEncoderLayer(
-            d_model=d_model,
-            nhead=nhead,
-            dim_feedforward=dim_feedforward,
-            dropout=dropout,
-            activation='gelu',
-            batch_first=True)
-        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
-        
-        self.aggregation_query = nn.Parameter(torch.randn(1, 1, d_model) * 0.02)
-        self.cross_attention = nn.MultiheadAttention(d_model, nhead, dropout=dropout, batch_first=True)
-        
-        self.final_norm = nn.LayerNorm(d_model)
-        self.mu_head = nn.Linear(d_model, n_topics)
-        self.var_head = nn.Linear(d_model, n_topics)
-        nn.init.constant_(self.var_head.bias, 0.5)
-        
-        self.apply(weight_init)
-    
-    def forward(self, x: torch.Tensor, x_norm: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
-        x_input = x_norm if x_norm is not None else torch.log1p(x)
-        batch_size = x_input.size(0)
-        
-        tokens = torch.stack([proj(x_input) for proj in self.projection_heads], dim=1)
-        tokens = tokens + self.token_embeddings.expand(batch_size, -1, -1)
-        tokens = self.transformer(tokens)
-        
-        query = self.aggregation_query.expand(batch_size, -1, -1)
-        h, _ = self.cross_attention(query, tokens, tokens)
-        h = h.squeeze(1)
-        h = self.final_norm(h)
-        
-        mu = self.mu_head(h)
-        var = F.softplus(self.var_head(h)) + self.var_eps
-        
-        return mu, var
-
-
 # =============================================================================
 # HYBRID MLP-ATTENTION ENCODER
 # =============================================================================
@@ -356,58 +253,6 @@ class HybridMLPAttentionEncoder(nn.Module):
             return (z,)
 
 
-class HybridMLPAttentionLogisticNormalEncoder(nn.Module):
-    """Hybrid encoder for topic models."""
-    def __init__(
-        self,
-        input_dim: int,
-        n_topics: int,
-        hidden_dim: int = 256,
-        num_layers: int = 2,
-        nhead: int = 4,
-        dropout: float = 0.1,
-        var_eps: float = 1e-4,
-        attention_weight: float = 0.3):
-        super().__init__()
-        self.var_eps = var_eps
-        self.attention_weight = attention_weight
-        
-        self.mlp_encoder = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.LayerNorm(hidden_dim),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.LayerNorm(hidden_dim),
-            nn.GELU(),
-            nn.Dropout(dropout))
-        
-        self.attention = nn.MultiheadAttention(hidden_dim, nhead, dropout=dropout, batch_first=True)
-        self.attn_norm = nn.LayerNorm(hidden_dim)
-        
-        self.mu_head = nn.Linear(hidden_dim, n_topics)
-        self.var_head = nn.Linear(hidden_dim, n_topics)
-        nn.init.constant_(self.var_head.bias, 0.5)
-        
-        self.apply(weight_init)
-    
-    def forward(self, x: torch.Tensor, x_norm: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
-        x_input = x_norm if x_norm is not None else torch.log1p(x)
-        
-        h_mlp = self.mlp_encoder(x_input)
-        h_seq = h_mlp.unsqueeze(0)
-        h_attn, _ = self.attention(h_seq, h_seq, h_seq)
-        h_attn = h_attn.squeeze(0)
-        
-        h = h_mlp + self.attention_weight * (h_attn - h_mlp)
-        h = self.attn_norm(h)
-        
-        mu = self.mu_head(h)
-        var = F.softplus(self.var_head(h)) + self.var_eps
-        
-        return mu, var
-
-
 # =============================================================================
 # ENCODER FACTORY
 # =============================================================================
@@ -480,57 +325,6 @@ def create_encoder(
             nhead=nhead,
             dropout=dropout,
             use_vae=use_vae,
-            var_eps=var_eps,
-            attention_weight=attention_weight)
-    else:
-        raise ValueError(f"Unknown encoder type: {encoder_type}. Use 'mlp', 'transformer', or 'hybrid'.")
-
-
-def create_topic_encoder(
-    encoder_type: Literal['mlp', 'transformer', 'hybrid'],
-    input_dim: int,
-    n_topics: int,
-    hidden_dim: int = 128,
-    d_model: int = 128,
-    nhead: int = 4,
-    num_layers: int = 2,
-    dim_feedforward: int = 256,
-    dropout: float = 0.1,
-    var_eps: float = 1e-4,
-    num_tokens: int = 8,
-    attention_weight: float = 0.3) -> nn.Module:
-    """
-    Factory function to create encoder for topic models.
-    
-    Returns encoder outputting (mu, var) for logistic-normal distribution.
-    """
-    if encoder_type == 'mlp':
-        return MLPLogisticNormalEncoder(
-            input_dim=input_dim,
-            n_topics=n_topics,
-            hidden_dim=hidden_dim,
-            num_layers=num_layers,
-            dropout=dropout,
-            var_eps=var_eps)
-    elif encoder_type == 'transformer':
-        return MultiHeadProjectionLogisticNormalEncoder(
-            input_dim=input_dim,
-            n_topics=n_topics,
-            d_model=d_model,
-            nhead=nhead,
-            num_layers=num_layers,
-            dim_feedforward=dim_feedforward,
-            dropout=dropout,
-            num_tokens=num_tokens,
-            var_eps=var_eps)
-    elif encoder_type == 'hybrid':
-        return HybridMLPAttentionLogisticNormalEncoder(
-            input_dim=input_dim,
-            n_topics=n_topics,
-            hidden_dim=hidden_dim,
-            num_layers=num_layers,
-            nhead=nhead,
-            dropout=dropout,
             var_eps=var_eps,
             attention_weight=attention_weight)
     else:

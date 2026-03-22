@@ -310,13 +310,13 @@ function Arrow() {
 // Figure 2: Compact Ablation Flow (with split icon showing DPMM vs Pure)
 // ═══════════════════════════════════════════════════════════════════════════════
 function Fig2Flow({ series }: { series: string }) {
-  const isDpmm = series === "dpmm";
-  const modelFamily = isDpmm ? "DPMM" : "Topic";
-  const baselineFamily = isDpmm ? "Pure-AE" : "Pure-VAE";
+  void series;
+  const modelFamily = "DPMM";
+  const baselineFamily = "Pure-AE";
 
   return (
     <div style={{ display: "flex", alignItems: "stretch", gap: "3px", padding: "4px 1px 1px 1px", width: "100%" }}>
-      
+
       <Phase label="INPUT DATA" color="#457B9D" details="Top-3k HVGs · log₁p normalisation · 4 species">
         <Step icon={Icons.cells} label="12 scRNA-seq" sub="Datasets" />
         <Arrow />
@@ -325,18 +325,18 @@ function Fig2Flow({ series }: { series: string }) {
 
       <Arrow />
 
-      <Phase label="MODEL ABLATION" color="#E63946" details={isDpmm ? 'latent d=10 · enc=[256,128] · dropout=0.2 · wd=0 · lr=1e-3 · 1000 ep · batch=128' : 'K=10 · enc=128 · λ_KL=0.01 (Topic) / 1.0 (Pure) · drop=0.0 · wd=1e-3 · lr=1e-3 · 1000 ep'}>
+      <Phase label="MODEL ABLATION" color="#E63946" details={'latent d=10 · enc=[256,128] · dropout=0.2 · wd=0 · lr=1e-3 · 1000 ep · batch=128'}>
         <Step icon={Icons.model} label="Architectures" sub="Base/Trans/Contr" />
         <Arrow />
-        <Step icon={Icons.ablation} label="Ablation" sub={isDpmm ? "±DPMM · ±CL" : "±Dir KL · ±CL"} />
+        <Step icon={Icons.ablation} label="Ablation" sub="±DPMM · ±CL" />
         <Arrow />
         <Step icon={Icons.train} label="Training" sub="5 seeds" />
       </Phase>
 
       <Arrow />
 
-      <Phase label="EVALUATION" color="#2A9D8F" details={isDpmm ? "NMI · ARI · ASW · cLISI · iLISI · kBET · runtime" : "NMI · ARI · ASW · DAV · COR · CAL"}>
-        <Step icon={Icons.evaluate} label={isDpmm ? "41 Metrics" : "6 Metrics"} sub={isDpmm ? "Bio/Batch/Time" : "Clust/Corr"} />
+      <Phase label="EVALUATION" color="#2A9D8F" details="NMI · ARI · ASW · cLISI · iLISI · kBET · runtime">
+        <Step icon={Icons.evaluate} label="41 Metrics" sub="Bio/Batch/Time" />
         <Arrow />
         <Step icon={Icons.compare} label="Validation" sub="Wilcoxon tests" />
       </Phase>
@@ -349,13 +349,13 @@ function Fig2Flow({ series }: { series: string }) {
 // Figure 3: Compact Sensitivity (10 HP sweeps)
 // ═══════════════════════════════════════════════════════════════════════════════
 function Fig3Flow({ series }: { series: string }) {
-  const isDpmm = series === "dpmm";
-  const baseModel = isDpmm ? "DPMM-Base" : "Topic-Base";
+  void series;
+  const baseModel = "DPMM-Base";
 
   return (
     <div style={{ display: "flex", alignItems: "stretch", gap: "3px", padding: "4px 1px 1px 1px", width: "100%" }}>
-      
-      <Phase label="SETUP" color="#457B9D" details={isDpmm ? `${baseModel} — d=10, enc=[256,128], drop=0.2, warmup=0.9` : `${baseModel} — K=10, enc=128, λ_KL=0.01, drop=0.0`}>
+
+      <Phase label="SETUP" color="#457B9D" details={`${baseModel} — d=10, enc=[256,128], drop=0.2, warmup=0.9`}>
         <Step icon={Icons.cells} label="12 Datasets" sub="Test Suite" />
         <Arrow />
         <Step icon={Icons.model} label={baseModel} sub="Default Config" />
@@ -363,8 +363,8 @@ function Fig3Flow({ series }: { series: string }) {
 
       <Arrow />
 
-      <Phase label="SENSITIVITY ANALYSIS" color="#E76F51" details={isDpmm ? "K · α · conc · lr · drop · epochs · batch · warmup · wd · clip" : "K · s · fb · lr · drop · epochs · batch · β_kl · wd · clip"}>
-        <Step icon={Icons.sweep} label="Prior Sweeps" sub={isDpmm ? "K/α/conc" : "K/s/fb"} />
+      <Phase label="SENSITIVITY ANALYSIS" color="#E76F51" details="K · α · conc · lr · drop · epochs · batch · warmup · wd · clip">
+        <Step icon={Icons.sweep} label="Prior Sweeps" sub="K/α/conc" />
         <Arrow />
         <Step icon={Icons.sweep} label="Train Sweeps" sub="lr/drop/epochs" />
         <Arrow />
@@ -387,10 +387,11 @@ function Fig3Flow({ series }: { series: string }) {
 // Figure 4: Compact Training Dynamics (embedding evolution)
 // ═══════════════════════════════════════════════════════════════════════════════
 function Fig4Flow({ series }: { series: string }) {
+  void series;
   return (
     <div style={{ display: "flex", alignItems: "stretch", gap: "3px", padding: "4px 1px 1px 1px", width: "100%" }}>
-      
-      <Phase label="CASE STUDY" color="#457B9D" details={`${series === 'dpmm' ? 'DPMM-Base (det. AE + GMM prior)' : 'Topic-Base (VAE + LN prior)'} — 3 scale tiers`}>
+
+      <Phase label="CASE STUDY" color="#457B9D" details="DPMM-Base (det. AE + GMM prior) — 3 scale tiers">
         <Step icon={Icons.cells} label="3 Datasets" sub="Small/Med/Large" />
         <Arrow />
         <Step icon={Icons.sweep} label="Hyperparams" sub="Best config" />
@@ -398,10 +399,10 @@ function Fig4Flow({ series }: { series: string }) {
 
       <Arrow />
 
-      <Phase label="DYNAMICS TRACKING" color="#9C27B0" details={`Snapshot ${series === 'dpmm' ? 'z ∈ ℝ^d' : 'θ ∈ Δ^{K-1}'} at ep 1, 10, 50, 100, …, final`}>
+      <Phase label="DYNAMICS TRACKING" color="#9C27B0" details="Snapshot z ∈ ℝ^d at ep 1, 10, 50, 100, …, final">
         <Step icon={Icons.train} label="Epoch Loop" sub="0 → MaxEpoch" />
         <Arrow />
-        <Step icon={Icons.latent} label={series === 'dpmm' ? "Latent z" : "Latent θ"} sub="Snapshot/Epoch" />
+        <Step icon={Icons.latent} label="Latent z" sub="Snapshot/Epoch" />
         <Arrow />
         <Step icon={Icons.time} label="Trajectory" sub="Loss + metrics" />
       </Phase>
@@ -422,13 +423,13 @@ function Fig4Flow({ series }: { series: string }) {
 // Figure 5: Compact Trade-off (Pareto frontier)
 // ═══════════════════════════════════════════════════════════════════════════════
 function Fig5Flow({ series }: { series: string }) {
-  const isDpmm = series === "dpmm";
-  const modelFamily = isDpmm ? "DPMM" : "Topic";
-  const baselineFamily = isDpmm ? "Pure-AE" : "Pure-VAE";
+  void series;
+  const modelFamily = "DPMM";
+  const baselineFamily = "Pure-AE";
 
   return (
     <div style={{ display: "flex", alignItems: "stretch", gap: "3px", padding: "4px 1px 1px 1px", width: "100%" }}>
-      
+
       <Phase label="MULTI-MODEL" color="#457B9D" details={`${modelFamily}(Base/Trans/Contr.) vs ${baselineFamily}(Base/Trans/Contr.)`}>
         <Step icon={Icons.cells} label="12 Datasets" sub="Diverse types" />
         <Arrow />
@@ -437,10 +438,10 @@ function Fig5Flow({ series }: { series: string }) {
 
       <Arrow />
 
-      <Phase label="METRIC SPACE" color="#E63946" details={isDpmm ? 'NMI · ARI · ASW · DAV + DRE · LSE · DREX · LSEX + efficiency' : 'NMI · ARI · ASW · DAV + COR · CAL — same training config as Fig. 2'}>
+      <Phase label="METRIC SPACE" color="#E63946" details="NMI · ARI · ASW · DAV + DRE · LSE · DREX · LSEX + efficiency">
         <Step icon={Icons.metrics} label="Bio Metrics" sub="NMI/ARI/ASW" />
         <Arrow />
-        <Step icon={Icons.metrics} label={isDpmm ? "Recon Metrics" : "Geom Metrics"} sub={isDpmm ? "DRE/LSE/..." : "DAV/COR/CAL"} />
+        <Step icon={Icons.metrics} label="Recon Metrics" sub="DRE/LSE/..." />
         <Arrow />
         <Step icon={Icons.time} label="Time/Mem" sub="s · MB" />
       </Phase>
@@ -461,13 +462,13 @@ function Fig5Flow({ series }: { series: string }) {
 // Figure 10: External Model Benchmark Comparison
 // ═══════════════════════════════════════════════════════════════════════════════
 function Fig10Flow({ series }: { series: string }) {
-  const isDpmm = series === "dpmm";
-  const modelFamily = isDpmm ? "DPMM" : "Topic";
+  void series;
+  const modelFamily = "DPMM";
 
   return (
     <div style={{ display: "flex", alignItems: "stretch", gap: "3px", padding: "4px 1px 1px 1px", width: "100%" }}>
 
-      <Phase label="UNIFIED MODELS" color="#457B9D" details={`11 external baselines + Best-${modelFamily} + Best-${isDpmm ? 'Topic' : 'DPMM'}`}>
+      <Phase label="UNIFIED MODELS" color="#457B9D" details={`11 external baselines + Best-${modelFamily}`}>
         <Step icon={Icons.model} label="11 External" sub="Baselines" />
         <Arrow />
         <Step icon={Icons.ablation} label={`Best-${modelFamily}`} sub="Internal Ref" />
@@ -475,7 +476,7 @@ function Fig10Flow({ series }: { series: string }) {
 
       <Arrow />
 
-      <Phase label="UNIFIED PIPELINE" color="#E76F51" details={`Same preproc (3k HVG, log1p) · 12 datasets · d=10, lr=1e-3, 1000 ep (${isDpmm ? 'scDiff d=64, CLEAR d=128' : 'scDiff d=64, CLEAR/scGCC d=128'})`}>
+      <Phase label="UNIFIED PIPELINE" color="#E76F51" details="Same preproc (3k HVG, log1p) · 12 datasets · d=10, lr=1e-3, 1000 ep (scDiff d=64, CLEAR d=128)">
         <Step icon={Icons.preprocess} label="Same Preproc" sub="HVG 3k · LogNorm" />
         <Arrow />
         <Step icon={Icons.cells} label="12 Datasets" sub="Unified eval" />
@@ -485,8 +486,8 @@ function Fig10Flow({ series }: { series: string }) {
 
       <Arrow />
 
-      <Phase label="COMPARISON" color="#2A9D8F" details={`${isDpmm ? "41" : "6"} metrics · Composite score · Ranking`}>
-        <Step icon={Icons.evaluate} label={isDpmm ? "41 Metrics" : "6 Metrics"} sub={isDpmm ? "NMI/ARI/ASW/..." : "NMI/ARI/ASW/DAV"} />
+      <Phase label="COMPARISON" color="#2A9D8F" details="41 metrics · Composite score · Ranking">
+        <Step icon={Icons.evaluate} label="41 Metrics" sub="NMI/ARI/ASW/..." />
         <Arrow />
         <Step icon={Icons.compare} label="Ranking" sub="Composite Score" />
       </Phase>

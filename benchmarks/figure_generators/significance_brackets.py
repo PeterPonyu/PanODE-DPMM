@@ -43,11 +43,6 @@ INTERNAL_PAIRS = {
         ("DPMM-Transformer", "Pure-Transformer-AE"),
         ("DPMM-Contrastive", "Pure-Contrastive-AE"),
     ],
-    "topic": [
-        ("Topic-Base", "Pure-VAE"),
-        ("Topic-Transformer", "Pure-Transformer-VAE"),
-        ("Topic-Contrastive", "Pure-Contrastive-VAE"),
-    ],
 }
 
 
@@ -138,7 +133,7 @@ def draw_significance_brackets(ax, model_order, metric_col, series,
     metric_col : str
         Metric column name to look up in the Wilcoxon table.
     series : str
-        ``"dpmm"`` or ``"topic"`` — determines which pairs to annotate.
+        ``"dpmm"`` — determines which pairs to annotate.
     data_per_model : list[np.ndarray] or None
         Per-model data arrays. Used to compute bracket height above data.
         If None, uses current y-axis limits.
@@ -248,7 +243,7 @@ def draw_external_significance_stars(ax, model_order, metric_col, series,
     Instead of connecting brackets (which would crowd the plot with 11
     external models), places significance stars directly above each
     external model's box, indicating Wilcoxon test result vs the
-    internal reference (Best-DPMM or Best-Topic).
+    internal reference (Best-DPMM).
 
     Parameters
     ----------
@@ -257,7 +252,7 @@ def draw_external_significance_stars(ax, model_order, metric_col, series,
         Full model names in boxplot order (x=1 = model_order[0]).
     metric_col : str
     series : str
-        ``"dpmm"`` or ``"topic"``
+        ``"dpmm"``
     data_per_model : list[np.ndarray] or None
 
     Returns
@@ -269,7 +264,7 @@ def draw_external_significance_stars(ax, model_order, metric_col, series,
     if ext_df is None:
         return 0
 
-    ref_label = "Best-DPMM" if series == "dpmm" else "Best-Topic"
+    ref_label = "Best-DPMM"
 
     n_drawn = 0
     for idx, model in enumerate(model_order):

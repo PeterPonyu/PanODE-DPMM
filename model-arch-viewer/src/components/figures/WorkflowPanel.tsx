@@ -14,7 +14,7 @@ import { PanelSection } from "./FigureComponents";
    ║  The last step shows the methodological output (NOT panel refs).       ║
    ║                                                                        ║
    ║  Color scheme: neutral blue (#E8F0FE fill, #4A7CBF border) to avoid   ║
-   ║  conflict with model-specific palette (DPMM=orange, Topic=purple).    ║
+   ║  conflict with model-specific palette (DPMM=orange).                 ║
    ╚══════════════════════════════════════════════════════════════════════════╝ */
 
 // ─── Step data type ──────────────────────────────────────────────────────────
@@ -219,24 +219,24 @@ function Arrow() {
 // ─── Per-figure per-series step definitions ──────────────────────────────────
 // NOTE: The last step describes the *methodological output*, NOT panel labels.
 function getWorkflowSteps(figNum: number, series: string): Step[] {
-  const isDpmm = series === "dpmm";
-  const modelFamily = isDpmm ? "DPMM" : "Topic";
-  const baselineFamily = isDpmm ? "Pure-AE" : "Pure-VAE";
-  const baseModel = isDpmm ? "DPMM-Base" : "Topic-Base";
+  void series;
+  const modelFamily = "DPMM";
+  const baselineFamily = "Pure-AE";
+  const baseModel = "DPMM-Base";
 
   const STEPS: Record<number, Step[]> = {
     2: [
       { label: "12 scRNA-seq", sub: "datasets", icon: "cells" },
       { label: "Preprocess", sub: "HVG · norm · log1p", icon: "preprocess" },
       { label: "Train 6 Models", sub: `3 ${modelFamily} + 3 ${baselineFamily}`, icon: "train" },
-      { label: "Evaluate", sub: `${isDpmm ? "41" : "6"} metrics × 12 datasets`, icon: "evaluate" },
+      { label: "Evaluate", sub: "41 metrics × 12 datasets", icon: "evaluate" },
       { label: "Ablation Analysis", sub: "UMAP · metrics · efficiency", icon: "compare" },
     ],
     3: [
       { label: "12 scRNA-seq", sub: "datasets", icon: "cells" },
       { label: baseModel, sub: "single architecture", icon: "train" },
       { label: "Sweep 10 HPs", sub: "one factor at a time", icon: "sweep" },
-      { label: `${isDpmm ? "6" : "4"} Core Metrics`, sub: "per sweep value", icon: "metrics" },
+      { label: `6 Core Metrics`, sub: "per sweep value", icon: "metrics" },
       { label: "Sensitivity Profile", sub: "parameter robustness", icon: "evaluate" },
     ],
     4: [
@@ -249,7 +249,7 @@ function getWorkflowSteps(figNum: number, series: string): Step[] {
     5: [
       { label: "12 scRNA-seq", sub: "datasets", icon: "cells" },
       { label: "Train 6 Models", sub: `3 ${modelFamily} + 3 ${baselineFamily}`, icon: "train" },
-      { label: `${isDpmm ? "41" : "6"} Metrics`, sub: "per model × dataset", icon: "metrics" },
+      { label: "41 Metrics", sub: "per model × dataset", icon: "metrics" },
       { label: "Pairwise Scatter", sub: "convex hulls", icon: "scatter" },
       { label: "Trade-off Landscape", sub: "multi-objective", icon: "compare" },
     ],

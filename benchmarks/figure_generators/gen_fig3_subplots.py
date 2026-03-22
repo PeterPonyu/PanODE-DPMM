@@ -41,8 +41,6 @@ from benchmarks.figure_generators.data_loaders import (
 
 _CORE_METRICS_ALL = ["NMI", "ARI", "ASW", "DAV",
                      "DRE_umap_overall_quality", "LSE_overall_quality"]
-# Topic models use a simplex latent space — LSE/DRE are not meaningful.
-_CORE_METRICS_TOPIC = ["NMI", "ARI", "ASW", "DAV"]
 
 _DISPLAY = {
     "NMI": "NMI \u2191", "ARI": "ARI \u2191", "ASW": "ASW \u2191",
@@ -183,8 +181,8 @@ def generate(series, out_dir):
     sub_dir.mkdir(parents=True, exist_ok=True)
     apply_subplot_style()
 
-    # Select metric set based on series
-    core_metrics = _CORE_METRICS_TOPIC if series == "topic" else _CORE_METRICS_ALL
+    # Select metric set
+    core_metrics = _CORE_METRICS_ALL
 
     all_sweeps = []
     for loader, source in [
@@ -231,7 +229,7 @@ def generate(series, out_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Figure 3 subplots")
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
     out = (Path(args.output_dir) if args.output_dir

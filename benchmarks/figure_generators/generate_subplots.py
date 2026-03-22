@@ -59,7 +59,7 @@ GENERATORS = {
 def main():
     parser = argparse.ArgumentParser(
         description="Generate individual subplot PNGs for Python figure composition")
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--figures", nargs="+", default=["all"],
                         help="Which figures: 2 3 4 6 7, or 'all'")
     parser.add_argument("--output-dir", default=None)

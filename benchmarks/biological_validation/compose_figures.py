@@ -16,9 +16,6 @@ Usage:
     python benchmarks/biological_validation/compose_figures.py \
         --model DPMM-Base --dataset setty --series dpmm
 
-    python benchmarks/biological_validation/compose_figures.py \
-        --model Topic-Base --dataset setty --series topic
-
 No GPU or model loading required — works entirely from saved results.
 """
 
@@ -151,7 +148,7 @@ def plot_composite_figure(latent, components, labels, importance, gene_names,
 
     n_cls = len(np.unique(labels_enc))
     cmap_ct = mpl.colormaps.get_cmap("tab20" if n_cls <= 20 else "nipy_spectral")
-    comp_prefix = "Topic" if series == "topic" else "Dim"
+    comp_prefix = "Dim"
 
     # Cell-type reference
     ax0 = fig.add_subplot(gs_umap[0, 0])
@@ -270,7 +267,7 @@ def plot_enrichment_grid(all_enr, series, model_name, save_path,
         print("  No enrichment data to plot.")
         return
 
-    comp_prefix = "Topic" if series == "topic" else "Dim"
+    comp_prefix = "Dim"
 
     cols = min(3, K)
     rows_grid = (K + cols - 1) // cols
@@ -334,11 +331,11 @@ def main():
         description="Compose multi-panel biological validation figures"
     )
     parser.add_argument("--model", required=True,
-                        help="Model name (e.g., DPMM-Base, Topic-Base)")
+                        help="Model name (e.g., DPMM-Base, DPMM-Transformer)")
     parser.add_argument("--dataset", required=True,
                         choices=["setty", "lung", "endo", "dentate"])
     parser.add_argument("--series", required=True,
-                        choices=["dpmm", "topic"])
+                        choices=["dpmm"])
     parser.add_argument("--results-dir", type=str, default=None,
                         help="Directory containing .npz and .csv results")
     parser.add_argument("--max-components", type=int, default=10)

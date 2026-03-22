@@ -1,13 +1,11 @@
 """Centralised model registry for all benchmark scripts.
 
-Defines the canonical MODELS dict (12 variants across 4 architecture
-families: DPMM, Topic, Pure-VAE, Pure-AE), series grouping constants,
+Defines the canonical MODELS dict (7 variants across 2 architecture
+families: DPMM, Pure-AE), series grouping constants,
 ablation step definitions, and utility helpers.
 
 Architecture Families:
 - DPMM: AE + Dirichlet Process Mixture Model clustering
-- Topic: VAE + Dirichlet/logistic-normal prior (simplex)
-- Pure-VAE: Standard VAE with Gaussian N(0,I) prior (independent)
 - Pure-AE: Deterministic autoencoder without any prior (independent)
 
 Exports
@@ -20,31 +18,15 @@ is_cuda_oom       : fn    — detect CUDA out-of-memory exceptions
 
 from models.dpmm_base import DPMMODEModel
 from models.dpmm_flow_matching import DPMMFlowMatchingModel
-try:
-    from models.topic_base import TopicODEModel
-except ImportError:
-    TopicODEModel = None
 from models.dpmm_contrastive import DPMMODEContrastiveModel
-try:
-    from models.topic_contrastive import TopicODEContrastiveModel
-except ImportError:
-    TopicODEContrastiveModel = None
 from models.dpmm_transformer import DPMMODETransformerModel
-try:
-    from models.topic_transformer import TopicODETransformerModel
-except ImportError:
-    TopicODETransformerModel = None
 
-# Independent Pure baselines (NOT derived from DPMM or Topic classes)
-try:
-    from models.pure_vae import PureVAEModel, PureVAETransformerModel, PureVAEContrastiveModel
-except ImportError:
-    PureVAEModel = PureVAETransformerModel = PureVAEContrastiveModel = None
+# Independent Pure-AE baselines (deterministic, no prior)
 from models.pure_ae import PureAEModel, PureAETransformerModel, PureAEContrastiveModel
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 12 model configurations — tuned parameters from sensitivity analysis
+# 7 model configurations — tuned parameters from sensitivity analysis
 # ═══════════════════════════════════════════════════════════════════════════════
 
 MODELS = {
@@ -90,53 +72,6 @@ MODELS = {
             'fit_epochs': 1000,
         },
         'series': 'pure-ae',
-    },
-
-    # ── Pure-VAE baselines (Gaussian N(0,I) prior — independent from Topic) ─
-    'Pure-VAE': {
-        'class': PureVAEModel,
-        'params': {
-            'latent_dim': 10,
-            'encoder_hidden': 128,
-            'decoder_dims': [128, 256],
-            'encoder_drop': 0.1,
-            'kl_weight': 1.0,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 1e-3,
-            'fit_epochs': 1000,
-        },
-        'series': 'pure-vae',
-    },
-    'Pure-Transformer-VAE': {
-        'class': PureVAETransformerModel,
-        'params': {
-            'latent_dim': 10,
-            'd_model': 128,
-            'decoder_dims': [128, 256],
-            'dropout': 0.1,
-            'kl_weight': 1.0,
-            'nhead': 4,
-            'num_encoder_layers': 2,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 1e-3,
-            'fit_epochs': 1000,
-        },
-        'series': 'pure-vae',
-    },
-    'Pure-Contrastive-VAE': {
-        'class': PureVAEContrastiveModel,
-        'params': {
-            'latent_dim': 10,
-            'encoder_hidden': 128,
-            'decoder_dims': [128, 256],
-            'encoder_drop': 0.1,
-            'kl_weight': 1.0,
-            'moco_weight': 1.0,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 1e-3,
-            'fit_epochs': 1000,
-        },
-        'series': 'pure-vae',
     },
 
     # ── DPMM series (AE backbone + DPMM clustering prior) ────────────────
@@ -209,50 +144,6 @@ MODELS = {
         },
         'series': 'dpmm',
     },
-
-    # ── Topic / LDA series (VAE backbone + Dirichlet prior) ──────────────
-    'Topic-Base': {
-        'class': TopicODEModel,
-        'params': {
-            'n_topics': 10,
-            'encoder_hidden': 128,
-            'kl_weight': 0.01,                 # light Dirichlet KL
-            'encoder_drop': 0.0,               # from sensitivity: no dropout for Topic
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 1e-3,          # from sensitivity: wd=1e-3 best for Topic
-            'fit_epochs': 1000,                # from sensitivity: 1000 optimal for Topic
-        },
-        'series': 'topic',
-    },
-    'Topic-Transformer': {
-        'class': TopicODETransformerModel,
-        'params': {
-            'n_topics': 10,
-            'd_model': 128,
-            'kl_weight': 0.01,
-            'dropout': 0.0,
-            'nhead': 4,
-            'num_encoder_layers': 2,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 1e-3,
-            'fit_epochs': 1000,
-        },
-        'series': 'topic',
-    },
-    'Topic-Contrastive': {
-        'class': TopicODEContrastiveModel,
-        'params': {
-            'n_topics': 10,
-            'encoder_hidden': 128,
-            'kl_weight': 0.01,
-            'encoder_drop': 0.0,
-            'moco_weight': 1.0,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 1e-3,
-            'fit_epochs': 1000,
-        },
-        'series': 'topic',
-    },
 }
 
 
@@ -277,20 +168,10 @@ ABLATION_STEPS = {
         ('DPMM-Contrastive',    '+Contrastive'),
         ('DPMM-FM',             '+Flow Matching'),
     ],
-    'topic': [
-        ('Topic-Base',            'Base VAE+Topic'),
-        ('Topic-Transformer',     '+Transformer'),
-        ('Topic-Contrastive',     '+Contrastive'),
-    ],
     'pure-ae': [
         ('Pure-AE',             'Base AE'),
         ('Pure-Transformer-AE', '+Transformer'),
         ('Pure-Contrastive-AE', '+Contrastive'),
-    ],
-    'pure-vae': [
-        ('Pure-VAE',              'Base VAE'),
-        ('Pure-Transformer-VAE',  '+Transformer'),
-        ('Pure-Contrastive-VAE',  '+Contrastive'),
     ],
 }
 
@@ -301,27 +182,23 @@ ABLATION_STEPS = {
 
 SERIES_GROUPS = {
     'dpmm':     {k for k, v in MODELS.items() if v['series'] == 'dpmm'},
-    'topic':    {k for k, v in MODELS.items() if v['series'] == 'topic'},
     'pure':     {k for k in MODELS if k.startswith('Pure-')},
     'pure-ae':  {k for k, v in MODELS.items() if v['series'] == 'pure-ae'},
-    'pure-vae': {k for k, v in MODELS.items() if v['series'] == 'pure-vae'},
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Paper grouping — map each series to its output / comparison group
-# Pure-AE is compared against DPMM, Pure-VAE against Topic
+# Pure-AE is compared against DPMM
 # ═══════════════════════════════════════════════════════════════════════════════
 
 SERIES_TO_PAPER = {
     'dpmm':     'dpmm',
-    'topic':    'topic',
     'pure-ae':  'dpmm',
-    'pure-vae': 'topic',
 }
 
 
 def paper_group(series_or_model: str) -> str:
-    """Return the paper output group ('dpmm' or 'topic') for a series or model name."""
+    """Return the paper output group ('dpmm') for a series or model name."""
     if series_or_model in SERIES_TO_PAPER:
         return SERIES_TO_PAPER[series_or_model]
     # Lookup by model name

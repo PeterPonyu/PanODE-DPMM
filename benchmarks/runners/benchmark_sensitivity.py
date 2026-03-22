@@ -6,7 +6,7 @@ Sweeps model-architecture hyperparameters (one-at-a-time, control-variable
 principle: all others held at default).
 
 Each DPMM variant has its own architecture-specific sweep:
-  ── Shared sweeps (all 3 DPMM variants + Topic) ──
+  ── Shared sweeps (all 3 DPMM variants) ──
   1) latent_dim                  ∈ {5, 10, 20, 50}
   2) dropout_rate                ∈ {0.0, 0.1, 0.2, 0.3}
 
@@ -23,21 +23,17 @@ Each DPMM variant has its own architecture-specific sweep:
     8) moco_weight                 ∈ {0.1, 0.5, 1.0, 2.0}
   9) moco_temperature            ∈ {0.05, 0.1, 0.2, 0.5}
 
-  ── Topic-Base specific ──
-  10) kl_weight                  ∈ {1.0, 0.5, 0.1, 0.01}
-  11) encoder_size (hidden)      ∈ {64, 128, 256, 512}
-
 Defaults (held constant unless being swept):
-  kl_weight=0.01, warmup_ratio=0.9, latent_dim=10,
-  encoder_hidden=128, encoder_dims=[256,128],
+  warmup_ratio=0.9, latent_dim=10,
+  encoder_dims=[256,128],
   dropout_rate=0.1, lr=1e-3, epochs=600, batch_size=128,
   d_model=128, nhead=4, num_encoder_layers=2,
     moco_weight=1.0, moco_temperature=0.2
 
 Outputs (under benchmark_results/sensitivity/):
-  csv/{topic,dpmm}/   — per-series CSV with all metrics + efficiency
-  plots/{topic,dpmm}/ — UMAP + metrics bar charts per sweep dimension
-  meta/{topic,dpmm}/  — JSON with full config
+  csv/dpmm/   — per-series CSV with all metrics + efficiency
+  plots/dpmm/ — UMAP + metrics bar charts per sweep dimension
+  meta/dpmm/  — JSON with full config
 
 Usage:
   python benchmarks/benchmark_sensitivity.py
@@ -64,7 +60,7 @@ from benchmarks.config import BASE_CONFIG, DEFAULT_OUTPUT_DIR, ensure_dirs, set_
 from benchmarks.dataset_registry import DATASET_REGISTRY, resolve_datasets
 from benchmarks.data_utils import load_or_preprocess_adata
 from benchmarks.train_utils import (
-    make_topic_params, make_dpmm_params, train_and_evaluate,
+    make_dpmm_params, train_and_evaluate,
     setup_series_dirs, save_latents, add_common_cli_args)
 from benchmarks.model_registry import paper_group
 from utils.data import DataSplitter
@@ -73,10 +69,6 @@ from utils.viz import plot_umap_grid, plot_all_metrics_barplot
 from models.dpmm_base import DPMMODEModel
 from models.dpmm_transformer import DPMMODETransformerModel
 from models.dpmm_contrastive import DPMMODEContrastiveModel
-try:
-    from models.topic_base import TopicODEModel
-except ImportError:
-    TopicODEModel = None
 
 # ── defaults (optimal from prior experiments) ─────────────────────────────────
 DATA_PATH     = str(BASE_CONFIG.data_path)
@@ -92,9 +84,6 @@ VERBOSE_EVERY = BASE_CONFIG.verbose_every
 DEFAULT_EPOCHS = BASE_CONFIG.epochs        # 600
 
 # ── optimal architecture defaults ─────────────────────────────────────────────
-TOPIC_KL_DEFAULT     = 0.01
-TOPIC_HIDDEN_DEFAULT = 128
-TOPIC_DROP_DEFAULT   = 0.1
 
 DPMM_WR_DEFAULT      = 0.9
 DPMM_EDIMS_DEFAULT   = [256, 128]
@@ -117,10 +106,7 @@ SWEEPS = {
     # Shared sweeps (all architectures)
     "latent_dim":    {"both": [5, 10, 20, 50]},
     "dropout_rate":  {"both": [0.0, 0.1, 0.2, 0.3]},
-    # Topic-Base specific
-    "kl_weight":     {"topic": [1.0, 0.5, 0.1, 0.01]},
     "encoder_size":  {
-        "topic": [64, 128, 256, 512],
         "dpmm":  [[128, 64], [256, 128], [512, 256], [1024, 512]],
     },
     # DPMM-Base specific
@@ -133,13 +119,6 @@ SWEEPS = {
     "moco_weight":          {"dpmm_cont": [0.1, 0.5, 1.0, 2.0]},
     "moco_temperature":     {"dpmm_cont": [0.05, 0.1, 0.2, 0.5]},
 }
-
-
-def _topic_cfg(latent_dim=LATENT_DIM, kl_weight=TOPIC_KL_DEFAULT,
-               encoder_hidden=TOPIC_HIDDEN_DEFAULT, dropout=TOPIC_DROP_DEFAULT):
-    return make_topic_params(
-        latent_dim=latent_dim, kl_weight=kl_weight,
-        encoder_hidden=encoder_hidden, dropout=dropout)
 
 
 def _dpmm_cfg(latent_dim=LATENT_DIM, warmup_ratio=DPMM_WR_DEFAULT,
@@ -186,18 +165,8 @@ def _cont_cfg(latent_dim=LATENT_DIM, moco_weight=CONT_MOCO_WEIGHT_DEFAULT,
 def build_variants():
     """Build all sweep variants. Each sweep changes ONE param, rest at default."""
     variants = []
-    _has_topic = TopicODEModel is not None
 
-    # ── 1. kl_weight (Topic only) ─────────────────────────────────────────────
-    if _has_topic:
-        for kl in SWEEPS["kl_weight"]["topic"]:
-            variants.append({
-                "name": f"Topic(kl={kl})", "series": "topic",
-                "sweep": "kl_weight", "sweep_val": kl,
-                "cls": TopicODEModel, "params": _topic_cfg(kl_weight=kl),
-            })
-
-    # ── 2. warmup_ratio (DPMM-Base only) ─────────────────────────────────────
+    # ── 1. warmup_ratio (DPMM-Base only) ─────────────────────────────────────
     for wr in SWEEPS["warmup_ratio"]["dpmm"]:
         variants.append({
             "name": f"DPMM-Base(wr={wr})", "series": "dpmm",
@@ -205,14 +174,8 @@ def build_variants():
             "cls": DPMMODEModel, "params": _dpmm_cfg(warmup_ratio=wr),
         })
 
-    # ── 3. latent_dim (all: Topic, DPMM-Base, DPMM-Trans, DPMM-Cont) ────────
+    # ── 2. latent_dim (DPMM-Base, DPMM-Trans, DPMM-Cont) ────────────────────
     for ld in SWEEPS["latent_dim"]["both"]:
-        if _has_topic:
-            variants.append({
-                "name": f"Topic(dim={ld})", "series": "topic",
-                "sweep": "latent_dim", "sweep_val": ld,
-                "cls": TopicODEModel, "params": _topic_cfg(latent_dim=ld),
-            })
         variants.append({
             "name": f"DPMM-Base(dim={ld})", "series": "dpmm",
             "sweep": "latent_dim", "sweep_val": ld,
@@ -229,14 +192,7 @@ def build_variants():
             "cls": DPMMODEContrastiveModel, "params": _cont_cfg(latent_dim=ld),
         })
 
-    # ── 4. encoder_size (Topic + DPMM-Base) ──────────────────────────────────
-    if _has_topic:
-        for eh in SWEEPS["encoder_size"]["topic"]:
-            variants.append({
-                "name": f"Topic(hidden={eh})", "series": "topic",
-                "sweep": "encoder_size", "sweep_val": eh,
-                "cls": TopicODEModel, "params": _topic_cfg(encoder_hidden=eh),
-            })
+    # ── 3. encoder_size (DPMM-Base) ──────────────────────────────────────────
     for edims in SWEEPS["encoder_size"]["dpmm"]:
         ddims = list(reversed(edims))
         tag = "x".join(str(d) for d in edims)
@@ -247,14 +203,8 @@ def build_variants():
             "params": _dpmm_cfg(encoder_dims=edims, decoder_dims=ddims),
         })
 
-    # ── 5. dropout_rate (all) ─────────────────────────────────────────────────
+    # ── 4. dropout_rate (all DPMM variants) ──────────────────────────────────
     for dr in SWEEPS["dropout_rate"]["both"]:
-        if _has_topic:
-            variants.append({
-                "name": f"Topic(drop={dr})", "series": "topic",
-                "sweep": "dropout_rate", "sweep_val": dr,
-                "cls": TopicODEModel, "params": _topic_cfg(dropout=dr),
-            })
         variants.append({
             "name": f"DPMM-Base(drop={dr})", "series": "dpmm",
             "sweep": "dropout_rate", "sweep_val": dr,
@@ -352,7 +302,6 @@ def main():
 
     # ── header ────────────────────────────────────────────────────────────
     variants = build_variants()
-    n_t = sum(1 for v in variants if v["series"] == "topic")
     n_d = sum(1 for v in variants if v["series"] == "dpmm")
 
     print("=" * 60)
@@ -362,8 +311,6 @@ def main():
     ds_keys = resolve_datasets(args.datasets)
     print(f"Data   : {ds_keys}")
     print(f"Epochs : {args.epochs},  LR : {args.lr:.0e},  Batch : {BATCH_SIZE}")
-    print(f"Defaults — Topic: kl={TOPIC_KL_DEFAULT}, hidden={TOPIC_HIDDEN_DEFAULT}, "
-          f"drop={TOPIC_DROP_DEFAULT}")
     print(f"Defaults — DPMM-Base : wr={DPMM_WR_DEFAULT}, enc={DPMM_EDIMS_DEFAULT}, "
           f"drop={DPMM_DROP_DEFAULT}")
     print(f"Defaults — DPMM-Trans: d_model={TRANS_DMODEL_DEFAULT}, nhead={TRANS_NHEAD_DEFAULT}, "
@@ -373,7 +320,7 @@ def main():
     print(f"Sweeps :")
     for sw, grid in SWEEPS.items():
         print(f"  {sw}: {grid}")
-    print(f"Total runs : {len(variants)} (Topic: {n_t}, DPMM: {n_d})")
+    print(f"Total runs : {len(variants)} (DPMM: {n_d})")
 
     # ── data + train (possibly multi-dataset) ─────────────────────────────
     results, latents = [], {}
@@ -419,10 +366,10 @@ def main():
     SENS_DIR = DEFAULT_OUTPUT_DIR / "sensitivity"
     lat_sdirs = setup_series_dirs(SENS_DIR, include_latents=True)
     save_latents(latents, lat_sdirs, tag, ds_keys=ds_keys, variants=variants)
-    for sk in ("topic", "dpmm"):
+    for sk in ("dpmm",):
         print(f"  Saved latents for {sk}: {lat_sdirs[sk]['latents']}")
 
-    for sk in ("topic", "dpmm"):
+    for sk in ("dpmm",):
         sdf = df[df["Series"].map(paper_group) == sk]
         if sdf.empty:
             continue
@@ -438,9 +385,6 @@ def main():
             "epochs": args.epochs, "lr": args.lr,
             "defaults": {
                 "latent_dim": LATENT_DIM,
-                "topic_kl_weight": TOPIC_KL_DEFAULT,
-                "topic_encoder_hidden": TOPIC_HIDDEN_DEFAULT,
-                "topic_dropout": TOPIC_DROP_DEFAULT,
                 "dpmm_warmup_ratio": DPMM_WR_DEFAULT,
                 "dpmm_encoder_dims": DPMM_EDIMS_DEFAULT,
                 "dpmm_dropout": DPMM_DROP_DEFAULT,
@@ -465,7 +409,7 @@ def main():
     print("ARCHITECTURE SENSITIVITY SUMMARY")
     print("=" * 80)
 
-    for sk, sl in [("topic", "Topic"), ("dpmm", "DPMM")]:
+    for sk, sl in [("dpmm", "DPMM")]:
         sdf = df[df["Series"] == sk]
         if sdf.empty:
             continue
@@ -496,7 +440,7 @@ def main():
         print("\nPlots disabled."); return
 
     generated = []
-    for sk, sl in [("topic", "Topic"), ("dpmm", "DPMM")]:
+    for sk, sl in [("dpmm", "DPMM")]:
         sdf = df[df["Series"] == sk]
         if sdf.empty:
             continue

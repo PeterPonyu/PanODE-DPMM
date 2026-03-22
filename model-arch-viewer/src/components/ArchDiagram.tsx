@@ -37,7 +37,7 @@ export default function ArchDiagram({ model }: Props) {
         <div className="bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-center shrink-0 w-[70px]">
           <div className="font-bold text-gray-700 text-[9px] leading-none">Input</div>
           <div className="text-[7px] text-gray-500 font-mono leading-tight mt-0.5">
-            {model.series === "topic" ? "raw counts" : "log1p norm"}
+            log1p norm
           </div>
         </div>
 

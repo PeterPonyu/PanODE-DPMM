@@ -14,14 +14,11 @@ mkdir -p "$RESULTS_DIR" "$MODELS_DIR"
 # All 12 datasets
 DATASETS=("setty" "lung" "endo" "dentate" "hemato" "pansci_muscle" "blood_aged" "hesc" "retina" "teeth" "pituitary" "pansci_tcell")
 
-# Prior-based models (6 models total — both series)
+# Prior-based models (DPMM series)
 declare -A SERIES_MAP=(
   ["DPMM-Base"]="dpmm"
   ["DPMM-Transformer"]="dpmm"
   ["DPMM-Contrastive"]="dpmm"
-  ["Topic-Base"]="topic"
-  ["Topic-Transformer"]="topic"
-  ["Topic-Contrastive"]="topic"
 )
 
 cd "$ROOT"

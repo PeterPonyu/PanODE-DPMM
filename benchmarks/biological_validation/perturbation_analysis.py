@@ -2,7 +2,7 @@
 """
 Latent component perturbation analysis + gene set enrichment.
 
-For each latent component (dim for DPMM, topic for Topic):
+For each latent component (dim for DPMM):
   1. Perturb that component by a small delta while holding others fixed
   2. Decode the perturbed latent to gene space
   3. Compute the change in reconstruction -> identifies responsive genes
@@ -17,11 +17,6 @@ Usage:
     python benchmarks/biological_validation/perturbation_analysis.py \
         --model-path benchmarks/training_dynamics_results/DPMM-Base_setty_model.pt \
         --dataset setty --series dpmm
-
-    python benchmarks/biological_validation/perturbation_analysis.py \
-        --model-path benchmarks/training_dynamics_results/Topic-Base_setty_model.pt \
-        --dataset setty --series topic \
-        --gene-sets GO_Biological_Process_2021
 
 Requires: gseapy, torch (inference only — lightweight GPU usage)
 """
@@ -57,8 +52,6 @@ def compute_perturbation_importance(model, data_loader, device,
                     changes when component k is perturbed by +delta
         mean_latent: [K] mean value of each component across cells
     """
-    is_topic = hasattr(model, 'n_topics')
-
     # Collect a subset of latent representations
     all_latent = []
     all_x = []
@@ -69,10 +62,7 @@ def compute_perturbation_importance(model, data_loader, device,
             else:
                 x = batch.to(device).float()
 
-            if is_topic:
-                z = model.encode(x)
-            else:
-                z = model.encode(x)
+            z = model.encode(x)
 
             all_latent.append(z)
             all_x.append(x)
@@ -100,11 +90,6 @@ def compute_perturbation_importance(model, data_loader, device,
     for k in range(K):
         z_pert = all_latent.clone()
         z_pert[:, k] += delta
-
-        # For Topic models: re-normalize so proportions still sum to 1
-        if is_topic:
-            z_pert = torch.clamp(z_pert, min=1e-8)
-            z_pert = z_pert / z_pert.sum(dim=1, keepdim=True)
 
         with torch.no_grad():
             recon_pert = model.decode(z_pert)
@@ -172,8 +157,7 @@ def run_enrichment(gene_list, gene_sets="GO_Biological_Process_2021",
 
 def plot_importance_heatmap(importance, gene_names, save_path,
                             title="Gene Importance per Component",
-                            top_genes=30, no_title=False, figformat="png",
-                            series="dpmm"):
+                            top_genes=30, no_title=False, figformat="png"):
     """Heatmap: rows = components, columns = top genes (union of top per component)."""
     apply_style()
 
@@ -193,10 +177,7 @@ def plot_importance_heatmap(importance, gene_names, save_path,
 
     ax.set_xticks(range(len(sub_genes)))
     ax.set_xticklabels(sub_genes, rotation=60, ha="right", fontsize=9)
-    if series == "topic":
-        ylabels = [f"Topic {k+1}" for k in range(K)]
-    else:
-        ylabels = [f"Dim {k+1}" for k in range(K)]
+    ylabels = [f"Dim {k+1}" for k in range(K)]
     ax.set_yticks(range(K))
     ax.set_yticklabels(ylabels, fontsize=11)
 
@@ -247,7 +228,7 @@ def plot_enrichment_dotplot(enr_results, component_label, save_path,
 
 
 def plot_enrichment_summary(all_enr, save_path, title="Top Enriched Terms per Component",
-                             no_title=False, figformat="png", series="dpmm"):
+                             no_title=False, figformat="png"):
     """Combined dot plot: all components side by side."""
     apply_style()
 
@@ -258,7 +239,7 @@ def plot_enrichment_summary(all_enr, save_path, title="Top Enriched Terms per Co
             continue
         top3 = enr_df.head(3)
         for _, row in top3.iterrows():
-            label = f"Topic {k+1}" if series == "topic" else f"Dim {k+1}"
+            label = f"Dim {k+1}"
             rows.append({
                 "Component": label,
                 "Term": row["Term"][:50],
@@ -302,7 +283,7 @@ def main():
     parser.add_argument("--model-path", required=True,
                         help="Path to saved model .pt")
     parser.add_argument("--dataset", required=True, choices=["setty", "lung", "endo", "dentate"])
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--delta", type=float, default=0.5,
                         help="Perturbation magnitude")
     parser.add_argument("--top-genes", type=int, default=50,
@@ -364,7 +345,7 @@ def main():
         importance, gene_names,
         out_dir / f"{tag}_importance_heatmap",
         title=f"Gene Importance per Component — {model_name}",
-        top_genes=30, series=args.series,
+        top_genes=30,
         no_title=getattr(args, 'no_title', False),
         figformat=args.fig_format)
 
@@ -382,8 +363,7 @@ def main():
     if not args.skip_enrichment:
         print(f"\nRunning enrichment ({args.gene_sets})...")
         all_enr = {}
-        comp_label_fn = (lambda k: f"Topic {k+1}") if args.series == "topic" \
-                        else (lambda k: f"Dim {k+1}")
+        comp_label_fn = lambda k: f"Dim {k+1}"
 
         for k in range(K):
             gene_list = [g for g, _ in top_genes[k]]
@@ -411,7 +391,6 @@ def main():
             all_enr,
             out_dir / f"{tag}_enrichment_summary",
             title=f"Enrichment Summary — {model_name}",
-            series=args.series,
             no_title=getattr(args, 'no_title', False),
             figformat=args.fig_format)
 

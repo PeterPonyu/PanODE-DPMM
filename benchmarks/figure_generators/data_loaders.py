@@ -23,7 +23,7 @@ from benchmarks.config import (
 ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Legacy timestamp constants (loaders now auto-discover latest)
-BASE_TS = {"dpmm": "20260211_232144", "topic": "20260211_232852"}
+BASE_TS = {"dpmm": "20260211_232144"}
 SENS_TS = "20260212_161246"
 TRAIN_TS = "20260212_154957"
 PREPROC_TS = "20260212_185159"
@@ -47,7 +47,7 @@ def safe_model_name(name):
 
 
 def parse_sweep_value(model_name):
-    """Extract numeric sweep value from a model name like 'Topic-Base(kl=0.1)'."""
+    """Extract numeric sweep value from a model name like 'DPMM-Base(warmup=0.1)'."""
     m = re.search(r"=([^\)]+)\)", str(model_name))
     if not m:
         return np.nan
@@ -249,7 +249,7 @@ def load_pairwise_wilcoxon_external():
     -------
     pd.DataFrame or None
         Same schema as :func:`load_pairwise_wilcoxon` but with
-        ``Structured`` = Best-DPMM or Best-Topic, ``Pure`` = external model.
+        ``Structured`` = Best-DPMM, ``Pure`` = external model.
     """
     stat_dir = RESULTS_DIR / "statistical_exports"
     p = stat_dir / "pairwise_wilcoxon_external.csv"

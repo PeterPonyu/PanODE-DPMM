@@ -7,7 +7,6 @@ its own sweep logic and ``main()``.
 
 Functions:
     train_and_evaluate   -- unified train → extract → metrics pipeline
-    make_topic_params    -- default Topic-Base model params
     make_dpmm_params     -- default DPMM-Base model params
     print_convergence    -- pretty-print convergence diagnostics
     setup_series_dirs    -- create csv/plots/meta/latents dir trees
@@ -31,23 +30,6 @@ from benchmarks.metrics_utils import (
 # ═══════════════════════════════════════════════════════════════════════════════
 # Default model parameter factories (previously duplicated 3×)
 # ═══════════════════════════════════════════════════════════════════════════════
-
-def make_topic_params(latent_dim=None, kl_weight=0.01,
-                      encoder_hidden=128, dropout=0.0):
-    """Return default Topic-Base architecture params.
-
-    Used by benchmark_sensitivity, benchmark_training, and
-    benchmark_preprocessing.
-    """
-    if latent_dim is None:
-        latent_dim = BASE_CONFIG.latent_dim
-    return {
-        "n_topics": latent_dim,
-        "encoder_hidden": encoder_hidden,
-        "kl_weight": kl_weight,
-        "encoder_drop": dropout,
-    }
-
 
 def make_dpmm_params(latent_dim=None, warmup_ratio=0.9,
                      encoder_dims=None, decoder_dims=None, dropout=0.15):
@@ -88,9 +70,9 @@ def train_and_evaluate(
     Parameters
     ----------
     name : str
-        Human-readable model name (e.g. ``"Topic(kl=0.01)"``).
+        Human-readable model name (e.g. ``"DPMM-Base"``).
     model_cls : type
-        Model class (e.g. ``TopicODEModel``).
+        Model class (e.g. ``DPMMODEModel``).
     params : dict
         Architecture params passed to ``model_cls(input_dim=..., **params)``.
     splitter : DataSplitter
@@ -244,14 +226,14 @@ def print_convergence(conv_diag):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def setup_series_dirs(base_dir, include_latents=True):
-    """Create csv/plots/meta[/latents] sub-dirs for topic & dpmm.
+    """Create csv/plots/meta[/latents] sub-dirs for dpmm.
 
     Returns
     -------
     dict : ``{series_key: {"csv": Path, "plots": Path, "meta": Path, ...}}``
     """
     sdirs = {}
-    for sk in ("topic", "dpmm"):
+    for sk in ("dpmm",):
         d = {
             "csv":   base_dir / "csv"   / sk,
             "plots": base_dir / "plots" / sk,
@@ -265,7 +247,7 @@ def setup_series_dirs(base_dir, include_latents=True):
 
 
 def save_latents(latents, sdirs, tag, ds_keys=None, variants=None):
-    """Persist latent .npz files organised by paper group (dpmm / topic).
+    """Persist latent .npz files organised by paper group (dpmm).
 
     *latents* is a dict mapping ``"ds_key::model_name"`` → np.ndarray.
     """
@@ -279,9 +261,7 @@ def save_latents(latents, sdirs, tag, ds_keys=None, variants=None):
         if model_key in MODELS:
             pg = _pg(MODELS[model_key]['series'])
         else:
-            # Fallback to name-based detection
-            is_topic = "topic" in model_key.lower()
-            pg = "topic" if is_topic else "dpmm"
+            pg = "dpmm"
 
         if variants is not None:
             # Check if model is in the variants list

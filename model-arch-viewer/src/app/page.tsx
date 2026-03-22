@@ -8,7 +8,6 @@ import ExportBar from "@/components/ExportBar";
 /* ── colour accents per series ── */
 const SERIES_ACCENT: Record<string, string> = {
   dpmm: "border-indigo-500",
-  topic: "border-orange-500",
 };
 const VARIANT_BADGE: Record<string, string> = {
   base: "bg-gray-200 text-gray-700",
@@ -30,7 +29,7 @@ export default function Home() {
         </p>
 
         {/* Series groups */}
-        {(["dpmm", "topic"] as const).map((series) => (
+        {(["dpmm"] as const).map((series) => (
           <div key={series} className="mb-4">
             <div className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">
               {series.toUpperCase()} Series
@@ -130,9 +129,7 @@ export default function Home() {
                     </td>
                     <td className="py-1.5 pr-2">{m.latentSpace.type}</td>
                     <td className="py-1.5 pr-2">{m.prior.name.split("(")[0]}</td>
-                    <td className="py-1.5 pr-2">
-                      {m.series === "topic" ? "β matrix" : "MLP"}
-                    </td>
+                    <td className="py-1.5 pr-2">MLP</td>
                     <td className="py-1.5 font-mono">{m.paramCount}</td>
                   </tr>
                 ))}

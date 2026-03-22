@@ -23,7 +23,7 @@
 > - `benchmarks/runners/benchmark_base.py`, `benchmark_crossdata.py` --
 >   internal model benchmarking (still valid).
 
-Benchmark scripts for evaluating 12 model variants (DPMM / Topic families)
+Benchmark scripts for evaluating DPMM model variants
 on single-cell RNA-seq datasets.  All scripts share a common configuration
 layer, dataset registry, model registry, metrics engine, and results-tracking
 manifest.
@@ -104,43 +104,41 @@ Defaults are defined in `config.py` (`BenchmarkConfig`):
 | Seed | 42 | Reproducibility |
 | DRE k | 10 | Neighbourhood size for DR quality metrics |
 
-## Models (12 variants)
+## Models (7 variants)
 
 **Pure baselines** (no clustering prior):
-- `Pure-AE` / `Pure-VAE`
+
+- `Pure-AE`
 
 **Strategy ablations** (single strategy, no prior):
+
 - `Pure-Transformer-AE` / `Pure-Contrastive-AE`
-- `Pure-Transformer-VAE` / `Pure-Contrastive-VAE`
 
 **DPMM series** (AE backbone + DPMM clustering):
-- `DPMM-Base` / `DPMM-Transformer` / `DPMM-Contrastive`
 
-**Topic / LDA series** (VAE backbone + Dirichlet prior):
-- `Topic-Base` / `Topic-Transformer` / `Topic-Contrastive`
+- `DPMM-Base` / `DPMM-Transformer` / `DPMM-Contrastive` / `DPMM-FM`
 
 Each model has per-series optimal hyperparameters (epochs, dropout,
 weight-decay) defined in `model_registry.py`.
 
-### Paper series (DPMM vs Topic)
+### Paper series
 
-Outputs are grouped into two **paper series** for the two manuscripts:
+Outputs are grouped into the **DPMM paper series** for the manuscript:
 
 | Paper | Series key | Models included | Figure output |
 |-------|------------|-----------------|---------------|
 | DPMM  | `dpmm`     | DPMM-* + Pure-AE (pure-ae) | `paper_figures/dpmm/` |
-| Topic | `topic`    | Topic-* + Pure-VAE (pure-vae) | `paper_figures/topic/` |
 
-- **Canonical mapping**: `model_registry.SERIES_TO_PAPER`, `paper_group(model_or_series)` — pure-ae → dpmm, pure-vae → topic.
-- **Figure generation**: all `figure_generators` and `generate_subplots.py` take `--series dpmm` or `--series topic` and write to `paper_figures/{series}/`.
-- **Manuscripts**: LaTeX sources live in `article/dpmm/main.tex` and `article/topic/main.tex`; see `article/README.md`.
+- **Canonical mapping**: `model_registry.SERIES_TO_PAPER`, `paper_group(model_or_series)` — pure-ae → dpmm.
+- **Figure generation**: all `figure_generators` and `generate_subplots.py` take `--series dpmm` and write to `paper_figures/dpmm/`.
+- **Manuscript**: LaTeX source lives in `article/dpmm/main_mdpi.tex`; see `article/README.md`.
 
 ## CLI Options (benchmark_base.py)
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--epochs` | 600 | Requested training epochs |
-| `--series` | `all` | `dpmm`, `topic`, `pure`, `pure-ae`, `pure-vae`, or `all` |
+| `--series` | `all` | `dpmm`, `pure`, `pure-ae`, or `all` |
 | `--models` | — | Explicit model names (overrides `--series`) |
 | `--data-path` | config | Path to `.h5ad` file |
 | `--batch-size` | 128 | Batch size |
@@ -166,9 +164,9 @@ benchmark_results/
 ├── _legacy/
 │   └── extra_sample/           ← exploratory / development outputs
 ├── base/
-│   ├── csv/{dpmm,topic}/       ← per-series CSV results
-│   ├── meta/{dpmm,topic}/      ← JSON run metadata
-│   └── plots/{dpmm,topic}/     ← UMAP + metrics barplots
+│   ├── csv/dpmm/                ← per-series CSV results
+│   ├── meta/dpmm/               ← JSON run metadata
+│   └── plots/dpmm/              ← UMAP + metrics barplots
 ├── crossdata/                  ← same csv/meta/plots layout
 ├── sensitivity/
 ├── training/

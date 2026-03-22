@@ -1,19 +1,16 @@
 """Generate individual subplot PNGs for Figure 10 (External Model Benchmark).
 
 Compares 11 external baseline models against the best internal variant
-for **one** series at a time. Internal vs external are fully separated:
+for the DPMM series. Internal vs external are fully separated:
 no single overcrowded panel mixing all methods.
 
 - ``--series dpmm``  →  internal reference = Best-DPMM  (warm palette)
-- ``--series topic`` →  internal reference = Best-Topic (cool palette)
-
-The two series are never mixed in the same figure.
 
 Produces:
   Panel A — Workflow diagram (selection → benchmark → comparison)
   Panel B (internal) — Core metric boxplots, 6 internal models only (3 prior + 3 pure)
   Panel B (external) — Core metric boxplots: 1 best internal + 11 external
-  Panel C — Extended metric boxplots (DPMM only; same suite as Figure 2 Panel D)
+  Panel C — Extended metric boxplots (same suite as Figure 2 Panel D)
   Panel D (internal) — Efficiency boxplots, 6 internal models only
   Panel D (external) — Efficiency boxplots: 1 best internal + 11 external
   Panel E — Aggregate ranking bar chart (external comparison)
@@ -24,13 +21,11 @@ External models:
 
 Internal reference (exactly one per run):
   - Best DPMM prior model  (when --series dpmm)
-  - Best Topic prior model (when --series topic)
 
 Output: benchmarks/paper_figures/{series}/subplots/fig10/
 
 Usage:
     python -m benchmarks.figure_generators.gen_fig10_subplots --series dpmm
-    python -m benchmarks.figure_generators.gen_fig10_subplots --series topic
 """
 
 import argparse
@@ -66,7 +61,7 @@ from benchmarks.figure_generators.gen_workflow import gen_workflow_png
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# External model color palettes — separate schemes for DPMM vs Topic series.
+# External model color palettes for DPMM series.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # DPMM series: warm red / orange / earth tones
@@ -84,47 +79,23 @@ EXTERNAL_MODEL_COLORS_DPMM = {
     "scSMD":         "#DFC27D",   # sand
 }
 
-# Topic series: cool blue / teal / purple tones
-EXTERNAL_MODEL_COLORS_TOPIC = {
-    "CellBLAST":     "#053061",   # navy
-    "GMVAE":         "#2166AC",   # deep blue
-    "SCALEX":        "#4393C3",   # medium blue
-    "scDiffusion":   "#92C5DE",   # sky blue
-    "siVAE":         "#D1E5F0",   # ice blue
-    "CLEAR":         "#67A9CF",   # steel blue
-    "scDAC":         "#3690C0",   # ocean blue
-    "scDeepCluster": "#02818A",   # teal
-    "scDHMap":       "#016C59",   # dark teal
-    "scGNN":         "#7B68AE",   # muted purple
-    "scSMD":         "#B2ABD2",   # light purple
-}
-
-# Reference model colors (internal best) — only the relevant one is used
+# Reference model colors (internal best)
 REFERENCE_COLORS = {
     "Best-DPMM":  "#E6550D",     # warm orange (DPMM family)
-    "Best-Topic": "#756BB1",     # purple (Topic family)
 }
 
-# Internal-only comparison: all 6 models per series (3 prior + 3 pure)
+# Internal-only comparison: all 6 models (3 prior + 3 pure)
 INTERNAL_MODEL_ORDER_DPMM = [
     "DPMM-Base", "DPMM-Transformer", "DPMM-Contrastive",
     "Pure-AE", "Pure-Transformer-AE", "Pure-Contrastive-AE",
 ]
-INTERNAL_MODEL_ORDER_TOPIC = [
-    "Topic-Base", "Topic-Transformer", "Topic-Contrastive",
-    "Pure-VAE", "Pure-Transformer-VAE", "Pure-Contrastive-VAE",
-]
 INTERNAL_SHORT_NAMES = {
     "DPMM-Base": "D-B", "DPMM-Transformer": "D-T", "DPMM-Contrastive": "D-C",
     "Pure-AE": "P-AE", "Pure-Transformer-AE": "P-TAE", "Pure-Contrastive-AE": "P-CAE",
-    "Topic-Base": "T-B", "Topic-Transformer": "T-T", "Topic-Contrastive": "T-C",
-    "Pure-VAE": "P-V", "Pure-Transformer-VAE": "P-TV", "Pure-Contrastive-VAE": "P-CV",
 }
 INTERNAL_COLORS = {
     "DPMM-Base": "#E6550D", "DPMM-Transformer": "#E6550D", "DPMM-Contrastive": "#E6550D",
     "Pure-AE": "#9ECAE1", "Pure-Transformer-AE": "#9ECAE1", "Pure-Contrastive-AE": "#9ECAE1",
-    "Topic-Base": "#756BB1", "Topic-Transformer": "#756BB1", "Topic-Contrastive": "#756BB1",
-    "Pure-VAE": "#C7E9C0", "Pure-Transformer-VAE": "#C7E9C0", "Pure-Contrastive-VAE": "#C7E9C0",
 }
 
 # Active palette holder — set by generate() based on --series
@@ -148,7 +119,6 @@ EXTERNAL_SHORT_NAMES = {
     "scGNN":         "GN",
     "scSMD":         "SM",
     "Best-DPMM":     "B-D",
-    "Best-Topic":    "B-T",
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -187,26 +157,22 @@ def _load_internal_best(series="dpmm"):
 
     Parameters
     ----------
-    series : {"dpmm", "topic"}
-        Which prior family to extract.  ``"dpmm"`` returns rows labelled
-        ``"Best-DPMM"``; ``"topic"`` returns ``"Best-Topic"``.
+    series : {"dpmm"}
+        Which prior family to extract.  Returns rows labelled
+        ``"Best-DPMM"``.
 
     Returns
     -------
     pd.DataFrame
-        Rows with ``Model`` = ``"Best-DPMM"`` or ``"Best-Topic"``,
+        Rows with ``Model`` = ``"Best-DPMM"``,
         preserving seed-level granularity when available.
     """
     from benchmarks.figure_generators.data_loaders import load_crossdata_combined
 
     df = load_crossdata_combined(prefer_multiseed=True)
 
-    if series == "topic":
-        prior_models = {"Topic-Base", "Topic-Transformer", "Topic-Contrastive"}
-        ref_label = "Best-Topic"
-    else:
-        prior_models = {"DPMM-Base", "DPMM-Transformer", "DPMM-Contrastive"}
-        ref_label = "Best-DPMM"
+    prior_models = {"DPMM-Base", "DPMM-Transformer", "DPMM-Contrastive"}
+    ref_label = "Best-DPMM"
 
     has_seed = "seed" in df.columns
 
@@ -256,10 +222,7 @@ def _load_internal_all(series="dpmm"):
     from benchmarks.figure_generators.data_loaders import load_crossdata_combined
 
     df = load_crossdata_combined(prefer_multiseed=True)
-    if series == "topic":
-        models = set(INTERNAL_MODEL_ORDER_TOPIC)
-    else:
-        models = set(INTERNAL_MODEL_ORDER_DPMM)
+    models = set(INTERNAL_MODEL_ORDER_DPMM)
 
     sub = df[df["Model"].isin(models)].copy()
     if sub.empty:
@@ -338,7 +301,7 @@ def _get_color(model_name):
 
 def gen_ext_boxplot(ext_df, int_df, metric_col, metric_label, out_path,
                     ref_model="Best-DPMM"):
-    """Generate one grouped boxplot: external models + best DPMM or Topic.
+    """Generate one grouped boxplot: external models + best DPMM.
 
     Internal reference model now shows seed-level variance (up to 60
     data points from 5 seeds × 12 datasets) when the 5-seed CSV is
@@ -403,7 +366,7 @@ def gen_ext_boxplot(ext_df, int_df, metric_col, metric_label, out_path,
     fig.subplots_adjust(bottom=0.40)          # room for rotated labels
 
     # Significance stars (external models vs internal reference)
-    series = "dpmm" if ref_model == "Best-DPMM" else "topic"
+    series = "dpmm"
     draw_external_significance_stars(ax, all_models, metric_col, series,
                                      data_per_model=data_per_model)
 
@@ -426,7 +389,7 @@ def gen_internal_boxplot(int_df, metric_col, metric_label, out_path, series="dpm
 
     No external models — readable internal ablation view per series.
     """
-    model_order = INTERNAL_MODEL_ORDER_TOPIC if series == "topic" else INTERNAL_MODEL_ORDER_DPMM
+    model_order = INTERNAL_MODEL_ORDER_DPMM
     data_per_model, all_models = _build_internal_matrix(int_df, metric_col, model_order)
     data_per_model = clip_extreme_outliers(data_per_model)
     n_models = len(all_models)
@@ -645,12 +608,8 @@ def gen_legend_strip(out_path, ref_model="Best-DPMM"):
 
 def _workflow_steps(series):
     """Return series-specific workflow steps for Panel A."""
-    if series == "topic":
-        ref_label = "Best-Topic"
-        ref_desc  = "Topic series"
-    else:
-        ref_label = "Best-DPMM"
-        ref_desc  = "DPMM series"
+    ref_label = "Best-DPMM"
+    ref_desc  = "DPMM series"
     return [
         {"label": "11 External Models",
          "sub": "CellBLAST · GMVAE · …",
@@ -710,7 +669,7 @@ def gen_ext_boxplot_compact(ext_df, int_df, metric_col, metric_label,
         "scDiffusion": "sD", "siVAE": "si", "CLEAR": "CL",
         "scDAC": "DC", "scDeepCluster": "DP", "scDHMap": "DH",
         "scGNN": "GN", "scSMD": "SM",
-        "Best-DPMM": "B-D", "Best-Topic": "B-T",
+        "Best-DPMM": "B-D",
     }
     short = [_COMPACT_NAMES.get(m, m[:4]) for m in all_models]
 
@@ -782,9 +741,8 @@ def gen_ext_boxplot_compact(ext_df, int_df, metric_col, metric_label,
 def generate(series, out_dir):
     """Generate all subplot PNGs for Figure 10.
 
-    When *series* is ``\"dpmm\"``, only Best-DPMM is shown as the internal
-    reference and the warm colour palette is used.  When ``\"topic\"``,
-    only Best-Topic is shown with the cool blue/teal palette.
+    Best-DPMM is shown as the internal reference and the warm colour
+    palette is used.
     """
     global _active_ext_colors
 
@@ -794,13 +752,9 @@ def generate(series, out_dir):
 
     apply_subplot_style()
 
-    # Select the internal reference and colour palette for this series
-    if series == "topic":
-        ref_model = "Best-Topic"
-        _active_ext_colors = EXTERNAL_MODEL_COLORS_TOPIC
-    else:
-        ref_model = "Best-DPMM"
-        _active_ext_colors = EXTERNAL_MODEL_COLORS_DPMM
+    # Select the internal reference and colour palette
+    ref_model = "Best-DPMM"
+    _active_ext_colors = EXTERNAL_MODEL_COLORS_DPMM
 
     # Load data — only the relevant series
     ext_df = _load_external_results()
@@ -826,27 +780,18 @@ def generate(series, out_dir):
                                 sub_dir / f"internal_eff_{safe}.png", series=series)
 
     # --- External comparison panels (1 best internal + 11 external) ---
-    if series == "topic":
-        all_metrics = core_metrics_b + ext_metrics_b
-        for col, label, hb in all_metrics:
-            if col in ext_df.columns or col in int_df.columns:
-                safe = col.replace("/", "_")
-                gen_ext_boxplot(ext_df, int_df, col, label,
-                                sub_dir / f"core_{safe}.png",
-                                ref_model=ref_model)
-    else:
-        for col, label, hb in core_metrics_b:
-            if col in ext_df.columns or col in int_df.columns:
-                safe = col.replace("/", "_")
-                gen_ext_boxplot(ext_df, int_df, col, label,
-                                sub_dir / f"core_{safe}.png",
-                                ref_model=ref_model)
-        for col, label, hb in ext_metrics_b:
-            if col in ext_df.columns or col in int_df.columns:
-                safe = col.replace("/", "_")
-                gen_ext_boxplot_compact(ext_df, int_df, col, label,
-                                       sub_dir / f"ext_{safe}.png",
-                                       higher_better=hb, ref_model=ref_model)
+    for col, label, hb in core_metrics_b:
+        if col in ext_df.columns or col in int_df.columns:
+            safe = col.replace("/", "_")
+            gen_ext_boxplot(ext_df, int_df, col, label,
+                            sub_dir / f"core_{safe}.png",
+                            ref_model=ref_model)
+    for col, label, hb in ext_metrics_b:
+        if col in ext_df.columns or col in int_df.columns:
+            safe = col.replace("/", "_")
+            gen_ext_boxplot_compact(ext_df, int_df, col, label,
+                                   sub_dir / f"ext_{safe}.png",
+                                   higher_better=hb, ref_model=ref_model)
 
     for col, label in EFFICIENCY_METRICS_FIG10:
         if col in ext_df.columns or col in int_df.columns:
@@ -881,7 +826,7 @@ def generate(series, out_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Figure 10 subplots")
     parser.add_argument("--series", default="dpmm",
-                        choices=["dpmm", "topic"])
+                        choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
     out = (Path(args.output_dir) if args.output_dir

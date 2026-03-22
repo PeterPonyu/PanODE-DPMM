@@ -2,7 +2,7 @@
 
 Panels
 ------
-(a) Representative UMAP gallery across the four core datasets.
+(a) Representative UMAP gallery across eight benchmarked datasets.
 (b) Full-metric boxplot grid across the preferred DPMM rerun tables.
 """
 
@@ -49,11 +49,11 @@ _MODEL_ORDER = [
 ]
 _DISPLAY_LABELS = {
     "Pure-AE": "AE",
-    "DPMM-Base": "DPMM",
-    "DPMM-FM": "DPMM-FM",
+    "DPMM-Base": "DPM",
+    "DPMM-FM": "FM",
 }
 # ── Datasets for UMAP panel ──────────────────────────────────────────────
-_UMAP_DATASETS = ["setty", "dentate", "lung", "endo"]
+_UMAP_DATASETS = ["setty", "dentate", "lung", "endo", "hemato", "hesc", "pituitary", "retina"]
 
 _SELECTED_METRICS = list(FULL_METRIC_SPECS)
 
@@ -162,6 +162,7 @@ def _draw_single_umap(ax, model_name: str, dataset: str) -> None:
                color=method_color(model_name), rasterized=True)
     ax.set_xticks([])
     ax.set_yticks([])
+    ax.set_aspect("equal", adjustable="datalim")
     for spine in ax.spines.values():
         spine.set_linewidth(0.3)
 
@@ -170,7 +171,7 @@ def _draw_umap_panel(fig, region, datasets):
     n_rows = len(_MODEL_ORDER)
     n_cols = len(datasets)
 
-    grid = region.grid(n_rows, n_cols, wgap=0.018, hgap=0.028)
+    grid = region.grid(n_rows, n_cols, wgap=0.014, hgap=0.028)
 
     for ri, model_name in enumerate(_MODEL_ORDER):
         for ci, dataset in enumerate(datasets):
@@ -178,10 +179,10 @@ def _draw_umap_panel(fig, region, datasets):
             style_axes(ax, kind="umap")
             _draw_single_umap(ax, model_name, dataset)
             if ci == 0:
-                ax.set_ylabel(_DISPLAY_LABELS.get(model_name, method_short_name(model_name)), fontsize=13, labelpad=6, color="black")
+                ax.set_ylabel(_DISPLAY_LABELS.get(model_name, method_short_name(model_name)), fontsize=11, labelpad=4, color="black")
             if ri == 0:
-                ax.set_title(dataset, fontsize=13,
-                             pad=4, fontweight="normal",
+                ax.set_title(dataset, fontsize=11,
+                             pad=3, fontweight="normal",
                              color="black")
 
     fig.text(region.left - 0.015, region.bottom + region.height + 0.008,
@@ -197,7 +198,7 @@ def _draw_boxplot_panel(fig, region, metric_tables):
     n_cols_grid = 5
     n_rows_grid = (n_metrics + n_cols_grid - 1) // n_cols_grid
 
-    grid = region.grid(n_rows_grid, n_cols_grid, wgap=0.065, hgap=0.046)
+    grid = region.grid(n_rows_grid, n_cols_grid, wgap=0.055, hgap=0.038)
 
     for mi, (col_name, display_name, hib) in enumerate(filtered_metrics):
         ri, ci = divmod(mi, n_cols_grid)
@@ -217,7 +218,7 @@ def _draw_boxplot_panel(fig, region, metric_tables):
             tick_labels.append(_DISPLAY_LABELS.get(model_name, method_short_name(model_name)))
 
         bp = ax.boxplot(
-            box_data, positions=positions, widths=0.7,
+            box_data, positions=positions, widths=0.55,
             patch_artist=True, showfliers=False,
             medianprops=dict(color="black", linewidth=1.0),
             whiskerprops=dict(linewidth=0.7),
@@ -241,7 +242,7 @@ def _draw_boxplot_panel(fig, region, metric_tables):
 
         # Stepwise ablation labels on x-axis
         ax.set_xticks(positions)
-        ax.set_xticklabels(tick_labels, fontsize=8, rotation=25, ha="right", color="black")
+        ax.set_xticklabels(tick_labels, fontsize=9.5, rotation=0, ha="center", color="black")
         ax.tick_params(axis="y", labelsize=10, colors="black")
         ax.tick_params(axis="x", length=0)
 
@@ -344,10 +345,10 @@ def generate(series, out_dir):
 
     metric_tables = _load_metric_tables()
 
-    fig = plt.figure(figsize=(12.0, 14.0))
+    fig = plt.figure(figsize=(16.0, 13.5))
 
-    root = bind_figure_region(fig, (0.055, 0.04, 0.975, 0.975))
-    umap_region, boxplot_region = root.split_rows([0.34, 0.60], gap=0.04)
+    root = bind_figure_region(fig, (0.045, 0.04, 0.98, 0.975))
+    umap_region, boxplot_region = root.split_rows([0.20, 0.74], gap=0.03)
 
     _draw_umap_panel(fig, umap_region, _UMAP_DATASETS)
     _draw_boxplot_panel(fig, boxplot_region, metric_tables)

@@ -12,7 +12,7 @@ External Model Benchmark — Cross-Dataset Evaluation
         python -m experiments.run_external_benchmark --group generative
 
 Evaluates 12 external baseline models (from Liora unified_models) on the
-same 12 datasets used for internal DPMM/Topic variant evaluation.  Results
+same 12 datasets used for internal DPMM variant evaluation.  Results
 are saved alongside internal results for direct comparison.
 
 External models:
@@ -324,13 +324,12 @@ def load_internal_best():
     """Load best internal model results per dataset.
 
     Returns DataFrame with columns: Dataset, Model, Series, NMI, ARI, ASW, DAV
-    for the best DPMM variant and best Topic variant per dataset.
+    for the best DPMM variant per dataset.
     """
     cross_dir = DEFAULT_OUTPUT_DIR / "crossdata" / "csv"
 
     # DPMM series results (latest complete run)
     dpmm_file = None
-    topic_file = None
     pure_file = None
 
     for f in sorted(cross_dir.glob("results_combined_*.csv"), reverse=True):
@@ -341,11 +340,8 @@ def load_internal_best():
             if any("DPMM" in m for m in models) or "dpmm" in series_vals:
                 if dpmm_file is None:
                     dpmm_file = f
-            if any("Topic" in m for m in models) or "topic" in series_vals:
-                if topic_file is None:
-                    topic_file = f
-            if any("Pure-AE" in m or "Pure-VAE" in m for m in models) \
-               or "pure-ae" in series_vals or "pure-vae" in series_vals:
+            if any("Pure-AE" in m for m in models) \
+               or "pure-ae" in series_vals:
                 if pure_file is None:
                     pure_file = f
         except Exception:
@@ -356,9 +352,8 @@ def load_internal_best():
 
     file_series_pairs = [
         (dpmm_file, "dpmm"),
-        (topic_file, "topic"),
     ]
-    if pure_file is not None and pure_file not in (dpmm_file, topic_file):
+    if pure_file is not None and pure_file != dpmm_file:
         file_series_pairs.append((pure_file, "pure"))
 
     for fpath, series_name in file_series_pairs:
@@ -467,7 +462,7 @@ def main():
     ap.add_argument("--seed", type=int, default=SEED)
     ap.add_argument("--no-plots", action="store_true")
     ap.add_argument("--compare", action="store_true",
-                    help="Compare with best internal DPMM/Topic variants.")
+                    help="Compare with best internal DPMM variants.")
     args = ap.parse_args()
 
     set_global_seed(args.seed)

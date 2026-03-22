@@ -1,20 +1,18 @@
 # PanODE-DPMM
 
-Single-cell representation learning with DPMM clustering, featuring Transformer / contrastive / standalone ablation variants.
+Single-cell representation learning with a flow-matching-refined DPMM prior autoencoder, featuring Transformer, contrastive, and flow matching ablation variants.
 
 ## Project Structure
 
 ```
-PanODE-LAB/
+PanODE-DPMM/
 ├── models/                       # Core model implementations
 │   ├── encoders.py               # Shared encoder architectures
 │   ├── shared_modules.py         # Reusable layers & blocks
 │   ├── dpmm_base.py              # DPMM base model (AE + DPMM clustering)
 │   ├── dpmm_transformer.py       # DPMM + Transformer encoder
 │   ├── dpmm_contrastive.py       # DPMM + MoCo contrastive learning
-│   ├── topic_base.py             # Logistic-normal topic model
-│   ├── topic_transformer.py      # Topic + Transformer encoder
-│   └── topic_contrastive.py      # Topic + MoCo contrastive learning
+│   ├── dpmm_flow_matching.py     # DPMM + Flow Matching refinement
 │
 ├── metrics/                      # Evaluation metrics
 │   ├── dre.py                    # Dimensionality Reduction Evaluator
@@ -28,7 +26,7 @@ PanODE-LAB/
 │   └── viz.py                    # Publication-quality visualisation tools
 │
 └── benchmarks/                   # Benchmarking
-    ├── benchmark_base.py         # Consolidated benchmark (12 model variants)
+    ├── benchmark_base.py         # Consolidated benchmark (7 model variants)
     └── config.py                 # Centralised benchmark configuration
 ```
 
@@ -43,37 +41,29 @@ pip install torch numpy scipy scikit-learn scanpy torchdiffeq pandas matplotlib 
 ### Run Benchmarks
 
 ```bash
-# Full benchmark — all 12 model variants, 200 epochs, no early stopping
-python benchmarks/benchmark_base.py --epochs 200 --no-early-stopping --series all
+# Full benchmark — all DPMM model variants, 600 epochs
+python benchmarks/benchmark_base.py --epochs 600 --series dpmm
 
 # DPMM series only
-python benchmarks/benchmark_base.py --epochs 200 --series dpmm
-
-# Topic series only
-python benchmarks/benchmark_base.py --epochs 200 --series topic
+python benchmarks/benchmark_base.py --epochs 600 --series dpmm
 
 # Quick smoke test (5 epochs)
-python benchmarks/benchmark_base.py --epochs 5 --no-early-stopping --series all
+python benchmarks/benchmark_base.py --epochs 5 --no-early-stopping --series dpmm
 ```
 
 ## Model Overview
 
-### 12 Benchmark Variants
+### 7 Benchmark Variants
 
 | # | Model | Family | Description |
 |---|-------|--------|-------------|
 | 1 | Pure-AE | Baseline | Vanilla autoencoder (reconstruction only) |
-| 2 | DPMM-Base | DPMM | AE + DPMM clustering with two-phase warmup |
-| 3 | DPMM-Transformer | DPMM | DPMM + gene-as-token self-attention |
-| 4 | DPMM-Contrastive | DPMM | DPMM + MoCo-v2 contrastive learning |
-| 5 | Pure-VAE | Baseline | Vanilla VAE (reconstruction + KL) |
-| 6 | Topic-Base | Topic | Logistic-normal topic model |
-| 7 | Topic-Transformer | Topic | Topic + gene-as-token self-attention |
-| 8 | Topic-Contrastive | Topic | Topic + MoCo-v2 contrastive learning |
-| 9 | Pure-Transformer-AE | Ablation | Transformer encoder only (no DPMM/Topic) |
-| 10 | Pure-Contrastive-AE | Ablation | Contrastive encoder only (no DPMM/Topic) |
-| 11 | Pure-Transformer-VAE | Ablation | Transformer + KL (no Topic) |
-| 12 | Pure-Contrastive-VAE | Ablation | Contrastive + KL (no Topic) |
+| 2 | Pure-Transformer-AE | Baseline | Transformer encoder only (no DPMM) |
+| 3 | Pure-Contrastive-AE | Baseline | Contrastive encoder only (no DPMM) |
+| 4 | DPMM-Base | DPMM | AE + DPMM clustering with two-phase warmup |
+| 5 | DPMM-Transformer | DPMM | DPMM + gene-as-token self-attention |
+| 6 | DPMM-Contrastive | DPMM | DPMM + MoCo-v2 contrastive learning |
+| 7 | DPMM-FM | DPMM | DPMM + conditional OT flow matching |
 
 ### Unified Hyperparameters
 
@@ -84,7 +74,6 @@ python benchmarks/benchmark_base.py --epochs 5 --no-early-stopping --series all
 | Batch size | 128 | All models |
 | Gradient clipping | 10.0 | All models |
 | DPMM warmup ratio | 0.9 | DPMM series only |
-| KL weight | 0.1 | Topic & VAE series |
 
 ## Evaluation Metrics
 
@@ -131,18 +120,18 @@ See [docs/BRANCHING.md](docs/BRANCHING.md) for the full workflow.
 ## Changelog
 
 ### v2.0 (2025-02-08)
-- **Consolidated benchmark**: merged 3 separate scripts (`benchmark_base.py`, `benchmark_base_contrastive.py`, `benchmark_attention.py`) into a single `benchmark_base.py` handling all 12 variants.
-- **Added 4 standalone ablation variants**: Pure-Transformer-AE, Pure-Contrastive-AE, Pure-Transformer-VAE, Pure-Contrastive-VAE — isolate Transformer / contrastive contributions without DPMM or Topic heads.
-- **Hyperparameter audit & unification**: fixed `kl_weight` (0.01→0.1 for Topic series), added `dpmm_warmup_ratio=0.9` to DPMM-Transformer & DPMM-Contrastive, unified gradient clipping to 10.0 across all models.
+- **Consolidated benchmark**: merged 3 separate scripts (`benchmark_base.py`, `benchmark_base_contrastive.py`, `benchmark_attention.py`) into a single `benchmark_base.py` handling all 7 variants.
+- **Added standalone ablation variants**: Pure-Transformer-AE, Pure-Contrastive-AE — isolate Transformer / contrastive contributions without DPMM.
+- **Hyperparameter audit & unification**: added `dpmm_warmup_ratio=0.9` to DPMM-Transformer & DPMM-Contrastive, unified gradient clipping to 10.0 across all models.
 - **Visualisation overhaul** (`utils/viz.py`):
   - Removed redundant `plot_metrics_comparison`; consolidated 9→6 metric panels.
-  - Switched to horizontal bar charts for readability with 12 models.
+  - Switched to horizontal bar charts for readability with 7 models.
   - Added `plot_metrics_heatmap` for compact cross-model comparison.
   - Publication-quality fonts (DejaVu Sans, 12 pt) and 12-colour palette.
-- **Removed GAT models** (`dpmm_gat.py`, `topic_gat.py`) — retired from the benchmark.
+- **Removed GAT models** (`dpmm_gat.py`) — retired from the benchmark.
 - **Cleaned up**: removed archive notebooks, stale cache files, backup files, and orphaned `__pycache__` entries.
 
 ### v1.0 (2025-01-29)
-- Initial 8-model benchmark (DPMM × {Base, Transformer, GAT, Contrastive} + Topic × {Base, Transformer, GAT, Contrastive}).
+- Initial DPMM benchmark (DPMM-Base, DPMM-Transformer, DPMM-Contrastive).
 - Separate benchmark scripts per model group.
 - DRE + LSE evaluation metrics.

@@ -6,19 +6,11 @@ For DPMM models:
   - Each latent dim is one component; project its value onto UMAP as a heatmap
   - Also show DPMM mixture weights / per-component responsibility
 
-For Topic models:
-  - Each topic proportion (theta_k) is projected onto UMAP
-  - Shows which cells have high loading on each topic
-
 Usage:
     # Requires a trained model saved by training_dynamics.py or benchmark
     python benchmarks/biological_validation/latent_component_umap.py \
         --model-path benchmarks/training_dynamics_results/DPMM-Base_setty_model.pt \
         --dataset setty --series dpmm
-
-    python benchmarks/biological_validation/latent_component_umap.py \
-        --model-path benchmarks/training_dynamics_results/Topic-Base_setty_model.pt \
-        --dataset setty --series topic
 
 Requires GPU for model inference (lightweight).
 """
@@ -44,13 +36,9 @@ def extract_latent_components(model, data_loader, device):
 
     Returns:
         latent: [N, D] full latent (for UMAP computation)
-        components: [N, K] per-component values
-            - For DPMM: latent z values (D=K=latent_dim)
-            - For Topic: topic proportions theta [N, n_topics]
+        components: [N, K] per-component values (latent z values, D=K=latent_dim)
         component_names: list of str
     """
-    is_topic = hasattr(model, 'n_topics')
-
     all_latent = []
     all_components = []
 
@@ -61,16 +49,9 @@ def extract_latent_components(model, data_loader, device):
             else:
                 x = batch.to(device).float()
 
-            if is_topic:
-                # Get topic proportions (simplex)
-                theta = model.encode(x)  # [B, n_topics]
-                latent = theta.cpu().numpy()
-                components = theta.cpu().numpy()
-            else:
-                # For DPMM/AE: use raw latent z
-                z = model.encode(x)  # [B, latent_dim]
-                latent = z.cpu().numpy()
-                components = z.cpu().numpy()
+            z = model.encode(x)  # [B, latent_dim]
+            latent = z.cpu().numpy()
+            components = z.cpu().numpy()
 
             all_latent.append(latent)
             all_components.append(components)
@@ -79,10 +60,7 @@ def extract_latent_components(model, data_loader, device):
     components = np.concatenate(all_components, axis=0)
 
     K = components.shape[1]
-    if is_topic:
-        names = [f"Topic {k+1}" for k in range(K)]
-    else:
-        names = [f"Dim {k+1}" for k in range(K)]
+    names = [f"Dim {k+1}" for k in range(K)]
 
     return latent, components, names
 
@@ -227,7 +205,7 @@ def main():
     parser.add_argument("--model-path", required=True,
                         help="Path to saved model .pt (from training_dynamics.py)")
     parser.add_argument("--dataset", required=True, choices=["setty", "lung", "endo", "dentate"])
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--max-components", type=int, default=10,
                         help="Max components to visualize")
     parser.add_argument("--output-dir", type=str, default=None)
@@ -288,8 +266,7 @@ def main():
     plot_component_umap(
         latent, components, comp_names, splitter.labels_test,
         out_dir / tag,
-        title=f"{'Topic Proportions' if args.series == 'topic' else 'Latent Dimensions'} "
-              f"— {model_name} ({args.dataset})",
+        title=f"Latent Dimensions — {model_name} ({args.dataset})",
         max_components=args.max_components,
         no_title=getattr(args, 'no_title', False),
         figformat=args.fig_format)

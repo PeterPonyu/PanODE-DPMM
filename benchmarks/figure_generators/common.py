@@ -40,7 +40,6 @@ from .data_loaders import (              # noqa: F401
 # ═══════════════════════════════════════════════════════════════════════════════
 
 PRIOR_MODELS_DPMM = ["DPMM-Base", "DPMM-Transformer", "DPMM-Contrastive"]
-PRIOR_MODELS_TOPIC = ["Topic-Base", "Topic-Transformer", "Topic-Contrastive"]
 
 REPRESENTATIVE_DATASETS = ["setty", "endo", "dentate"]
 
@@ -72,15 +71,6 @@ ALL_BOXPLOT_METRICS_CORE = [
     ("DAV",                   "DAV \u2193",            False),
     ("DRE_umap_overall_quality", "DRE UMAP \u2191",   True),
     ("LSE_overall_quality",   "LSE Overall \u2191",    True),
-]
-
-# Topic models use a simplex latent space where LSE / DRE / DREX / LSEX
-# metrics are not meaningful (inherently lower).  Use a reduced core set.
-ALL_BOXPLOT_METRICS_CORE_TOPIC = [
-    ("NMI",                   "NMI \u2191",            True),
-    ("ARI",                   "ARI \u2191",            True),
-    ("ASW",                   "ASW \u2191",            True),
-    ("DAV",                   "DAV \u2193",            False),
 ]
 
 ALL_BOXPLOT_METRICS_EXT = [
@@ -116,24 +106,13 @@ ALL_BOXPLOT_METRICS_EXT = [
     ("LSEX_overall_quality",        "LSEX Overall \u2191",      True),
 ]
 
-# Topic series: only classical clustering (COR, CAL) — LSE/DRE not meaningful
-ALL_BOXPLOT_METRICS_EXT_TOPIC = [
-    ("COR",                         "Corr \u2191",              True),
-    ("CAL",                         "Cal\u2013H \u2191",        True),
-]
-
-
 def get_core_metrics(series: str):
     """Return the core metric list appropriate for *series*."""
-    if series == "topic":
-        return ALL_BOXPLOT_METRICS_CORE_TOPIC
     return ALL_BOXPLOT_METRICS_CORE
 
 
 def get_ext_metrics(series: str):
     """Return the extended metric list appropriate for *series*."""
-    if series == "topic":
-        return ALL_BOXPLOT_METRICS_EXT_TOPIC
     return ALL_BOXPLOT_METRICS_EXT
 
 # ═══════════════════════════════════════════════════════════════════════════════

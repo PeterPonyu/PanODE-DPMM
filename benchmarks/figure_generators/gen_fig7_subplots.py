@@ -33,7 +33,7 @@ from benchmarks.figure_generators.subplot_style import (
     FONTSIZE_TITLE, FONTSIZE_TICK)
 from benchmarks.figure_generators.common import (
     MODEL_SHORT_NAMES,
-    PRIOR_MODELS_DPMM, PRIOR_MODELS_TOPIC,
+    PRIOR_MODELS_DPMM,
     REPRESENTATIVE_DATASETS, BIO_RESULTS
 )
 
@@ -120,8 +120,8 @@ def generate(series, out_dir):
     sub_dir.mkdir(parents=True, exist_ok=True)
     apply_subplot_style()
 
-    models = PRIOR_MODELS_TOPIC if series == "topic" else PRIOR_MODELS_DPMM
-    comp_prefix = "Topic" if series == "topic" else "Dim"
+    models = PRIOR_MODELS_DPMM
+    comp_prefix = "Dim"
     results_dir = BIO_RESULTS
 
     avail_models = []
@@ -161,7 +161,7 @@ def generate(series, out_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Figure 7 subplots")
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
     out = (Path(args.output_dir) if args.output_dir

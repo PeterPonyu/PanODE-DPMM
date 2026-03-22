@@ -37,7 +37,7 @@ from benchmarks.figure_generators.subplot_style import (
     FONTSIZE_CAPTION)
 from benchmarks.figure_generators.common import (
     MODEL_SHORT_NAMES,
-    PRIOR_MODELS_DPMM, PRIOR_MODELS_TOPIC,
+    PRIOR_MODELS_DPMM,
     REPRESENTATIVE_DATASETS, BIO_RESULTS
 )
 
@@ -105,39 +105,6 @@ def _discover_bio_datasets(models, results_dir):
             found[ds] = md
     return found
 
-
-def _load_beta_enrichments(models, results_dir):
-    """Load beta-based enrichment CSVs for Topic models.
-
-    Returns ``{dataset: {model: {k: DataFrame, ...}, ...}, ...}``
-    Only populated for Topic models that have ``*_beta_enrich_comp{k}.csv``.
-    """
-    found = {}
-    for ds in REPRESENTATIVE_DATASETS:
-        ds_data = {}
-        for model in models:
-            if not model.startswith("Topic"):
-                continue
-            tag = f"{model}_{ds}"
-            candidates = [
-                results_dir / model,
-                results_dir,
-            ]
-            enrichments = {}
-            for parent in candidates:
-                for k in range(20):  # up to 20 topics
-                    csv_path = parent / f"{tag}_beta_enrich_comp{k}.csv"
-                    if csv_path.exists():
-                        edf = pd.read_csv(csv_path)
-                        if len(edf) > 0:
-                            enrichments[k] = edf
-                if enrichments:
-                    break
-            if enrichments:
-                ds_data[model] = {"enrichments": enrichments}
-        if ds_data:
-            found[ds] = ds_data
-    return found
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -310,8 +277,8 @@ def generate(series, out_dir):
     sub_dir.mkdir(parents=True, exist_ok=True)
     apply_subplot_style()
 
-    models = PRIOR_MODELS_TOPIC if series == "topic" else PRIOR_MODELS_DPMM
-    comp_prefix = "Topic" if series == "topic" else "Dim"
+    models = PRIOR_MODELS_DPMM
+    comp_prefix = "Dim"
     results_dir = BIO_RESULTS
 
     bio_datasets = _discover_bio_datasets(models, results_dir)
@@ -323,9 +290,7 @@ def generate(series, out_dir):
                     if any(m in bio_datasets.get(ds, {}) for ds in bio_datasets)]
 
     # Panel B — enrichment dot plots (perturbation-based)
-    # Topic: top_n=7 (compact; 9 plots across 3 datasets × 3 models)
-    # DPMM:  top_n=10
-    perturb_top_n = 5 if series == "topic" else 10
+    perturb_top_n = 10
     enrich_files = {}
     for ds_name in bio_datasets:
         ds_enrich = []
@@ -341,29 +306,8 @@ def generate(series, out_dir):
             ds_enrich.append({"file": fname, "model": model})
         enrich_files[ds_name] = ds_enrich
 
-    # ── Panel C — beta-based enrichment (Topic series, best variant only) ──
-    beta_enrich_files = {}
-    if series == "topic":
-        # Only show the best-performing Topic variant's beta enrichment
-        _BEST_TOPIC_VARIANT = "Topic-Transformer"
-        beta_data = _load_beta_enrichments(models, results_dir)
-        for ds_name, ds_models in beta_data.items():
-            ds_beta = []
-            md = ds_models.get(_BEST_TOPIC_VARIANT)
-            if md is None:
-                continue
-            safe_m = _BEST_TOPIC_VARIANT.replace("/", "_")
-            fname = f"beta_enrich_{ds_name}_{safe_m}.png"
-            gen_enrichment_dotplot(md, "Topic", ds_name, _BEST_TOPIC_VARIANT,
-                                  sub_dir / fname,
-                                  top_n=10)
-            ds_beta.append({"file": fname, "model": _BEST_TOPIC_VARIANT})
-            if ds_beta:
-                beta_enrich_files[ds_name] = ds_beta
-
     manifest = build_manifest(sub_dir, {
         "panelA": enrich_files,
-        "panelBeta": beta_enrich_files,
         "models": avail_models,
         "datasets": list(bio_datasets.keys()),
     })
@@ -372,7 +316,7 @@ def generate(series, out_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Figure 9 subplots")
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
     out = (Path(args.output_dir) if args.output_dir

@@ -7,7 +7,7 @@ directory, this script:
 2. Extracts ``X_test_norm  [N, G]`` — the normalised expression matrix
    for the same test cells that produced ``latent  [N, K]``.
 3. Computes ``corr  [K, G]`` — the Pearson correlation between each
-   latent dimension (or topic proportion) and each gene.
+   latent dimension and each gene.
 4. Saves ``{model}_{dataset}_correlation.npz`` with keys
    ``correlation``, ``gene_names``.
 
@@ -33,7 +33,6 @@ REPRESENTATIVE_DATASETS = ["setty", "endo", "dentate"]
 # Models to process
 ALL_MODELS = [
     "DPMM-Base", "DPMM-Contrastive", "DPMM-Transformer",
-    "Topic-Base", "Topic-Contrastive", "Topic-Transformer",
 ]
 
 

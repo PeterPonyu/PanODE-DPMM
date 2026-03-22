@@ -21,7 +21,6 @@ from .shared_modules import (
     ResidualMLP,
     InformationBottleneck,
     MLPDecoder,
-    TopicDecoder,
     SubgraphDataset,
     precompute_knn_graph,
     reparameterize,
@@ -30,13 +29,9 @@ from .shared_modules import (
 # Encoder modules
 from .encoders import (
     MultiHeadProjectionEncoder,
-    MultiHeadProjectionLogisticNormalEncoder,
     HybridMLPAttentionEncoder,
-    HybridMLPAttentionLogisticNormalEncoder,
     MLPEncoder,
-    MLPLogisticNormalEncoder,
-    create_encoder,
-    create_topic_encoder)
+    create_encoder)
 
 # DPMM Models
 from .dpmm_base import DPMMAutoEncoder
@@ -54,20 +49,15 @@ __all__ = [
     'ResidualMLP',
     'InformationBottleneck',
     'MLPDecoder',
-    'TopicDecoder',
     'SubgraphDataset',
     'precompute_knn_graph',
     'reparameterize',
     'log_to_simplex',
     # Encoders
     'MultiHeadProjectionEncoder',
-    'MultiHeadProjectionLogisticNormalEncoder',
     'HybridMLPAttentionEncoder',
-    'HybridMLPAttentionLogisticNormalEncoder',
     'MLPEncoder',
-    'MLPLogisticNormalEncoder',
     'create_encoder',
-    'create_topic_encoder',
     # DPMM Models
     'DPMMAutoEncoder',
     'DPMMFlowMatchingModel',

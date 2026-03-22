@@ -1,7 +1,7 @@
 """
 Shared Modules for PanODE-LAB Models.
 
-This module contains reusable components shared across DPMM and Topic models:
+This module contains reusable components shared across DPMM models:
 - Weight initialization
 - Common layers (MLP, Bottleneck, ODE functions)
 - Decoder architectures
@@ -140,33 +140,6 @@ class MLPDecoder(nn.Module):
     
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         return self.net(z)
-
-
-class TopicDecoder(nn.Module):
-    """Decoder: theta (topic distribution) -> word distribution."""
-    def __init__(self, n_topics: int, n_words: int):
-        super().__init__()
-        self.n_topics = n_topics
-        self.n_words = n_words
-        self.beta_logit = nn.Parameter(torch.randn(n_topics, n_words))
-        self.apply(weight_init)
-    
-    @property
-    def beta(self) -> torch.Tensor:
-        """Topic-word probability matrix."""
-        return F.softmax(self.beta_logit, dim=1)
-    
-    @property
-    def log_beta(self) -> torch.Tensor:
-        """Log topic-word probability matrix."""
-        return F.log_softmax(self.beta_logit, dim=1)
-    
-    def forward(self, theta: torch.Tensor) -> torch.Tensor:
-        """Reconstruct word distribution from topic distribution."""
-        log_theta = torch.log(theta + 1e-10)
-        log_beta = self.log_beta.T.unsqueeze(0)
-        log_prob = torch.logsumexp(log_theta.unsqueeze(1) + log_beta, dim=2)
-        return torch.exp(log_prob)
 
 
 # =============================================================================

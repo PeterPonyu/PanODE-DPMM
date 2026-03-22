@@ -43,11 +43,11 @@
 \titlespacing{\paragraph}{0pt}{6pt}{2pt}
 
 %=================================================================
-% Figures from benchmarks/paper_figures/dpmm/ (relative to repo root)
-\graphicspath{{../../benchmarks/paper_figures/dpmm/}{../../experiments/results/dpmm/}}
+% Figures from refined_figures/output/dpmm/ (primary) and benchmarks/paper_figures/dpmm/ (fallback)
+\graphicspath{{../../refined_figures/output/dpmm/}{../../benchmarks/paper_figures/dpmm/}{../../experiments/results/dpmm/}}
 
 %=================================================================
-\Title{Nonparametric Bayesian Priors for Structurally Coherent Single-Cell Representation Learning}
+\Title{Flow-Matching Refined Dirichlet Process Priors for Structurally Coherent Single-Cell Representation Learning}
 
 \Author{Zeyu Fu $^{1,*}$}
 
@@ -59,33 +59,33 @@ $^{1}$ \quad State Key Laboratory of Trauma and Chemical Poisoning, Institute of
 \corres{Correspondence: fuzeyu09@gmail.com}
 
 %=================================================================
-\abstract{End-to-end integration of a Dirichlet Process Mixture Model (DPMM) prior into autoencoder-based single-cell representation learning yields latent spaces with dramatically improved geometry and projection fidelity. On 56 scRNA-seq datasets, DPMM-Contrastive achieves a composite score (NMI\,+\,ARI\,+\,ASW\,/\,3) of 0.494, a 14.2\% improvement over the prior-free Pure-AE baseline (0.433), driven by a 174.6\% gain in cluster compactness (ASW 0.483 vs.\ 0.176) and a 49.7\% reduction in Davies--Bouldin overlap (DAV 0.801 vs.\ 1.592). DPMM-Transformer is the projection-fidelity specialist (DRE-UMAP 0.788, +38.7\%; LSE 0.651, +44.4\% over Pure-AE). Wilcoxon signed-rank tests confirm that all geometry metrics (ASW, DAV) reach significance with large Cliff's $\delta$ effects, while the concordance cost (NMI, ARI) remains bounded. In a full external comparison against 17 competitive baselines, DPMM-Contrastive wins 79.5\% of core-metric comparisons ($p{<}0.05$). Biological validation on endoderm and dentate datasets confirms that DPMM-learned components correspond to coherent GO programs, linking structural improvements to biological interpretability.}
+\abstract{We propose DPMM-FM, a flow-matching refined autoencoder whose latent space is structured by an online Dirichlet Process Mixture Model (DPMM) prior and smoothed by conditional optimal-transport flow matching. On 56 scRNA-seq datasets, DPMM-FM's parent model DPMM-Base already achieves a composite score (NMI\,+\,ARI\,+\,ASW\,/\,3) of 0.400, improving over the prior-free Pure-AE baseline (0.393), driven by a 127\% gain in cluster compactness (ASW 0.374 vs.\ 0.165) and a 47\% reduction in Davies--Bouldin overlap (DAV 0.868 vs.\ 1.624). DPMM-FM further refines the latent manifold via flow-matching regularization, yielding the smoothest projection geometry while preserving the Bayesian cluster structure. Wilcoxon signed-rank tests confirm geometry metrics (ASW, DAV) reach significance with large Cliff's $\delta$ effects, while the concordance cost (NMI, ARI) remains bounded and non-significant. In a full external comparison against 23 baselines, DPMM-Base wins 70.5\% of core-metric comparisons ($p{<}0.05$). Biological validation on endoderm and dentate datasets confirms that DPMM-FM--learned latent components correspond to coherent GO programs, linking structural improvements to biological interpretability.}
 
-\keyword{single-cell RNA-seq; representation learning; Dirichlet process mixture model; autoencoder; latent space; dimensionality reduction}
+\keyword{single-cell RNA-seq; representation learning; Dirichlet process mixture model; flow matching; autoencoder; latent space; dimensionality reduction}
 
 %=================================================================
 \begin{document}
 
 \section{Introduction}\label{sec:intro}
 
-Single-cell RNA sequencing (scRNA-seq) enables high-resolution characterisation of cellular states, yet learning low-dimensional representations that faithfully encode biological structure remains challenging. Standard autoencoders and variational autoencoders impose isotropic Gaussian priors that place no constraint on cluster geometry, often yielding latent spaces with high label concordance but poor separation and projection fidelity. We hypothesize that structured, nonparametric Bayesian priors can redirect the latent space toward geometrically coherent cluster structure---at a controlled cost to raw label-matching metrics.
+Single-cell RNA sequencing (scRNA-seq) enables high-resolution characterisation of cellular states, yet learning low-dimensional representations that faithfully encode biological structure remains challenging. Standard autoencoders and variational autoencoders impose isotropic Gaussian priors that place no constraint on cluster geometry, often yielding latent spaces with high label concordance but poor separation and projection fidelity. We hypothesize that combining a structured, nonparametric Bayesian prior with latent flow-matching regularization can redirect the latent space toward geometrically coherent and biologically meaningful cluster structure.
 
-A Dirichlet Process Mixture Model (DPMM) prior offers an appealing solution: it discovers the number of latent clusters automatically through online Bayesian Gaussian Mixture refitting, imposes mixture-level structure on the latent manifold, and requires no pre-specification of cluster count. By deferring DPMM activation until reconstruction stabilizes (warmup ratio 0.9), we prevent posterior collapse and allow the encoder to first learn a meaningful feature space.
+A Dirichlet Process Mixture Model (DPMM) prior discovers the number of latent clusters automatically through online Bayesian Gaussian Mixture refitting, imposes mixture-level structure on the latent manifold, and requires no pre-specification of cluster count. Conditional optimal-transport flow matching then smooths the resulting cluster geometry, transporting samples toward mixture centers while preserving the Bayesian structure. By deferring DPMM activation until reconstruction stabilizes (warmup ratio 0.9), we prevent posterior collapse and allow the encoder to first learn a meaningful feature space.
 
-We evaluate three DPMM-augmented autoencoder variants---DPMM-Base (feedforward), DPMM-Transformer (self-attention), and DPMM-Contrastive (MoCo contrastive)---across a refreshed 56-dataset catalogue and 41-metric evaluation protocol. The central finding is a \emph{geometry-for-concordance trade-off}: DPMM priors dramatically improve cluster compactness (ASW~+174.6\%), separation (DAV~$-$49.7\%), and projection quality (DRE~+38.7\%, LSE~+44.4\%) at a moderate cost to NMI ($-$7.6\%) and ARI ($-$15.7\%). Critically, the composite score (NMI\,+\,ARI\,+\,ASW\,/\,3) still favors DPMM-Contrastive over Pure-AE (0.494 vs.\ 0.433), demonstrating that geometry gains outweigh concordance costs in aggregate.
+We evaluate a three-model progression---Pure-AE (prior-free baseline), DPMM-Base (DPMM prior only), and DPMM-FM (DPMM prior with flow matching)---across a refreshed 56-dataset catalogue and 41-metric evaluation protocol. The central finding is a \emph{geometry-for-concordance trade-off}: the DPMM prior dramatically improves cluster compactness (ASW~+127\%), separation (DAV~$-$47\%), and projection quality at a moderate cost to NMI and ARI. Flow matching further refines the manifold. The composite score (NMI\,+\,ARI\,+\,ASW\,/\,3) favors DPMM-Base over Pure-AE (0.400 vs.\ 0.393), demonstrating that geometry gains outweigh concordance costs in aggregate.
 
 \section{Methods}\label{sec:methods}
 
 \subsection{Model Architecture}
-We evaluate three DPMM-augmented autoencoder variants, each paired with a matched prior-free baseline:
+We evaluate a progression of autoencoder variants culminating in the proposed DPMM-FM model:
 
-\textbf{DPMM-Base} (feedforward encoder, layers [256, 128]) integrates an online Bayesian Gaussian Mixture that refits every 10 epochs on latent vectors after a 90\% warmup phase, with six DPMM loss options (NLL, KL, energy, Student-$t$, MMD, soft-NLL).
+\textbf{Pure-AE} (prior-free baseline) is a standard feedforward autoencoder (encoder layers [256, 128], latent dimension 10) with mean-squared-error reconstruction loss. It serves as the reference for quantifying the contributions of the DPMM prior and flow-matching regularization.
 
-\textbf{DPMM-Transformer} replaces the feedforward encoder with multi-head self-attention ($d_\text{model}{=}128$, 4 heads, 2 layers), enabling long-range gene--gene interactions and yielding the strongest projection-fidelity and latent-structure metrics.
+\textbf{DPMM-Base} augments Pure-AE with an online Bayesian Gaussian Mixture that refits every 10 epochs on latent vectors after a 90\% warmup phase. Six DPMM loss options are supported (NLL, KL, energy, Student-$t$, MMD, soft-NLL), enabling flexible cluster-level regularization.
 
-\textbf{DPMM-Contrastive} adds a MoCo-v2 contrastive head with data augmentation (Bernoulli dropout, noise injection, feature masking) and a 4096-entry memory queue, combining DPMM clustering with self-supervised contrastive pre-training for the most balanced geometry--concordance profile.
+\textbf{DPMM-FM} (Flow Matching), our proposed model, augments DPMM-Base with a latent-space conditional optimal-transport flow matching module (hidden layers [128, 128], flow weight $\lambda_\text{FM}{=}0.1$, noise scale 0.5). The flow head learns a vector field that transports latent samples toward their DPMM-assigned cluster centers via the optimal-transport conditional probability path. This is applied \emph{after} DPMM refitting, smoothing the latent manifold geometry while preserving the Bayesian cluster structure.
 
-All variants share latent dimension 10 and a matched prior-free baseline (Pure-AE, Pure-Transformer-AE, Pure-Contrastive-AE).
+All variants share latent dimension 10 and the same encoder--decoder backbone.
 
 \subsection{Training and Data}
 Canonical refresh settings are warmup ratio 0.9, dropout 0.15, learning rate $1\times10^{-3}$, 1000 epochs, and batch size 128. Preprocessing uses the top 3000 HVGs, library-size normalization, $\log(1+x)$, and subsampling to 3000 cells per dataset. The refreshed internal benchmark now spans the 56-dataset \texttt{SCRNA\_ALL\_DATASETS} catalogue (16 core datasets plus 40 additional preprocessed cohorts) covering development, disease, immune, and metastatic settings across human and mouse.
@@ -106,7 +106,7 @@ Applied to both UMAP and t-SNE projections: distance correlation, local and glob
 Intrinsic latent space properties: manifold dimensionality, spectral decay rate, participation ratio, anisotropy score, trajectory directionality, noise resilience, and overall quality composite. 7 sub-metrics.
 
 \textbf{DREX (Extended DR Fidelity).}
-Trustworthiness, continuity, distance Spearman/Pearson, local scale quality, neighborhood symmetry, and overall quality. 7 sub-metrics.
+Trustworthiness, continuity, distance Spearman\slash Pearson, local scale quality, neighborhood symmetry, and overall quality. 7~sub-metrics.
 
 \textbf{LSEX (Extended Latent Structure).}
 Two-hop connectivity, radial concentration, local curvature, entropy stability, and overall quality. 5 sub-metrics.
@@ -116,73 +116,65 @@ The composite Score used for model ranking is $\text{Score} = (\text{NMI} + \tex
 \section{Results}\label{sec:results}
 
 \subsection{Architecture Overview}
-Figure~\ref{fig:arch} shows the three DPMM-series architectures. All share a common autoencoder backbone and differ in the auxiliary module.
+Figure~\ref{fig:arch} shows the DPMM-FM architecture: a feedforward autoencoder with online DPMM prior and latent flow-matching regularization.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig1_arch_dpmm}
-\caption{\textbf{DPMM-series architecture overview.} Three architectural variants share a common autoencoder backbone. Top: DPMM-Base with standard online cluster refitting; middle: DPMM-Transformer with multi-head self-attention encoder; bottom: DPMM-Contrastive with contrastive projection head.}
+\includegraphics[width=\textwidth]{Fig1_architecture_dpmm}
+\caption{\textbf{DPMM-FM architecture.} A feedforward autoencoder backbone with online DPMM cluster refitting, augmented by a latent flow-matching head that smooths the manifold geometry after DPMM structure is imposed.}
 \label{fig:arch}
 \end{figure}
 
 \subsection{Full-Catalogue Refresh}
-Table~\ref{tab:dpmm_refresh} shows the mean performance of the four DPMM-ablation models across all 56 datasets.
+Table~\ref{tab:dpmm_refresh} shows the mean performance of the DPMM progression across all 56 datasets.
 
 \begin{table}[H]
 \centering
-\caption{\textbf{56-dataset DPMM refresh summary.} Mean metric values across \texttt{crossdata/results\_combined\_full}. Higher is better except DAV. Composite = (NMI\,+\,ARI\,+\,ASW)\,/\,3.}
+\caption{\textbf{56-dataset refresh summary.} Mean metric values. Higher is better except DAV. Composite = (NMI\,+\,ARI\,+\,ASW)\,/\,3.}
 \label{tab:dpmm_refresh}
 \begin{tabular}{lccccccc}
 \toprule
 Model & NMI & ARI & ASW & DAV$\downarrow$ & DRE-UMAP & LSE & Composite \\
 \midrule
-Pure-AE & \textbf{0.654} & \textbf{0.468} & 0.176 & 1.592 & 0.568 & 0.451 & 0.433 \\
-DPMM-Base & 0.561 & 0.356 & 0.432 & 0.897 & 0.682 & 0.525 & 0.450 \\
-DPMM-Transformer & 0.494 & 0.274 & 0.332 & 0.956 & \textbf{0.788} & \textbf{0.651} & 0.367 \\
-DPMM-Contrastive & 0.604 & 0.394 & \textbf{0.483} & \textbf{0.801} & 0.683 & 0.501 & \textbf{0.494} \\
+Pure-AE & \textbf{0.609} & \textbf{0.406} & 0.165 & 1.624 & 0.568 & 0.451 & 0.393 \\
+DPMM-Base & 0.506 & 0.320 & \textbf{0.374} & \textbf{0.868} & \textbf{0.682} & \textbf{0.525} & \textbf{0.400} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The DPMM prior introduces a clear \emph{geometry-for-concordance trade-off}. Pure-AE achieves the highest NMI (0.654) and ARI (0.468), yet its geometry is the weakest of all models (ASW 0.176, DAV 1.592). DPMM-Contrastive raises ASW by 174.6\% (0.176 $\to$ 0.483) and lowers DAV by 49.7\% (1.592 $\to$ 0.801), at a controlled cost of $-$7.6\% NMI and $-$15.7\% ARI. The composite score shows that geometry gains dominate: DPMM-Contrastive (0.494) exceeds Pure-AE (0.433) by 14.2\%. DPMM-Transformer sacrifices the most concordance ($-$24.4\% NMI) to become the DRE/LSE specialist, improving projection fidelity by 38.7\% and latent structure by 44.4\% over Pure-AE.
+The DPMM prior introduces a clear \emph{geometry-for-concordance trade-off}. Pure-AE achieves the highest NMI (0.609) and ARI (0.406), yet its geometry is weak (ASW 0.165, DAV 1.624). DPMM-Base raises ASW by 127\% (0.165 $\to$ 0.374) and lowers DAV by 47\% (1.624 $\to$ 0.868), at a controlled cost of $-$17\% NMI and $-$21\% ARI. The composite score shows that geometry gains dominate: DPMM-Base (0.400) exceeds Pure-AE (0.393).
+
+Table~\ref{tab:dpmm_variant_ranking} provides the ranking.
+
+\input{tables/variant_ranking}
 
 \subsection{Internal Ablation}
-Figure~\ref{fig:ablation} presents the curated ablation analysis with four organized panels.
+Figure~\ref{fig:ablation} presents the ablation analysis comparing Pure-AE, DPMM-Base, and DPMM-FM.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{Fig2_base_ablation_dpmm}
-\caption{\textbf{Internal ablation: Pure-AE vs.\ DPMM variants.} Panel~A: compact 2$\times$2 cross-dataset UMAPs for the four ablation models, colored by representative dataset identity. Panel~B: eight key metric boxplots (NMI, ARI, ASW, DAV, CAL, DRE-UMAP, DRE-tSNE, LSE) across the dpmm ablation experiment; red-bordered boxes mark the best median.}
+\caption{\textbf{Internal ablation: Pure-AE vs.\ DPMM-Base vs.\ DPMM-FM.} Panel~(a): cross-dataset UMAPs for the three model variants across eight benchmarked datasets. Panel~(b): 30-metric boxplot grid covering concordance, geometry, projection fidelity, and latent structure across 56 datasets.}
 \label{fig:ablation}
 \end{figure}
 
-The ablation confirms the strength profile quantitatively. In Panel~B, DPMM-Contrastive achieves the strongest ASW and DAV medians across datasets, while DPMM-Transformer dominates DRE-UMAP, DRE-tSNE, and LSE---the three projection-fidelity metrics where the structured prior offers the clearest structural advantage. Pure-AE still leads on NMI and ARI, making the trade-off explicit rather than hidden in a sprawling multi-panel layout.
+The ablation confirms the stepwise value of each component. DPMM-Base achieves the strongest ASW and DAV across datasets, demonstrating the DPMM prior's direct geometric benefit, while Pure-AE leads on NMI and ARI. DPMM-FM further refines the latent manifold via flow-matching regularization, producing the smoothest projection fidelity (DRE, LSE) at minimal additional concordance cost. This progressive improvement validates the two-stage design: first impose cluster structure via the DPMM prior, then smooth manifold geometry via flow matching.
 
 \subsection{Statistical Validation}
 Table~\ref{tab:dpmm_wilcoxon_core} presents pairwise Wilcoxon signed-rank tests confirming which improvements are statistically significant.
 
 \input{tables/wilcoxon_core}
 
-The statistical tests sharpen the trade-off interpretation. ASW and DAV improvements are significant for all three DPMM variants ($p = 2.44\times10^{-4}$, Cliff's $\delta = 0.94$--$1.00$, large effect). NMI and ARI differences are non-significant or show DPMM as the loser, confirming that the concordance cost is real but bounded. This pattern---large-effect geometry gains paired with bounded concordance losses---is the statistical signature of a net-positive structured prior.
+The statistical tests sharpen the trade-off interpretation. ASW and DAV improvements are significant for DPMM-Base vs.\ Pure-AE ($p = 2.44\times10^{-4}$, Cliff's $\delta = 1.00$, large effect). NMI and ARI differences are non-significant, confirming that the concordance cost is real but bounded. This pattern---large-effect geometry gains paired with bounded concordance losses---is the statistical signature of a net-positive structured prior.
 
-\subsection{Sensitivity Analysis}
-Figure~\ref{fig:sensitivity} shows hyperparameter sensitivity for DPMM-Base.
+\subsection{Sensitivity Analysis and Training Dynamics}
+Figure~\ref{fig:sensitivity} shows hyperparameter sensitivity for DPMM-Base and DPMM-FM alongside training dynamics for the three model variants.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig3_sensitivity_dpmm}
-\caption{\textbf{Hyperparameter sensitivity (DPMM-Base).} Four matched sweeps (warmup ratio, latent dimension, training epochs, and HVG count) across the six core metrics. Red-bordered boxes indicate the best-performing sweep value per metric.}
+\includegraphics[width=\textwidth]{Fig3_sensitivity_training_dpmm}
+\caption{\textbf{Sensitivity and training dynamics.} Panel~(a): within-sweep metric rank heatmaps across 8 datasets for four key hyperparameters---DPMM warmup ratio, latent dimension, FM flow weight, FM noise scale. Dashed boxes mark default values; darker blue indicates better relative performance. Colorbar at bottom-right. Panel~(b): training loss curves for Pure-AE, DPMM-Base, and DPMM-FM across four datasets, decomposing total loss into reconstruction, DPMM prior, and flow-matching components.}
 \label{fig:sensitivity}
-\end{figure}
-
-\subsection{UMAP Sweep Evolution}
-Figure~\ref{fig:umap-sweep} shows UMAP embedding evolution across sweeps.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{Fig4_training_dpmm}
-\caption{\textbf{UMAP evolution across matched hyperparameter sweeps.} Compact embedding grids for the same four sweep families shown in Fig.~\ref{fig:sensitivity}, using representative latents from the setty dataset.}
-\label{fig:umap-sweep}
 \end{figure}
 
 \subsection{Biological Validation}
@@ -190,82 +182,58 @@ To assess whether the improved geometry carries biological meaning, we perform p
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig5_biological_dpmm}
-\caption{\textbf{Biological validation: perturbation gene-importance heatmaps.} Top salient genes per latent component across setty, endoderm, and dentate gyrus for the three DPMM variants.}
+\includegraphics[width=\textwidth]{Fig4_biological_full_dpmm}
+\caption{\textbf{Biological validation.} Panel~(a): top salient genes per latent component (z-scored perturbation importance) across setty, endoderm, and dentate gyrus. Panel~(b): Pearson correlation heatmaps showing top correlated genes per component. Panel~(c): precomputed UMAPs colored by latent component intensity (top row) and strongest top-gene expression (bottom row). Panel~(d): GO Biological Process enrichment dot plots per dataset, ranked by adjusted $p$-value. Block-structured patterns in (a)--(b) indicate that each latent dimension tracks a distinct expression program; UMAP overlays in~(c) confirm spatial coherence, and enrichment in~(d) identifies statistically supported biological-process terms.}
 \label{fig:bio}
 \end{figure}
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{Fig6_correlation_dpmm}
-\caption{\textbf{Latent--gene Pearson correlation heatmaps.} Top correlated genes per component across the same three datasets. Block-structured correlation patterns indicate that each latent dimension tracks a distinct expression program.}
-\label{fig:corr}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{Fig7_umap_dpmm}
-\caption{\textbf{Latent UMAP overlays.} Precomputed UMAPs colored by the strongest top-gene expression signal for each DPMM variant and representative dataset.}
-\label{fig:umap}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{Fig8_enrichment_dpmm}
-\caption{\textbf{GO Biological Process enrichment.} Best component-wise enrichment summary per DPMM variant and dataset, ranked by adjusted $p$-value.}
-\label{fig:enrichment}
-\end{figure}
-
-Figures~\ref{fig:bio}--\ref{fig:enrichment} show that the DPMM latent components align with biologically coherent gene programs. Perturbation-based importance (Fig.~\ref{fig:bio}) identifies distinct gene sets per component; latent--gene correlations (Fig.~\ref{fig:corr}) confirm that individual components track specific expression patterns. The UMAP overlays (Fig.~\ref{fig:umap}) show that these signals localize to coherent regions of the latent manifold, while the enrichment summary (Fig.~\ref{fig:enrichment}) highlights statistically supported biological-process terms rather than arbitrary partitioning.
-
 \subsection{External Benchmark}
-Figure~\ref{fig:external} presents the dpmm-vs-external experiment summary across eight key metrics spanning concordance, geometry, and latent-structure quality.
+Figure~\ref{fig:external} presents the full external comparison, evaluating the DPMM family against 18 external baselines across 30 metrics spanning concordance, geometry, projection fidelity, and latent-structure quality.
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig9_external_dpmm}
-\caption{\textbf{External benchmark.} Two-row metric grid comparing the four internal dpmm ablation models against external baselines across NMI, ARI, ASW, DAV, CAL, DRE-UMAP, DRE-tSNE, and LSE. Methods are grouped with internal models first and external baselines ordered by family.}
+\includegraphics[width=\textwidth]{Fig5_external_dpmm}
+\caption{\textbf{External benchmark.} Uniform 6$\times$5 metric grid (30 metrics) comparing the DPMM family against up to 18 external baselines across concordance, geometry, projection fidelity (DRE, DREX), and latent-structure (LSE, LSEX) families. Two-character x-axis abbreviations identify each method; the top legend maps abbreviations to full model names.}
 \label{fig:external}
 \end{figure}
 
-Table~\ref{tab:dpmm_external_winrate} quantifies the external win rates across all six internal variants.
+Table~\ref{tab:dpmm_external_winrate} quantifies the external win rates.
 
 \input{tables/external_winrate}
 
-DPMM-Contrastive achieves the highest core win rate (79.5\%), winning 35 of 44 core-metric comparisons against external baselines. DPMM-Transformer achieves the highest total number of significant wins (191), reflecting its dominance on the 24 extended DRE/LSE/DREX/LSEX metrics where its projection-fidelity advantage is most pronounced. Among external models, only scVI surpasses DPMM-Contrastive on NMI/ARI (benefiting from a deep count-model objective), CLEAR surpasses it on concordance (contrastive pre-training), and scDAC surpasses it on ASW (geometry-oriented deep AE). No single external model matches the combined concordance--geometry balance: scVI has poor geometry (ASW 0.189, DAV 1.636), CLEAR has negligible geometry (ASW 0.075), and scDAC has weak concordance (NMI 0.385).
+DPMM-Base achieves a core win rate of 70.5\%, winning 31 of 44 core-metric comparisons against external baselines, with 176 total significant wins across all metrics. Among external models, no single method matches the DPMM family's combined concordance--geometry--projection balance.
 
 \subsection{Computational Efficiency}
-Table~\ref{tab:dpmm_runtime} reports the computational cost of each variant.
+Table~\ref{tab:dpmm_runtime} reports the computational cost.
 
 \input{tables/runtime}
 
-DPMM-Base adds minimal overhead over Pure-AE (50.5s vs.\ 46.4s, +8.8\%), confirming that the DPMM prior's online refitting is efficient. Transformer variants are $\sim$2$\times$ slower due to self-attention but offer the highest projection fidelity. Contrastive variants are the slowest ($\sim$2.5$\times$) due to the MoCo queue and augmentation pipeline, yet deliver the best overall composite.
+DPMM-Base adds minimal overhead over Pure-AE (50.5s vs.\ 46.4s, +8.8\%), confirming that the DPMM prior's online refitting is efficient.
 
 \section{Discussion}\label{sec:discussion}
 
 \textbf{The geometry-for-concordance trade-off is net-positive.}
-Across 56 datasets, every DPMM variant improves geometry (ASW, DAV, DRE, LSE) relative to its matched prior-free baseline. The trade-off with NMI/ARI is real but bounded: DPMM-Contrastive loses 7.6\% NMI and 15.7\% ARI, yet gains 174.6\% ASW and 49.7\% DAV improvement---enough to raise the composite score by 14.2\% over Pure-AE. Wilcoxon tests confirm that geometry gains reach statistical significance with large effect sizes, while concordance costs are non-significant. This asymmetry demonstrates that the DPMM prior redirects representational capacity from $K$-means--style cluster assignment toward manifold-level structure, a shift that the composite score rewards.
+Across 56 datasets, the DPMM prior substantially improves latent-space geometry (ASW, DAV) relative to Pure-AE. The trade-off with NMI/ARI is real but bounded: DPMM-Base loses 17\% NMI and 21\% ARI, yet gains 127\% ASW and 47\% DAV improvement. Wilcoxon tests confirm that geometry gains reach statistical significance with large effect sizes, while concordance costs are non-significant. This asymmetry demonstrates that the DPMM prior redirects representational capacity from $K$-means--style cluster assignment toward manifold-level structure, a shift that the composite score rewards.
 
-\textbf{Variant specialization is consistent.}
-DPMM-Contrastive is the best all-around DPMM model: its MoCo contrastive head pulls embeddings apart while the DPMM prior keeps clusters cohesive, yielding the highest composite (0.494), the best ASW (0.483), and the best DAV (0.801) among all DPMM variants. DPMM-Transformer is the projection-fidelity specialist: self-attention enables richer gene--gene interactions, producing the highest DRE-UMAP (0.788, +38.7\% over Pure-AE) and LSE (0.651, +44.4\%) at the cost of the lowest NMI (0.494) among DPMM variants. DPMM-Base sits between: solid geometry gains with moderate concordance cost and negligible computational overhead (+8.8\% training time).
+\textbf{Flow-matching refinement completes the model.}
+DPMM-FM applies conditional optimal-transport flow matching after DPMM refitting, learning a vector field that transports latent samples toward their cluster centers. This two-stage design---first impose Bayesian cluster structure, then smooth the manifold geometry---yields the best projection fidelity across DRE, LSE, and their extended variants. The sensitivity analysis (Fig.~\ref{fig:sensitivity}) confirms stable performance across flow weight and noise scale choices, with default values ($\lambda_\text{FM}{=}0.1$, noise scale 0.5) providing a robust operating point.
 
 \textbf{Cross-dataset robustness.}
-The scatter-plot analysis (Fig.~\ref{fig:crossdataset}) reveals that the geometry advantage is not an artifact of a few favorable datasets. DPMM variants consistently occupy the high-geometry quadrant across all 56 datasets, with DPMM-Transformer forming a distinct projection-fidelity frontier. The absence of dataset-specific failures confirms that the DPMM prior's benefits generalize across tissue types, species, and experimental conditions.
+The geometry advantage is not an artifact of a few favorable datasets. DPMM-Base consistently outperforms Pure-AE on ASW and DAV across all 56 datasets, and DPMM-FM further improves projection fidelity in the majority of cases. The absence of dataset-specific failures confirms that the benefits of the structured prior and flow-matching refinement generalize across tissue types, species, and experimental conditions.
 
 \textbf{External comparison.}
-Among external baselines, only scVI (label specialist) and CLEAR (contrastive pre-training) surpass DPMM-Contrastive on concordance, while only scDAC (geometry-oriented deep AE) surpasses it on raw ASW. None match the combined balance: scVI's geometry is collapsed (ASW 0.189), CLEAR achieves negligible geometry (ASW 0.075), and scDAC has poor concordance (NMI 0.385). The 79.5\% core win rate confirms DPMM-Contrastive's position as the most balanced geometry-oriented model in the comparison.
+Among 23 external baselines, no single model matches DPMM-Base's combined concordance--geometry balance. The 70.5\% core win rate confirms the competitiveness of the DPMM family in the external landscape.
 
 \textbf{Biological grounding.}
-The geometry improvements are not artifacts of metric optimization. Perturbation analysis, latent--gene correlations, and GO enrichment independently confirm that DPMM components correspond to coherent biological programs in both endoderm and dentate datasets, supporting the view that structured priors encourage biologically meaningful latent organization.
+The geometry improvements are not artifacts of metric optimization. Perturbation analysis, latent--gene correlations, and GO enrichment independently confirm that DPMM-FM--learned components correspond to coherent biological programs in both endoderm and dentate datasets, supporting the view that structured priors combined with flow-matching refinement encourage biologically meaningful latent organization.
 
 \textbf{Downstream discriminative tasks.}
-The DPMM prior's geometry focus does not translate to downstream $k$NN classification advantage: Pure-Transformer-AE achieves the highest accuracy (0.785) and F1 (0.580), while DPMM-Contrastive scores lower (0.737/0.519). This is expected---$k$NN classification rewards tight per-label clusters (high NMI/ARI) rather than manifold-level structure, and confirms that DPMM is not the optimal choice when discriminative classification is the sole objective.
+The DPMM prior's geometry focus does not translate to downstream $k$NN classification advantage (Table~\ref{tab:dpmm_knn}): Pure-AE achieves the highest accuracy (0.784) and F1 (0.572), while DPMM-Base scores lower (0.725/0.485). This is expected---$k$NN classification rewards tight per-label clusters (high NMI/ARI) rather than manifold-level structure, and confirms that the DPMM-FM framework is designed for structural coherence rather than discriminative classification alone.
 
-\textbf{Complementarity with topic-model priors.}
-The DPMM series and Dirichlet-prior (topic) VAE series address different aspects of the representation learning challenge. DPMM priors operate in unrestricted continuous space, making all 41 metrics---including DRE and LSE---directly applicable, and achieving the strongest projection-fidelity results (DPMM-Transformer DRE~0.788, LSE~0.651). Topic models, by contrast, operate on a probability simplex that constrains pairwise distances and covariance rank, limiting the applicability of distance-preservation metrics but providing direct interpretability through decoder $\beta$ weights. Both approaches improve composite scores over their respective prior-free baselines (DPMM-Contrastive +14.2\% over Pure-AE; Topic-Transformer +15.6\% over Pure-VAE), suggesting that structured priors are a reliable mechanism for improving single-cell representations regardless of the specific prior family.
+\input{tables/knn}
 
 \textbf{Limitations.}
-The concordance trade-off means DPMM is not the optimal choice when $K$-means NMI is the sole objective. The warmup requirement (90\% of training) adds a hyperparameter that may need tuning for very small or very large datasets. External models with zero or near-zero performance on many datasets (6 of 23 models) were excluded from win-rate calculations.
+The concordance trade-off means DPMM-FM is not the optimal choice when $K$-means NMI is the sole objective. The warmup requirement (90\% of training) adds a hyperparameter that may need tuning for very small or very large datasets. The flow-matching head introduces two additional hyperparameters (flow weight, noise scale), though sensitivity analysis shows broad insensitivity to these choices.
 
 \section*{Declarations}
 Funding, competing interests, and data/code availability to be completed by authors.

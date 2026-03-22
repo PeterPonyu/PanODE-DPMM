@@ -5,7 +5,7 @@ Training / Optimisation Hyperparameter Sweep
 Sweeps training-related hyperparameters (one-at-a-time, control-variable
 principle: all others held at default).
 
-Sweep dimensions (on Topic-Base and DPMM-Base):
+Sweep dimensions (on DPMM-Base):
   1) Learning rate   ∈ {1e-4, 1e-3, 5e-3, 1e-2}
   2) Epochs          ∈ {200, 600, 1200, 1600}
   3) Batch size      ∈ {32, 64, 256, 512}
@@ -18,9 +18,9 @@ Defaults (held constant unless being swept):
 Efficiency is recorded per-run: sec/epoch, peak GPU MB, param count.
 
 Outputs (under benchmark_results/training/):
-  csv/{topic,dpmm}/   — per-series CSV
-  plots/{topic,dpmm}/ — UMAP + metrics bar charts per sweep
-  meta/{topic,dpmm}/  — JSON configs
+  csv/dpmm/   — per-series CSV
+  plots/dpmm/ — UMAP + metrics bar charts per sweep
+  meta/dpmm/  — JSON configs
 
 Usage:
   python benchmarks/benchmark_training.py
@@ -46,13 +46,12 @@ from benchmarks.config import BASE_CONFIG, DEFAULT_OUTPUT_DIR, ensure_dirs, set_
 from benchmarks.dataset_registry import DATASET_REGISTRY, resolve_datasets
 from benchmarks.data_utils import load_or_preprocess_adata
 from benchmarks.train_utils import (
-    make_topic_params, make_dpmm_params, train_and_evaluate,
+    make_dpmm_params, train_and_evaluate,
     setup_series_dirs, save_latents, add_common_cli_args)
 from utils.data import DataSplitter
 from utils.viz import plot_umap_grid, plot_all_metrics_barplot
 
 from models.dpmm_base import DPMMODEModel
-from models.topic_base import TopicODEModel
 
 # ── defaults ──────────────────────────────────────────────────────────────────
 DATA_PATH     = str(BASE_CONFIG.data_path)
@@ -75,16 +74,11 @@ BATCH_GRID   = [32, 64, 256, 512]
 WD_GRID      = [0.0, 1e-5, 1e-4, 1e-3]
 
 # ── model configs (architecture fixed at sensitivity-optimal) ─────────────────
-def _topic_params():
-    return make_topic_params(latent_dim=LATENT_DIM)
-
-
 def _dpmm_params():
     return make_dpmm_params(latent_dim=LATENT_DIM)
 
 
 MODELS = {
-    "topic": {"class": TopicODEModel, "params_fn": _topic_params, "label": "Topic-Base"},
     "dpmm":  {"class": DPMMODEModel,  "params_fn": _dpmm_params,  "label": "DPMM-Base"},
 }
 
@@ -187,7 +181,6 @@ def main():
 
     # ── header ────────────────────────────────────────────────────────────
     runs = build_sweep()
-    n_t = sum(1 for r in runs if r["series"] == "topic")
     n_d = sum(1 for r in runs if r["series"] == "dpmm")
 
     print("=" * 60)
@@ -201,7 +194,7 @@ def main():
     print(f"Batch      : {BATCH_GRID}")
     print(f"WeightDecay: {WD_GRID}")
     print(f"Baseline   : lr={LR:.0e}, ep={DEFAULT_EPOCHS}, bs={BATCH_SIZE}, wd={WEIGHT_DECAY:.0e}")
-    print(f"Total runs : {len(runs)} (Topic: {n_t}, DPMM: {n_d})")
+    print(f"Total runs : {len(runs)} (DPMM: {n_d})")
 
     # ── data + train (possibly multi-dataset) ─────────────────────────────
     results, latents = [], {}
@@ -235,12 +228,12 @@ def main():
     tag = f"training_{timestamp}"
 
     # Save latent representations for downstream UMAP in composite figures
-    for sk in ("topic", "dpmm"):
+    for sk in ("dpmm",):
         lat_dir = TRAIN_DIR / "latents" / sk
         ensure_dirs(lat_dir)
         for lat_key, lat_arr in latents.items():
             ds_key, model_key = lat_key.split("::", 1)
-            # model_key is like "Topic-Base(ep=800)", sk check via run list
+            # model_key is like "DPMM-Base(ep=800)", sk check via run list
             matching = [r for r in runs if r["name"] == model_key and r["series"] == sk]
             if matching:
                 safe_name = model_key.replace("/", "_").replace(" ", "_")
@@ -249,7 +242,7 @@ def main():
                     np.savez(lat_dir / f"{safe_name}_{tag}.npz", latent=lat_arr)
         print(f"  Saved latents for {sk}: {lat_dir}")
 
-    for sk in ("topic", "dpmm"):
+    for sk in ("dpmm",):
         sdf = df[df["Series"] == sk]
         if sdf.empty:
             continue
@@ -283,7 +276,7 @@ def main():
     print("TRAINING SWEEP SUMMARY")
     print("=" * 80)
 
-    for sk, sl in [("topic", "Topic-Base"), ("dpmm", "DPMM-Base")]:
+    for sk, sl in [("dpmm", "DPMM-Base")]:
         sdf = df[df["Series"] == sk]
         if sdf.empty:
             continue
@@ -313,7 +306,7 @@ def main():
         print("\nPlots disabled."); return
 
     generated = []
-    for sk, sl in [("topic", "Topic-Base"), ("dpmm", "DPMM-Base")]:
+    for sk, sl in [("dpmm", "DPMM-Base")]:
         sdf = df[df["Series"] == sk]
         if sdf.empty:
             continue

@@ -57,7 +57,7 @@ export function LatentBlock({
       <div className="font-bold text-indigo-800 text-[10px]">{name}</div>
       <div className="text-[8px] text-gray-600 font-mono">{dims}</div>
       <span className="inline-block mt-0.5 text-[7px] bg-white/70 rounded px-1 py-0.5 text-indigo-700">
-        {type === "simplex" ? "Simplex" : "ℝ^d"}
+        ℝ^d
       </span>
     </div>
   );

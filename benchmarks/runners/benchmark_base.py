@@ -2,16 +2,13 @@
 """
 Consolidated Benchmark — All Model Variants (No ODE)
 
-Models (12 variants across 2 architecture families):
+Models (6 variants across 2 architecture families):
   Pure baselines (no clustering prior, no strategy):
-    - Pure-AE / Pure-VAE
+    - Pure-AE
   Standalone strategy ablations (no clustering prior):
     - Pure-Transformer-AE / Pure-Contrastive-AE
-    - Pure-Transformer-VAE / Pure-Contrastive-VAE
   DPMM series (AE backbone + DPMM clustering):
     - DPMM-Base / DPMM-Transformer / DPMM-Contrastive
-  Topic / LDA series (VAE backbone + Dirichlet prior):
-    - Topic-Base / Topic-Transformer / Topic-Contrastive
 
 Usage:
   python benchmarks/benchmark_base.py --epochs 200 --no-early-stopping
@@ -92,11 +89,6 @@ SERIES_DIRS = {
         'plots': PLOT_DIR / 'dpmm',
         'meta': META_DIR / 'dpmm',
     },
-    'topic': {
-        'csv': CSV_DIR / 'topic',
-        'plots': PLOT_DIR / 'topic',
-        'meta': META_DIR / 'topic',
-    },
 }
 
 
@@ -170,7 +162,7 @@ def parse_args():
     g.add_argument("--lr-series", type=str, default="",
                    help="Comma-separated LR list, e.g. 1e-2,1e-3,1e-4")
     g.add_argument("--series", type=str, default="all",
-                   help="all, dpmm, topic, pure, pure-ae, pure-vae "
+                   help="all, dpmm, pure, pure-ae, pure-vae "
                         "or comma-separated")
     g.add_argument("--models", nargs="+", default=None,
                    help="Explicit model names (overrides --series)")
@@ -220,17 +212,10 @@ def apply_cli_overrides(args):
             'plots': PLOT_DIR / 'dpmm',
             'meta': META_DIR / 'dpmm',
         },
-        'topic': {
-            'csv': CSV_DIR / 'topic',
-            'plots': PLOT_DIR / 'topic',
-            'meta': META_DIR / 'topic',
-        },
     }
     ensure_dirs(
         SERIES_DIRS['dpmm']['csv'], SERIES_DIRS['dpmm']['plots'],
-        SERIES_DIRS['dpmm']['meta'],
-        SERIES_DIRS['topic']['csv'], SERIES_DIRS['topic']['plots'],
-        SERIES_DIRS['topic']['meta'])
+        SERIES_DIRS['dpmm']['meta'])
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -271,9 +256,9 @@ def run_benchmark_epoch(splitter, adata, epoch, lr, args):
     n_cells = int(adata.n_obs)
     tag = f"{data_name}_{n_cells}c_ep{epoch}_lr{lr_str}_{timestamp}"
 
-    # ── Save per-series CSVs (group by paper: pure-ae→dpmm, pure-vae→topic) ──
+    # ── Save per-series CSVs (group by paper: pure-ae→dpmm) ──
     df['_paper'] = df['Series'].map(lambda s: paper_group(s))
-    for sk in ('dpmm', 'topic'):
+    for sk in ('dpmm',):
         sdf = df[df['_paper'] == sk].drop(columns=['_paper'])
         if sdf.empty:
             continue
@@ -329,7 +314,7 @@ def run_benchmark_epoch(splitter, adata, epoch, lr, args):
     }
 
     active_papers = {paper_group(cfg['series']) for cfg in selected_models.values()}
-    for sk in ('dpmm', 'topic'):
+    for sk in ('dpmm',):
         if sk not in active_papers:
             continue
         meta_path = SERIES_DIRS[sk]['meta'] / f"run_{tag}.json"
@@ -363,7 +348,7 @@ def run_benchmark_epoch(splitter, adata, epoch, lr, args):
                 pass
 
     # ── Append to run manifest ──
-    for sk in ('dpmm', 'topic'):
+    for sk in ('dpmm',):
         if sk not in active_papers:
             continue
         csv_path = SERIES_DIRS[sk]['csv'] / f"results_{tag}.csv"
@@ -386,8 +371,8 @@ def run_benchmark_epoch(splitter, adata, epoch, lr, args):
         print("  Plots disabled via --no-plots")
         return df, tag, generated_plots, latents
 
-    display_names = {'dpmm': 'DPMM', 'topic': 'Topic'}
-    for sk in ('dpmm', 'topic'):
+    display_names = {'dpmm': 'DPMM'}
+    for sk in ('dpmm',):
         if sk not in active_papers:
             continue
         sdf = df[df['Series'].map(lambda s: paper_group(s)) == sk]
@@ -563,7 +548,7 @@ def _print_summary(df, generated_plots):
     print("\n" + "=" * 80)
     print(f"Results saved to {BASE_DIR}/")
     result_series = set(df['Series'].unique()) if 'Series' in df.columns else set()
-    for sk in ('dpmm', 'topic'):
+    for sk in ('dpmm',):
         if sk in result_series:
             print(f"  {sk.upper()}: csv/  meta/  plots/")
     if generated_plots:
@@ -607,7 +592,7 @@ def _print_table(df, title, cols, extra_header="", extra_fn=None):
 
 
 def _print_ablation_summary(df):
-    """Print ablation deltas within DPMM and Topic series."""
+    """Print ablation deltas within the DPMM series."""
     ab_metrics = [('NMI', '.4f'), ('ARI', '.4f'),
                   ('LSE_overall_quality', '.4f'),
                   ('DRE_umap_overall_quality', '.4f')]

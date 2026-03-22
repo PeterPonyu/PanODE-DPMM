@@ -9,7 +9,7 @@ Provides:
   - save_with_vcd(fig, path, dpi): canonical save with VCD
   - compute_fixed_export_bbox(): deterministic export crop
 
-Ported from CLOP-DiT geometry system, adapted for PanODE-DPMM/Topic.
+Ported from CLOP-DiT geometry system, adapted for PanODE-DPMM.
 """
 
 from __future__ import annotations
@@ -87,10 +87,6 @@ MODEL_COLORS = {
     "DPMM-Base":            "#E15759",
     "DPMM-Transformer":     "#FF9D9A",
     "DPMM-Contrastive":     "#B07AA1",
-    # Topic variants (warm)
-    "Topic-Base":           "#E15759",
-    "Topic-Transformer":    "#FF9D9A",
-    "Topic-Contrastive":    "#B07AA1",
 }
 
 # Short display names for tight layouts
@@ -104,9 +100,6 @@ MODEL_SHORT_NAMES = {
     "DPMM-Base": "DPMM",
     "DPMM-Transformer": "DPMM-T",
     "DPMM-Contrastive": "DPMM-C",
-    "Topic-Base": "Topic",
-    "Topic-Transformer": "Topic-T",
-    "Topic-Contrastive": "Topic-C",
 }
 
 # Semantic colours for annotations and UI elements

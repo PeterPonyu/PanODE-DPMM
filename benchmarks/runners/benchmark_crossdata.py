@@ -46,7 +46,7 @@ from benchmarks.train_utils import (
     select_models, apply_model_overrides)
 from utils.data import DataSplitter
 from utils.viz import plot_umap_grid, plot_all_metrics_barplot
-from utils.paper_style import MODEL_SHORT_NAMES, MODEL_ORDER_DPMM, MODEL_ORDER_TOPIC
+from utils.paper_style import MODEL_SHORT_NAMES, MODEL_ORDER_DPMM
 
 # ── defaults ──────────────────────────────────────────────────────────────────
 LATENT_DIM    = BASE_CONFIG.latent_dim
@@ -200,7 +200,7 @@ def run_dataset(ds_key, ds_info, device, verbose_every, seed, cache_dir, no_plot
         # Also produce per-series separated barplots with improved style
         try:
             from utils.viz import plot_core_metrics_barplot
-            for series_tag, order in [("dpmm", MODEL_ORDER_DPMM), ("topic", MODEL_ORDER_TOPIC)]:
+            for series_tag, order in [("dpmm", MODEL_ORDER_DPMM)]:
                 s_models = [m for m in order if m in df["Model"].values]
                 if len(s_models) < 2:
                     continue
@@ -231,7 +231,7 @@ def main():
   python benchmarks/benchmark_crossdata.py --series pure --override-epochs 500
 
   # Specific models
-  python benchmarks/benchmark_crossdata.py --models Pure-Transformer-VAE Topic-Transformer
+  python benchmarks/benchmark_crossdata.py --models Pure-AE DPMM-Base
 
   # DPMM series with custom dropout
   python benchmarks/benchmark_crossdata.py --series dpmm --override-dropout 0.15
@@ -239,8 +239,8 @@ def main():
     ap.add_argument("--datasets", nargs="+", default=None,
                     help="Which datasets to run (core + extra). Default: all core.")
     ap.add_argument("--series", type=str, default="all",
-                    help="Model series to run: all, dpmm, topic, pure, pure-ae, "
-                         "pure-vae, or comma-separated combination. Default: all.")
+                    help="Model series to run: all, dpmm, pure, pure-ae, "
+                         "or comma-separated combination. Default: all.")
     ap.add_argument("--models", nargs="+", default=None,
                     help="Explicit model names to run (overrides --series).")
     ap.add_argument("--override-epochs", type=int, default=None,

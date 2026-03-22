@@ -9,10 +9,6 @@ See [docs/RESULTS_OVERVIEW.md](../../docs/RESULTS_OVERVIEW.md) for full document
 |------|---------|--------|
 | `dpmm/ablation/` | 4 models: Pure-AE, DPMM-Base, DPMM-Transformer, DPMM-Contrastive | **canonical** |
 | `dpmm/vs_external/` | DPMM ablation + external baselines | **canonical** |
-| `topic/ablation/` | 4 models: Pure-VAE, Topic-Base, Topic-Transformer, Topic-Contrastive | **canonical** |
-| `topic/vs_external/` | Topic ablation + external baselines | **canonical** |
-| `mixed/full_comparison/` | All 12 internal models head-to-head | **canonical** |
-| `mixed/full_vs_external/` | 12 internal + all external | **canonical** |
 | `external/` | External baselines (21+ models, 5 groups) | **canonical** |
 | `external/{group}/` | Per-group results when run with `--group` | **canonical** |
 

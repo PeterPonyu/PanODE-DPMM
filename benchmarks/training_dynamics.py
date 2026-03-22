@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 """
-Training dynamics visualization for PanODE models.
+Training dynamics visualization for PanODE DPMM models.
 
-Records ONLY loss values (train/val × total/recon/dpmm/kl) during training.
-No inference, no metric evaluation, no checkpoints — pure loss recording
+Records ONLY loss values (train/val x total/recon/dpmm) during training.
+No inference, no metric evaluation, no checkpoints -- pure loss recording
 for maximum speed. Plots loss decomposition curves after training.
 
 Usage:
     python -m benchmarks.training_dynamics --model DPMM-Base --dataset setty
-    python -m benchmarks.training_dynamics --model Topic-Base --dataset setty --epochs 800
     python -m benchmarks.training_dynamics --plot-only --history training_dynamics_results/DPMM-Base_setty_history.json
 """
 
@@ -40,7 +39,6 @@ def train_and_record_losses(model, train_loader, val_loader, epochs, lr, device,
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     is_dpmm = hasattr(model, 'dpmm_params')
-    is_topic = hasattr(model, 'n_topics')
 
     history = {
         "train_loss": [], "val_loss": [],
@@ -50,10 +48,6 @@ def train_and_record_losses(model, train_loader, val_loader, epochs, lr, device,
         history["dpmm_loss"] = []
         history["val_dpmm_loss"] = []
         dpmm_warmup_epochs = int(epochs * model.dpmm_warmup_ratio)
-    if is_topic:
-        history["kl_loss"] = []
-        history["val_kl_loss"] = []
-        kl_weight = getattr(model, 'kl_weight', 0.1)
 
     for epoch in range(epochs):
         # ── DPMM refit ──
@@ -66,14 +60,13 @@ def train_and_record_losses(model, train_loader, val_loader, epochs, lr, device,
 
         # ── Train ──
         model.train()
-        tl, tr, td, tk = 0., 0., 0., 0.
+        tl, tr, td = 0., 0., 0.
         n = 0
         for batch in train_loader:
             x, kw = model._prepare_batch(batch, device)
             optimizer.zero_grad()
             out = model.forward(x, **kw)
-            ld = model.compute_loss(out, kl_weight=kl_weight, **kw) if is_topic \
-                 else model.compute_loss(x, out, **kw)
+            ld = model.compute_loss(x, out, **kw)
             loss = ld["total_loss"]
             if not torch.isfinite(loss):
                 continue
@@ -82,34 +75,29 @@ def train_and_record_losses(model, train_loader, val_loader, epochs, lr, device,
             optimizer.step()
             tl += loss.item(); tr += ld["recon_loss"].item()
             if is_dpmm and "dpmm_loss" in ld: td += ld["dpmm_loss"].item()
-            if is_topic and "kl_loss" in ld:   tk += ld["kl_loss"].item()
             n += 1
         if n == 0:
             continue
         history["train_loss"].append(tl / n)
         history["recon_loss"].append(tr / n)
         if is_dpmm: history["dpmm_loss"].append(td / n)
-        if is_topic: history["kl_loss"].append(tk / n)
 
         # ── Validation (forward only, no grad) ──
         model.eval()
-        vl, vr, vd, vk = 0., 0., 0., 0.
+        vl, vr, vd = 0., 0., 0.
         nv = 0
         with torch.no_grad():
             for batch in val_loader:
                 x, kw = model._prepare_batch(batch, device)
                 out = model.forward(x, **kw)
-                ld = model.compute_loss(out, kl_weight=kl_weight, **kw) if is_topic \
-                     else model.compute_loss(x, out, **kw)
+                ld = model.compute_loss(x, out, **kw)
                 vl += ld["total_loss"].item(); vr += ld["recon_loss"].item()
                 if is_dpmm and "dpmm_loss" in ld: vd += ld["dpmm_loss"].item()
-                if is_topic and "kl_loss" in ld:   vk += ld["kl_loss"].item()
                 nv += 1
         if nv > 0:
             history["val_loss"].append(vl / nv)
             history["val_recon_loss"].append(vr / nv)
             if is_dpmm: history["val_dpmm_loss"].append(vd / nv)
-            if is_topic: history["val_kl_loss"].append(vk / nv)
 
         # ── Console log ──
         if (epoch + 1) % verbose_every == 0 or epoch == 0 or epoch + 1 == epochs:
@@ -119,7 +107,6 @@ def train_and_record_losses(model, train_loader, val_loader, epochs, lr, device,
                 msg += f"  val={history['val_loss'][-1]:.4f}"
             msg += f"  recon={history['recon_loss'][-1]:.4f}"
             if is_dpmm: msg += f"  dpmm={history['dpmm_loss'][-1]:.4f}"
-            if is_topic: msg += f"  kl={history['kl_loss'][-1]:.4f}"
             print(msg)
 
     return history
@@ -134,25 +121,21 @@ def plot_training_dynamics(history, model_name, save_path, no_title=False,
     """Plot loss decomposition: train vs val for each loss component.
 
     Layout (compact, adaptive):
-      DPMM models → 1×3 [Total] [Recon] [DPMM]
-      Topic models → 1×2 [Total] [Recon+KL overlay]   (skip flat DPMM)
-      Pure AE/VAE  → 1×2 [Total] [Recon]
-    Train = solid, Val = dashed. Compact 4.0×3.0 per panel.
+      DPMM models  -> 1x3 [Total] [Recon] [DPMM]
+      Pure AE/VAE  -> 1x2 [Total] [Recon]
+    Train = solid, Val = dashed. Compact 4.0x3.0 per panel.
     """
     apply_style()
 
     has_dpmm = "dpmm_loss" in history and len(history.get("dpmm_loss", [])) > 0
-    has_kl = "kl_loss" in history and len(history.get("kl_loss", [])) > 0
 
-    # Skip DPMM panel for Topic/Pure (would be flat zero)
+    # Show DPMM panel only if there are non-trivial DPMM losses
     show_dpmm = has_dpmm and any(v > 1e-8 for v in history["dpmm_loss"])
-    show_kl = has_kl
 
     panels = []  # list of (title, traces)
     C = {"train": "#2171B5", "val": "#CB181D",
          "recon_t": "#238B45", "recon_v": "#74C476",
-         "dpmm_t": "#E6550D", "dpmm_v": "#FDAE6B",
-         "kl_t": "#6A51A3", "kl_v": "#9E9AC8"}
+         "dpmm_t": "#E6550D", "dpmm_v": "#FDAE6B"}
 
     epochs = list(range(1, len(history["train_loss"]) + 1))
     val_epochs = list(range(1, len(history.get("val_loss", [])) + 1))
@@ -169,7 +152,7 @@ def plot_training_dynamics(history, model_name, save_path, no_title=False,
         traces_recon.append(("Recon (val)", val_epochs, history["val_recon_loss"], C["recon_v"], "--"))
     panels.append(("Reconstruction", traces_recon, None))
 
-    # Panel 3 (conditional)
+    # Panel 3 (conditional): DPMM loss
     if show_dpmm:
         warmup_ep = None
         traces_d = [("DPMM (train)", epochs, history["dpmm_loss"], C["dpmm_t"], "-")]
@@ -180,11 +163,6 @@ def plot_training_dynamics(history, model_name, save_path, no_title=False,
                 warmup_ep = i + 1
                 break
         panels.append(("DPMM Loss", traces_d, warmup_ep))
-    elif show_kl:
-        traces_k = [("KL (train)", epochs, history["kl_loss"], C["kl_t"], "-")]
-        if history.get("val_kl_loss"):
-            traces_k.append(("KL (val)", val_epochs, history["val_kl_loss"], C["kl_v"], "--"))
-        panels.append(("KL Loss", traces_k, None))
 
     n_panels = len(panels)
     fig, axes = plt.subplots(1, n_panels, figsize=(4.0 * n_panels, 3.0))

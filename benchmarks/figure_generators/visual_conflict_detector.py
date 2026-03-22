@@ -1655,6 +1655,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Enhanced visual conflict detection audit (18 passes)")
     parser.add_argument("--series", default="dpmm",
-                        choices=["dpmm", "topic"])
+                        choices=["dpmm"])
     args = parser.parse_args()
     audit_all_figures(args.series)

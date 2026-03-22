@@ -227,14 +227,14 @@ function Arrow() {
 // Figure 6: Gradient Saliency Workflow
 // ═══════════════════════════════════════════════════════════════════════════════
 function Fig6Flow({ series }: { series: string }) {
-  const family = series === "dpmm" ? "DPMM" : "Topic";
+  void series;
   return (
     <div style={{ display: "flex", alignItems: "stretch", gap: "3px", padding: "4px 1px 1px 1px", width: "100%" }}>
-      
+
       <Phase label="SETUP" color="#457B9D" details="Input scRNA-seq (normalized) & trained models">
         <Step icon={Icons.cells} label="3 Datasets" sub="Setty/Endo/Dentate" />
         <Arrow />
-        <Step icon={Icons.model} label={`${family} Models`} sub="Pre-trained" />
+        <Step icon={Icons.model} label="DPMM Models" sub="Pre-trained" />
         <div style={{ fontSize: "5.5px", color: CLR.textSub, marginTop: "1px", fontStyle: "italic", fontFamily: "serif" }}>
           z = f_θ(x), x̂ = g_φ(z)
         </div>
@@ -269,12 +269,11 @@ function Fig6Flow({ series }: { series: string }) {
 // Figure 7: Latent–Gene Correlation Workflow
 // ═══════════════════════════════════════════════════════════════════════════════
 function Fig7Flow({ series }: { series: string }) {
-  const family = series === "dpmm" ? "DPMM" : "Topic";
-  const compLabel = series === "dpmm" ? "Latent Dim" : "Topic";
+  void series;
   return (
     <div style={{ display: "flex", alignItems: "stretch", gap: "3px", padding: "4px 1px 1px 1px", width: "100%" }}>
       <Phase label="LATENT EXTRACTION" color="#457B9D" details="Extract latent representations from trained models">
-        <Step icon={Icons.model} label={`${family} Models`} sub="Pre-trained" />
+        <Step icon={Icons.model} label="DPMM Models" sub="Pre-trained" />
         <Arrow />
         <Step icon={Icons.cells} label="Latent Matrix" sub="Z ∈ ℝⁿˣᵈ" />
         <div style={{ fontSize: "5.5px", color: CLR.textSub, marginTop: "1px", fontStyle: "italic", fontFamily: "serif" }}>
@@ -285,7 +284,7 @@ function Fig7Flow({ series }: { series: string }) {
       <Arrow />
 
       <Phase label="CORRELATION" color="#E76F51" details="Pearson r per gene × latent dim; genes ordered by dominant component (block-diagonal)">
-        <Step icon={Icons.gradient} label="Pearson r" sub={`Gene × ${compLabel}`} />
+        <Step icon={Icons.gradient} label="Pearson r" sub="Gene × Latent Dim" />
         <Arrow />
         <Step icon={Icons.filter} label="Top 30 Genes" sub="argmax |r| grouping" />
         <div style={{ fontSize: "5.5px", color: CLR.textSub, marginTop: "1px", fontStyle: "italic", fontFamily: "serif" }}>
@@ -311,12 +310,11 @@ function Fig7Flow({ series }: { series: string }) {
 // Figure 8: Latent UMAP Projection Workflow
 // ═══════════════════════════════════════════════════════════════════════════════
 function Fig8Flow({ series }: { series: string }) {
-  const family = series === "dpmm" ? "DPMM" : "Topic";
-  const compLabel = series === "dpmm" ? "Dim" : "Topic";
+  void series;
   return (
     <div style={{ display: "flex", alignItems: "stretch", gap: "3px", padding: "4px 1px 1px 1px", width: "100%" }}>
       <Phase label="LATENT EXTRACTION" color="#457B9D" details="Encode test cells via trained models">
-        <Step icon={Icons.model} label={`${family} Encoder`} sub="f_θ(x) → z" />
+        <Step icon={Icons.model} label="DPMM Encoder" sub="f_θ(x) → z" />
         <Arrow />
         <Step icon={Icons.cells} label="Latent Z" sub="Z ∈ ℝⁿˣᵈ" />
         <div style={{ fontSize: "5.5px", color: CLR.textSub, marginTop: "1px", fontStyle: "italic", fontFamily: "serif" }}>

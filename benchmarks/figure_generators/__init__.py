@@ -10,7 +10,7 @@ Figure design (no duplication across figures):
   Fig 3   — All hyperparameter sweeps merged (sensitivity + training + preprocessing)
   Fig 4   — UMAP embedding trends across hyperparameter sweep latent snapshots
   Fig 5   — REMOVED (Cross-model performance trade-offs)
-  Fig 6   — Biological validation: gradient-based gene importance heatmaps + Topic β
+  Fig 6   — Biological validation: gradient-based gene importance heatmaps
   Fig 7   — Latent–gene Pearson correlation heatmaps
   Fig 8   — Latent UMAP projections: component intensity + gene expression
   Fig 9   — Biological validation: GO enrichment analysis with improved font consistency

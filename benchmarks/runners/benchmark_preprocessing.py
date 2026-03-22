@@ -8,12 +8,12 @@ Evaluates the impact of preprocessing choices on model performance:
 Max-cells sweep removed — use fixed 3000 cells (default).
 
 All model/training params held at optimal defaults.
-Representative models: Topic-Base (kl=0.01) and DPMM-Base (wr=0.6).
+Representative model: DPMM-Base (wr=0.9).
 
 Outputs (under benchmark_results/preprocessing/):
-  csv/{topic,dpmm}/   — per-series CSV
-  plots/{topic,dpmm}/ — per-sweep UMAP + metrics
-  meta/{topic,dpmm}/  — JSON configs
+  csv/dpmm/   — per-series CSV
+  plots/dpmm/ — per-sweep UMAP + metrics
+  meta/dpmm/  — JSON configs
 
 Usage:
   python benchmarks/benchmark_preprocessing.py
@@ -39,14 +39,13 @@ from benchmarks.config import BASE_CONFIG, DEFAULT_OUTPUT_DIR, ensure_dirs, set_
 from benchmarks.dataset_registry import DATASET_REGISTRY, resolve_datasets
 from benchmarks.data_utils import load_or_preprocess_adata
 from benchmarks.train_utils import (
-    make_topic_params, make_dpmm_params,
+    make_dpmm_params,
     setup_series_dirs, add_common_cli_args,
     train_and_evaluate)
 from utils.data import DataSplitter
 from utils.viz import plot_umap_grid, plot_all_metrics_barplot
 
 from models.dpmm_base import DPMMODEModel
-from models.topic_base import TopicODEModel
 
 # ── defaults ──────────────────────────────────────────────────────────────────
 DATA_PATH     = str(BASE_CONFIG.data_path)
@@ -68,16 +67,11 @@ HVG_DEFAULT   = BASE_CONFIG.hvg_top_genes   # 3000
 CELLS_DEFAULT = BASE_CONFIG.max_cells       # 3000
 
 
-def _topic_params():
-    return make_topic_params(latent_dim=LATENT_DIM)
-
-
 def _dpmm_params():
     return make_dpmm_params(latent_dim=LATENT_DIM)
 
 
 MODELS = {
-    "topic": {"class": TopicODEModel, "params_fn": _topic_params, "label": "Topic-Base"},
     "dpmm":  {"class": DPMMODEModel,  "params_fn": _dpmm_params,  "label": "DPMM-Base"},
 }
 
@@ -179,7 +173,6 @@ def main():
     ensure_dirs(CACHE_DIR)
 
     runs = build_sweep()
-    n_t = sum(1 for r in runs if r["series"] == "topic")
     n_d = sum(1 for r in runs if r["series"] == "dpmm")
 
     print("=" * 60)
@@ -190,7 +183,7 @@ def main():
     print(f"Data   : {ds_keys}")
     print(f"HVG sweep   : {HVG_GRID}  (default={HVG_DEFAULT})")
     print(f"Cells sweep : {CELLS_GRID}  (default={CELLS_DEFAULT})")
-    print(f"Total runs  : {len(runs)} (Topic: {n_t}, DPMM: {n_d})")
+    print(f"Total runs  : {len(runs)} (DPMM: {n_d})")
 
     results, latents = [], {}
     for ds_key in ds_keys:
@@ -216,22 +209,20 @@ def main():
 
     # Save latent representations for downstream UMAP in composite figures
     PREPROC_DIR = DEFAULT_OUTPUT_DIR / "preprocessing"
-    for sk in ("topic", "dpmm"):
+    for sk in ("dpmm",):
         lat_dir = PREPROC_DIR / "latents" / sk
         ensure_dirs(lat_dir)
         for lat_key, lat_arr in latents.items():
             ds_key, model_key = lat_key.split("::", 1)
-            # Match model to series
-            is_topic = any(t in model_key for t in ("Topic", "topic"))
             is_dpmm = any(t in model_key for t in ("DPMM", "dpmm"))
-            if (sk == "topic" and is_topic) or (sk == "dpmm" and is_dpmm):
+            if sk == "dpmm" and is_dpmm:
                 safe_name = model_key.replace("/", "_").replace(" ", "_")
                 np.savez(lat_dir / f"{safe_name}_{ds_key}_{tag}.npz", latent=lat_arr)
                 if len(ds_keys) == 1:
                     np.savez(lat_dir / f"{safe_name}_{tag}.npz", latent=lat_arr)
         print(f"  Saved latents for {sk}: {lat_dir}")
 
-    for sk in ("topic", "dpmm"):
+    for sk in ("dpmm",):
         sdf = df[df["Series"] == sk]
         if sdf.empty:
             continue
@@ -259,7 +250,7 @@ def main():
     print("PREPROCESSING SENSITIVITY SUMMARY")
     print("=" * 80)
 
-    for sk, sl in [("topic", "Topic"), ("dpmm", "DPMM")]:
+    for sk, sl in [("dpmm", "DPMM")]:
         sdf = df[df["Series"] == sk]
         if sdf.empty:
             continue
@@ -288,7 +279,7 @@ def main():
         print("\nPlots disabled."); return
 
     generated = []
-    for sk, sl in [("topic", "Topic"), ("dpmm", "DPMM")]:
+    for sk, sl in [("dpmm", "DPMM")]:
         sdf = df[df["Series"] == sk]
         if sdf.empty:
             continue

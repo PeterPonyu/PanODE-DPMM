@@ -60,7 +60,7 @@ def _build_metric_matrix(per_ds, metric_col, series, seed_average=True):
     metric_col : str
         Column name of the metric to extract.
     series : str
-        ``"dpmm"`` or ``"topic"`` — determines model ordering.
+        ``"dpmm"`` — determines model ordering.
     seed_average : bool
         If True (default), average across seeds per (Model, Dataset) pair,
         yielding one value per dataset (n ≈ 12).  If False, retain all
@@ -434,35 +434,23 @@ def generate(series, out_dir, seed_average=True):
             break
 
     # Panel B — core metric boxplots (3 columns in frontend)
-    # For Topic series (only 6 total metrics), merge core+ext into a
-    # single "metrics" set — no need for separate panels.
     core_metrics = get_core_metrics(series)
     ext_metrics = get_ext_metrics(series)
-    if series == "topic":
-        # Merge all metrics under "core_" prefix for unified panel
-        all_metrics = list(core_metrics) + list(ext_metrics)
-        for col, label, _ in all_metrics:
-            if any(col in per_ds[ds].columns for ds in per_ds):
-                safe = col.replace("/", "_")
-                gen_single_boxplot(per_ds, col, label, series,
-                                   sub_dir / f"core_{safe}.png",
-                                   seed_average=seed_average)
-    else:
-        for col, label, _ in core_metrics:
-            if any(col in per_ds[ds].columns for ds in per_ds):
-                safe = col.replace("/", "_")
-                gen_single_boxplot(per_ds, col, label, series,
-                                   sub_dir / f"core_{safe}.png",
-                                   seed_average=seed_average)
+    for col, label, _ in core_metrics:
+        if any(col in per_ds[ds].columns for ds in per_ds):
+            safe = col.replace("/", "_")
+            gen_single_boxplot(per_ds, col, label, series,
+                               sub_dir / f"core_{safe}.png",
+                               seed_average=seed_average)
 
-        # Panel C — extended metric boxplots (4 columns in frontend)
-        for col, label, _ in ext_metrics:
-            if any(col in per_ds[ds].columns for ds in per_ds):
-                safe = col.replace("/", "_")
-                gen_single_boxplot(per_ds, col, label, series,
-                                   sub_dir / f"ext_{safe}.png",
-                                   show_friedman=False,
-                                   seed_average=seed_average)
+    # Panel C — extended metric boxplots (4 columns in frontend)
+    for col, label, _ in ext_metrics:
+        if any(col in per_ds[ds].columns for ds in per_ds):
+            safe = col.replace("/", "_")
+            gen_single_boxplot(per_ds, col, label, series,
+                               sub_dir / f"ext_{safe}.png",
+                               show_friedman=False,
+                               seed_average=seed_average)
 
     # Panel D — efficiency boxplots (3 columns in frontend)
     eff_metrics = [
@@ -499,7 +487,7 @@ def generate(series, out_dir, seed_average=True):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Figure 2 subplots")
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     parser.add_argument("--per-seed", action="store_true",
                         help="Show all seed-level data points (n≈60) "

@@ -7,7 +7,7 @@ import math
 
 
 class PriorMixin:
-    """Logistic-normal prior for topic models"""
+    """Logistic-normal prior mixin"""
     
     @staticmethod
     def _dirichlet_to_logistic_normal(alpha: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:

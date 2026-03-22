@@ -37,8 +37,8 @@ _EXTERNAL_TICK_LABELS = {
     "PeakVI": "PV",
     "PoissonVI": "Po",
     "GMVAE": "GM",
-    "GMVAE-Poincare": "GP",
-    "GMVAE-PGM": "Gp",
+    "GMVAE-Poincare": "GPo",
+    "GMVAE-PGM": "GPg",
     "GMVAE-LearnablePGM": "GL",
     "GMVAE-HW": "GH",
     "CLEAR": "CL",
@@ -58,7 +58,7 @@ def _draw_metric_boxplot(ax, arrays: list[np.ndarray], methods: list[str], metri
     bp = ax.boxplot(
         arrays,
         patch_artist=True,
-        widths=0.62,
+        widths=0.55,
         showfliers=False,
         medianprops=dict(color="black", lw=1.1),
     )
@@ -85,9 +85,9 @@ def _draw_metric_boxplot(ax, arrays: list[np.ndarray], methods: list[str], metri
         )
 
     ax.set_xticks(range(1, len(methods) + 1))
-    ax.set_xticklabels([_EXTERNAL_TICK_LABELS.get(m, method_short_name(m)) for m in methods], fontsize=12.0, rotation=90, ha="center", color="black")
-    ax.set_title(metric_label, fontsize=15.0, loc="left", pad=3, fontweight="normal", color="black")
-    ax.tick_params(labelsize=12.0, colors="black")
+    ax.set_xticklabels([_EXTERNAL_TICK_LABELS.get(m, method_short_name(m)) for m in methods], fontsize=8.5, rotation=90, ha="center", color="black")
+    ax.set_title(metric_label, fontsize=12.0, loc="left", pad=3, fontweight="normal", color="black")
+    ax.tick_params(labelsize=9.0, colors="black")
     ax.grid(axis="y", alpha=0.20, lw=0.4)
     ymin, ymax = ax.get_ylim()
     pad = (ymax - ymin) * 0.10 if ymax > ymin else 0.1
@@ -112,9 +112,9 @@ def generate(series, out_dir):
 
     n_cols = 5
     n_rows = (len(metrics) + n_cols - 1) // n_cols
-    fig = plt.figure(figsize=(16.0, 14.0))
+    fig = plt.figure(figsize=(16.0, 16.0))
     root = bind_figure_region(fig, (0.035, 0.06, 0.985, 0.935))
-    grid = root.grid(n_rows, n_cols, wgap=0.035, hgap=0.065)
+    grid = root.grid(n_rows, n_cols, wgap=0.045, hgap=0.055)
 
     legend_handles = [Patch(facecolor=method_color(name), edgecolor="#666666", label=name)
                       for name in methods]
@@ -122,13 +122,13 @@ def generate(series, out_dir):
         handles=legend_handles,
         labels=methods,
         loc="upper center",
-        bbox_to_anchor=(0.5, 0.998),
+        bbox_to_anchor=(0.5, 0.995),
         ncol=10,
         frameon=False,
-        fontsize=12.0,
-        handlelength=1.1,
-        handletextpad=0.35,
-        columnspacing=0.8,
+        fontsize=9.0,
+        handlelength=1.0,
+        handletextpad=0.3,
+        columnspacing=0.6,
     )
 
     for idx, (metric_name, metric_label, _) in enumerate(metrics):
@@ -161,7 +161,7 @@ def generate(series, out_dir):
         ax = grid[row][col].add_axes(fig)
         ax.axis("off")
 
-    out_path = out_dir / f"Fig7_external_{series}.png"
+    out_path = out_dir / f"Fig5_external_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)
     print(f"  ✓ {out_path.name}")
 

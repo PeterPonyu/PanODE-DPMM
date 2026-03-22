@@ -23,7 +23,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--datasets", type=str, nargs="+", default=["setty", "endo"])
     parser.add_argument("--latent-dims", type=int, nargs="+", default=[50, 100, 200])
-    parser.add_argument("--models", type=str, nargs="+", default=["DPMM-Base", "Topic-Base", "Pure-AE"])
+    parser.add_argument("--models", type=str, nargs="+", default=["DPMM-Base", "Pure-AE"])
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 

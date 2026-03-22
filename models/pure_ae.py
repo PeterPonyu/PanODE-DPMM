@@ -1,7 +1,7 @@
 """
 Pure AE: Standard Autoencoder with no prior regularization.
 
-Fully independent from Topic and DPMM architectures.
+Fully independent from DPMM architectures.
 No KL divergence, no Dirichlet prior, no DPMM clustering, no simplex.
 Pure reconstruction autoencoder with MSE loss.
 
@@ -297,7 +297,7 @@ class PureAEModel(BaseModel):
     - Decoder: MLP → reconstruction
     - Loss: MSE reconstruction only
 
-    No VAE component, no DPMM, no Topic prior.
+    No VAE component, no DPMM prior.
     """
 
     def __init__(

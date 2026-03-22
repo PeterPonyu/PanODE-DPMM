@@ -62,6 +62,36 @@ benchmarks/benchmark_results/*/csv/
 benchmarks/benchmark_results/statistical_exports/
 benchmarks/benchmark_results/external/
 
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+retrain_log.txt
+
+# ── Model checkpoints (regenerable) ─────────────────────────────────────────
+experiments/results/*/models/
+experiments/results/dpmm_diagnostics/*.npz
+
+# ── Refined figure generation artifacts ─────────────────────────────────────
+refined_figures/output/
+
+# ── Duplicate fonts (canonical copy in fonts/) ──────────────────────────────
+vcd/fonts/
+
+# ── Compiled article PDF (regenerable) ──────────────────────────────────────
+article/dpmm/main_mdpi.pdf
+
+# ── LaTeX compilation artifacts ─────────────────────────────────────────────
+*.aux
+*.bbl
+*.blg
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.nav
+*.snm
+*.vrb
+
 # ── OS ───────────────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db

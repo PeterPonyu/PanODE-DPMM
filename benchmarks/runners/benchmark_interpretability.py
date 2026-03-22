@@ -2,16 +2,16 @@
 """
 Quantitative Interpretability Benchmark (E3)
 
-Computes topic coherence (NPMI) and gene set enrichment breadth for
+Computes component coherence (NPMI) and gene set enrichment breadth for
 prior-based models across multiple datasets, providing the quantitative
 interpretability metric requested by the reviewer.
 
 Metrics:
-1. Topic Coherence (NPMI): Measures co-occurrence of top genes within each
-   latent component. Higher = more coherent/interpretable topics.
+1. Component Coherence (NPMI): Measures co-occurrence of top genes within each
+   latent component. Higher = more coherent/interpretable components.
 2. GO Enrichment Breadth: Fraction of latent components that produce
    significant GO terms (adj p < 0.05). Higher = biologically meaningful.
-3. Gene Specificity: How specific each gene is to a single topic
+3. Gene Specificity: How specific each gene is to a single component
    (entropy-based). Lower entropy = more specific/interpretable.
 
 Usage:
@@ -46,42 +46,42 @@ from benchmarks.biological_validation.perturbation_analysis import (
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# Topic Coherence (Correlation-based, suitable for sparse scRNA-seq)
+# Component Coherence (Correlation-based, suitable for sparse scRNA-seq)
 # ═════════════════════════════════════════════════════════════════════════════
 
-def compute_topic_coherence(adata, top_genes_per_topic, top_n=20):
-    """Compute correlation-based topic coherence for sparse scRNA-seq data.
-    
-    For each topic, compute the mean pairwise Pearson correlation among
-    the top-N genes' expression vectors. Higher coherence = genes in
+def compute_component_coherence(adata, top_genes_per_component, top_n=20):
+    """Compute correlation-based component coherence for sparse scRNA-seq data.
+
+    For each latent component, compute the mean pairwise Pearson correlation
+    among the top-N genes' expression vectors. Higher coherence = genes in
     each component vary together across cells = biologically coherent.
-    
+
     Also computes NPMI on the above-median binarized expression matrix.
-    
-    Returns per-topic scores and aggregates.
+
+    Returns per-component scores and aggregates.
     """
     X = adata.X
     if issparse(X):
         X = X.toarray()
     
     gene_to_idx = {g: i for i, g in enumerate(adata.var_names)}
-    
-    topic_coherences = []
-    topic_npmis = []
+
+    comp_coherences = []
+    comp_npmis = []
     n_cells = X.shape[0]
     
     # For NPMI: binarize at 75th percentile (more selective than median for sparse data)
     gene_q75 = np.percentile(X, 75, axis=0)
     X_bin = (X > gene_q75).astype(float)
     
-    for topic_id, gene_list in top_genes_per_topic.items():
+    for comp_id, gene_list in top_genes_per_component.items():
         # gene_list may be [(gene_name, score), ...] tuples or plain strings
         raw = gene_list[:top_n]
         genes = [g[0] if isinstance(g, (list, tuple)) else g for g in raw]
         genes = [g for g in genes if g in gene_to_idx]
         if len(genes) < 2:
-            topic_coherences.append(0.0)
-            topic_npmis.append(0.0)
+            comp_coherences.append(0.0)
+            comp_npmis.append(0.0)
             continue
         
         idxs = [gene_to_idx[g] for g in genes]
@@ -97,7 +97,7 @@ def compute_topic_coherence(adata, top_genes_per_topic, top_n=20):
         n_g = len(idxs)
         mask = np.triu(np.ones((n_g, n_g), dtype=bool), k=1)
         pairwise_corrs = corr_matrix[mask]
-        topic_coherences.append(float(np.mean(pairwise_corrs)))
+        comp_coherences.append(float(np.mean(pairwise_corrs)))
         
         # NPMI on binarized data
         gene_vectors = X_bin[:, idxs]
@@ -117,15 +117,15 @@ def compute_topic_coherence(adata, top_genes_per_topic, top_n=20):
                 npmi = pmi / (-np.log(p_ij + eps))
                 npmi_pairs.append(npmi)
         
-        topic_npmis.append(np.mean(npmi_pairs) if npmi_pairs else 0.0)
-    
+        comp_npmis.append(np.mean(npmi_pairs) if npmi_pairs else 0.0)
+
     return {
-        "per_topic_coherence": topic_coherences,
-        "mean_coherence": np.mean(topic_coherences) if topic_coherences else 0.0,
-        "std_coherence": np.std(topic_coherences) if topic_coherences else 0.0,
-        "per_topic_npmi": topic_npmis,
-        "mean_npmi": np.mean(topic_npmis) if topic_npmis else 0.0,
-        "std_npmi": np.std(topic_npmis) if topic_npmis else 0.0,
+        "per_component_coherence": comp_coherences,
+        "mean_coherence": np.mean(comp_coherences) if comp_coherences else 0.0,
+        "std_coherence": np.std(comp_coherences) if comp_coherences else 0.0,
+        "per_component_npmi": comp_npmis,
+        "mean_npmi": np.mean(comp_npmis) if comp_npmis else 0.0,
+        "std_npmi": np.std(comp_npmis) if comp_npmis else 0.0,
     }
 
 
@@ -133,7 +133,7 @@ def compute_gene_specificity(importance_matrix):
     """Compute entropy-based gene specificity.
     
     For each gene, compute the entropy of its importance distribution
-    across topics. Lower entropy = gene is specific to fewer topics.
+    across components. Lower entropy = gene is specific to fewer components.
     
     Returns mean specificity (1 - normalized entropy).
     """
@@ -212,8 +212,8 @@ def main():
     parser.add_argument("--all", action="store_true",
                         help="Run on all 12 datasets")
     parser.add_argument("--models", type=str, nargs="+",
-                        default=["DPMM-Base", "Topic-Base",
-                                 "DPMM-Contrastive", "Topic-Contrastive", "Pure-AE"])
+                        default=["DPMM-Base",
+                                 "DPMM-Contrastive", "Pure-AE"])
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--top-n-genes", type=int, default=30,
                         help="Top N genes per component for coherence")
@@ -292,8 +292,8 @@ def main():
                     importance, gene_names, top_n=args.top_n_genes
                 )
 
-                # 1. Topic Coherence (correlation + NPMI)
-                coh = compute_topic_coherence(adata, top_genes, top_n=args.top_n_genes)
+                # 1. Component Coherence (correlation + NPMI)
+                coh = compute_component_coherence(adata, top_genes, top_n=args.top_n_genes)
 
                 # 2. Gene Specificity
                 spec = compute_gene_specificity(importance)

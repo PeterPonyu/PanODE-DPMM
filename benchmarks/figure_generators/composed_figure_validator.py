@@ -14,7 +14,6 @@ Supports two output sources:
 
 Usage:
     python -m benchmarks.figure_generators.composed_figure_validator --series dpmm
-    python -m benchmarks.figure_generators.composed_figure_validator --series dpmm topic
     python -m benchmarks.figure_generators.composed_figure_validator --series dpmm --figures 6 7 8 10 11 12
 
 Author: PanODE-LAB pipeline
@@ -258,7 +257,7 @@ def validate_all_figures(series_list: list[str],
     Parameters
     ----------
     series_list : list[str]
-        List of series names (e.g., ["dpmm", "topic"]).
+        List of series names (e.g., ["dpmm"]).
     figures : list[int] or None
         Figure numbers to validate. None = all (1-12).
     verbose : bool
@@ -357,8 +356,8 @@ def validate_all_figures(series_list: list[str],
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Validate composed figure PNGs (size, content, conflicts)")
-    parser.add_argument("--series", nargs="+", default=["dpmm", "topic"],
-                        choices=["dpmm", "topic"],
+    parser.add_argument("--series", nargs="+", default=["dpmm"],
+                        choices=["dpmm"],
                         help="Series to validate")
     parser.add_argument("--figures", nargs="+", type=int, default=None,
                         help="Figure numbers to validate (default: all 1-12)")

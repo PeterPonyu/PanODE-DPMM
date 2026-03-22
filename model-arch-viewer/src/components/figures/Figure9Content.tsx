@@ -30,7 +30,6 @@ interface EnrichEntry {
 
 interface Manifest {
   panelA?: Record<string, EnrichEntry[]>;
-  panelBeta?: Record<string, EnrichEntry[]>;
   models?: string[];
   datasets?: string[];
   image_sizes?: Record<string, { w: number; h: number }>;
@@ -53,8 +52,7 @@ function Figure9Content({ series }: Props) {
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
   if (!manifest) return <div className="p-4 text-gray-400">Loading…</div>;
 
-  const { panelA = {}, panelBeta = {}, datasets = [] } = manifest;
-  const betaDatasets = Object.keys(panelBeta);
+  const { panelA = {}, datasets = [] } = manifest;
 
   return (
     <FigureContainer figureId="figure9" series={series}>
@@ -85,32 +83,6 @@ function Figure9Content({ series }: Props) {
           );
         })}
       </PanelSection>
-
-      {/* Panel C — Beta decoder enrichment (best Topic variant only) */}
-      {betaDatasets.length > 0 && (
-        <PanelSection label="C" title="GO / BP Enrichment (Topic β Decoder — Best Variant)">
-          <SubplotGrid columns={betaDatasets.length} gap="4px">
-            {betaDatasets.map((ds) => {
-              const entries = panelBeta[ds] ?? [];
-              if (entries.length === 0) return null;
-              return entries.map((e) => (
-                <div key={e.file}>
-                  <div
-                    className="text-[7px] text-gray-500 pl-1 mb-0.5"
-                    style={{ fontFamily: "Arial, sans-serif" }}
-                  >
-                    {ds}
-                  </div>
-                  <SubplotImage
-                    src={subplotPath(series, 9, e.file)}
-                    alt={`${e.model} β — ${ds}`}
-                  />
-                </div>
-              ));
-            })}
-          </SubplotGrid>
-        </PanelSection>
-      )}
     </FigureContainer>
   );
 }

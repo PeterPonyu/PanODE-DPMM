@@ -82,7 +82,7 @@ function Figure3Content({ series }: Props) {
                 label={labels[labelIdx] ?? ""}
                 title={`${sweepName}`}
               >
-                <SubplotGrid columns={series === "topic" ? 2 : 3} gap="1px">
+                <SubplotGrid columns={3} gap="1px">
                   {info.plots.map((f) => (
                     <SubplotImage
                       key={f}

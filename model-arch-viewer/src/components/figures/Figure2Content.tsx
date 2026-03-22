@@ -108,8 +108,8 @@ function Figure2Content({ series }: Props) {
           </PanelSection>
         )}
 
-        {/* Panel C: core boxplots (Topic: unified 6 metrics in 3 cols; DPMM: core only in 3 cols) */}
-        <PanelSection label="C" title={series === "topic" ? "Metrics" : "Core Metrics"}>
+        {/* Panel C: core boxplots */}
+        <PanelSection label="C" title="Core Metrics">
           <SubplotGrid columns={3} gap="1px">
             {panelB.map((f) => (
               <SubplotImage key={f} src={subplotPath(series, 2, f)} alt={f}
@@ -131,8 +131,8 @@ function Figure2Content({ series }: Props) {
         )}
       </PanelColumns>
 
-      {/* Row 3: Panel E — Extended metrics (DPMM only; Topic merges into Panel C) */}
-      {panelC.length > 0 && series !== "topic" && (
+      {/* Row 3: Panel E — Extended metrics */}
+      {panelC.length > 0 && (
         <PanelSection label="E" title="Extended Metrics">
           <SubplotGrid columns={8} gap="1px">
             {panelC.map((f) => (

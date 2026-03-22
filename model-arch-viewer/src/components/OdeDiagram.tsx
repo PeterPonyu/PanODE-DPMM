@@ -4,7 +4,7 @@ import React from "react";
 import { ODE_MODULE } from "@/data/models";
 
 interface Props {
-  series: "dpmm" | "topic";
+  series: "dpmm";
 }
 
 export default function OdeDiagram({ series }: Props) {

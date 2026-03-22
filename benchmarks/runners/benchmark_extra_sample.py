@@ -18,7 +18,7 @@ python benchmarks/benchmark_extra_sample.py --all --seed 42
 # Run a specific subset of datasets + models:
 python benchmarks/benchmark_extra_sample.py \
     --datasets tnbc_brain lbm_brain bc_ec bcc \
-    --models DPMM-Base DPMM-Contrastive Topic-Base Topic-Transformer Topic-Contrastive \
+    --models DPMM-Base DPMM-Contrastive DPMM-FM \
     --seed 42
 
 # Run using a dataset group defined in dataset_registry.py:
@@ -62,21 +62,12 @@ ALL_MODELS = [
     "Pure-AE",
     "Pure-Transformer-AE",
     "Pure-Contrastive-AE",
-    "Pure-VAE",
-    "Pure-Transformer-VAE",
-    "Pure-Contrastive-VAE",
-    "Topic-Base",
-    "Topic-Transformer",
-    "Topic-Contrastive",
 ]
 
 # Compact five-model set useful for quick sanity runs
 QUICK_MODELS = [
     "DPMM-Base",
     "DPMM-Contrastive",
-    "Topic-Base",
-    "Topic-Transformer",
-    "Topic-Contrastive",
 ]
 
 

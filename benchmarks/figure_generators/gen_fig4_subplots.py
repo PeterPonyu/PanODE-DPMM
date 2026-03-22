@@ -38,10 +38,9 @@ from benchmarks.figure_generators.data_loaders import (
     load_sweep_latents, parse_sweep_value)
 
 
-# Series-specific sensitivity params (kl_weight = Topic, warmup_ratio = DPMM)
+# Series-specific sensitivity params (warmup_ratio = DPMM)
 _SENSITIVITY_PARAMS = {
     "dpmm":  ["warmup_ratio", "latent_dim", "encoder_size", "dropout_rate"],
-    "topic": ["kl_weight",    "latent_dim", "encoder_size", "dropout_rate"],
 }
 
 def _key_params_by_source(series):
@@ -182,7 +181,7 @@ def generate(series, out_dir):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Figure 4 subplots")
-    parser.add_argument("--series", required=True, choices=["dpmm", "topic"])
+    parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
     out = (Path(args.output_dir) if args.output_dir

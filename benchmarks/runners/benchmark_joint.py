@@ -2,8 +2,8 @@
 """
 Joint Multi-Dataset Training Benchmark
 
-Trains all 6 core model variants (3 DPMM + 3 Topic) on a single joint
-dataset formed by concatenating all 12 development datasets.
+Trains DPMM model variants on a single joint dataset formed by
+concatenating all 12 development datasets.
 
 Motivation
 ----------
@@ -37,7 +37,7 @@ Outputs (under benchmark_results/joint/)
 Usage
 -----
   python benchmarks/benchmark_joint.py
-  python benchmarks/benchmark_joint.py --models DPMM-Base Topic-Base
+  python benchmarks/benchmark_joint.py --models DPMM-Base DPMM-FM
   python benchmarks/benchmark_joint.py --epochs 200 --max-cells 1500
 """
 
@@ -78,7 +78,6 @@ from benchmarks.train_utils import train_and_evaluate
 # ──────────────────────────────────────────────────────────────────────────────
 JOINT_MODELS = [
     "DPMM-Base", "DPMM-Transformer", "DPMM-Contrastive",
-    "Topic-Base", "Topic-Transformer", "Topic-Contrastive",
 ]
 HVG_PER_DS   = 3000   # HVGs to select per dataset before intersection
 MIN_SHARED   = 300    # minimum acceptable shared genes (fallback if < this)
@@ -286,7 +285,7 @@ def train_joint_model(model_name, joint_adata, device, epochs, seed):
     model_info = MODELS[model_name]
     params = model_info["params"].copy()
 
-    latent_dim = params.get("latent_dim") or params.get("n_topics") or BASE_CONFIG.latent_dim
+    latent_dim = params.get("latent_dim") or BASE_CONFIG.latent_dim
 
     splitter = _make_joint_splitter(joint_adata, latent_dim=latent_dim, seed=seed)
 

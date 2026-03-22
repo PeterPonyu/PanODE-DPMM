@@ -24,7 +24,7 @@ echo "  Source base: $SUBPLOTS_BASE"
 
 mkdir -p "$PUBLIC_DIR/subplots"
 
-for series in dpmm topic; do
+for series in dpmm; do
   SERIES_SRC="$SUBPLOTS_BASE/$series/subplots"
   SERIES_DST="$PUBLIC_DIR/subplots/$series"
 

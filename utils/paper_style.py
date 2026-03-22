@@ -2,7 +2,7 @@
 Unified plot style configuration for PanODE paper figures.
 
 Provides:
-- Consistent model ordering (ablation-aware) for both DPMM and Topic papers
+- Consistent model ordering (ablation-aware) for the DPMM paper
 - Per-model color palette with clear warm/cool distinction
 - Publication-quality rcParams (large fonts, high DPI)
 - CLI helper to override style at runtime
@@ -73,30 +73,18 @@ MODEL_ORDER_DPMM = [
     "DPMM-Contrastive",
 ]
 
-# Topic paper: Pure-VAE baselines first, then Topic variants
-MODEL_ORDER_TOPIC = [
-    "Pure-VAE",
-    "Pure-Transformer-VAE",
-    "Pure-Contrastive-VAE",
-    "Topic-Base",
-    "Topic-Transformer",
-    "Topic-Contrastive",
-]
-
-# Full 12-model order for cross-paper comparison
-MODEL_ORDER_ALL = MODEL_ORDER_DPMM + MODEL_ORDER_TOPIC
+# Full model order
+MODEL_ORDER_ALL = MODEL_ORDER_DPMM
 
 
 def get_model_order(series: str = "all") -> List[str]:
     """Return canonical model ordering for the given series.
 
     Args:
-        series: 'dpmm', 'topic', or 'all'
+        series: 'dpmm' or 'all'
     """
     if series == "dpmm":
         return list(MODEL_ORDER_DPMM)
-    elif series == "topic":
-        return list(MODEL_ORDER_TOPIC)
     else:
         return list(MODEL_ORDER_ALL)
 
@@ -107,8 +95,6 @@ def get_model_order(series: str = "all") -> List[str]:
 
 # Blue tones for Pure-AE family (cool, baseline)
 # Orange/red tones for DPMM family (warm, method)
-# Green tones for Pure-VAE family (cool, baseline)
-# Purple tones for Topic family (warm, method)
 
 MODEL_COLORS: Dict[str, str] = {
     # ─── AE family (blue gradient) ───
@@ -119,14 +105,6 @@ MODEL_COLORS: Dict[str, str] = {
     "DPMM-Base":            "#FD8D3C",   # orange
     "DPMM-Transformer":     "#E6550D",   # dark orange
     "DPMM-Contrastive":     "#A63603",   # deep red-orange
-    # ─── VAE family (green gradient) ───
-    "Pure-VAE":             "#74C476",   # light green
-    "Pure-Transformer-VAE": "#31A354",   # medium green
-    "Pure-Contrastive-VAE": "#006D2C",   # dark green
-    # ─── Topic family (purple gradient) ───
-    "Topic-Base":           "#9E9AC8",   # light purple
-    "Topic-Transformer":    "#756BB1",   # medium purple
-    "Topic-Contrastive":    "#54278F",   # dark purple
 }
 
 # Short display names for tight layouts
@@ -137,12 +115,6 @@ MODEL_SHORT_NAMES: Dict[str, str] = {
     "DPMM-Base":            "DPMM",
     "DPMM-Transformer":     "DPMM-Tfm",
     "DPMM-Contrastive":     "DPMM-Ctr",
-    "Pure-VAE":             "P-VAE",
-    "Pure-Transformer-VAE": "P-Tfm-VAE",
-    "Pure-Contrastive-VAE": "P-Ctr-VAE",
-    "Topic-Base":           "Topic",
-    "Topic-Transformer":    "Topic-Tfm",
-    "Topic-Contrastive":    "Topic-Ctr",
 }
 
 

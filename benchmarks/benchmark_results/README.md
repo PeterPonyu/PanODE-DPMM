@@ -79,7 +79,7 @@ statistical_analysis.py
             ▼
 generate_paper_figures.py / figure_generators/
     │
-    └──→ benchmarks/paper_figures/{dpmm,topic,statistical}/
+    └──→ benchmarks/paper_figures/{dpmm,statistical}/
 ```
 
 ## Multiple CSV Generations

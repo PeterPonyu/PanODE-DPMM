@@ -15,7 +15,7 @@ import EnhancedWorkflowPanel from "@/components/figures/EnhancedWorkflowPanel";
  *
  *  Panel A: Workflow (selection → benchmark → comparison)
  *  Panel B: 6 core metric boxplots (NMI, ARI, ASW, DAV, DRE UMAP, LSE Overall)
- *           comparing 11 external models + Best-DPMM/Topic  (3-col grid)
+ *           comparing 11 external models + Best-DPMM  (3-col grid)
  *           Internal best now has seed-level variance (up to 60 data points)
  *  Panel C: Extended metric boxplots (same suite as Fig 2 Panel D)  (8-col grid)
  *  Panel D: Efficiency metric boxplots (SecPerEpoch, PeakGPU, Params) (3-col)
@@ -77,9 +77,9 @@ function Figure10Content({ series }: Props) {
       {/* Panel A: Workflow */}
       <EnhancedWorkflowPanel figNum={10} series={series} />
 
-      {/* Panel B: Core metric boxplots (6 metrics / 3 cols for dpmm; 4 metrics / 4 cols for topic) */}
+      {/* Panel B: Core metric boxplots (6 metrics / 3 cols) */}
       <PanelSection label="B" title="Core Metrics — External vs Internal">
-        <SubplotGrid columns={series === "topic" ? 4 : 3} gap="3px">
+        <SubplotGrid columns={3} gap="3px">
           {sortedCore.map((f) => (
             <SubplotImage
               key={f}
@@ -92,10 +92,10 @@ function Figure10Content({ series }: Props) {
         </SubplotGrid>
       </PanelSection>
 
-      {/* Panel C: Extended metric boxplots (8-col / 24 metrics for dpmm; 2-col / 2 metrics for topic) */}
+      {/* Panel C: Extended metric boxplots (8-col / 24 metrics) */}
       {extBoxplots.length > 0 && (
         <PanelSection label="C" title="Extended Metrics">
-          <SubplotGrid columns={series === "topic" ? 2 : 8} gap="2px">
+          <SubplotGrid columns={8} gap="2px">
             {extBoxplots.map((f) => (
               <SubplotImage
                 key={f}

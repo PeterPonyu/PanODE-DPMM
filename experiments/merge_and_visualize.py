@@ -103,9 +103,7 @@ from experiments.visualize_experiment import (
 # Internal models — same order as full_comparison preset
 INTERNAL_METHODS = [
     "Pure-AE", "Pure-Trans-AE", "Pure-Contr-AE",
-    "Pure-VAE", "Pure-Trans-VAE", "Pure-Contr-VAE",
     "DPMM-Base", "DPMM-Trans", "DPMM-Contr",
-    "Topic-Base", "Topic-Trans", "Topic-Contr",
 ]
 
 # External baselines — ordered from eval_lib.baselines.registry
