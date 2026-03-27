@@ -38,9 +38,19 @@ model-arch-viewer/public/statistical
 model-arch-viewer/public/subplots/*
 !model-arch-viewer/public/subplots/.gitkeep
 
-# ── Manuscript sources (kept private/off-repo) ──────────────────────────────
+# ── Manuscript sources ───────────────────────────────────────────────────────
 article/*
 !article/README.md
+!article/build.sh
+!article/dpmm/
+article/dpmm/*.aux
+article/dpmm/*.bbl
+article/dpmm/*.blg
+article/dpmm/*.fdb_latexmk
+article/dpmm/*.fls
+article/dpmm/*.log
+article/dpmm/*.out
+article/dpmm/*.pdf
 
 # ── Local benchmark / experiment outputs (regenerable) ──────────────────────
 benchmarks/benchmark_results/**

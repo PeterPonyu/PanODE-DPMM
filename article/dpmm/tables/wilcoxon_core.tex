@@ -1,0 +1,17 @@
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Wilcoxon signed-rank tests on core metrics.} DPMM-Base vs.\ Pure-AE across 12 core datasets. W/L/T = wins/losses/ties; Sig.\ at $\alpha{=}0.05$.}
+\label{tab:dpmm_wilcoxon_core}
+{\small
+\begin{tabular}{llccccc}
+\toprule
+Comparison & Metric & W/L/T & $p$-value & Sig. & Cliff's $\delta$ & Effect \\
+\midrule
+DPMM-Base vs Pure-AE & ARI & 4/8/0 & 0.924 & No & $-$0.431 & medium \\
+DPMM-Base vs Pure-AE & ASW & 12/0/0 & 2.44e-04 & Yes & 1.000 & large \\
+DPMM-Base vs Pure-AE & DAV & 12/0/0 & 2.44e-04 & Yes & 1.000 & large \\
+DPMM-Base vs Pure-AE & NMI & 2/10/0 & 0.999 & No & $-$0.639 & large \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
