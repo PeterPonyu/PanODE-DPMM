@@ -55,7 +55,7 @@ class ExperimentConfig:
     datasets: Dict[str, dict] = field(default_factory=dict)
     epochs: int = 100
     max_cells: int = 3000
-    n_hvg: int = 2000
+    n_hvg: int = 3000
     latent_dim: int = 10
     batch_size: int = 128
     seed: int = 42

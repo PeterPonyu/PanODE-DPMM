@@ -134,7 +134,7 @@ EXTERNAL_MODELS = {
     "CLEAR": {
         "factory": create_clear_model,
         "params": {
-            "latent_dim": 128,
+            "latent_dim": 10,
             "hidden_dim": 256,
             "queue_size": 1024,
             "temperature": 0.2,
@@ -213,7 +213,7 @@ EXTERNAL_MODELS = {
     "scGCC": {
         "factory": create_scgcc_model,
         "params": {
-            "latent_dim": 128,
+            "latent_dim": 10,
             "queue_size": 512,
             "heads": 4,
         },

@@ -339,7 +339,7 @@ def generate(series, out_dir):
     ax.text(2.28, card_y + 0.32,
         "Training setup\n"
         r"• AdamW, lr = $10^{-3}$, batch = 128" "\n"
-        r"• 1000 ep, warmup $\tau$=0.8, $d_z$=10, $\lambda_{FM}$=0.1",
+        r"• 1000 ep, warmup $\tau$=0.9, $d_z$=10, $\lambda_{FM}$=0.1",
         fontsize=10.5, color="#455A64", va="top", zorder=5,
         linespacing=1.20)
 

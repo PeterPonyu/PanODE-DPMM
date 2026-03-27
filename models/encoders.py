@@ -10,13 +10,18 @@ This module provides encoder architectures for single-cell representation learni
 
 2. MULTI-HEAD PROJECTION TRANSFORMER (Recommended for attention):
    - Projects gene vector into multiple token embeddings
-   - Self-attention learns relationships between projections  
+   - Self-attention learns relationships between projections
    - Prevents representation collapse through diverse projections
    - O(num_tokens²) complexity where num_tokens << n_genes
 
 3. HYBRID MLP-ATTENTION (Balanced):
    - MLP backbone with multi-head attention refinement
    - Best of both worlds: MLP stability + attention expressiveness
+
+4. GAT ENCODER (Graph Attention):
+   - Graph Attention Network operating on a kNN cell graph
+   - Leverages cell-cell neighbourhood structure via attention
+   - Requires torch_geometric; gracefully unavailable otherwise
 """
 import torch
 import torch.nn as nn
@@ -24,6 +29,12 @@ import torch.nn.functional as F
 from typing import Tuple, Optional, Literal
 
 from .shared_modules import weight_init, MLP, ResidualMLP
+
+# Optional PyG dependency for GAT encoder
+try:
+    from torch_geometric.nn import GATConv
+except ImportError:
+    GATConv = None
 
 
 # =============================================================================
@@ -55,12 +66,14 @@ class MLPEncoder(nn.Module):
         if use_vae:
             self.mu_head = nn.Linear(hidden_dim, output_dim)
             self.var_head = nn.Linear(hidden_dim, output_dim)
-            nn.init.constant_(self.var_head.bias, 0.5)
         else:
             self.output_proj = nn.Linear(hidden_dim, output_dim)
-        
+
         self.apply(weight_init)
-    
+        # Re-apply after weight_init so the intended 0.5 is not overwritten
+        if use_vae:
+            nn.init.constant_(self.var_head.bias, 0.5)
+
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
         h = self.encoder(x)
         
@@ -143,11 +156,13 @@ class MultiHeadProjectionEncoder(nn.Module):
         if use_vae:
             self.mu_head = nn.Linear(d_model, output_dim)
             self.var_head = nn.Linear(d_model, output_dim)
-            nn.init.constant_(self.var_head.bias, 0.5)
         else:
             self.output_proj = nn.Linear(d_model, output_dim)
-        
+
         self.apply(weight_init)
+        # Re-apply after weight_init so the intended 0.5 is not overwritten
+        if use_vae:
+            nn.init.constant_(self.var_head.bias, 0.5)
     
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
         batch_size = x.size(0)
@@ -225,11 +240,13 @@ class HybridMLPAttentionEncoder(nn.Module):
         if use_vae:
             self.mu_head = nn.Linear(hidden_dim, output_dim)
             self.var_head = nn.Linear(hidden_dim, output_dim)
-            nn.init.constant_(self.var_head.bias, 0.5)
         else:
             self.output_proj = nn.Linear(hidden_dim, output_dim)
-        
+
         self.apply(weight_init)
+        # Re-apply after weight_init so the intended 0.5 is not overwritten
+        if use_vae:
+            nn.init.constant_(self.var_head.bias, 0.5)
     
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
         h_mlp = self.mlp_encoder(x)
@@ -254,11 +271,129 @@ class HybridMLPAttentionEncoder(nn.Module):
 
 
 # =============================================================================
+# GAT (GRAPH ATTENTION) ENCODER
+# =============================================================================
+
+class GATConvEncoder(nn.Module):
+    """Graph Attention Network encoder for cell-graph–aware representation learning.
+
+    Architecture (following CCVGAE's polymorphic dispatch pattern):
+      1. Stack of [GATConv → BatchNorm → ReLU → Dropout] layers
+      2. Residual skip from first hidden layer to last
+      3. Separate GATConv heads for mean/logvar (VAE) or a single linear output (AE)
+
+    Requires ``torch_geometric``.  When the package is absent the
+    ``create_encoder`` factory will raise ``ImportError`` rather than
+    silently returning a broken object.
+    """
+
+    def __init__(
+        self,
+        input_dim: int,
+        hidden_dim: int = 128,
+        output_dim: int = 32,
+        num_layers: int = 2,
+        num_heads: int = 4,
+        dropout: float = 0.1,
+        use_vae: bool = False,
+        var_eps: float = 1e-4,
+        use_residual: bool = True,
+    ):
+        super().__init__()
+        if GATConv is None:
+            raise ImportError(
+                "GATConvEncoder requires torch_geometric. "
+                "Install with: pip install torch-geometric"
+            )
+        self.use_vae = use_vae
+        self.var_eps = var_eps
+        self.use_residual = use_residual
+
+        # Build GATConv stack
+        self.convs = nn.ModuleList()
+        self.bns = nn.ModuleList()
+        self.dropouts = nn.ModuleList()
+
+        # First layer: input_dim → hidden_dim (multi-head, concat)
+        self.convs.append(
+            GATConv(input_dim, hidden_dim, heads=num_heads, dropout=dropout, concat=True)
+        )
+        self.bns.append(nn.BatchNorm1d(hidden_dim * num_heads))
+        self.dropouts.append(nn.Dropout(dropout))
+
+        # Additional hidden layers: (hidden_dim * num_heads) → hidden_dim (concat)
+        for _ in range(num_layers - 1):
+            self.convs.append(
+                GATConv(hidden_dim * num_heads, hidden_dim, heads=num_heads,
+                        dropout=dropout, concat=True)
+            )
+            self.bns.append(nn.BatchNorm1d(hidden_dim * num_heads))
+            self.dropouts.append(nn.Dropout(dropout))
+
+        gat_out_dim = hidden_dim * num_heads
+
+        # Output heads
+        if use_vae:
+            self.mu_head = GATConv(gat_out_dim, output_dim, heads=1,
+                                   concat=False, dropout=dropout)
+            self.var_head = GATConv(gat_out_dim, output_dim, heads=1,
+                                    concat=False, dropout=dropout)
+        else:
+            self.output_conv = GATConv(gat_out_dim, output_dim, heads=1,
+                                       concat=False, dropout=dropout)
+
+    def forward(
+        self,
+        x: torch.Tensor,
+        edge_index: torch.Tensor,
+    ) -> Tuple[torch.Tensor, ...]:
+        """Forward pass.
+
+        Parameters
+        ----------
+        x : Tensor [N, input_dim]
+            Node (cell) features.
+        edge_index : LongTensor [2, E]
+            COO-format edge indices of the cell graph.
+
+        Returns
+        -------
+        (z,) or (z, mu, var)
+        """
+        residual = None
+        h = x
+        for i, (conv, bn, drop) in enumerate(
+            zip(self.convs, self.bns, self.dropouts)
+        ):
+            h = conv(h, edge_index)
+            h = bn(h)
+            h = F.relu(h)
+            h = drop(h)
+            if self.use_residual and i == 0:
+                residual = h
+
+        if self.use_residual and residual is not None:
+            h = h + residual
+
+        if self.use_vae:
+            mu = self.mu_head(h, edge_index)
+            log_var = self.var_head(h, edge_index)
+            var = F.softplus(log_var) + self.var_eps
+            std = torch.sqrt(var)
+            eps = torch.randn_like(std)
+            z = mu + eps * std
+            return z, mu, var
+        else:
+            z = self.output_conv(h, edge_index)
+            return (z,)
+
+
+# =============================================================================
 # ENCODER FACTORY
 # =============================================================================
 
 def create_encoder(
-    encoder_type: Literal['mlp', 'transformer', 'hybrid'],
+    encoder_type: Literal['mlp', 'transformer', 'hybrid', 'gat'],
     input_dim: int,
     output_dim: int,
     hidden_dim: int = 128,
@@ -270,15 +405,19 @@ def create_encoder(
     dropout: float = 0.1,
     var_eps: float = 1e-4,
     num_tokens: int = 8,
-    attention_weight: float = 0.3) -> nn.Module:
+    attention_weight: float = 0.3,
+    # GAT-specific
+    gat_num_heads: int = 4,
+    gat_use_residual: bool = True) -> nn.Module:
     """
     Factory function to create encoder.
-    
+
     Args:
-        encoder_type: 
+        encoder_type:
             - 'mlp': Simple MLP (fastest)
             - 'transformer': Multi-head projection transformer
             - 'hybrid': Hybrid MLP + attention
+            - 'gat': Graph Attention Network (requires torch_geometric)
         input_dim: Number of input features (genes)
         output_dim: Latent dimension
         hidden_dim: Hidden dimension for MLP/hybrid
@@ -291,7 +430,9 @@ def create_encoder(
         var_eps: Variance epsilon
         num_tokens: Number of projection heads (transformer)
         attention_weight: Attention blend ratio (hybrid)
-    
+        gat_num_heads: Number of GAT attention heads
+        gat_use_residual: Whether to use residual skip in GAT
+
     Returns:
         Encoder module
     """
@@ -327,5 +468,20 @@ def create_encoder(
             use_vae=use_vae,
             var_eps=var_eps,
             attention_weight=attention_weight)
+    elif encoder_type == 'gat':
+        if GATConv is None:
+            raise ImportError(
+                "encoder_type='gat' requires torch_geometric. "
+                "Install with: pip install torch-geometric")
+        return GATConvEncoder(
+            input_dim=input_dim,
+            hidden_dim=hidden_dim,
+            output_dim=output_dim,
+            num_layers=num_layers,
+            num_heads=gat_num_heads,
+            dropout=dropout,
+            use_vae=use_vae,
+            var_eps=var_eps,
+            use_residual=gat_use_residual)
     else:
-        raise ValueError(f"Unknown encoder type: {encoder_type}. Use 'mlp', 'transformer', or 'hybrid'.")
+        raise ValueError(f"Unknown encoder type: {encoder_type}. Use 'mlp', 'transformer', 'hybrid', or 'gat'.")

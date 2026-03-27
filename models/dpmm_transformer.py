@@ -24,7 +24,6 @@ from sklearn.mixture import BayesianGaussianMixture
 from scipy.sparse import issparse
 try:
     from .base_model import BaseModel
-    from .mixins import PriorMixin
     from .shared_modules import (
         weight_init, MLP, InformationBottleneck,
         reparameterize)
@@ -33,13 +32,14 @@ try:
         create_encoder)
 except ImportError:
     from utils.base_model import BaseModel
-    from utils.mixins import PriorMixin
     from models.shared_modules import (
         weight_init, MLP, InformationBottleneck,
         reparameterize)
     from models.encoders import (
         MLPEncoder, MultiHeadProjectionEncoder, HybridMLPAttentionEncoder,
         create_encoder)
+
+from utils.mixins import PriorMixin
 
 
 def _act(name: str) -> nn.Module:

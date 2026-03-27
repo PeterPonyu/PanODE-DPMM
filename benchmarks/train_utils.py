@@ -198,7 +198,7 @@ def train_and_evaluate(
             "Time_s": elapsed,
             "Error": str(exc)[:200],
             "latent": None,
-            "NMI": 0, "ARI": 0,
+            "NMI": np.nan, "ARI": np.nan, "ASW": np.nan,
             "Epochs": epochs,
             "EpochsTrained": 0,
         }

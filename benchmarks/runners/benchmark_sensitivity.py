@@ -88,18 +88,18 @@ DEFAULT_EPOCHS = BASE_CONFIG.epochs        # 600
 DPMM_WR_DEFAULT      = 0.9
 DPMM_EDIMS_DEFAULT   = [256, 128]
 DPMM_DDIMS_DEFAULT   = [128, 256]
-DPMM_DROP_DEFAULT    = 0.1
+DPMM_DROP_DEFAULT    = 0.2
 
 # Transformer-specific defaults
 TRANS_DMODEL_DEFAULT   = 128
 TRANS_NHEAD_DEFAULT    = 4
 TRANS_NLAYERS_DEFAULT  = 2
-TRANS_DROP_DEFAULT     = 0.1
+TRANS_DROP_DEFAULT     = 0.2
 
 # Contrastive-specific defaults
 CONT_MOCO_WEIGHT_DEFAULT = 1.0
 CONT_MOCO_TEMP_DEFAULT   = 0.2
-CONT_DROP_DEFAULT        = 0.1
+CONT_DROP_DEFAULT        = 0.2
 
 # ── sweep grids ───────────────────────────────────────────────────────────────
 SWEEPS = {

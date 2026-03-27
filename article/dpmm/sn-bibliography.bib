@@ -1,2 +1,262 @@
 % Bibliography for PanODE-DPMM manuscript
-% Add references here in BibTeX format
+
+% --- scRNA-seq foundations ---
+
+@article{zheng2017massively,
+  title={Massively parallel digital transcriptional profiling of single cells},
+  author={Zheng, Grace X Y and Terry, Jessica M and Belgrader, Phillip and Ryvkin, Paul and Bent, Zachary W and Wilson, Ryan and Ziraldo, Solongo B and Wheeler, Tobias D and McDermott, Geoff P and Zhu, Junjie and others},
+  journal={Nature Communications},
+  volume={8},
+  pages={14049},
+  year={2017},
+  publisher={Nature Publishing Group}
+}
+
+@article{hwang2018single,
+  title={Single-cell {RNA} sequencing technologies and bioinformatics pipelines},
+  author={Hwang, Byungjin and Lee, Ji Hyun and Bang, Duhee},
+  journal={Experimental \& Molecular Medicine},
+  volume={50},
+  number={8},
+  pages={1--14},
+  year={2018},
+  publisher={Nature Publishing Group}
+}
+
+% --- VAE and generative models ---
+
+@inproceedings{kingma2014auto,
+  title={Auto-Encoding Variational {B}ayes},
+  author={Kingma, Diederik P and Welling, Max},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2014}
+}
+
+@inproceedings{higgins2017beta,
+  title={$\beta$-{VAE}: Learning Basic Visual Concepts with a Constrained Variational Framework},
+  author={Higgins, Irina and Matthey, Loic and Pal, Arka and Burgess, Christopher and Glorot, Xavier and Botvinick, Matthew and Mohamed, Shakir and Lerchner, Alexander},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2017}
+}
+
+% --- Single-cell deep learning baselines ---
+
+@article{lopez2018deep,
+  title={Deep generative modeling for single-cell transcriptomics},
+  author={Lopez, Romain and Regier, Jeffrey and Cole, Michael B and Jordan, Michael I and Yosef, Nir},
+  journal={Nature Methods},
+  volume={15},
+  number={12},
+  pages={1053--1058},
+  year={2018},
+  publisher={Nature Publishing Group}
+}
+
+@article{gronbech2020scvae,
+  title={sc{VAE}: Variational auto-encoders for single-cell gene expression data},
+  author={Gr{\o}nbech, Christopher Heje and Vording, Maximillian Fornitz and Timshel, Pascal N and S{\o}nderby, Casper Kaae and Pers, Tune H and Winther, Ole},
+  journal={Bioinformatics},
+  volume={36},
+  number={16},
+  pages={4415--4422},
+  year={2020},
+  publisher={Oxford University Press}
+}
+
+@article{cao2020searching,
+  title={Searching large-scale {scRNA}-seq databases via unbiased cell embedding with {Cell BLAST}},
+  author={Cao, Zhi-Jie and Wei, Lin and Lu, Shen and Yang, De-Chang and Gao, Ge},
+  journal={Nature Communications},
+  volume={11},
+  pages={3458},
+  year={2020},
+  publisher={Nature Publishing Group}
+}
+
+@article{xiong2022online,
+  title={Online single-cell data integration through projecting heterogeneous datasets into a common cell-embedding space},
+  author={Xiong, Lei and Tian, Kang and Li, Yuzhe and Ning, Weixi and Gao, Xin and Zhang, Qiangfeng Cliff},
+  journal={Nature Communications},
+  volume={13},
+  pages={6118},
+  year={2022},
+  publisher={Nature Publishing Group}
+}
+
+% --- Dirichlet process and Bayesian nonparametrics ---
+
+@article{ferguson1973bayesian,
+  title={A {B}ayesian analysis of some nonparametric problems},
+  author={Ferguson, Thomas S},
+  journal={The Annals of Statistics},
+  volume={1},
+  number={2},
+  pages={209--230},
+  year={1973},
+  publisher={Institute of Mathematical Statistics}
+}
+
+@article{neal2000markov,
+  title={Markov chain sampling methods for {D}irichlet process mixture models},
+  author={Neal, Radford M},
+  journal={Journal of Computational and Graphical Statistics},
+  volume={9},
+  number={2},
+  pages={249--265},
+  year={2000},
+  publisher={Taylor \& Francis}
+}
+
+@article{blei2006variational,
+  title={Variational inference for {D}irichlet process mixtures},
+  author={Blei, David M and Jordan, Michael I},
+  journal={Bayesian Analysis},
+  volume={1},
+  number={1},
+  pages={121--143},
+  year={2006},
+  publisher={International Society for Bayesian Analysis}
+}
+
+@book{bishop2006pattern,
+  title={Pattern Recognition and Machine Learning},
+  author={Bishop, Christopher M},
+  year={2006},
+  publisher={Springer}
+}
+
+% --- Flow matching and optimal transport ---
+
+@inproceedings{lipman2023flow,
+  title={Flow Matching for Generative Modeling},
+  author={Lipman, Yaron and Chen, Ricky T Q and Ben-Hamu, Heli and Nickel, Maximilian and Le, Matt},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2023}
+}
+
+@article{tong2024improving,
+  title={Improving and Generalizing Flow-Based Generative Models with Minibatch Optimal Transport},
+  author={Tong, Alexander and Malkin, Nikolay and Huguet, Guillaume and Zhang, Yanlei and Rector-Brooks, Jared and Fatras, Kilian and Wolf, Guy and Bengio, Yoshua},
+  journal={Transactions on Machine Learning Research},
+  year={2024}
+}
+
+% --- Dimensionality reduction ---
+
+@article{mcinnes2018umap,
+  title={{UMAP}: Uniform Manifold Approximation and Projection for Dimension Reduction},
+  author={McInnes, Leland and Healy, John and Melville, James},
+  journal={arXiv preprint arXiv:1802.03426},
+  year={2018}
+}
+
+@article{vandermaaten2008visualizing,
+  title={Visualizing Data using {t-SNE}},
+  author={van der Maaten, Laurens and Hinton, Geoffrey},
+  journal={Journal of Machine Learning Research},
+  volume={9},
+  pages={2579--2605},
+  year={2008}
+}
+
+% --- Clustering evaluation metrics ---
+
+@article{rousseeuw1987silhouettes,
+  title={Silhouettes: A Graphical Aid to the Interpretation and Validation of Cluster Analysis},
+  author={Rousseeuw, Peter J},
+  journal={Journal of Computational and Applied Mathematics},
+  volume={20},
+  pages={53--65},
+  year={1987},
+  publisher={Elsevier}
+}
+
+@article{davies1979cluster,
+  title={A Cluster Separation Measure},
+  author={Davies, David L and Bouldin, Donald W},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume={PAMI-1},
+  number={2},
+  pages={224--227},
+  year={1979},
+  publisher={IEEE}
+}
+
+@article{hubert1985comparing,
+  title={Comparing Partitions},
+  author={Hubert, Lawrence and Arabie, Phipps},
+  journal={Journal of Classification},
+  volume={2},
+  number={1},
+  pages={193--218},
+  year={1985},
+  publisher={Springer}
+}
+
+@article{strehl2002cluster,
+  title={Cluster Ensembles -- A Knowledge Reuse Framework for Combining Multiple Partitions},
+  author={Strehl, Alexander and Ghosh, Joydeep},
+  journal={Journal of Machine Learning Research},
+  volume={3},
+  pages={583--617},
+  year={2002}
+}
+
+@article{calinski1974dendrite,
+  title={A Dendrite Method for Cluster Analysis},
+  author={Cali{\'n}ski, Tadeusz and Harabasz, Jerzy},
+  journal={Communications in Statistics -- Theory and Methods},
+  volume={3},
+  number={1},
+  pages={1--27},
+  year={1974},
+  publisher={Taylor \& Francis}
+}
+
+% --- Statistical tests ---
+
+@article{wilcoxon1945individual,
+  title={Individual Comparisons by Ranking Methods},
+  author={Wilcoxon, Frank},
+  journal={Biometrics Bulletin},
+  volume={1},
+  number={6},
+  pages={80--83},
+  year={1945}
+}
+
+@article{cliff1993dominance,
+  title={Dominance Statistics: Ordinal Analyses to Answer Ordinal Questions},
+  author={Cliff, Norman},
+  journal={Psychological Bulletin},
+  volume={114},
+  number={3},
+  pages={494--509},
+  year={1993},
+  publisher={American Psychological Association}
+}
+
+% --- Gene Ontology ---
+
+@article{ashburner2000gene,
+  title={Gene {O}ntology: Tool for the Unification of Biology},
+  author={Ashburner, Michael and Ball, Catherine A and Blake, Judith A and Botstein, David and Butler, Heather and Cherry, J Michael and Davis, Allan P and Dolinski, Kara and Dwight, Selina S and Eppig, Janan T and others},
+  journal={Nature Genetics},
+  volume={25},
+  number={1},
+  pages={25--29},
+  year={2000},
+  publisher={Nature Publishing Group}
+}
+
+% --- Bioinformatics tools ---
+
+@article{wolf2018scanpy,
+  title={{SCANPY}: Large-scale single-cell gene expression data analysis},
+  author={Wolf, F Alexander and Angerer, Philipp and Theis, Fabian J},
+  journal={Genome Biology},
+  volume={19},
+  pages={15},
+  year={2018},
+  publisher={BioMed Central}
+}

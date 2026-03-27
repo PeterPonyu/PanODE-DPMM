@@ -188,10 +188,11 @@ class DataSplitter:
         random_seed: int = 42,
         latent_dim: int = 10,
         adaptive_norm: bool = True,
-        verbose: bool = True):
+        verbose: bool = True,
+        skip_normalization: bool = False):
         """
         Initialize DataSplitter and process data.
-        
+
         Args:
             adata: AnnData object with count data
             layer: Layer name for raw counts (default: 'counts')
@@ -203,6 +204,9 @@ class DataSplitter:
             latent_dim: Number of clusters for pseudo-labels if no cell_type
             adaptive_norm: Whether to use adaptive normalization
             verbose: Whether to print processing details
+            skip_normalization: If True, skip library-size norm + log1p
+                (use when data was already normalized upstream, e.g. by
+                load_or_preprocess_adata).
         """
         self.train_size = train_size
         self.val_size = val_size
@@ -212,7 +216,8 @@ class DataSplitter:
         self.latent_dim = latent_dim
         self.adaptive_norm = adaptive_norm
         self.verbose = verbose
-        
+        self.skip_normalization = skip_normalization
+
         self._process_data(adata, layer)
     
     def _process_data(self, adata, layer: str):
@@ -222,10 +227,10 @@ class DataSplitter:
             X = adata.layers[layer]
         else:
             X = adata.X
-        
+
         X = X.toarray() if sp.issparse(X) else np.asarray(X)
         X_raw = X.astype(np.float32)
-        
+
         # Compute statistics
         stats = compute_dataset_stats(X)
         if self.verbose:
@@ -234,22 +239,33 @@ class DataSplitter:
             print(f"  Sparsity: {stats['sparsity']:.2%}, "
                   f"Lib size: {stats['lib_size_mean']:.0f}+/-{stats['lib_size_std']:.0f}, "
                   f"Max value: {stats['max_val']:.0f}")
-        
-        # Apply library size normalization before log transform (important for scRNA-seq!)
-        # This normalizes each cell to have the same total count (target_sum)
-        lib_sizes = X.sum(axis=1, keepdims=True)
-        lib_sizes = np.clip(lib_sizes, 1e-10, None)  # Avoid division by zero
-        target_sum = 1e4  # Standard target for scRNA-seq
-        X_libsize_norm = X * target_sum / lib_sizes
-        
-        # Log-transform (now properly normalized)
-        X_log = log_transform(X_libsize_norm)
-        
-        # Adaptive normalization (clipping/scaling)
-        if self.adaptive_norm:
-            X_norm = adaptive_normalize(X_log, stats, verbose=self.verbose)
+
+        if self.skip_normalization:
+            # Data already normalized upstream — use adata.X directly
+            X_pre = adata.X.toarray() if sp.issparse(adata.X) else np.asarray(adata.X)
+            X_pre = X_pre.astype(np.float32)
+            if self.verbose:
+                print("  Skipping normalization (already done upstream)")
+            # Still apply adaptive clipping for numerical safety
+            if self.adaptive_norm:
+                X_norm = adaptive_normalize(X_pre, stats, verbose=self.verbose)
+            else:
+                X_norm = np.clip(X_pre, -10, 10).astype(np.float32)
         else:
-            X_norm = np.clip(X_log, -10, 10).astype(np.float32)
+            # Apply library size normalization before log transform
+            lib_sizes = X.sum(axis=1, keepdims=True)
+            lib_sizes = np.clip(lib_sizes, 1e-10, None)
+            target_sum = 1e4
+            X_libsize_norm = X * target_sum / lib_sizes
+
+            # Log-transform
+            X_log = log_transform(X_libsize_norm)
+
+            # Adaptive normalization (clipping/scaling)
+            if self.adaptive_norm:
+                X_norm = adaptive_normalize(X_log, stats, verbose=self.verbose)
+            else:
+                X_norm = np.clip(X_log, -10, 10).astype(np.float32)
         
         # Validate
         validate_data(X_norm, raise_error=True)
