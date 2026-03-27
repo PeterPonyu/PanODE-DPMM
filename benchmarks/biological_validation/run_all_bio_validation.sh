@@ -4,12 +4,13 @@
 # Step 2: perturbation_analysis.py  → gene importance + GO enrichment
 # Step 3: compose_figures.py        → multi-panel composite
 
-set -e
+set -euo pipefail
 
-PYTHON="/home/zeyufu/miniconda3/envs/dl/bin/python"
-ROOT="/home/zeyufu/Desktop/PanODE-LAB"
-MODELS_DIR="$ROOT/benchmarks/benchmark_results/models"
-RESULTS_DIR="$ROOT/benchmarks/biological_validation/results"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PYTHON="${PANODE_PYTHON:-python}"
+MODELS_DIR="${PANODE_MODELS_DIR:-$ROOT/benchmarks/benchmark_results/models}"
+RESULTS_DIR="${PANODE_BIO_RESULTS_DIR:-$ROOT/benchmarks/biological_validation/results}"
 DATASET="setty"
 
 mkdir -p "$RESULTS_DIR"

@@ -32,4 +32,3 @@ class VanillaDecoderLayer(nn.Module):
 
     def forward(self, z):
         return z
-

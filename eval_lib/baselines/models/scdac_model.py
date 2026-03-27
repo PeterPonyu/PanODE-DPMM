@@ -85,7 +85,7 @@ class scDACEAutoEncoder(nn.Module):
 class scDACModel(BaseModel):
     """
     scDAC: Autoencoder with DPMM (Dirichlet Process Mixture Model) regularization
-    
+
     Features:
     - Two-phase training: warmup + DPMM-regularized
     - Periodic DPMM refitting on latent space
@@ -202,7 +202,7 @@ class scDACModel(BaseModel):
         **kwargs):
         """
         Custom fit with DPMM refitting
-        
+
         Training phases:
         1. Warmup: Train autoencoder without DPMM (first dpmm_warmup_ratio epochs)
         2. DPMM: Refit DPMM on latent space, train with DPMM loss
@@ -257,7 +257,7 @@ class scDACModel(BaseModel):
 def create_scdac_model(input_dim: int, latent_dim: int = 32, **kwargs) -> scDACModel:
     """
     Create scDAC model
-    
+
     Example:
         >>> model = create_scdac_model(2000, latent_dim=32, dpmm_warmup_ratio=0.6)
     """

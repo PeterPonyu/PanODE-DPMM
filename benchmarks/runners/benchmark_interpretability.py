@@ -63,17 +63,17 @@ def compute_component_coherence(adata, top_genes_per_component, top_n=20):
     X = adata.X
     if issparse(X):
         X = X.toarray()
-    
+
     gene_to_idx = {g: i for i, g in enumerate(adata.var_names)}
 
     comp_coherences = []
     comp_npmis = []
     n_cells = X.shape[0]
-    
+
     # For NPMI: binarize at 75th percentile (more selective than median for sparse data)
     gene_q75 = np.percentile(X, 75, axis=0)
     X_bin = (X > gene_q75).astype(float)
-    
+
     for comp_id, gene_list in top_genes_per_component.items():
         # gene_list may be [(gene_name, score), ...] tuples or plain strings
         raw = gene_list[:top_n]
@@ -83,9 +83,9 @@ def compute_component_coherence(adata, top_genes_per_component, top_n=20):
             comp_coherences.append(0.0)
             comp_npmis.append(0.0)
             continue
-        
+
         idxs = [gene_to_idx[g] for g in genes]
-        
+
         # Correlation-based coherence (on continuous expression)
         gene_expr = X[:, idxs]  # [cells, n_genes]
         # Pearson correlation via corrcoef
@@ -98,7 +98,7 @@ def compute_component_coherence(adata, top_genes_per_component, top_n=20):
         mask = np.triu(np.ones((n_g, n_g), dtype=bool), k=1)
         pairwise_corrs = corr_matrix[mask]
         comp_coherences.append(float(np.mean(pairwise_corrs)))
-        
+
         # NPMI on binarized data
         gene_vectors = X_bin[:, idxs]
         npmi_pairs = []
@@ -108,15 +108,15 @@ def compute_component_coherence(adata, top_genes_per_component, top_n=20):
                 p_i = gene_vectors[:, i].sum() / n_cells
                 p_j = gene_vectors[:, j].sum() / n_cells
                 p_ij = ((gene_vectors[:, i] * gene_vectors[:, j]).sum()) / n_cells
-                
+
                 if p_ij < eps or p_i < eps or p_j < eps:
                     npmi_pairs.append(0.0)
                     continue
-                
+
                 pmi = np.log(p_ij / (p_i * p_j + eps))
                 npmi = pmi / (-np.log(p_ij + eps))
                 npmi_pairs.append(npmi)
-        
+
         comp_npmis.append(np.mean(npmi_pairs) if npmi_pairs else 0.0)
 
     return {
@@ -131,27 +131,27 @@ def compute_component_coherence(adata, top_genes_per_component, top_n=20):
 
 def compute_gene_specificity(importance_matrix):
     """Compute entropy-based gene specificity.
-    
+
     For each gene, compute the entropy of its importance distribution
     across components. Lower entropy = gene is specific to fewer components.
-    
+
     Returns mean specificity (1 - normalized entropy).
     """
     # importance: [K, G] matrix
     K, G = importance_matrix.shape
-    
+
     # Normalize each gene's importance to a probability distribution
     abs_imp = np.abs(importance_matrix)
     col_sums = abs_imp.sum(axis=0, keepdims=True) + 1e-12
     probs = abs_imp / col_sums
-    
+
     # Compute entropy per gene
     entropies = -np.sum(probs * np.log(probs + 1e-12), axis=0)
     max_entropy = np.log(K)
-    
+
     # Specificity = 1 - normalized_entropy
     specificity = 1.0 - (entropies / max_entropy) if max_entropy > 0 else np.zeros(G)
-    
+
     return {
         "mean_specificity": float(np.mean(specificity)),
         "std_specificity": float(np.std(specificity)),
@@ -163,10 +163,10 @@ def compute_enrichment_breadth(model, data_loader, gene_names, device,
     """Fraction of latent components with significant GO enrichment."""
     importance, _ = compute_perturbation_importance(model, data_loader, device)
     top_genes = get_top_genes_per_component(importance, gene_names, top_n=top_n_genes)
-    
+
     n_components = len(top_genes)
     n_significant = 0
-    
+
     for comp_id, gene_list in top_genes.items():
         try:
             enr = run_enrichment(gene_list, organism=organism)
@@ -176,9 +176,9 @@ def compute_enrichment_breadth(model, data_loader, gene_names, device,
                     n_significant += 1
         except Exception:
             pass
-    
+
     breadth = n_significant / max(n_components, 1)
-    
+
     return {
         "enrichment_breadth": breadth,
         "n_significant": n_significant,
@@ -356,7 +356,7 @@ def main():
             aggfunc="mean")
         print(f"\n--- Mean Coherence by Model × Dataset ---")
         print(pivot.to_string())
-        
+
         pivot_spec = df.pivot_table(
             index="Dataset",
             columns="Model",

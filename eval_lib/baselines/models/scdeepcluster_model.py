@@ -86,12 +86,12 @@ class ClusteringLayer(nn.Module):
 class scDeepClusterModel(BaseModel):
     """
     scDeepCluster: ZINB autoencoder + DEC clustering
-    
+
     Training phases:
     1. Pretrain: AE with ZINB loss only
     2. Init: KMeans on latent space
     3. Finetune: Joint optimization (ZINB + clustering KL)
-    
+
     Batch format: (x, raw_x, size_factors) or (x, size_factors)
     """
 
@@ -287,7 +287,7 @@ class scDeepClusterModel(BaseModel):
 def create_scdeepcluster_model(input_dim: int, latent_dim: int = 32, n_clusters: int = 10, **kwargs) -> scDeepClusterModel:
     """
     Create scDeepCluster model
-    
+
     Example:
         >>> model = create_scdeepcluster_model(2000, latent_dim=32, n_clusters=10)
     """

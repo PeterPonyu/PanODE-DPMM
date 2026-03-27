@@ -29,11 +29,11 @@ from typing import Optional, Dict, Any
 def is_raw_counts(X, threshold: float = 0.5) -> bool:
     """
     Check if data contains raw integer counts.
-    
+
     Args:
         X: Input data matrix (dense or sparse)
         threshold: Fraction of values that must be integer-like
-        
+
     Returns:
         True if data appears to be raw counts, False otherwise
     """
@@ -44,18 +44,18 @@ def is_raw_counts(X, threshold: float = 0.5) -> bool:
         sample_data = flat_data[np.random.choice(
             len(flat_data), min(10000, len(flat_data)), replace=False
         )]
-    
+
     sample_data = sample_data[sample_data > 0]
     if len(sample_data) == 0:
         return False
-    
+
     # Check for normalized data (values between 0 and 1)
     if np.mean((sample_data > 0) & (sample_data < 1)) > 0.1:
         return False
     # Check for negative values
     if np.any(sample_data < 0):
         return False
-    
+
     # Check if values are integer-like
     integer_like = np.abs(sample_data - np.round(sample_data)) < 1e-6
     return np.mean(integer_like) >= threshold
@@ -64,10 +64,10 @@ def is_raw_counts(X, threshold: float = 0.5) -> bool:
 def compute_dataset_stats(X) -> Dict[str, float]:
     """
     Compute statistics for adaptive normalization.
-    
+
     Args:
         X: Input data matrix (dense or sparse)
-        
+
     Returns:
         Dictionary with sparsity, lib_size_mean, lib_size_std, max_val
     """
@@ -83,12 +83,12 @@ def compute_dataset_stats(X) -> Dict[str, float]:
 def adaptive_normalize(X_log, stats: Dict[str, float], verbose: bool = True) -> np.ndarray:
     """
     Apply adaptive normalization based on dataset characteristics.
-    
+
     Args:
         X_log: Log-transformed data matrix
         stats: Dataset statistics from compute_dataset_stats()
         verbose: Whether to print normalization details
-        
+
     Returns:
         Normalized data matrix as float32
     """
@@ -117,11 +117,11 @@ def adaptive_normalize(X_log, stats: Dict[str, float], verbose: bool = True) -> 
 def log_transform(X, offset: float = 1.0) -> np.ndarray:
     """
     Apply log1p transformation.
-    
+
     Args:
         X: Input data matrix
         offset: Offset for log transform (default: 1.0 for log1p)
-        
+
     Returns:
         Log-transformed data
     """
@@ -131,20 +131,20 @@ def log_transform(X, offset: float = 1.0) -> np.ndarray:
 def validate_data(X_norm: np.ndarray, raise_error: bool = True) -> bool:
     """
     Validate normalized data for NaN and Inf values.
-    
+
     Args:
         X_norm: Normalized data matrix
         raise_error: Whether to raise ValueError on invalid data
-        
+
     Returns:
         True if data is valid
-        
+
     Raises:
         ValueError: If data contains NaN or Inf values and raise_error=True
     """
     has_nan = np.isnan(X_norm).any()
     has_inf = np.isinf(X_norm).any()
-    
+
     if has_nan or has_inf:
         if raise_error:
             raise ValueError(f"Invalid values in data: NaN={has_nan}, Inf={has_inf}")
@@ -159,14 +159,14 @@ def validate_data(X_norm: np.ndarray, raise_error: bool = True) -> bool:
 class DataSplitter:
     """
     Standalone data splitter for single-cell data.
-    
+
     Handles:
     - Raw count extraction and validation
     - Adaptive log-normalization
     - Train/val/test splitting
     - DataLoader creation
     - Label encoding
-    
+
     Example:
         >>> import scanpy as sc
         >>> adata = sc.read_h5ad('data.h5ad')
@@ -176,7 +176,7 @@ class DataSplitter:
         >>> # Access labels
         >>> labels = splitter.labels_test
     """
-    
+
     def __init__(
         self,
         adata,
@@ -219,7 +219,7 @@ class DataSplitter:
         self.skip_normalization = skip_normalization
 
         self._process_data(adata, layer)
-    
+
     def _process_data(self, adata, layer: str):
         """Process AnnData and create splits."""
         # Extract raw counts
@@ -266,24 +266,24 @@ class DataSplitter:
                 X_norm = adaptive_normalize(X_log, stats, verbose=self.verbose)
             else:
                 X_norm = np.clip(X_log, -10, 10).astype(np.float32)
-        
+
         # Validate
         validate_data(X_norm, raise_error=True)
-        
+
         self.n_obs, self.n_var = X.shape
-        
+
         # Store gene names for downstream analysis
         self.var_names = list(adata.var_names) if hasattr(adata, 'var_names') else [f"gene_{i}" for i in range(self.n_var)]
-        
+
         # Generate or extract labels
         self._extract_labels(adata, X_norm)
-        
+
         # Create splits
         self._create_splits(X_norm, X_raw)
-        
+
         # Create DataLoaders
         self._create_dataloaders()
-    
+
     def _extract_labels(self, adata, X_norm: np.ndarray):
         """Extract or generate cell type labels."""
         if 'cell_type' in adata.obs.columns:
@@ -308,19 +308,19 @@ class DataSplitter:
                     print(f"  Warning: KMeans failed ({e}), using random labels")
                 self.labels = np.random.randint(0, self.latent_dim, size=self.n_obs)
                 self.label_encoder = None
-    
+
     def _create_splits(self, X_norm: np.ndarray, X_raw: np.ndarray):
         """Create train/val/test splits."""
         np.random.seed(self.random_seed)
         indices = np.random.permutation(self.n_obs)
-        
+
         n_train = int(self.train_size * self.n_obs)
         n_val = int(self.val_size * self.n_obs)
-        
+
         self.train_idx = indices[:n_train]
         self.val_idx = indices[n_train:n_train + n_val]
         self.test_idx = indices[n_train + n_val:]
-        
+
         # Split data
         self.X_train_norm = X_norm[self.train_idx]
         self.X_train_raw = X_raw[self.train_idx]
@@ -328,26 +328,26 @@ class DataSplitter:
         self.X_val_raw = X_raw[self.val_idx]
         self.X_test_norm = X_norm[self.test_idx]
         self.X_test_raw = X_raw[self.test_idx]
-        
+
         # Keep full arrays for reference
         self.X_norm = X_norm
         self.X_raw = X_raw
-        
+
         # Split labels
         self.labels_train = self.labels[self.train_idx]
         self.labels_val = self.labels[self.val_idx]
         self.labels_test = self.labels[self.test_idx]
-        
+
         if self.verbose:
             print(f"\nData split:")
             print(f"  Train: {len(self.train_idx):,} cells ({len(self.train_idx)/self.n_obs*100:.1f}%)")
             print(f"  Val:   {len(self.val_idx):,} cells ({len(self.val_idx)/self.n_obs*100:.1f}%)")
             print(f"  Test:  {len(self.test_idx):,} cells ({len(self.test_idx)/self.n_obs*100:.1f}%)")
-    
+
     def _create_dataloaders(self):
         """Create PyTorch DataLoaders.
-        
-        IMPORTANT: 
+
+        IMPORTANT:
         - train_loader uses shuffle=True for stochastic training
         - val_loader and test_loader use shuffle=False to preserve order
           for correct label alignment during evaluation/visualization
@@ -358,11 +358,11 @@ class DataSplitter:
         X_val_raw_t = torch.FloatTensor(self.X_val_raw)
         X_test_norm_t = torch.FloatTensor(self.X_test_norm)
         X_test_raw_t = torch.FloatTensor(self.X_test_raw)
-        
+
         train_dataset = TensorDataset(X_train_norm_t, X_train_raw_t)
         val_dataset = TensorDataset(X_val_norm_t, X_val_raw_t)
         test_dataset = TensorDataset(X_test_norm_t, X_test_raw_t)
-        
+
         # Training: shuffle=True for stochastic gradient descent
         self.train_loader = DataLoader(
             train_dataset, batch_size=self.batch_size, shuffle=True, drop_last=True
@@ -375,17 +375,17 @@ class DataSplitter:
         self.test_loader = DataLoader(
             test_dataset, batch_size=self.batch_size, shuffle=False, drop_last=False
         )
-        
+
         if self.verbose:
             print(f"  Batch size: {self.batch_size}, Batches/epoch: {len(self.train_loader)}")
-    
+
     def get_all_loader(self, batch_size: Optional[int] = None) -> DataLoader:
         """
         Create a DataLoader for all data (train + val + test).
-        
+
         Args:
             batch_size: Batch size (default: same as splitter batch_size)
-            
+
         Returns:
             DataLoader for all data
         """

@@ -48,9 +48,9 @@ class Distribution(Distribution):
     def log_prob(self, z):
         target_mean, target_logvar = sqrt(-2 * self.c) * z[..., 0], z[..., 1]
         kl = euclidean_kl_div(
-            target_mean, 
-            target_logvar, 
-            self.alpha * (-2 * self.c).sqrt(), 
+            target_mean,
+            target_logvar,
+            self.alpha * (-2 * self.c).sqrt(),
             self.log_beta_square
         )
         return _log_prob(kl, self.log_gamma_square, self.log_beta_square, self.c)
@@ -78,4 +78,3 @@ class Distribution(Distribution):
             target_dist.gamma_b
         )
         return kl1 + kl2
-

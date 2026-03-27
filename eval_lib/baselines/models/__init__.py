@@ -8,7 +8,6 @@
 from .base_model import BaseModel
 
 from .cellblast_model import CellBLASTModel, create_cellblast_model
-from .gmvae_model import GMVAEModel, create_gmvae_model
 from .scalex_model import SCALEXModel, create_scalex_model
 from .scdiffusion_model import scDiffusionModel, create_scdiffusion_model
 from .sivae_model import siVAEModel, create_sivae_model
@@ -21,6 +20,13 @@ from .scgnn_model import scGNNModel, create_scgnn_model
 from .scgcc_model import scGCCModel, create_scgcc_model
 from .scsmd_model import scSMDModel, create_scsmd_model
 from .disentanglement_vae_model import DisentanglementVAEModel, create_disentanglement_vae_model
+
+# GM-VAE (requires geoopt)
+try:
+    from .gmvae_model import GMVAEModel, create_gmvae_model
+    _GEOOPT_AVAILABLE = True
+except ImportError:
+    _GEOOPT_AVAILABLE = False
 
 # scVI-family (requires scvi-tools)
 try:

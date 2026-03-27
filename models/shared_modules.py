@@ -1,5 +1,5 @@
 """
-Shared Modules for PanODE-LAB Models.
+Shared Modules for PanODE-DPMM models.
 
 This module contains reusable components shared across DPMM models:
 - Weight initialization
@@ -53,7 +53,7 @@ class MLP(nn.Module):
                 layers.append(nn.Dropout(dropout))
         self.net = nn.Sequential(*layers)
         self.apply(weight_init)
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
 
@@ -61,16 +61,16 @@ class MLP(nn.Module):
 class ResidualMLP(nn.Module):
     """MLP with residual connections (iAODE-style)."""
     def __init__(
-        self, 
-        input_dim: int, 
-        hidden_dim: int, 
-        output_dim: int, 
+        self,
+        input_dim: int,
+        hidden_dim: int,
+        output_dim: int,
         num_layers: int = 2,
         dropout: float = 0.1,
         use_batch_norm: bool = True):
         super().__init__()
         self.input_proj = nn.Linear(input_dim, hidden_dim)
-        
+
         self.layers = nn.ModuleList()
         self.norms = nn.ModuleList()
         for _ in range(num_layers):
@@ -79,15 +79,15 @@ class ResidualMLP(nn.Module):
                 self.norms.append(nn.BatchNorm1d(hidden_dim))
             else:
                 self.norms.append(nn.LayerNorm(hidden_dim))
-        
+
         self.output_proj = nn.Linear(hidden_dim, output_dim)
         self.dropout = nn.Dropout(dropout)
         self.activation = nn.GELU()
         self.apply(weight_init)
-    
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         h = self.activation(self.input_proj(x))
-        
+
         for layer, norm in zip(self.layers, self.norms):
             residual = h
             h = layer(h)
@@ -95,7 +95,7 @@ class ResidualMLP(nn.Module):
             h = self.activation(h)
             h = self.dropout(h)
             h = h + residual  # Residual connection
-        
+
         return self.output_proj(h)
 
 
@@ -106,7 +106,7 @@ class InformationBottleneck(nn.Module):
         hidden_dim = max(latent_dim // 2, bottleneck_dim)
         self.compress = MLP([latent_dim, hidden_dim, bottleneck_dim], dropout=dropout)
         self.expand = MLP([bottleneck_dim, hidden_dim, latent_dim], dropout=dropout)
-    
+
     def forward(self, z: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         z_bottleneck = self.compress(z)
         z_reconstructed = self.expand(z_bottleneck)
@@ -120,9 +120,9 @@ class InformationBottleneck(nn.Module):
 class MLPDecoder(nn.Module):
     """Standard MLP decoder for reconstruction."""
     def __init__(
-        self, 
-        latent_dim: int, 
-        hidden_dim: int, 
+        self,
+        latent_dim: int,
+        hidden_dim: int,
         output_dim: int,
         dropout: float = 0.1):
         super().__init__()
@@ -137,7 +137,7 @@ class MLPDecoder(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(hidden_dim, output_dim))
         self.apply(weight_init)
-    
+
     def forward(self, z: torch.Tensor) -> torch.Tensor:
         return self.net(z)
 
@@ -149,11 +149,11 @@ class MLPDecoder(nn.Module):
 class SubgraphDataset(Dataset):
     """
     Dataset for subgraph sampling from precomputed k-NN graph (CCVGAE-style).
-    
+
     This enables efficient training on large graphs by:
     1. Building the k-NN graph ONCE for the entire dataset
     2. Sampling smaller subgraphs during training
-    
+
     Much faster than computing k-NN graph per batch!
     """
     def __init__(
@@ -196,18 +196,18 @@ class SubgraphDataset(Dataset):
     def _create_data_object(self, selected_nodes: np.ndarray) -> Dict[str, torch.Tensor]:
         """Create data dict from selected nodes."""
         node_map = {old_idx: new_idx for new_idx, old_idx in enumerate(selected_nodes)}
-        
+
         # Filter edges within subgraph
         edge_mask = np.isin(self.edge_index[0], selected_nodes) & np.isin(self.edge_index[1], selected_nodes)
         subgraph_edges = self.edge_index[:, edge_mask]
         subgraph_weights = self.edge_weight[edge_mask]
-        
+
         # Remap edge indices
         new_edge_index = np.array([
             [node_map[i] for i in subgraph_edges[0]],
             [node_map[i] for i in subgraph_edges[1]]
         ]) if subgraph_edges.size > 0 else np.array([[], []], dtype=np.int64)
-        
+
         # Build adjacency matrix
         n_sub = len(selected_nodes)
         adj = np.zeros((n_sub, n_sub), dtype=np.float32)
@@ -215,7 +215,7 @@ class SubgraphDataset(Dataset):
             adj[new_edge_index[0], new_edge_index[1]] = subgraph_weights
         np.fill_diagonal(adj, 1.0)
         adj = np.maximum(adj, adj.T)
-        
+
         return {
             'x': torch.tensor(self.node_features[selected_nodes], dtype=torch.float, device=self.device),
             'adj': torch.tensor(adj, dtype=torch.float, device=self.device),
@@ -224,41 +224,41 @@ class SubgraphDataset(Dataset):
 
 
 def precompute_knn_graph(
-    x_full: np.ndarray, 
-    k: int = 10, 
+    x_full: np.ndarray,
+    k: int = 10,
     metric: str = 'euclidean',
     pca_dim: Optional[int] = None) -> Tuple[np.ndarray, np.ndarray]:
     """
     Precompute k-NN graph for entire dataset ONCE.
-    
+
     Args:
         x_full: Features [n_samples, n_features]
         k: Number of neighbors
         metric: Distance metric
         pca_dim: Optional PCA reduction before computing k-NN
-        
+
     Returns:
         edge_index: [2, n_edges] COO format
         edge_weight: [n_edges] edge weights
     """
     from sklearn.neighbors import NearestNeighbors
     from sklearn.decomposition import PCA
-    
+
     n_samples = x_full.shape[0]
     k_actual = min(k, n_samples - 1)
-    
+
     # Optional PCA reduction
     x_for_graph = x_full
     if pca_dim is not None and x_full.shape[1] > pca_dim:
         max_pca_dim = min(pca_dim, n_samples - 1, x_full.shape[1])
         if max_pca_dim > 0:
             x_for_graph = PCA(n_components=max_pca_dim, random_state=42).fit_transform(x_full)
-    
+
     # Compute k-NN
     nn = NearestNeighbors(n_neighbors=k_actual + 1, metric=metric, n_jobs=-1)
     nn.fit(x_for_graph)
     distances, indices = nn.kneighbors(x_for_graph)
-    
+
     # Build edge_index and edge_weight
     rows, cols, weights = [], [], []
     for i in range(n_samples):
@@ -267,10 +267,10 @@ def precompute_knn_graph(
                 rows.append(i)
                 cols.append(j)
                 weights.append(1.0)
-    
+
     edge_index = np.array([rows, cols], dtype=np.int64)
     edge_weight = np.array(weights, dtype=np.float32)
-    
+
     return edge_index, edge_weight
 
 

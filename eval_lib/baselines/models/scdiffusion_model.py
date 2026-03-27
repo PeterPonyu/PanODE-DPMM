@@ -210,7 +210,7 @@ class DenoisingUNet(nn.Module):
 class scDiffusionModel(BaseModel):
     """
     scDiffusion: DDPM for single-cell data generation
-    
+
     Features:
     - Forward diffusion: q(x_t | x_0) adds noise progressively
     - Reverse diffusion: p(x_{t-1} | x_t) denoises via UNet
@@ -411,7 +411,7 @@ class scDiffusionModel(BaseModel):
     def extract_latent(self, data_loader, device="cuda", timestep: Optional[int] = None, return_reconstructions: bool = False):
         """
         Extract latent representations and optionally reconstructions
-        
+
         Returns:
             dict with 'latent' [N, embedding_dim], optional 'reconstruction' and 'labels'
         """
@@ -457,7 +457,7 @@ def create_scdiffusion_model(
     **kwargs):
     """
     Create scDiffusion model
-    
+
     Example:
         >>> model = create_scdiffusion_model(2000, latent_dim=128, embedding_dim=10, n_classes=5)
     """

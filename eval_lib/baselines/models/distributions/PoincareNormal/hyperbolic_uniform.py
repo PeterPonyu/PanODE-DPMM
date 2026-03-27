@@ -12,7 +12,7 @@ class HypersphericalUniform(torch.distributions.Distribution):
     @property
     def dim(self):
         return self._dim
-    
+
     def __init__(self, dim, device='cpu', validate_args=None):
         super(HypersphericalUniform, self).__init__(torch.Size([dim]), validate_args=False)
         self._dim = dim
@@ -40,4 +40,3 @@ class HypersphericalUniform(torch.distributions.Distribution):
 
     def entropy(self):
         return self._log_surface_area()
-

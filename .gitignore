@@ -33,6 +33,7 @@ node_modules/
 model-arch-viewer/.next/
 model-arch-viewer/node_modules/
 model-arch-viewer/tsconfig.tsbuildinfo
+model-arch-viewer/README.md
 model-arch-viewer/public/statistical
 model-arch-viewer/public/subplots/*
 !model-arch-viewer/public/subplots/.gitkeep

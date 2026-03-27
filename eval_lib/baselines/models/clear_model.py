@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from typing import Dict, Optional, Tuple, Any, Callable
-import warnings 
+import warnings
 from .base_model import BaseModel
 
 
@@ -60,7 +60,7 @@ class CLEARMLPEncoder(nn.Module):
 class MoCoHead(nn.Module):
     """
     Momentum Contrast head: query encoder + momentum key encoder + queue
-    
+
     Note: No reconstruction; learns embeddings via InfoNCE loss
     """
     def __init__(
@@ -131,7 +131,7 @@ class MoCoHead(nn.Module):
 class CLEARModel(BaseModel):
     """
     CLEAR: MoCo-based contrastive learning for scRNA-seq
-    
+
     Supports batch formats:
     - Env loader: (x_norm, x_raw) -> views generated from x_norm
     - Contrastive loader: (view1, view2) -> used directly
@@ -167,7 +167,7 @@ class CLEARModel(BaseModel):
             scale_jitter: Scale jitter range
         """
         super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=hidden_dims or [], model_name=model_name)
-        
+
         self.moco = MoCoHead(
             input_dim=input_dim,
             dim=latent_dim,
@@ -228,7 +228,7 @@ class CLEARModel(BaseModel):
         """Extract embeddings (ignores return_reconstructions)"""
         if return_reconstructions:
             warnings.warn("CLEARModel has no decoder; return_reconstructions ignored")
-        
+
         self.eval()
         self.to(device)
 
@@ -238,14 +238,14 @@ class CLEARModel(BaseModel):
             x = x.to(device).float()
             z = self.encode(x)
             zs.append(z.detach().cpu().numpy())
-        
+
         return {"latent": np.concatenate(zs, axis=0)}
 
 
 def create_clear_model(input_dim: int, latent_dim: int = 128, **kwargs) -> CLEARModel:
     """
     Create CLEAR model
-    
+
     Examples:
         >>> model = create_clear_model(2000, latent_dim=128, queue_size=2048)
     """

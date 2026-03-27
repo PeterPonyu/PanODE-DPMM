@@ -53,7 +53,7 @@ class ARS():
         # Avoid under/overflow errors. the envelope and pdf are only
         # proportional to the true pdf, so can choose any constant of proportionality.
         self.offset = self.h.max(-1)[0].view(-1, 1)
-        self.h = self.h - self.offset 
+        self.h = self.h - self.offset
 
         # Derivative at first point in xi must be > 0
         # Derivative at last point in xi must be < 0
@@ -108,7 +108,7 @@ class ARS():
 
         self.z = torch.zeros(self.B, self.K + 1).to(self.device)
         self.z[:, 0] = self.lb; self.z[:, self.K] = self.ub
-        self.z[:, 1:self.K] = (diff(self.h[:, :self.K]) - diff(self.x[:, :self.K] * self.hprime[:, :self.K])) / -diff(self.hprime[:, :self.K]) 
+        self.z[:, 1:self.K] = (diff(self.h[:, :self.K]) - diff(self.x[:, :self.K] * self.hprime[:, :self.K])) / -diff(self.hprime[:, :self.K])
         idx = [0]+list(range(self.K))
         self.u = self.h[:, idx] + self.hprime[:, idx] * (self.z-self.x[:, idx])
 
@@ -126,8 +126,7 @@ class ARS():
         i = (self.cs/self.cu.unsqueeze(-1)).unsqueeze(-1) <= u.unsqueeze(1).expand(*self.cs.shape, *shape)
         idx = i.sum(1) - 1
 
-        xt = self.x.gather(1, idx) + (-self.h.gather(1, idx) + torch.log(self.hprime.gather(1, idx)*(self.cu.unsqueeze(-1)*u - self.cs.gather(1, idx)) + 
+        xt = self.x.gather(1, idx) + (-self.h.gather(1, idx) + torch.log(self.hprime.gather(1, idx)*(self.cu.unsqueeze(-1)*u - self.cs.gather(1, idx)) +
         torch.exp(self.u.gather(1, idx)))) / self.hprime.gather(1, idx)
 
         return xt, idx
-

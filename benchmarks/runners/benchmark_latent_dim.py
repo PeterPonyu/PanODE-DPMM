@@ -29,44 +29,44 @@ def main():
 
     set_global_seed(args.seed)
     device = torch.device(BASE_CONFIG.device)
-    
+
     out_dirs = {
         "csv": result_subdir("latent_dim", "csv"),
         "cache": CACHE_DIR,
     }
     ensure_dirs(*out_dirs.values())
     results = []
-    
+
     for ds_key in args.datasets:
         ds_info = DATASET_REGISTRY[ds_key]
-        
+
         for latent_dim in args.latent_dims:
             print(f"\n=== Latent Dim Test: {ds_key} with d={latent_dim} ===")
-            
+
             # Load data
             adata = load_or_preprocess_adata(
                 ds_info["path"], max_cells=BASE_CONFIG.max_cells, hvg_top_genes=BASE_CONFIG.hvg_top_genes,
                 seed=args.seed, cache_dir=str(out_dirs["cache"]), use_cache=True
             )
             adata = standardize_labels(adata, ds_info["label_key"])
-            
+
             splitter = DataSplitter(
                 adata=adata, layer="counts",
                 train_size=0.7, val_size=0.15, test_size=0.15,
                 batch_size=BASE_CONFIG.batch_size, latent_dim=latent_dim
             )
-            
+
             for model_name in args.models:
                 print(f"  Model: {model_name}")
                 from benchmarks.model_registry import MODELS
                 model_info = MODELS[model_name]
-                
+
                 start_time = time.time()
-                
+
                 # Override latent_dim in params
                 params = model_info["params"].copy()
                 params["latent_dim"] = latent_dim
-                
+
                 res = train_and_evaluate(
                     name=model_name,
                     model_cls=model_info["class"],
@@ -77,25 +77,25 @@ def main():
                     epochs=BASE_CONFIG.epochs,
                     data_type=ds_info["data_type"]
                 )
-                
+
                 end_time = time.time()
                 train_time = end_time - start_time
-                
+
                 res["Dataset"] = ds_key
                 res["LatentDim"] = latent_dim
                 res["Model"] = model_name
                 res["TrainTime"] = train_time
                 res["Score"] = (res.get("NMI", 0) + res.get("ARI", 0) + res.get("ASW", 0)) / 3
-                
+
                 # Remove large objects
                 res.pop("latent", None)
                 res.pop("history", None)
                 res.pop("model_obj", None)
-                
+
                 results.append(res)
-                
+
                 torch.cuda.empty_cache()
-                
+
     df = pd.DataFrame(results)
     csv_path = out_dirs["csv"] / f"latent_dim_seed{args.seed}.csv"
     df.to_csv(csv_path, index=False)

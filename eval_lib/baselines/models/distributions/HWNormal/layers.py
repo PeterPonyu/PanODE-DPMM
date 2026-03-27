@@ -41,4 +41,3 @@ class VanillaDecoderLayer(nn.Module):
         z = self.manifold.logmap0(z)[..., 1:]
         z = z.reshape(*z.shape[:-2], -1)
         return z
-

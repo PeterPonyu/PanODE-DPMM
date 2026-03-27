@@ -68,4 +68,3 @@ class Distribution():
             target_dist.log_gamma_b
         )
         return kl1 + kl2
-

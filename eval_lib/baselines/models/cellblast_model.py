@@ -2,7 +2,7 @@
 Cell BLAST的PyTorch实现
 基于DIRECTi的单细胞注释模型
 
-Reference: Cao et al. (2020) Searching large-scale scRNA-seq databases via 
+Reference: Cao et al. (2020) Searching large-scale scRNA-seq databases via
 unbiased cell embedding with Cell BLAST. Nature Communications.
 """
 import torch
@@ -15,13 +15,13 @@ from .base_model import BaseModel
 
 class Encoder(nn.Module):
     """DIRECTi编码器，使用ELU激活函数"""
-    def __init__(self, input_dim: int, hidden_dims: list, latent_dim: int, 
+    def __init__(self, input_dim: int, hidden_dims: list, latent_dim: int,
                  dropout: float = 0.0, use_bn: bool = True):
         super().__init__()
-        
+
         self.layers = nn.ModuleList()
         prev_dim = input_dim
-        
+
         for hidden_dim in hidden_dims:
             layer_modules = [nn.Linear(prev_dim, hidden_dim)]
             if use_bn:
@@ -29,13 +29,13 @@ class Encoder(nn.Module):
             layer_modules.append(nn.ELU())
             if dropout > 0:
                 layer_modules.append(nn.Dropout(dropout))
-            
+
             self.layers.append(nn.Sequential(*layer_modules))
             prev_dim = hidden_dim
-        
+
         self.fc_mu = nn.Linear(prev_dim, latent_dim)
         self.fc_logvar = nn.Linear(prev_dim, latent_dim)
-    
+
     def forward(self, x):
         """返回 (mu, logvar)"""
         h = x
@@ -50,12 +50,12 @@ class Decoder(nn.Module):
                  dropout: float = 0.0, use_bn: bool = True,
                  output_distribution: str = 'zinb'):
         super().__init__()
-        
+
         self.output_distribution = output_distribution
-        
+
         self.layers = nn.ModuleList()
         prev_dim = latent_dim
-        
+
         for hidden_dim in reversed(hidden_dims):
             layer_modules = [nn.Linear(prev_dim, hidden_dim)]
             if use_bn:
@@ -63,10 +63,10 @@ class Decoder(nn.Module):
             layer_modules.append(nn.ELU())
             if dropout > 0:
                 layer_modules.append(nn.Dropout(dropout))
-            
+
             self.layers.append(nn.Sequential(*layer_modules))
             prev_dim = hidden_dim
-        
+
         if output_distribution == 'zinb':
             self.mean_decoder = nn.Sequential(nn.Linear(prev_dim, output_dim), nn.Softmax(dim=-1))
             self.disp_decoder = nn.Sequential(nn.Linear(prev_dim, output_dim), nn.Softplus())
@@ -76,13 +76,13 @@ class Decoder(nn.Module):
             self.disp_decoder = nn.Sequential(nn.Linear(prev_dim, output_dim), nn.Softplus())
         else:
             self.mean_decoder = nn.Linear(prev_dim, output_dim)
-    
+
     def forward(self, z):
         """返回分布参数字典"""
         h = z
         for layer in self.layers:
             h = layer(h)
-        
+
         if self.output_distribution == 'zinb':
             return {
                 'mean': self.mean_decoder(h),
@@ -110,7 +110,7 @@ class BatchDiscriminator(nn.Module):
             nn.Dropout(0.1),
             nn.Linear(hidden_dim, n_batches)
         )
-    
+
     def forward(self, z):
         return self.discriminator(z)
 
@@ -118,14 +118,14 @@ class BatchDiscriminator(nn.Module):
 class CellBLASTModel(BaseModel):
     """
     Cell BLAST完整实现：ZINB/NB重构 + 对抗性批次校正 + 概率潜在空间
-    
+
     Features:
     - ZINB/NB reconstruction for count data
     - Adversarial batch correction
     - Probabilistic latent space (VAE)
     - ELU activation
     """
-    
+
     def __init__(self,
                  input_dim: int,
                  latent_dim: int = 10,
@@ -151,24 +151,24 @@ class CellBLASTModel(BaseModel):
         """
         if hidden_dims is None:
             hidden_dims = [512, 256, 128]
-        
+
         super().__init__(input_dim, latent_dim, hidden_dims, model_name)
-        
+
         self.dropout = dropout
         self.use_bn = use_bn
         self.output_distribution = output_distribution
         self.use_batch_correction = use_batch_correction
         self.n_batches = n_batches
         self.adversarial_weight = adversarial_weight
-        
+
         self.encoder_net = Encoder(input_dim, hidden_dims, latent_dim, dropout, use_bn)
         self.decoder_net = Decoder(latent_dim, hidden_dims, input_dim, dropout, use_bn, output_distribution)
-        
+
         if use_batch_correction and n_batches > 1:
             self.batch_discriminator = BatchDiscriminator(latent_dim, n_batches)
         else:
             self.batch_discriminator = None
-    
+
     def _prepare_batch(self, batch_data, device):
         """处理批次数据，支持 (x_norm, x_raw) 和可选的 batch_id"""
         if isinstance(batch_data, (list, tuple)):
@@ -194,7 +194,7 @@ class CellBLASTModel(BaseModel):
         if self.use_batch_correction:
             metadata["batch_id"] = torch.zeros(x.size(0), dtype=torch.long, device=device)
         return x, metadata
-    
+
     def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
         """重参数化技巧"""
         if self.training:
@@ -202,22 +202,22 @@ class CellBLASTModel(BaseModel):
             eps = torch.randn_like(std)
             return mu + eps * std
         return mu
-    
+
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         """编码到潜在空间"""
         mu, logvar = self.encoder_net(x)
         return self.reparameterize(mu, logvar)
-    
+
     def decode(self, z: torch.Tensor):
         """从潜在空间解码"""
         decoder_output = self.decoder_net(z)
         return decoder_output['mean']
-    
-    def forward(self, x: torch.Tensor, batch_id: Optional[torch.Tensor] = None, 
+
+    def forward(self, x: torch.Tensor, batch_id: Optional[torch.Tensor] = None,
                 x_raw: Optional[torch.Tensor] = None, **kwargs):
         """
         前向传播
-        
+
         Args:
             x: x_norm (用于编码器)
             x_raw: 原始counts (用于library size和似然计算)
@@ -243,7 +243,7 @@ class CellBLASTModel(BaseModel):
         }
         output.update(decoder_output)
         return output
-    
+
     def _zinb_loss(self, x: torch.Tensor, mean: torch.Tensor,
                    disp: torch.Tensor, dropout_logit: torch.Tensor,
                    library_size: torch.Tensor) -> torch.Tensor:
@@ -251,33 +251,33 @@ class CellBLASTModel(BaseModel):
         eps = 1e-10
         mean_scaled = mean * library_size
         pi = torch.sigmoid(dropout_logit)
-        
+
         t1 = torch.lgamma(disp + eps) + torch.lgamma(x + 1.0) - torch.lgamma(x + disp + eps)
         t2 = (disp + x) * torch.log(1.0 + (mean_scaled / (disp + eps))) + \
              (x * (torch.log(disp + eps) - torch.log(mean_scaled + eps)))
         nb_log_likelihood = -(t1 + t2)
-        
+
         zero_nb = torch.pow(disp / (disp + mean_scaled + eps), disp)
         zero_case_log_prob = torch.log(pi + (1.0 - pi) * zero_nb + eps)
         non_zero_case_log_prob = torch.log(1.0 - pi + eps) + nb_log_likelihood
-        
+
         loss = torch.where(x < 1e-8, -zero_case_log_prob, -non_zero_case_log_prob)
         return loss.mean()
-    
+
     def _nb_loss(self, x: torch.Tensor, mean: torch.Tensor,
                  disp: torch.Tensor, library_size: torch.Tensor) -> torch.Tensor:
         """Negative Binomial loss"""
         eps = 1e-10
         mean_scaled = mean * library_size
-        
+
         t1 = torch.lgamma(disp + eps) + torch.lgamma(x + 1.0) - torch.lgamma(x + disp + eps)
         t2 = (disp + x) * torch.log(1.0 + (mean_scaled / (disp + eps))) + \
              (x * (torch.log(disp + eps) - torch.log(mean_scaled + eps)))
-        
+
         return (t1 + t2).mean()
-    
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], 
-                    beta: float = 1.0, batch_id: Optional[torch.Tensor] = None, 
+
+    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
+                    beta: float = 1.0, batch_id: Optional[torch.Tensor] = None,
                     x_raw: Optional[torch.Tensor] = None, **kwargs):
         """计算总损失：重构 + KL + 对抗性批次校正"""
         x_counts = x_raw if x_raw is not None else x
@@ -288,7 +288,7 @@ class CellBLASTModel(BaseModel):
         kl_loss = torch.clamp(kl_loss, min=0.0)
 
         if self.output_distribution == "zinb":
-            recon_loss = self._zinb_loss(x_counts, outputs["mean"], outputs["disp"], 
+            recon_loss = self._zinb_loss(x_counts, outputs["mean"], outputs["disp"],
                                         outputs["dropout_logit"], library_size)
         elif self.output_distribution == "nb":
             recon_loss = self._nb_loss(x_counts, outputs["mean"], outputs["disp"], library_size)
@@ -297,13 +297,13 @@ class CellBLASTModel(BaseModel):
 
         batch_disc_loss = torch.tensor(0.0, device=x.device)
         batch_adv_loss = torch.tensor(0.0, device=x.device)
-        
+
         if self.batch_discriminator is not None and batch_id is not None and outputs["batch_logits"] is not None:
             batch_disc_loss = F.cross_entropy(outputs["batch_logits"], batch_id)
             batch_adv_loss = -batch_disc_loss
 
         total_loss = recon_loss + beta * kl_loss + self.adversarial_weight * batch_adv_loss
-        
+
         return {
             "total_loss": total_loss,
             "recon_loss": recon_loss,
@@ -311,14 +311,14 @@ class CellBLASTModel(BaseModel):
             "batch_disc_loss": batch_disc_loss,
             "batch_adv_loss": batch_adv_loss,
         }
-    
+
     def compute_posterior_distance(self, z1: torch.Tensor, z2: torch.Tensor,
                                   mu1: torch.Tensor, mu2: torch.Tensor,
                                   logvar1: torch.Tensor, logvar2: torch.Tensor) -> torch.Tensor:
         """
         计算细胞间后验距离（用于Cell BLAST注释）
         使用KL散度: KL(q(z|x1) || q(z|x2))
-        
+
         Returns:
             [batch1, batch2] 成对KL散度矩阵
         """
@@ -326,22 +326,22 @@ class CellBLASTModel(BaseModel):
         mu2 = mu2.unsqueeze(0)
         logvar1 = logvar1.unsqueeze(1)
         logvar2 = logvar2.unsqueeze(0)
-        
+
         var1 = torch.exp(logvar1)
         var2 = torch.exp(logvar2)
-        
+
         kl = 0.5 * (
             logvar2 - logvar1 +
             (var1 + (mu1 - mu2).pow(2)) / (var2 + 1e-10) - 1
         )
-        
+
         return kl.sum(dim=-1)
 
 
 def create_cellblast_model(input_dim: int, latent_dim: int = 10, **kwargs):
     """
     创建Cell BLAST模型
-    
+
     Examples:
         >>> model = create_cellblast_model(2000, latent_dim=10, output_distribution='zinb')
         >>> model = create_cellblast_model(2000, use_batch_correction=True, n_batches=5)

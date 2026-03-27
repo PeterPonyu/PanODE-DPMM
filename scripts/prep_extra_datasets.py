@@ -23,17 +23,24 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import scanpy as sc
 
+# ── Dataset roots (portable; overridable via environment) ────────────────────
+DATASETS_ROOT = Path(os.environ.get(
+    "PANODE_DATASETS_ROOT",
+    str(Path(__file__).resolve().parent.parent / "data")))
+
 # ── Output directory for enriched h5ad files ─────────────────────────────────
 PREP_OUT = Path(os.environ.get(
-    "PREP_EXTRA_OUTDIR",
-    "/home/zeyufu/Desktop/datasets/extra_preprocessed"))
+    "PANODE_PREP_OUTDIR",
+    os.environ.get(
+        "PREP_EXTRA_OUTDIR",
+        str(DATASETS_ROOT / "extra_preprocessed"))))
 PREP_OUT.mkdir(parents=True, exist_ok=True)
 
 # ── Catalog of extra datasets with preprocessing config ──────────────────────
 EXTRA_CATALOG = {
     # ── Labeled developmental ─────────────────────────────────────────────────
     "irall": {
-        "src":         "/home/zeyufu/Desktop/datasets/IRALL.h5ad",
+        "src":         str(DATASETS_ROOT / "IRALL.h5ad"),
         "label_key":   "cell_type",      # 12 well-annotated classes
         "leiden_res":  None,             # No Leiden needed — labels exist
         "data_type":   "cluster",
@@ -43,7 +50,7 @@ EXTRA_CATALOG = {
         "note":        "Uses existing 'cell_type' annotation",
     },
     "wtko": {
-        "src":         "/home/zeyufu/Desktop/datasets/wtko0312.h5ad",
+        "src":         str(DATASETS_ROOT / "wtko0312.h5ad"),
         "label_key":   "leiden",          # Pre-computed leiden
         "leiden_res":  None,
         "data_type":   "cluster",
@@ -54,7 +61,7 @@ EXTRA_CATALOG = {
     },
     # ── Cancer datasets (raw, need Leiden) ───────────────────────────────────
     "tnbc_brain": {
-        "src":         "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE143423_tnbc_CancerBrainHm.h5ad",
+        "src":         str(DATASETS_ROOT / "CancerDatasets" / "GSE143423_tnbc_CancerBrainHm.h5ad"),
         "label_key":   "cell_type",
         "leiden_res":  0.4,
         "data_type":   "cluster",
@@ -64,7 +71,7 @@ EXTRA_CATALOG = {
         "note":        "Brain metastatic microenvironment from TNBC",
     },
     "lbm_brain": {
-        "src":         "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE143423_lbm_CancerBrainHm.h5ad",
+        "src":         str(DATASETS_ROOT / "CancerDatasets" / "GSE143423_lbm_CancerBrainHm.h5ad"),
         "label_key":   "cell_type",
         "leiden_res":  0.4,
         "data_type":   "cluster",
@@ -74,7 +81,7 @@ EXTRA_CATALOG = {
         "note":        "Brain metastatic microenvironment from lung cancer",
     },
     "hepatoblastoma": {
-        "src":         "/home/zeyufu/Desktop/datasets/CancerDatasets2/GSE283205_hepatoblastomaCancer.h5ad",
+        "src":         str(DATASETS_ROOT / "CancerDatasets2" / "GSE283205_hepatoblastomaCancer.h5ad"),
         "label_key":   "cell_type",
         "leiden_res":  0.5,
         "data_type":   "cluster",
@@ -84,7 +91,7 @@ EXTRA_CATALOG = {
         "note":        "Pediatric liver cancer tumor microenvironment",
     },
     "bc_ec": {
-        "src":         "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE155109_bcECHmCancer.h5ad",
+        "src":         str(DATASETS_ROOT / "CancerDatasets" / "GSE155109_bcECHmCancer.h5ad"),
         "label_key":   "cell_type",
         "leiden_res":  0.4,
         "data_type":   "cluster",
@@ -94,7 +101,7 @@ EXTRA_CATALOG = {
         "note":        "Tumor endothelial cell heterogeneity in breast cancer",
     },
     "bcc": {
-        "src":         "/home/zeyufu/Desktop/datasets/CancerDatasets/GSE123813_bccHmCancer.h5ad",
+        "src":         str(DATASETS_ROOT / "CancerDatasets" / "GSE123813_bccHmCancer.h5ad"),
         "label_key":   "cell_type",
         "leiden_res":  0.8,
         "data_type":   "cluster",

@@ -15,7 +15,6 @@ Each entry specifies:
 
 from .models import (
     create_cellblast_model,
-    create_gmvae_model,
     create_scalex_model,
     create_scdiffusion_model,
     create_sivae_model,
@@ -27,6 +26,13 @@ from .models import (
     create_scgcc_model,
     create_scsmd_model,
     create_disentanglement_vae_model)
+
+# GM-VAE (optional — requires geoopt)
+try:
+    from .models import create_gmvae_model
+    _GEOOPT_AVAILABLE = True
+except ImportError:
+    _GEOOPT_AVAILABLE = False
 
 # scVI-family (optional — requires scvi-tools)
 try:
@@ -59,71 +65,6 @@ EXTERNAL_MODELS = {
             "verbose_every": 50,
         },
         "notes": "VAE with adversarial batch correction (batch correction disabled)",
-    },
-    "GMVAE": {
-        "factory": create_gmvae_model,
-        "params": {
-            "latent_dim": 10,
-            "hidden_dims": [256, 128],
-            "distribution": "euclidean",
-            "loss_type": "MSE",
-        },
-        "fit_params": {
-            "epochs": 1000,
-            "lr": 1e-3,
-            "patience": 100,
-            "verbose_every": 50,
-        },
-        "notes": "Geometric Manifold VAE (Euclidean mode)",
-    },
-    "GMVAE-Poincare": {
-        "factory": create_gmvae_model,
-        "params": {
-            "latent_dim": 10,
-            "hidden_dims": [256, 128],
-            "distribution": "poincare",
-            "loss_type": "MSE",
-        },
-        "fit_params": {
-            "epochs": 1000,
-            "lr": 1e-3,
-            "patience": 100,
-            "verbose_every": 50,
-        },
-        "notes": "GM-VAE with Poincaré ball latent (figure group: GM-VAE series)",
-    },
-    "GMVAE-PGM": {
-        "factory": create_gmvae_model,
-        "params": {
-            "latent_dim": 10,
-            "hidden_dims": [256, 128],
-            "distribution": "pgm",
-            "loss_type": "MSE",
-        },
-        "fit_params": {"epochs": 1000, "lr": 1e-3, "patience": 100, "verbose_every": 50},
-        "notes": "GM-VAE with PGM latent (figure group: GM-VAE series)",
-    },
-    "GMVAE-LearnablePGM": {
-        "factory": create_gmvae_model,
-        "params": {
-            "latent_dim": 10,
-            "hidden_dims": [256, 128],
-            "distribution": "learnable_pgm",
-            "loss_type": "MSE",
-        },
-        "fit_params": {"epochs": 1000, "lr": 1e-3, "patience": 100, "verbose_every": 50},
-        "notes": "GM-VAE with learnable PGM (figure group: GM-VAE series)",
-    },
-    "GMVAE-HW": {
-        "factory": create_gmvae_model,
-        "params": {
-            "latent_dim": 10,
-            "hidden_dims": [256, 128],
-            "distribution": "hw",
-            "loss_type": "MSE",
-        },
-        "fit_params": {"epochs": 1000, "lr": 1e-3, "patience": 100, "verbose_every": 50},
-        "notes": "GM-VAE with hyperbolic (HW) latent (figure group: GM-VAE series)",
     },
     "SCALEX": {
         "factory": create_scalex_model,
@@ -342,6 +283,78 @@ EXTERNAL_MODELS = {
         "notes": "Beta-VAE (beta=4) for stronger disentanglement (Higgins et al.)",
     },
 }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GM-VAE series (optional, requires geoopt)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+if _GEOOPT_AVAILABLE:
+    EXTERNAL_MODELS["GMVAE"] = {
+        "factory": create_gmvae_model,
+        "params": {
+            "latent_dim": 10,
+            "hidden_dims": [256, 128],
+            "distribution": "euclidean",
+            "loss_type": "MSE",
+        },
+        "fit_params": {
+            "epochs": 1000,
+            "lr": 1e-3,
+            "patience": 100,
+            "verbose_every": 50,
+        },
+        "notes": "Geometric Manifold VAE (Euclidean mode)",
+    }
+    EXTERNAL_MODELS["GMVAE-Poincare"] = {
+        "factory": create_gmvae_model,
+        "params": {
+            "latent_dim": 10,
+            "hidden_dims": [256, 128],
+            "distribution": "poincare",
+            "loss_type": "MSE",
+        },
+        "fit_params": {
+            "epochs": 1000,
+            "lr": 1e-3,
+            "patience": 100,
+            "verbose_every": 50,
+        },
+        "notes": "GM-VAE with Poincaré ball latent (figure group: GM-VAE series)",
+    }
+    EXTERNAL_MODELS["GMVAE-PGM"] = {
+        "factory": create_gmvae_model,
+        "params": {
+            "latent_dim": 10,
+            "hidden_dims": [256, 128],
+            "distribution": "pgm",
+            "loss_type": "MSE",
+        },
+        "fit_params": {"epochs": 1000, "lr": 1e-3, "patience": 100, "verbose_every": 50},
+        "notes": "GM-VAE with PGM latent (figure group: GM-VAE series)",
+    }
+    EXTERNAL_MODELS["GMVAE-LearnablePGM"] = {
+        "factory": create_gmvae_model,
+        "params": {
+            "latent_dim": 10,
+            "hidden_dims": [256, 128],
+            "distribution": "learnable_pgm",
+            "loss_type": "MSE",
+        },
+        "fit_params": {"epochs": 1000, "lr": 1e-3, "patience": 100, "verbose_every": 50},
+        "notes": "GM-VAE with learnable PGM (figure group: GM-VAE series)",
+    }
+    EXTERNAL_MODELS["GMVAE-HW"] = {
+        "factory": create_gmvae_model,
+        "params": {
+            "latent_dim": 10,
+            "hidden_dims": [256, 128],
+            "distribution": "hw",
+            "loss_type": "MSE",
+        },
+        "fit_params": {"epochs": 1000, "lr": 1e-3, "patience": 100, "verbose_every": 50},
+        "notes": "GM-VAE with hyperbolic (HW) latent (figure group: GM-VAE series)",
+    }
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

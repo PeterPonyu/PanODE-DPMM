@@ -87,13 +87,13 @@ class GCNVAE(nn.Module):
 class scGNNModel(BaseModel):
     """
     scGNN: Graph VAE for single-cell data
-    
+
     Features:
     - Automatic kNN graph construction from features
     - Graph convolution encoder
     - Inner product decoder for adjacency reconstruction
     - VAE loss: adjacency BCE + KL divergence
-    
+
     Note: decode() returns adjacency matrix, not gene expression
     """
 
@@ -177,7 +177,7 @@ class scGNNModel(BaseModel):
             "recon_loss": recon_loss,
             "kl_loss": kl_loss,
         }
-    
+
     @torch.no_grad()
     def extract_latent(self, data_loader, device: str = "cuda", return_reconstructions: bool = False):
         """Extract latent representations"""
@@ -199,7 +199,7 @@ class scGNNModel(BaseModel):
 def create_scgnn_model(input_dim: int, latent_dim: int = 16, **kwargs) -> scGNNModel:
     """
     Create scGNN model
-    
+
     Example:
         >>> model = create_scgnn_model(2000, latent_dim=16, k_neighbors=10)
     """

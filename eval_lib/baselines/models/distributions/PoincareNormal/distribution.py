@@ -45,7 +45,7 @@ class Distribution():
         shape = mean[None].expand([N, *mean.shape]).size()
         alpha = self.direction.sample(torch.Size([*shape[:-1]]))
         radius = self.radius.rsample(torch.Size([N]))
-    
+
         z = expmap_polar(self.manifold.c, mean[None], alpha, radius)
         z = z.reshape([N, *fixed_shape, -1])
         return z
@@ -53,4 +53,3 @@ class Distribution():
     def sample(self, N):
         with torch.no_grad():
             return self.rsample(N)
-

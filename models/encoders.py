@@ -56,13 +56,13 @@ class MLPEncoder(nn.Module):
         super().__init__()
         self.use_vae = use_vae
         self.var_eps = var_eps
-        
+
         if use_residual:
             self.encoder = ResidualMLP(input_dim, hidden_dim, hidden_dim, num_layers, dropout)
         else:
             layers = [input_dim] + [hidden_dim] * num_layers
             self.encoder = MLP(layers, dropout)
-        
+
         if use_vae:
             self.mu_head = nn.Linear(hidden_dim, output_dim)
             self.var_head = nn.Linear(hidden_dim, output_dim)
@@ -76,7 +76,7 @@ class MLPEncoder(nn.Module):
 
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
         h = self.encoder(x)
-        
+
         if self.use_vae:
             mu = self.mu_head(h)
             var = F.softplus(self.var_head(h)) + self.var_eps
@@ -96,12 +96,12 @@ class MLPEncoder(nn.Module):
 class MultiHeadProjectionEncoder(nn.Module):
     """
     Multi-Head Projection Transformer Encoder.
-    
+
     Architecture:
     1. K parallel projections: gene vector -> K x d_model tokens
     2. Transformer self-attention across K tokens
     3. Learnable aggregation -> latent space
-    
+
     This design prevents the single-token collapse problem.
     """
     def __init__(
@@ -123,7 +123,7 @@ class MultiHeadProjectionEncoder(nn.Module):
         self.num_tokens = num_tokens
         self.use_vae = use_vae
         self.var_eps = var_eps
-        
+
         # Multiple projection heads
         self.projection_heads = nn.ModuleList([
             nn.Sequential(
@@ -133,10 +133,10 @@ class MultiHeadProjectionEncoder(nn.Module):
                 nn.Dropout(dropout))
             for _ in range(num_tokens)
         ])
-        
+
         # Token type embeddings
         self.token_embeddings = nn.Parameter(torch.randn(1, num_tokens, d_model) * 0.02)
-        
+
         # Transformer encoder
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
@@ -146,11 +146,11 @@ class MultiHeadProjectionEncoder(nn.Module):
             activation='gelu',
             batch_first=True)
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
-        
+
         # Aggregation
         self.aggregation_query = nn.Parameter(torch.randn(1, 1, d_model) * 0.02)
         self.cross_attention = nn.MultiheadAttention(d_model, nhead, dropout=dropout, batch_first=True)
-        
+
         # Output
         self.final_norm = nn.LayerNorm(d_model)
         if use_vae:
@@ -163,23 +163,23 @@ class MultiHeadProjectionEncoder(nn.Module):
         # Re-apply after weight_init so the intended 0.5 is not overwritten
         if use_vae:
             nn.init.constant_(self.var_head.bias, 0.5)
-    
+
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
         batch_size = x.size(0)
-        
+
         # Create K tokens
         tokens = torch.stack([proj(x) for proj in self.projection_heads], dim=1)
         tokens = tokens + self.token_embeddings.expand(batch_size, -1, -1)
-        
+
         # Transform
         tokens = self.transformer(tokens)
-        
+
         # Aggregate
         query = self.aggregation_query.expand(batch_size, -1, -1)
         h, _ = self.cross_attention(query, tokens, tokens)
         h = h.squeeze(1)
         h = self.final_norm(h)
-        
+
         if self.use_vae:
             mu = self.mu_head(h)
             var = F.softplus(self.var_head(h)) + self.var_eps
@@ -199,7 +199,7 @@ class MultiHeadProjectionEncoder(nn.Module):
 class HybridMLPAttentionEncoder(nn.Module):
     """
     Hybrid MLP + Attention Encoder.
-    
+
     Architecture:
     1. MLP backbone produces base embedding
     2. Multi-head attention refines across batch
@@ -220,7 +220,7 @@ class HybridMLPAttentionEncoder(nn.Module):
         self.use_vae = use_vae
         self.var_eps = var_eps
         self.attention_weight = attention_weight
-        
+
         # MLP backbone
         self.mlp_encoder = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -231,11 +231,11 @@ class HybridMLPAttentionEncoder(nn.Module):
             nn.LayerNorm(hidden_dim),
             nn.GELU(),
             nn.Dropout(dropout))
-        
+
         # Attention refinement
         self.attention = nn.MultiheadAttention(hidden_dim, nhead, dropout=dropout, batch_first=True)
         self.attn_norm = nn.LayerNorm(hidden_dim)
-        
+
         # Output
         if use_vae:
             self.mu_head = nn.Linear(hidden_dim, output_dim)
@@ -247,17 +247,17 @@ class HybridMLPAttentionEncoder(nn.Module):
         # Re-apply after weight_init so the intended 0.5 is not overwritten
         if use_vae:
             nn.init.constant_(self.var_head.bias, 0.5)
-    
+
     def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
         h_mlp = self.mlp_encoder(x)
-        
+
         h_seq = h_mlp.unsqueeze(0)
         h_attn, _ = self.attention(h_seq, h_seq, h_seq)
         h_attn = h_attn.squeeze(0)
-        
+
         h = h_mlp + self.attention_weight * (h_attn - h_mlp)
         h = self.attn_norm(h)
-        
+
         if self.use_vae:
             mu = self.mu_head(h)
             var = F.softplus(self.var_head(h)) + self.var_eps

@@ -2,12 +2,13 @@
 # Run biological validation for ALL 12 datasets × prior-based models.
 # Addresses Reviewer Concern E3: "GO enrichment still limited to 3 datasets."
 #
-set -e
+set -euo pipefail
 
-PYTHON="/home/zeyufu/Desktop/.conda/bin/python"
-ROOT="/home/zeyufu/Desktop/PanODE-LAB"
-MODELS_DIR="$ROOT/benchmarks/benchmark_results/models"
-RESULTS_DIR="$ROOT/benchmarks/biological_validation/results"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PYTHON="${PANODE_PYTHON:-python}"
+MODELS_DIR="${PANODE_MODELS_DIR:-$ROOT/benchmarks/benchmark_results/models}"
+RESULTS_DIR="${PANODE_BIO_RESULTS_DIR:-$ROOT/benchmarks/biological_validation/results}"
 
 mkdir -p "$RESULTS_DIR" "$MODELS_DIR"
 

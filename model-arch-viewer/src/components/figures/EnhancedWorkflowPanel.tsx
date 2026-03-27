@@ -28,7 +28,7 @@ const Icons = {
       <circle cx="10" cy="14" r="3.5" fill="#6A9FD8" opacity="0.6" stroke="#4A7CBF" strokeWidth="0.7"/>
     </svg>
   ),
-  
+
   // Preprocessing funnel
   preprocess: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -36,7 +36,7 @@ const Icons = {
       <line x1="5" y1="7" x2="15" y2="7" stroke="#1D3557" strokeWidth="0.5"/>
     </svg>
   ),
-  
+
   // Neural network
   train: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -54,7 +54,7 @@ const Icons = {
       <line x1="13" y1="12" x2="15" y2="10" stroke="#E63946" strokeWidth="0.5" opacity="0.6"/>
     </svg>
   ),
-  
+
   // Checklist evaluation
   evaluate: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -67,7 +67,7 @@ const Icons = {
       <line x1="10" y1="12" x2="14" y2="12" stroke="#457B9D" strokeWidth="0.6"/>
     </svg>
   ),
-  
+
   // Compare/balance
   compare: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -77,7 +77,7 @@ const Icons = {
       <polygon points="8,4 12,4 10,6.5" fill="#457B9D" opacity="0.5"/>
     </svg>
   ),
-  
+
   // Hyperparameter sweep/dial
   sweep: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -87,7 +87,7 @@ const Icons = {
       <circle cx="7" cy="13" r="2.2" fill="#2A9D8F" stroke="#1D7874" strokeWidth="0.6"/>
     </svg>
   ),
-  
+
   // Metrics bar chart
   metrics: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -96,7 +96,7 @@ const Icons = {
       <rect x="13" y="9" width="3" height="9" rx="0.4" fill="#2A9D8F" stroke="#1D7874" strokeWidth="0.5"/>
     </svg>
   ),
-  
+
   // UMAP scatter
   umap: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -109,7 +109,7 @@ const Icons = {
       <circle cx="10" cy="10" r="1.2" fill="#2A9D8F" opacity="0.7"/>
     </svg>
   ),
-  
+
   // Scatter with hull
   scatter: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -121,7 +121,7 @@ const Icons = {
       <circle cx="15" cy="12" r="1.3" fill="#2A9D8F" opacity="0.8"/>
     </svg>
   ),
-  
+
   // Heatmap/gradient
   gradient: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -139,7 +139,7 @@ const Icons = {
       <rect x="15" y="12" width="2" height="4" fill="#A50F15"/>
     </svg>
   ),
-  
+
   // Latent space
   latent: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -152,7 +152,7 @@ const Icons = {
       <circle cx="11" cy="10" r="1.8" fill="#457B9D" opacity="0.5" stroke="#1D3557" strokeWidth="0.5"/>
     </svg>
   ),
-  
+
   // Model architecture
   model: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -163,7 +163,7 @@ const Icons = {
       <line x1="11" y1="8.5" x2="11" y2="11.5" stroke="#1D3557" strokeWidth="0.5"/>
     </svg>
   ),
-  
+
   // Ablation/split
   ablation: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -173,7 +173,7 @@ const Icons = {
       <text x="14.5" y="11.5" textAnchor="middle" fontSize="7" fill="#1f2937" fontWeight="bold">−</text>
     </svg>
   ),
-  
+
   // Time/evolution
   time: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -185,7 +185,7 @@ const Icons = {
       <polygon points="17,5 19,5 18,8" fill="#E63946" opacity="0.5"/>
     </svg>
   ),
-  
+
   // Multi-objective
   pareto: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -202,10 +202,10 @@ const Icons = {
 function Phase({ label, color, children, details }: { label: string, color: string, children: React.ReactNode, details?: string }) {
   return (
     <div style={{
-      display: "flex", 
+      display: "flex",
       flexDirection: "column",
-      border: `1px solid ${color}40`, 
-      backgroundColor: `${color}08`, 
+      border: `1px solid ${color}40`,
+      backgroundColor: `${color}08`,
       borderRadius: "4px",
       margin: "0 2px",
       padding: "3px 2px 2px 2px",
@@ -237,11 +237,11 @@ function Phase({ label, color, children, details }: { label: string, color: stri
       {/* Detailed Description Footer */}
       {details && (
         <div style={{
-           fontSize: "6px", 
-           color: CLR.textSub, 
-           marginTop: "3px", 
+           fontSize: "6px",
+           color: CLR.textSub,
+           marginTop: "3px",
            textAlign: "center",
-           borderTop: `0.5px solid ${color}30`, 
+           borderTop: `0.5px solid ${color}30`,
            paddingTop: "1.5px",
            lineHeight: "1.2",
            fontStyle: "italic",
@@ -257,9 +257,9 @@ function Phase({ label, color, children, details }: { label: string, color: stri
 // ─── Compact Step Component ──────────────────────────────────────────────────
 function Step({ icon, label, sub }: { icon: React.ReactNode; label: string; sub?: string }) {
   return (
-    <div style={{ 
-      flex: 1, 
-      minWidth: 0, 
+    <div style={{
+      flex: 1,
+      minWidth: 0,
       textAlign: "center",
       padding: "2px 3px", // Increased padding slightly
       display: "flex",
@@ -270,19 +270,19 @@ function Step({ icon, label, sub }: { icon: React.ReactNode; label: string; sub?
       <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.5px" }}>
         {icon}
       </div>
-      <div style={{ 
-        fontSize: "7.5px", 
-        fontWeight: "bold", 
-        color: CLR.text, 
+      <div style={{
+        fontSize: "7.5px",
+        fontWeight: "bold",
+        color: CLR.text,
         fontFamily: FONT,
         lineHeight: 1.1,
       }}>
         {label}
       </div>
       {sub && (
-        <div style={{ 
-          fontSize: "6px", 
-          color: CLR.textSub, 
+        <div style={{
+          fontSize: "6px",
+          color: CLR.textSub,
           fontFamily: FONT,
           lineHeight: 1.05,
           marginTop: "1px",

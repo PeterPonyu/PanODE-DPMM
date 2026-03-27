@@ -4,10 +4,14 @@ Centralizes dataset paths, label keys, and metadata so multiple benchmark
 entry scripts do not duplicate the same large registry block.
 """
 
+import os
 from pathlib import Path
 
 
-DATASETS_ROOT = Path("/home/zeyufu/Desktop/datasets")
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+DATASETS_ROOT = Path(
+    os.environ.get("PANODE_DATASETS_ROOT", str(_REPO_ROOT / "data"))
+)
 
 DATASET_REGISTRY = {
     "setty": {
@@ -145,7 +149,15 @@ FOUR_FOLDER_ADDITIONAL_REGISTRY = {
 
 
 # ── Extra / sample datasets (run after prep_extra_datasets.py) ───────────────
-EXTRA_DATASETS_ROOT = Path("/home/zeyufu/Desktop/datasets/extra_preprocessed")
+EXTRA_DATASETS_ROOT = Path(
+    os.environ.get(
+        "PANODE_PREP_OUTDIR",
+        os.environ.get(
+            "PREP_EXTRA_OUTDIR",
+            str(DATASETS_ROOT / "extra_preprocessed"),
+        ),
+    )
+)
 
 EXTRA_DATASET_REGISTRY = {
     # -- Labeled developmental / disease -----------------------------------

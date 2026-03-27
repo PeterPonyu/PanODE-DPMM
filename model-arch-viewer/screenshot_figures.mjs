@@ -20,12 +20,16 @@
 import { chromium } from "playwright";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
 const PORT = 3099;
-const BASE = `http://localhost:${PORT}`;
-const OUT_BASE = "/home/zeyufu/Desktop/PanODE-LAB/benchmarks/paper_figures";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const REPO_ROOT = path.resolve(__dirname, "..");
+const BASE = process.env.PANODE_VIEWER_BASE_URL ?? `http://localhost:${PORT}`;
+const OUT_BASE = process.env.PANODE_PAPER_FIGURES_DIR ?? path.join(REPO_ROOT, "benchmarks", "paper_figures");
 const DPR = 3;  // deviceScaleFactor for high-res output
 
 // Maximum output size at DPR=3 (17cm × 23cm at 288 DPI = 96×3)

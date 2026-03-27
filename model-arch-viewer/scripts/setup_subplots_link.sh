@@ -8,14 +8,14 @@
 #   model-arch-viewer/public/statistical/
 #   → benchmarks/paper_figures/statistical/
 #
-# Run from the PanODE-LAB root directory.
+# Figure assets are generated locally and intentionally not tracked.
 
 set -euo pipefail
 
 VIEWER_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ROOT="$(cd "$VIEWER_DIR/.." && pwd)"
 PUBLIC_DIR="$VIEWER_DIR/public"
-SUBPLOTS_BASE="$ROOT/benchmarks/paper_figures"
+SUBPLOTS_BASE="${PANODE_PAPER_FIGURES_DIR:-$ROOT/benchmarks/paper_figures}"
 
 echo "Setting up subplot symlinks..."
 echo "  Viewer dir: $VIEWER_DIR"

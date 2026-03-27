@@ -42,7 +42,7 @@ def compute_all(datasets=None, models=None, force=False):
         from benchmarks.biological_validation import load_data_with_genes
     except ImportError:
         print("  Cannot import load_data_with_genes. "
-              "Run from PanODE-LAB root.")
+              "Run from the repository root.")
         return
 
     try:

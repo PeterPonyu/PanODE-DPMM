@@ -1,8 +1,13 @@
 import { chromium } from "playwright";
+import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
-const BASE = "http://localhost:3099/figure1";
-const OUT = "/home/zeyufu/Desktop/PanODE-LAB/benchmarks/paper_figures";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const REPO_ROOT = path.resolve(__dirname, "..");
+const BASE = `${process.env.PANODE_VIEWER_BASE_URL ?? "http://localhost:3099"}/figure1`;
+const OUT = process.env.PANODE_PAPER_FIGURES_DIR ?? path.join(REPO_ROOT, "benchmarks", "paper_figures");
 
 for (const series of ["dpmm", "topic"]) {
   const browser = await chromium.launch();
@@ -12,6 +17,7 @@ for (const series of ["dpmm", "topic"]) {
 
   const el = await page.$("#figure1-root");
   if (el) {
+    fs.mkdirSync(path.join(OUT, series), { recursive: true });
     const outPath = path.join(OUT, series, `Fig1_arch_${series}.png`);
     await el.screenshot({ path: outPath, type: "png" });
     console.log(`Saved: ${outPath}`);

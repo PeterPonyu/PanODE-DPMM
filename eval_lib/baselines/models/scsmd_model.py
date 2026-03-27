@@ -99,7 +99,7 @@ class AutoEncoder(nn.Module):
             x = self.layer2(x)
             x = self.layer3(x)
             return (x.size(1), x.size(2), x.size(3))
-        
+
     def decode_latent(self, u: torch.Tensor) -> torch.Tensor:
         """Decode latent to image [B, 1, img_size, img_size]"""
         b = u.size(0)
@@ -116,8 +116,8 @@ class AutoEncoder(nn.Module):
             y = nn.functional.interpolate(
                 y, size=(self.img_size, self.img_size), mode="bilinear", align_corners=False
             )
-        return y       
-     
+        return y
+
     def _make_layer(self, block, planes, num_blocks, stride=1):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
@@ -145,7 +145,7 @@ class AutoEncoder(nn.Module):
         out = self.layer3(out)
         out = out.view(b, -1)
         u = self.fc_encode(out)
-        
+
         eps = 1e-6
         mean = (F.softplus(self.fc_mean(u)) + eps).clamp(max=1e6)
         disp = (F.softplus(self.fc_disp(u)) + eps).clamp(max=1e4)
@@ -175,7 +175,7 @@ class MutualNet(nn.Module):
 class scSMDModel(BaseModel):
     """
     scSMD: ResNet autoencoder with mutual information clustering
-    
+
     Features:
     - Reshapes 1D gene data [B, input_dim] → 2D images [B, 1, H, W]
     - ResNet encoder/decoder with bottleneck blocks
@@ -236,7 +236,7 @@ class scSMDModel(BaseModel):
         y = self.autoencoder.decode_latent(z)
         flat = y.view(y.size(0), -1)
         return flat[:, : self.input_dim]
-    
+
     def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
         """Forward pass"""
         x_img = self._preprocess(x)
@@ -377,7 +377,7 @@ class scSMDModel(BaseModel):
 def create_scsmd_model(input_dim: int, latent_dim: int = 10, n_clusters: int = 10, **kwargs) -> scSMDModel:
     """
     Create scSMD model
-    
+
     Example:
         >>> model = create_scsmd_model(2000, latent_dim=10, n_clusters=10, img_size=64)
     """

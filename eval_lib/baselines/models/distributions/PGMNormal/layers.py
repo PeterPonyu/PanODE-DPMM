@@ -30,7 +30,7 @@ class EncoderLayer(nn.Module):
 class VanillaEncoderLayer(nn.Module):
     def __init__(self, args, feature_dim) -> None:
         super().__init__()
-        
+
         self.encoder = EncoderLayer(args, feature_dim)
 
     def forward(self, feature):
@@ -40,7 +40,7 @@ class VanillaEncoderLayer(nn.Module):
 class GeoEncoderLayer(nn.Module):
     def __init__(self, args, feature_dim) -> None:
         super().__init__()
-        
+
         self.c = torch.tensor([args.c], device=args.device)
         self.encoder = EncoderLayer(args, feature_dim)
         self.manifold = geoopt.manifolds.Lorentz(-1 / args.c)
@@ -79,4 +79,3 @@ class GeoDecoderLayer(nn.Module):
         z = halfplane2lorentz(z, self.c)
         z = self.manifold.logmap0(z)[..., 1:]
         return z.reshape(*z.shape[:-2], -1)
-

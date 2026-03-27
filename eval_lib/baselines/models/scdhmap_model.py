@@ -220,13 +220,13 @@ class scDHMapCore(nn.Module):
 class scDHMapModel(BaseModel):
     """
     scDHMap: Hyperbolic VAE for single-cell data
-    
+
     Features:
     - Latent space on Lorentz hyperboloid (encode/decode via Poincaré ball)
     - ZINB reconstruction for count data
     - Optional t-SNE repulsion in hyperbolic space
     - Two-phase training: pretrain (recon+KL) → main (+ t-SNE)
-    
+
     Batch format: (x, x_raw, size_factors, [idx])
     """
 
@@ -300,7 +300,7 @@ class scDHMapModel(BaseModel):
             "pi": pi,
             "reconstruction": mean,
         }
-    
+
     def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], x_raw=None, sf=None, p_tensor=None, **kwargs):
         """Compute loss: ZINB + KL + optional t-SNE"""
         if x_raw is None:
@@ -442,7 +442,7 @@ class scDHMapModel(BaseModel):
 def create_scdhmap_model(input_dim: int, latent_dim: int = 10, **kwargs) -> scDHMapModel:
     """
     Create scDHMap model
-    
+
     Example:
         >>> model = create_scdhmap_model(2000, latent_dim=10, alpha=1.0, beta=1.0)
     """

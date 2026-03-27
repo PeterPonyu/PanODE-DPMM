@@ -156,7 +156,7 @@ def build_knn_edge_index(x: torch.Tensor, k: int = 15, metric: str = "cosine") -
 class scGCCModel(BaseModel):
     """
     scGCC: Graph contrastive learning with MoCo
-    
+
     Features:
     - MoCo: momentum encoder + queue-based negative sampling
     - GAT encoder for graph representation
@@ -225,7 +225,7 @@ class scGCCModel(BaseModel):
         tensors = getattr(ds, "tensors", None)
         if isinstance(tensors, (tuple, list)) and len(tensors) >= 1 and torch.is_tensor(tensors[0]):
             return tensors[0]
-        
+
         xs = []
         for b in loader:
             if isinstance(b, (list, tuple)):
@@ -353,7 +353,7 @@ class scGCCModel(BaseModel):
 
         if edge_index is None:
             edge_index = build_knn_edge_index(full_x, k=knn_k, metric=knn_metric)
-        
+
         z = self.encode(full_x.to(device).float(), edge_index.to(device))
         return {"latent": z.detach().cpu().numpy()}
 
@@ -361,9 +361,9 @@ class scGCCModel(BaseModel):
 def create_scgcc_model(input_dim: int, latent_dim: int = 256, **kwargs) -> scGCCModel:
     """
     Create scGCC model
-    
+
     Example:
-        >>> model = create_scgcc_model(2000, latent_dim=256, queue_size=512, 
+        >>> model = create_scgcc_model(2000, latent_dim=256, queue_size=512,
         ...                            heads=4, knn_k=15)
     """
     return scGCCModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)

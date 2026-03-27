@@ -23,4 +23,3 @@ class Distribution():
 
     def kl_div(self, target_dist):
         return euclidean_kl_div(self.mean, self.logvar, target_dist.mean, target_dist.logvar)
-

@@ -28,7 +28,7 @@ const Icons = {
       <circle cx="10" cy="14" r="3.5" fill="#6A9FD8" opacity="0.6" stroke="#4A7CBF" strokeWidth="0.7"/>
     </svg>
   ),
-  
+
   // Preprocessing funnel
   preprocess: (
     <svg width="16" height="16" viewBox="0 0 20 20">
@@ -106,7 +106,7 @@ const Icons = {
       <circle cx="16" cy="5" r="2" fill="#E15759"/>
     </svg>
   ),
-  
+
   // Statistical Test
   stats: (
      <svg width="16" height="16" viewBox="0 0 20 20">
@@ -120,10 +120,10 @@ const Icons = {
 function Phase({ label, color, children, details }: { label: string, color: string, children: React.ReactNode, details?: string }) {
   return (
     <div style={{
-      display: "flex", 
+      display: "flex",
       flexDirection: "column",
-      border: `1px solid ${color}40`, 
-      backgroundColor: `${color}08`, 
+      border: `1px solid ${color}40`,
+      backgroundColor: `${color}08`,
       borderRadius: "4px",
       margin: "0 2px",
       padding: "3px 2px 2px 2px",
@@ -155,11 +155,11 @@ function Phase({ label, color, children, details }: { label: string, color: stri
       {/* Detailed Description Footer */}
       {details && (
         <div style={{
-           fontSize: "6px", 
-           color: CLR.textSub, 
-           marginTop: "3px", 
+           fontSize: "6px",
+           color: CLR.textSub,
+           marginTop: "3px",
            textAlign: "center",
-           borderTop: `0.5px solid ${color}30`, 
+           borderTop: `0.5px solid ${color}30`,
            paddingTop: "1.5px",
            lineHeight: "1.2",
            fontStyle: "italic",
@@ -175,11 +175,11 @@ function Phase({ label, color, children, details }: { label: string, color: stri
 // ─── Compact Step Component ──────────────────────────────────────────────────
 function Step({ icon, label, sub }: { icon: React.ReactNode; label: string; sub?: string }) {
   return (
-    <div style={{ 
-      flex: 1, 
-      minWidth: 0, 
+    <div style={{
+      flex: 1,
+      minWidth: 0,
       textAlign: "center",
-      padding: "2px 3px", 
+      padding: "2px 3px",
       display: "flex",
       flexDirection: "column",
       justifyContent: "center",
@@ -188,19 +188,19 @@ function Step({ icon, label, sub }: { icon: React.ReactNode; label: string; sub?
       <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.5px" }}>
         {icon}
       </div>
-      <div style={{ 
-        fontSize: "7.5px", 
-        fontWeight: "bold", 
-        color: CLR.text, 
+      <div style={{
+        fontSize: "7.5px",
+        fontWeight: "bold",
+        color: CLR.text,
         fontFamily: FONT,
         lineHeight: 1.1,
       }}>
         {label}
       </div>
       {sub && (
-        <div style={{ 
-          fontSize: "6px", 
-          color: CLR.textSub, 
+        <div style={{
+          fontSize: "6px",
+          color: CLR.textSub,
           fontFamily: FONT,
           lineHeight: 1.05,
           marginTop: "1px",

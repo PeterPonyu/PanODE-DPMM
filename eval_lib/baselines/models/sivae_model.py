@@ -2,7 +2,7 @@
 siVAE: Supervised interpretable VAE for gene regulatory network inference
 Key: Interpretable linear encoder + supervised classification
 
-Reference: Kopf et al. (2021) Mixture-of-Experts VAE for clustering and 
+Reference: Kopf et al. (2021) Mixture-of-Experts VAE for clustering and
 generating from similarity-based representations on single cell data
 """
 import torch
@@ -15,20 +15,20 @@ from .base_model import BaseModel
 
 class InterpretableLinearEncoder(nn.Module):
     """Linear encoder with sparsity constraints for gene-factor interpretability"""
-    def __init__(self, input_dim: int, latent_dim: int, 
+    def __init__(self, input_dim: int, latent_dim: int,
                  constraint: str = 'l1', constraint_weight: float = 0.01):
         super().__init__()
         self.input_dim = input_dim
         self.latent_dim = latent_dim
         self.constraint = constraint
         self.constraint_weight = constraint_weight
-        
+
         self.fc = nn.Linear(input_dim, latent_dim, bias=False)
         nn.init.xavier_normal_(self.fc.weight, gain=0.01)
-    
+
     def forward(self, x):
         return self.fc(x)
-    
+
     def get_constraint_loss(self):
         """Sparsity/smoothness constraint for interpretability"""
         if self.constraint == 'l1':
@@ -45,13 +45,13 @@ class siVAEEncoder(nn.Module):
                  use_interpretable: bool = True,
                  constraint: str = 'l1',
                  constraint_weight: float = 0.01,
-                 batch_norm: bool = True, 
+                 batch_norm: bool = True,
                  dropout: float = 0.1):
         super().__init__()
-        
+
         self.use_interpretable = use_interpretable
         self.batch_norm = batch_norm
-        
+
         if use_interpretable:
             self.ile = InterpretableLinearEncoder(
                 input_dim, latent_dim, constraint, constraint_weight
@@ -60,11 +60,11 @@ class siVAEEncoder(nn.Module):
         else:
             self.ile = None
             encoder_input_dim = input_dim
-        
+
         if len(hidden_dims) > 0:
             layers = []
             prev_dim = encoder_input_dim
-            
+
             for hidden_dim in hidden_dims:
                 layers.append(nn.Linear(prev_dim, hidden_dim))
                 if batch_norm:
@@ -72,7 +72,7 @@ class siVAEEncoder(nn.Module):
                 layers.append(nn.ReLU())
                 layers.append(nn.Dropout(dropout))
                 prev_dim = hidden_dim
-            
+
             self.encoder = nn.Sequential(*layers)
             self.fc_mu = nn.Linear(prev_dim, latent_dim)
             self.fc_logvar = nn.Linear(prev_dim, latent_dim)
@@ -80,22 +80,22 @@ class siVAEEncoder(nn.Module):
             self.encoder = nn.Identity()
             self.fc_mu = nn.Identity()
             self.fc_logvar = nn.Linear(encoder_input_dim, latent_dim)
-        
+
         if isinstance(self.fc_logvar, nn.Linear):
             with torch.no_grad():
                 self.fc_logvar.weight.fill_(0.0)
                 self.fc_logvar.bias.fill_(-5.0)
-    
+
     def forward(self, x):
         if self.use_interpretable:
             ile_output = self.ile(x)
             h = self.encoder(ile_output)
-            
+
             if isinstance(self.fc_mu, nn.Identity):
                 mu = ile_output
             else:
                 mu = self.fc_mu(h)
-            
+
             logvar = self.fc_logvar(h)
             return mu, logvar, ile_output
         else:
@@ -111,13 +111,13 @@ class siVAEDecoder(nn.Module):
                  batch_norm: bool = True, dropout: float = 0.1,
                  output_distribution: str = 'nb'):
         super().__init__()
-        
+
         self.batch_norm = batch_norm
         self.output_distribution = output_distribution
-        
+
         layers = []
         prev_dim = latent_dim
-        
+
         for hidden_dim in reversed(hidden_dims):
             layers.append(nn.Linear(prev_dim, hidden_dim))
             if batch_norm:
@@ -125,9 +125,9 @@ class siVAEDecoder(nn.Module):
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(dropout))
             prev_dim = hidden_dim
-        
+
         self.decoder = nn.Sequential(*layers)
-        
+
         if output_distribution == 'zinb':
             self.fc_mean = nn.Sequential(
                 nn.Linear(prev_dim, output_dim),
@@ -155,7 +155,7 @@ class siVAEDecoder(nn.Module):
             self.fc_logvar = nn.Linear(prev_dim, output_dim)
         else:
             raise ValueError(f"Unknown distribution: {output_distribution}")
-    
+
     def forward(self, z):
         h = self.decoder(z)
         if self.output_distribution == 'zinb':
@@ -177,14 +177,14 @@ class SupervisedClassifier(nn.Module):
     """Predicts cell type labels from latent (supervised component)"""
     def __init__(self, latent_dim: int, n_classes: int, hidden_dim: int = 128):
         super().__init__()
-        
+
         self.classifier = nn.Sequential(
             nn.Linear(latent_dim, hidden_dim),
             nn.ReLU(),
             nn.Dropout(0.1),
             nn.Linear(hidden_dim, n_classes)
         )
-    
+
     def forward(self, z):
         return self.classifier(z)
 
@@ -192,7 +192,7 @@ class SupervisedClassifier(nn.Module):
 class siVAEModel(BaseModel):
     """
     siVAE: Supervised interpretable VAE
-    
+
     Features:
     - Interpretable Linear Encoder: sparse gene-factor mapping
     - Supervised classification: cell type prediction from latent
@@ -200,7 +200,7 @@ class siVAEModel(BaseModel):
     - ZINB/NB/Gaussian reconstruction
     - Gene relevance scoring for GRN inference
     """
-    
+
     def __init__(self,
                  input_dim: int,
                  latent_dim: int = 50,
@@ -232,9 +232,9 @@ class siVAEModel(BaseModel):
         """
         if hidden_dims is None:
             hidden_dims = [512, 256]
-        
+
         super().__init__(input_dim, latent_dim, hidden_dims, model_name)
-        
+
         self.n_classes = n_classes
         self.use_interpretable = use_interpretable
         self.constraint = constraint
@@ -245,32 +245,32 @@ class siVAEModel(BaseModel):
         self.use_batch = use_batch
         self.n_batches = n_batches
         self.supervised_weight = supervised_weight
-        
+
         self.encoder_net = siVAEEncoder(
             input_dim, hidden_dims, latent_dim,
             use_interpretable, constraint, constraint_weight,
             batch_norm, dropout
         )
-        
+
         decoder_input_dim = latent_dim
         if use_batch:
             decoder_input_dim += n_batches
-        
+
         self.decoder_net = siVAEDecoder(
             decoder_input_dim, hidden_dims, input_dim,
             batch_norm, dropout, output_distribution
         )
-        
+
         if n_classes > 0:
             self.classifier = SupervisedClassifier(latent_dim, n_classes)
         else:
             self.classifier = None
-        
+
         if use_batch:
             self.batch_embedding = nn.Embedding(n_batches, n_batches)
             self.batch_embedding.weight.data = torch.eye(n_batches)
             self.batch_embedding.weight.requires_grad = False
-    
+
     def _prepare_batch(self, batch_data, device):
         if isinstance(batch_data, (list, tuple)):
             x = batch_data[0].to(device).float()
@@ -304,7 +304,7 @@ class siVAEModel(BaseModel):
         if self.use_batch:
             metadata["batch_id"] = torch.zeros(x.size(0), dtype=torch.long, device=device)
         return x, metadata
-    
+
     def reparameterize(self, mu: torch.Tensor, logvar: torch.Tensor) -> torch.Tensor:
         if self.training:
             std = torch.exp(0.5 * logvar)
@@ -312,13 +312,13 @@ class siVAEModel(BaseModel):
             return mu + eps * std
         else:
             return mu
-    
+
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         """Encode to latent space [B, latent_dim]"""
         mu, logvar, _ = self.encoder_net(x)
         z = self.reparameterize(mu, logvar)
         return z
-    
+
     def decode(self, z: torch.Tensor, batch_id: Optional[torch.Tensor] = None):
         """Decode latent to gene expression"""
         if self.use_batch and batch_id is not None:
@@ -331,7 +331,7 @@ class siVAEModel(BaseModel):
             return decoder_output['mean']
         else:
             return decoder_output['x_mu']
-    
+
     def forward(self, x: torch.Tensor, batch_id: Optional[torch.Tensor] = None, labels: Optional[torch.Tensor] = None, x_raw: Optional[torch.Tensor] = None, **kwargs):
         """Forward pass with library size normalization"""
         x_counts = x_raw if x_raw is not None else x
@@ -361,37 +361,37 @@ class siVAEModel(BaseModel):
         }
         output.update(decoder_output)
         return output
-    
+
     def _zinb_loss(self, x: torch.Tensor, mean: torch.Tensor,
                    disp: torch.Tensor, pi: torch.Tensor,
                    library_size: torch.Tensor) -> torch.Tensor:
         """Zero-Inflated Negative Binomial loss"""
         eps = 1e-10
         mean_scaled = mean * library_size
-        
+
         t1 = torch.lgamma(disp + eps) + torch.lgamma(x + 1.0) - torch.lgamma(x + disp + eps)
         t2 = (disp + x) * torch.log(1.0 + (mean_scaled / (disp + eps))) + \
              (x * (torch.log(disp + eps) - torch.log(mean_scaled + eps)))
         nb_case = t1 + t2 - torch.log(1.0 - pi + eps)
-        
+
         zero_nb = torch.pow(disp / (disp + mean_scaled + eps), disp)
         zero_case = -torch.log(pi + ((1.0 - pi) * zero_nb) + eps)
-        
+
         result = torch.where(x < 1e-8, zero_case, nb_case)
         return result.mean()
-    
+
     def _nb_loss(self, x: torch.Tensor, mean: torch.Tensor,
                  disp: torch.Tensor, library_size: torch.Tensor) -> torch.Tensor:
         """Negative Binomial loss"""
         eps = 1e-10
         mean_scaled = mean * library_size
-        
+
         t1 = torch.lgamma(disp + eps) + torch.lgamma(x + 1.0) - torch.lgamma(x + disp + eps)
         t2 = (disp + x) * torch.log(1.0 + (mean_scaled / (disp + eps))) + \
              (x * (torch.log(disp + eps) - torch.log(mean_scaled + eps)))
-        
+
         return (t1 + t2).mean()
-    
+
     def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], beta: float = 1, labels: Optional[torch.Tensor] = None, x_raw: Optional[torch.Tensor] = None, **kwargs):
         """Compute loss: reconstruction + KL + supervised + constraint"""
         x_counts = x_raw if x_raw is not None else x
@@ -421,24 +421,24 @@ class siVAEModel(BaseModel):
             'supervised_loss': supervised_loss,
             'constraint_loss': constraint_loss
         }
-    
-    def compute_gene_relevance(self, x: torch.Tensor, 
+
+    def compute_gene_relevance(self, x: torch.Tensor,
                               latent_dim_idx: int = 0) -> torch.Tensor:
         """
         Compute gene relevance scores for GRN inference
-        
+
         Returns gradient-based importance of each gene for a latent factor
         """
         x.requires_grad = True
-        
+
         mu_z, logvar_z, ile_output = self.encoder_net(x)
         target_latent = mu_z[:, latent_dim_idx].sum()
         target_latent.backward()
-        
+
         relevance = torch.abs(x.grad).mean(dim=0)
-        
+
         return relevance
-    
+
     def extract_latent(self, data_loader, device: str = "cuda", return_reconstructions: bool = False):
         return super().extract_latent(
             data_loader=data_loader,
@@ -450,9 +450,9 @@ def create_sivae_model(input_dim: int, latent_dim: int = 50,
                       n_classes: int = 0, **kwargs):
     """
     Create siVAE model
-    
+
     Example:
-        >>> model = create_sivae_model(2000, latent_dim=50, n_classes=10, 
+        >>> model = create_sivae_model(2000, latent_dim=50, n_classes=10,
         ...                            use_interpretable=True, output_distribution='zinb')
     """
     return siVAEModel(input_dim=input_dim, latent_dim=latent_dim,

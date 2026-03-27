@@ -33,10 +33,15 @@ import numpy as np
 import scanpy as sc
 
 # ── Output directory ─────────────────────────────────────────────────────────
-PREP_OUT = Path("/home/zeyufu/Desktop/datasets/extra_preprocessed")
+DATASETS_ROOT = Path(os.environ.get(
+    "PANODE_DATASETS_ROOT",
+    str(Path(__file__).resolve().parent.parent / "data")))
+PREP_OUT = Path(os.environ.get(
+    "PANODE_PREP_OUTDIR",
+    os.environ.get(
+        "PREP_EXTRA_OUTDIR",
+        str(DATASETS_ROOT / "extra_preprocessed"))))
 PREP_OUT.mkdir(parents=True, exist_ok=True)
-
-DATASETS_ROOT = Path("/home/zeyufu/Desktop/datasets")
 
 # ── Catalog of NEW datasets to prep (29 datasets) ───────────────────────────
 # These are datasets NOT currently in SCRNA_16_DATASETS or EXTRA_DATASET_REGISTRY

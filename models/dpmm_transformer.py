@@ -57,7 +57,7 @@ def _act(name: str) -> nn.Module:
 class DPMMTransformerAutoEncoder(nn.Module):
     """Transformer-based Autoencoder with optional VAE, bottleneck, and ODE."""
     def __init__(
-        self, 
+        self,
         input_dim: int,
         latent_dim: int = 32,
         d_model: int = 128,
@@ -76,7 +76,7 @@ class DPMMTransformerAutoEncoder(nn.Module):
         self.var_eps = var_eps
         self.latent_dim = latent_dim
         self.encoder_type = encoder_type
-        
+
         # Create encoder using factory
         self.encoder = create_encoder(
             encoder_type=encoder_type,
@@ -90,12 +90,12 @@ class DPMMTransformerAutoEncoder(nn.Module):
             dim_feedforward=dim_feedforward,
             dropout=dropout,
             var_eps=var_eps)
-        
+
         # MLP decoder
         if decoder_dims is None:
             decoder_dims = [128, 256]
         self.decoder = MLP([latent_dim] + decoder_dims + [input_dim], dropout=dropout)
-        
+
 
         self.use_bottleneck = use_bottleneck
 
@@ -103,12 +103,12 @@ class DPMMTransformerAutoEncoder(nn.Module):
             if bottleneck_dim is None:
                 bottleneck_dim = max(latent_dim // 2, 8)
             self.bottleneck = InformationBottleneck(latent_dim, bottleneck_dim, dropout)
-    
+
     def encode_vae(self, x: torch.Tensor):
         """VAE encoding: returns (mu, var)"""
         z, mu, var = self.encoder(x)
         return mu, var
-    
+
     def encode_ae(self, x: torch.Tensor):
         """AE encoding: returns latent directly"""
         result = self.encoder(x)
@@ -117,7 +117,7 @@ class DPMMTransformerAutoEncoder(nn.Module):
     def forward(self, x):
         """Standard forward pass without ODE dynamics"""
         return self._forward_normal(x)
-    
+
     def _forward_normal(self, x):
         if self.use_vae:
             z, mu, var = self.encoder(x)
@@ -125,7 +125,7 @@ class DPMMTransformerAutoEncoder(nn.Module):
             result = self.encoder(x)
             z = result[0]
             mu, var = None, None
-        
+
         if self.use_bottleneck:
             z_le, z_ld = self.bottleneck(z)
             x_hat = self.decoder(z)
@@ -138,7 +138,7 @@ class DPMMTransformerAutoEncoder(nn.Module):
 
 class DPMMODETransformerModel(PriorMixin, BaseModel):
     """DPMMODETransformer: Transformer AE/VAE with DPMM clustering and optional ODE.
-    
+
     Uses efficient Cell-as-Token transformer (iAODE-style) with O(batch_size) attention.
     Includes KL annealing and free bits to prevent posterior collapse.
     """
@@ -172,9 +172,9 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         var_reg_weight: float = 10.0,
         var_reg_min: float = 0.01):
         super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=[d_model], model_name=model_name)
-        
+
         self.encoder_type = encoder_type
-        
+
         self.ae = DPMMTransformerAutoEncoder(
             input_dim=input_dim,
             latent_dim=latent_dim,
@@ -188,7 +188,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             bottleneck_dim=bottleneck_dim,
             use_vae=use_vae,
             encoder_type=encoder_type)
-        
+
         self.dpmm_warmup_ratio = dpmm_warmup_ratio
         self.dpmm_loss_weight = dpmm_loss_weight
         self.dpmm_refit_interval = dpmm_refit_interval
@@ -231,18 +231,18 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         self.eval()
         self.to(device)
         latents, recons = [], []
-        
+
         with torch.no_grad():
             for batch_data in data_loader:
                 x, batch_kwargs = self._prepare_batch(batch_data, device)
-                
+
                 z = self.encode(x, **batch_kwargs)
-                
+
                 latents.append(z.cpu().numpy())
-                
+
                 if return_reconstructions:
                     recons.append(self.decode(z).cpu().numpy())
-        
+
         result = {"latent": np.concatenate(latents, axis=0)}
         if return_reconstructions:
             result["reconstruction"] = np.concatenate(recons, axis=0)
@@ -260,7 +260,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         else:
             x_hat, z, _, _, mu, var = self.ae(x)
             recon = (x_hat,)
-        
+
         result = {"reconstruction": recon, "latent": z}
         if mu is not None:
             result["mu"] = mu
@@ -269,16 +269,16 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
 
     def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], **kwargs) -> Dict[str, torch.Tensor]:
         """Compute loss: reconstruction + DPMM + KL (Phase 1)
-        
+
         NOTE: Uses _compute_loss_with_kl_weight internally for KL annealing support.
         """
         return self._compute_loss_with_kl_weight(x, outputs, self.kl_weight, **kwargs)
-    
-    def _compute_loss_with_kl_weight(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], 
+
+    def _compute_loss_with_kl_weight(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
                                       kl_weight: float, **kwargs) -> Dict[str, torch.Tensor]:
         """Compute loss with a specific KL weight (for KL annealing)."""
         loss_dict = {}
-        
+
         if self.ae.use_bottleneck:
             x_hat, x_le_hat = outputs["reconstruction"]
             recon_ae = self.recon_loss_fn(x_hat, x)
@@ -290,22 +290,22 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             x_hat, = outputs["reconstruction"]
             recon = self.recon_loss_fn(x_hat, x)
             loss_dict["recon_ae"] = recon
-        
+
         loss_dict["recon_loss"] = recon
-        
+
         # DPMM loss
         dpmm = torch.tensor(0.0, device=x.device)
         if self.dpmm_fitted and self.dpmm_params is not None:
             dpmm = self._dpmm_loss_kl(outputs["latent"])
         loss_dict["dpmm_loss"] = dpmm
-        
+
         # VAE KL loss with free bits to prevent posterior collapse
         kl_vae = torch.tensor(0.0, device=x.device)
         if self.use_vae and "mu" in outputs and "var" in outputs:
             # Use free bits KL to prevent latent dimensions from collapsing
             kl_vae = self._kl_gaussian_free_bits(outputs["mu"], outputs["var"], free_bits=0.1)
             loss_dict["kl_vae"] = kl_vae
-        
+
         # Latent variance regularization: prevent per-dim collapse
         z = outputs["latent"]
         var_per_dim = z.var(dim=0)  # [latent_dim]
@@ -315,7 +315,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
 
         total = recon + self._current_dpmm_weight * dpmm + kl_weight * kl_vae + var_reg
         loss_dict["total_loss"] = total
-        
+
         return loss_dict
 
     def _update_dpmm_params(self, bgm: BayesianGaussianMixture, device: torch.device):
@@ -324,9 +324,9 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         weight_concentration = torch.as_tensor(bgm.weight_concentration_, dtype=torch.float32, device=device)
         precisions_cholesky = torch.as_tensor(bgm.precisions_cholesky_, dtype=torch.float32, device=device)
         weights = torch.as_tensor(bgm.weights_, dtype=torch.float32, device=device)
-        
+
         precisions_cholesky = torch.clamp(precisions_cholesky, min=1e-6, max=10.0)
-        
+
         self.dpmm_params = {
             "means": means,
             "weight_concentration": weight_concentration,
@@ -341,21 +341,21 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         dp = self.dpmm_params
         n_features = z.size(1)
         eps = 1e-10
-        
+
         weights = dp["weights"]
         log_weights = torch.log(weights + eps)
         log_det = torch.sum(torch.log(dp["precisions_cholesky"] + eps), dim=1)
         precisions = dp["precisions_cholesky"] ** 2
-        
+
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
         mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
-        
+
         log_gauss = -0.5 * (n_features * math.log(2.0 * math.pi) + mahalanobis) + log_det
         log_prob = torch.logsumexp(log_gauss + log_weights, dim=1)
-        
+
         nll = -log_prob
         return torch.clamp(nll.mean(), min=0.0, max=5.0)
-    
+
     def _kl_gaussian(self, mu: torch.Tensor, var: torch.Tensor) -> torch.Tensor:
         """KL divergence for Gaussian"""
         kl_per_sample = 0.5 * torch.sum(var + mu ** 2 - 1.0 - torch.log(var + 1e-10), dim=1)
@@ -365,16 +365,16 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         """Refit DPMM on current latent representations"""
         self.eval()
         z_all = []
-        
+
         with torch.no_grad():
             for batch in train_loader:
                 x, _ = self._prepare_batch(batch, device)
                 z = self.encode(x)
                 z_all.append(z.cpu().numpy())
-        
+
         z_all = np.concatenate(z_all, axis=0)
         z_all = z_all + np.random.normal(0, 1e-6, z_all.shape)
-        
+
         try:
             bgm = BayesianGaussianMixture(
                 n_components=self.n_components,
@@ -386,13 +386,13 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
                 tol=1e-3,
                 random_state=42)
             bgm.fit(z_all)
-            
+
             if not np.isfinite(bgm.lower_bound_):
                 return False
-            
+
             self._update_dpmm_params(bgm, device=device)
             return True
-            
+
         except Exception as e:
             if verbose >= 1:
                 print(f"Warning: DPMM fitting failed: {e}")
@@ -412,27 +412,27 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         weight_decay: float = 1e-5,
         **kwargs):
         """Phase 1: Train Transformer AE/VAE with periodic DPMM refitting.
-        
+
         Uses fixed KL weight (no annealing) and fixed learning rate (no scheduler).
-        
+
         Args:
             weight_decay: AdamW weight decay (L2 regularization).
         """
         self.to(device)
         optimizer = torch.optim.AdamW(self.parameters(), lr=lr, weight_decay=weight_decay)
-        
+
         dpmm_warmup_epochs = int(epochs * self.dpmm_warmup_ratio)
-        
+
         best_loss = float('inf')
         patience_counter = 0
-        
+
         train_losses, recon_losses, dpmm_losses, kl_losses = [], [], [], []
 
         if verbose_every is None or verbose_every < 1:
             verbose_every = 1
 
         for epoch in range(epochs):
-            
+
             # DPMM annealing: gradual ramp after warmup to prevent collapse
             if epoch < dpmm_warmup_epochs:
                 self.dpmm_fitted = False
@@ -454,19 +454,19 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
 
             for batch in train_loader:
                 x, batch_kwargs = self._prepare_batch(batch, device)
-                
+
                 optimizer.zero_grad()
                 out = self.forward(x, **batch_kwargs, **kwargs)
                 loss_dict = self.compute_loss(x, out, **batch_kwargs, **kwargs)
                 loss = loss_dict["total_loss"]
-                
+
                 if not torch.isfinite(loss):
                     continue
-                
+
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.parameters(), 10.0)
                 optimizer.step()
-                
+
                 epoch_loss += loss.item()
                 epoch_recon += loss_dict["recon_loss"].item()
                 epoch_dpmm += loss_dict["dpmm_loss"].item()
@@ -481,7 +481,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             avg_recon = epoch_recon / n_batches
             avg_dpmm = epoch_dpmm / n_batches
             avg_kl = epoch_kl / n_batches
-            
+
             train_losses.append(avg_loss)
             recon_losses.append(avg_recon)
             dpmm_losses.append(avg_dpmm)
@@ -512,11 +512,11 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
 def create_dpmmode_transformer_model(input_dim: int, latent_dim: int = 32, **kwargs) -> DPMMODETransformerModel:
     """
     Create DPMMODETransformer model.
-    
+
     Args:
         input_dim: Number of input features (genes)
         latent_dim: Latent space dimension (16-128)
-    
+
     Critical Parameters:
         d_model: Transformer model dimension (default: 256)
         nhead: Number of attention heads (default: 8)

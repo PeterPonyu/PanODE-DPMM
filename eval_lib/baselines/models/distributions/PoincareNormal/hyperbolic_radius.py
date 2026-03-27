@@ -84,7 +84,7 @@ def grad_cdf_value_scale(value, scale, c, dim):
         torch.erf((value - (dim - 1 - 2 * k_float) * c.sqrt() * scale.pow(2)) / scale / math.sqrt(2)) \
         + torch.erf((dim - 1 - 2 * k_float) * c.sqrt() * scale / math.sqrt(2)) \
     )
-    
+
     log_arg2 = math.sqrt(2 / math.pi) * ( \
         (dim - 1 - 2 * k_float) * c.sqrt() * torch.exp(-(dim - 1 - 2 * k_float).pow(2) * c * scale.pow(2) / 2) \
         - ((value / scale.pow(2) + (dim - 1 - 2 * k_float) * c.sqrt()) * torch.exp(-(value - (dim - 1 - 2 * k_float) * c.sqrt() * scale.pow(2)).pow(2) / (2 * scale.pow(2)))) \
@@ -110,7 +110,7 @@ def grad_cdf_value_scale(value, scale, c, dim):
     S1 = log_sum_exp_signs(s1, signs, dim=0)
     grad_log_cdf_scale = grad_sum_sigma / S1.exp()
     log_unormalised_prob = - value.pow(2) / (2 * scale.pow(2)) + (dim - 1) * logsinh(c.sqrt() * value) - (dim - 1) / 2 * c.log()
-    
+
     with torch.autograd.enable_grad():
         # scale = scale.float()
         logZ = _log_normalizer_closed_grad.apply(scale, c, dim)
@@ -125,7 +125,7 @@ def grad_cdf_value_scale(value, scale, c, dim):
 
 
 class _log_normalizer_closed_grad(Function):
-    @staticmethod 
+    @staticmethod
     def forward(ctx, scale, c, dim):
         # scale = scale.double()
         # c = c.double()
@@ -297,7 +297,7 @@ class HyperbolicRadius(dist.Distribution):
         return res
 
     def grad_log_prob(self, value):
-        res = - value / self.scale.pow(2) + (self.dim - 1) * self.c.sqrt() * torch.cosh(self.c.sqrt() * value) / torch.sinh(self.c.sqrt() * value) 
+        res = - value / self.scale.pow(2) + (self.dim - 1) * self.c.sqrt() * torch.cosh(self.c.sqrt() * value) / torch.sinh(self.c.sqrt() * value)
         return res
 
     def cdf(self, value):
@@ -309,7 +309,7 @@ class HyperbolicRadius(dist.Distribution):
         scale = self.scale
         dim = torch.tensor(int(self.dim), device=self.device)
         signs = torch.tensor([1., -1.], device=self.device).repeat(((self.dim+1) // 2) * 2)[:self.dim].unsqueeze(-1).unsqueeze(-1).expand(self.dim, *self.scale.size())
-        
+
         k_float = rexpand(torch.arange(self.dim), *self.scale.size()).double().to(self.device)
         s2 = torch.lgamma(dim) - torch.lgamma(k_float + 1) - torch.lgamma(dim - k_float) \
                 + (dim - 1 - 2 * k_float).pow(2) * c * scale.pow(2) / 2 \
@@ -357,4 +357,3 @@ class HyperbolicRadius(dist.Distribution):
     def stddev(self): return self.variance.sqrt()
 
     def _log_normalizer(self): return _log_normalizer_closed_grad.apply(self.scale, self.c, self.dim)
-

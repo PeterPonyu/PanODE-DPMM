@@ -11,20 +11,7 @@ Research code for single-cell representation learning with DPMM-regularised auto
 - reusable benchmarking and latent-space evaluation utilities under `benchmarks/` and `eval_lib/`,
 - publication-style figure generation under `refined_figures/`,
 - a local Next.js architecture viewer under `model-arch-viewer/`, and
-- automated tests plus repository health files for smoother collaboration.
-
-## What lives in this repository
-
-This repository is intentionally **source-first**. It keeps model code, evaluation libraries, experiment runners, figure generators, and helper scripts under version control, while generated artefacts stay local.
-
-Not committed on purpose:
-
-- benchmark and experiment outputs,
-- manuscript source files,
-- logs, caches, checkpoints, and coverage artefacts, and
-- local viewer symlinks and build artefacts.
-
-Directories such as `benchmarks/benchmark_results/`, `experiments/results/`, and `article/` remain in the tree only as documented placeholders.
+- automated tests and CI.
 
 ## Repository layout
 
@@ -64,16 +51,12 @@ For optional graph encoder support:
 pip install -e ".[dev,graph]"
 ```
 
-If you prefer plain requirements-style onboarding, see `pyproject.toml` and `.env.example`.
-
 ### Optional environment variables
 
 You can either pass dataset paths explicitly to commands, or set these optional environment variables:
 
 - `PANODE_DATASETS_ROOT` — base folder for local `.h5ad` datasets
 - `PANODE_DEFAULT_DATASET` — default dataset file used by benchmark smoke tests
-
-Copy `.env.example` to `.env` if you want a local, ignored configuration file.
 
 ### Common workflows
 
@@ -114,34 +97,12 @@ npm install
 npm run dev
 ```
 
-## Development workflow
+## Development
 
-- Read `CONTRIBUTING.md` before opening a pull request.
-- Use `pre-commit install` after installing the dev dependencies.
-- Avoid committing generated outputs, datasets, checkpoints, or manuscript source files.
-- Use the issue and pull request templates in `.github/` to keep changes reproducible and reviewable.
-
-## Project metadata
-
-- license: `MIT` (`LICENSE`)
-- citation metadata: `CITATION.cff`
-- security reporting guidance: `SECURITY.md`
-- release notes: `CHANGELOG.md`
-- contributor expectations: `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`
-
-## Core components
-
-- `models/` contains `Pure-AE`, `DPMM-Base`, `DPMM-Transformer`, `DPMM-Contrastive`, and `DPMM-FM` implementations.
-- `eval_lib/` provides reusable metrics, plotting helpers, and external baseline registries.
-- `benchmarks/runners/` contains the benchmark entry points used for internal model comparisons.
-- `experiments/` contains experiment-level orchestration and result-merging utilities.
-- `refined_figures/` turns local result tables into publication-ready composite figures.
-
-## Repository hygiene
-
-- `article/` keeps only a public note; manuscript sources are intentionally omitted.
-- `benchmarks/benchmark_results/` and `experiments/results/` are local output roots and should be regenerated, not committed.
-- `model-arch-viewer/` is a local helper app; see `model-arch-viewer/README.md` for asset-link setup.
+```bash
+pre-commit install   # enable local checks after installing dev deps
+pytest               # run tests before opening a PR
+```
 
 ## Citation
 

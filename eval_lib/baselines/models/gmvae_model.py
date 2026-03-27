@@ -157,27 +157,27 @@ class GMVAEEncoder(nn.Module):
                  distribution: str = 'euclidean', layer_type: str = None,
                  device='cuda', c=-1.0):
         super().__init__()
-        
+
         if distribution not in DISTRIBUTION_CONFIG:
             raise ValueError(f"Unknown distribution: {distribution}. "
                            f"Choose from {list(DISTRIBUTION_CONFIG.keys())}")
-        
+
         self.distribution = distribution
         self.config = DISTRIBUTION_CONFIG[distribution]
-        
+
         if self.config['requires_even'] and latent_dim % 2 != 0:
             raise ValueError(f"{distribution} requires even latent_dim (got {latent_dim})")
-        
+
         if layer_type is None:
             layer_type = self.config['default_layer']
-        
+
         if layer_type not in self.config['encoder_layers']:
             raise ValueError(f"Invalid layer_type '{layer_type}' for {distribution}. "
                            f"Choose from {list(self.config['encoder_layers'].keys())}")
-        
+
         self.layer_type = layer_type
         self.latent_dim = latent_dim
-        
+
         layers = []
         prev_dim = input_dim
         for hidden_dim in hidden_dims:
@@ -187,16 +187,16 @@ class GMVAEEncoder(nn.Module):
                 nn.BatchNorm1d(hidden_dim)
             ])
             prev_dim = hidden_dim
-        
+
         self.feature_extractor = nn.Sequential(*layers)
         self.feature_dim = prev_dim
-        
+
         internal_latent_dim = int(latent_dim * self.config['internal_dim_factor'])
         args = SimpleArgs(internal_latent_dim, device, c)
-        
+
         encoder_class = self.config['encoder_layers'][layer_type]
         self.variational_layer = encoder_class(args, self.feature_dim)
-    
+
     def forward(self, x):
         """Returns (loc, scale) distribution parameters"""
         features = self.feature_extractor(x)
@@ -209,35 +209,35 @@ class GMVAEDecoder(nn.Module):
                  distribution: str = 'euclidean', layer_type: str = None,
                  device='cuda', c=-1.0, loss_type: str = 'MSE'):
         super().__init__()
-        
+
         if distribution not in DISTRIBUTION_CONFIG:
             raise ValueError(f"Unknown distribution: {distribution}")
-        
+
         self.distribution = distribution
         self.config = DISTRIBUTION_CONFIG[distribution]
-        
+
         if self.config['requires_even'] and latent_dim % 2 != 0:
             raise ValueError(f"{distribution} requires even latent_dim (got {latent_dim})")
-        
+
         if layer_type is None:
             layer_type = self.config['default_layer']
-        
+
         if layer_type not in self.config['decoder_layers']:
             raise ValueError(f"Invalid layer_type '{layer_type}' for {distribution}. "
                            f"Choose from {list(self.config['decoder_layers'].keys())}")
-        
+
         self.layer_type = layer_type
         self.latent_dim = latent_dim
         self.loss_type = loss_type
-        
+
         internal_latent_dim = int(latent_dim * self.config['internal_dim_factor'])
         args = SimpleArgs(internal_latent_dim, device, c)
-        
+
         decoder_class = self.config['decoder_layers'][layer_type]
         self.decode_layer = decoder_class(args)
-        
+
         decoder_output_shape = self.config.get('decoder_output_shape', 'flat')
-        
+
         if decoder_output_shape == 'doubled_flat':
             decoder_input_dim = latent_dim
         elif decoder_output_shape == 'geometry_2d':
@@ -248,7 +248,7 @@ class GMVAEDecoder(nn.Module):
             decoder_input_dim = latent_dim
         else:
             decoder_input_dim = latent_dim
-        
+
         layers = []
         prev_dim = decoder_input_dim
         for hidden_dim in reversed(hidden_dims):
@@ -258,39 +258,39 @@ class GMVAEDecoder(nn.Module):
                 nn.BatchNorm1d(hidden_dim)
             ])
             prev_dim = hidden_dim
-        
+
         output_features = output_dim * 2 if loss_type == 'NLL' else output_dim
         layers.append(nn.Linear(prev_dim, output_features))
-        
+
         self.decoder_net = nn.Sequential(*layers)
-    
+
     def forward(self, z):
         """Decode from geometry-specific latent representation"""
         z_decoded = self.decode_layer(z)
-        
+
         decoder_output_shape = self.config.get('decoder_output_shape', 'flat')
         batch_size = z_decoded.size(0) if z_decoded.dim() > 0 else 1
-        
+
         if decoder_output_shape == 'doubled_flat':
             if z_decoded.dim() == 2:
                 z_decoded = z_decoded[..., :z_decoded.size(-1)//2]
-        
+
         elif decoder_output_shape == 'geometry_2d':
             if z_decoded.dim() == 3:
                 z_decoded = z_decoded.reshape(batch_size, -1)
-        
+
         elif decoder_output_shape == 'geometry_3d':
             if z_decoded.dim() == 3:
                 z_decoded = z_decoded[..., :2]
                 z_decoded = z_decoded.reshape(batch_size, -1)
-        
+
         elif decoder_output_shape == 'flat':
             if z_decoded.dim() > 2:
                 z_decoded = z_decoded.reshape(batch_size, -1)
-        
+
         if z_decoded.dim() > 2:
             z_decoded = z_decoded.reshape(batch_size, -1)
-        
+
         return self.decoder_net(z_decoded)
 
 
@@ -303,7 +303,7 @@ class GMVAEModel(BaseModel):
     - LearnablePGM: PGM with learnable curvature
     - HW: Hyperboloid Wrapped Normal (Lorentz model)
     """
-    
+
     def __init__(self,
                  input_dim: int,
                  latent_dim: int = 10,
@@ -330,66 +330,66 @@ class GMVAEModel(BaseModel):
         """
         if hidden_dims is None:
             hidden_dims = [512, 256]
-        
+
         if distribution not in DISTRIBUTION_CONFIG:
             raise ValueError(f"Unknown distribution: {distribution}. "
                            f"Choose from {list(DISTRIBUTION_CONFIG.keys())}")
-        
+
         config = DISTRIBUTION_CONFIG[distribution]
-        
+
         if config['requires_even'] and latent_dim % 2 != 0:
             raise ValueError(f"latent_dim must be even for {distribution} (got {latent_dim})")
-        
+
         super().__init__(input_dim, latent_dim, hidden_dims, model_name)
-        
+
         self.distribution = distribution
         self.config = config
         self.encoder_layer = encoder_layer or config['default_layer']
         self.decoder_layer = decoder_layer or config['default_layer']
         self.curvature = curvature
         self.loss_type = loss_type
-        
+
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        
+
         self.encoder_net = GMVAEEncoder(
             input_dim, hidden_dims, latent_dim,
             distribution, self.encoder_layer, self.device, curvature
         )
-        
+
         self.decoder_net = GMVAEDecoder(
             latent_dim, hidden_dims, input_dim,
             distribution, self.decoder_layer, self.device, curvature, loss_type
         )
-        
+
         internal_latent_dim = int(latent_dim * config['internal_dim_factor'])
         args = SimpleArgs(internal_latent_dim, self.device, curvature)
-        
+
         self.prior = config['get_prior'](args)
-    
+
     def _create_distribution(self, *params):
         """Create distribution from parameters"""
         return self.config['distribution_class'](*params)
-    
+
     def _reshape_for_output(self, z):
         """Reshape geometry-specific samples to [B, latent_dim]"""
         if z.dim() == 2:
             return z
-        
+
         batch_size = z.size(0)
-        
+
         if self.config['sample_shape'] == '2d':
             return z.reshape(batch_size, -1)
         elif self.config['sample_shape'] == '3d':
             if self.distribution == 'hw':
                 return z[..., :2].reshape(batch_size, -1)
             return z.reshape(batch_size, -1)
-        
+
         return z.reshape(batch_size, -1)
-    
+
     def _reshape_for_decoder(self, z):
         """Reshape [B, latent_dim] to geometry-specific format"""
         batch_size = z.size(0)
-        
+
         if self.config['sample_shape'] == 'flat':
             return z
         elif self.config['sample_shape'] == '2d':
@@ -403,36 +403,36 @@ class GMVAEModel(BaseModel):
                 ], dim=-1)
                 return z_3d
             return z.reshape(batch_size, -1, 3)
-        
+
         return z
-    
+
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         """Encode to [B, latent_dim]"""
         params = self.encoder_net(x)
         variational = self._create_distribution(*params)
         z = variational.rsample(1).squeeze(0)
         return self._reshape_for_output(z)
-    
+
     def decode(self, z: torch.Tensor) -> torch.Tensor:
         """Decode from [B, latent_dim]"""
         z = self._reshape_for_decoder(z)
         output = self.decoder_net(z)
-        
+
         if self.loss_type == 'NLL':
             return output[..., :output.size(-1)//2]
         return output
-    
-    def forward(self, x: torch.Tensor, n_samples: int = 1, beta: float = 1.0, 
+
+    def forward(self, x: torch.Tensor, n_samples: int = 1, beta: float = 1.0,
                 iwae: int = 0, **kwargs) -> Dict[str, torch.Tensor]:
         """Forward pass with optional IWAE sampling"""
         params = self.encoder_net(x)
         variational = self._create_distribution(*params)
-        
+
         z = variational.rsample(n_samples)
-        
+
         if n_samples > 1:
             original_shape = z.shape
-            
+
             if z.dim() == 3:
                 z_flat = z.reshape(-1, z.size(-1))
                 z_reshaped = z_flat
@@ -442,20 +442,20 @@ class GMVAEModel(BaseModel):
             else:
                 z_flat = z.reshape(n_samples * x.size(0), -1)
                 z_reshaped = self._reshape_for_decoder(z_flat)
-            
+
             x_generated = self.decoder_net(z_reshaped)
             x_generated = x_generated.view(n_samples, x.size(0), -1)
         else:
             z = z.squeeze(0)
             x_generated = self.decoder_net(z)
-        
+
         return {
             'reconstruction': x_generated,
             'latent': z,
             'variational': variational,
             'params': params
         }
-    
+
     def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
                      beta: float = 1.0, n_samples: int = 1, iwae: int = 0,
                      **kwargs) -> Dict[str, torch.Tensor]:
@@ -463,7 +463,7 @@ class GMVAEModel(BaseModel):
         x_generated = outputs['reconstruction']
         z = outputs['latent']
         variational = outputs['variational']
-        
+
         if self.loss_type == 'BCE':
             if n_samples > 1:
                 recon_loss = F.binary_cross_entropy_with_logits(
@@ -489,7 +489,7 @@ class GMVAEModel(BaseModel):
                 recon_loss = 0.5 * ((x - mu).pow(2) / logvar.exp() + logvar).mean()
         else:
             raise ValueError(f"Unknown loss type: {self.loss_type}")
-        
+
         # Prepare z for KL computation (manifold distributions need [K, B, ...] shape)
         z_kl = z
         if (self.distribution in ('poincare', 'pgm', 'learnable_pgm', 'hw')
@@ -497,7 +497,7 @@ class GMVAEModel(BaseModel):
                 and z.dim() >= 2
                 and z.shape[0] == x.shape[0]):
             z_kl = z.unsqueeze(0)
-        
+
         if iwae == 0 or n_samples == 1:
             if hasattr(variational, 'kl_div') and variational.kl_div is not None:
                 kl_div = variational.kl_div
@@ -505,33 +505,33 @@ class GMVAEModel(BaseModel):
             else:
                 log_q = variational.log_prob(z_kl)
                 log_p = self.prior.log_prob(z_kl)
-                
+
                 if log_q.dim() > 1:
                     kl_loss = (log_q - log_p).sum(dim=-1).mean()
                 else:
                     kl_loss = (log_q - log_p).mean()
-            
+
             total_loss = recon_loss + beta * kl_loss
             recon_loss_sum = recon_loss
             kl_loss_sum = kl_loss
         else:
             log_q = variational.log_prob(z)
             log_p = self.prior.log_prob(z)
-            
+
             if log_q.dim() > 2:
                 log_q = log_q.sum(dim=-1)
                 log_p = log_p.sum(dim=-1)
-            
+
             kl_loss = log_q - log_p
             total_loss_sum = -recon_loss - beta * kl_loss
-            
+
             loss = total_loss_sum.logsumexp(dim=0)
             loss = loss - np.log(n_samples)
             total_loss = -loss.mean()
-            
+
             recon_loss_sum = recon_loss.mean(dim=0).sum()
             kl_loss_sum = kl_loss.mean(dim=0).sum()
-        
+
         return {
             'total_loss': total_loss,
             'recon_loss': recon_loss_sum,
@@ -539,21 +539,21 @@ class GMVAEModel(BaseModel):
         }
 
 
-def create_gmvae_model(input_dim: int, latent_dim: int = 10, 
+def create_gmvae_model(input_dim: int, latent_dim: int = 10,
                        distribution: str = 'euclidean', **kwargs):
     """
     Create GM-VAE model
-    
+
     Args:
         input_dim: Input dimension
         latent_dim: Latent dimension (must be even for non-Euclidean)
         distribution: 'euclidean', 'poincare', 'pgm', 'learnable_pgm', 'hw'
-    
+
     Examples:
         >>> model = create_gmvae_model(2000, latent_dim=10, distribution='euclidean')
         >>> model = create_gmvae_model(2000, latent_dim=10, distribution='poincare')
         >>> model = create_gmvae_model(2000, latent_dim=10, distribution='learnable_pgm',
         ...                           encoder_layer='Exp', decoder_layer='Log')
     """
-    return GMVAEModel(input_dim=input_dim, latent_dim=latent_dim, 
+    return GMVAEModel(input_dim=input_dim, latent_dim=latent_dim,
                      distribution=distribution, **kwargs)

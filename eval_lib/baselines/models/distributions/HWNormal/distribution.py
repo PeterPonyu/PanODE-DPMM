@@ -52,4 +52,3 @@ class Distribution():
     def sample(self, N):
         with torch.no_grad():
             return self.rsample(N)
-

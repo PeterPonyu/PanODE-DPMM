@@ -15,15 +15,15 @@ import inspect
 class BaseModel(ABC, nn.Module):
     """
     Abstract base class for single-cell models
-    
+
     Defines unified interface for:
     - Training with early stopping
     - Validation
     - Latent representation extraction
     - Model checkpointing
-    
+
     Subclasses must implement: encode(), decode(), forward(), compute_loss()
-    
+
     Example:
         >>> class MyVAE(BaseModel):
         ...     def encode(self, x): return self.encoder(x)
@@ -35,8 +35,8 @@ class BaseModel(ABC, nn.Module):
         ...         recon_loss = F.mse_loss(outputs['reconstruction'], x)
         ...         return {'total_loss': recon_loss, 'recon_loss': recon_loss}
     """
-    
-    def __init__(self, 
+
+    def __init__(self,
                  input_dim: int,
                  latent_dim: int,
                  hidden_dims: list = None,
@@ -53,7 +53,7 @@ class BaseModel(ABC, nn.Module):
         self.latent_dim = latent_dim
         self.hidden_dims = hidden_dims or [512, 256]
         self.model_name = model_name
-        
+
     @abstractmethod
     def encode(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
         """Encode x -> z"""
@@ -75,37 +75,37 @@ class BaseModel(ABC, nn.Module):
         if any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values()):
             return kwargs
         return {k: v for k, v in kwargs.items() if k in params}
-    
+
     @abstractmethod
     def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
         """
         Forward pass
-        
+
         Args:
             x: Input [batch_size, input_dim]
             **kwargs: Additional args (batch_id, labels, etc.)
-            
+
         Returns:
             Dict with 'latent' and model-specific outputs (e.g., 'reconstruction')
         """
         pass
-    
+
     @abstractmethod
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], 
+    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
                      **kwargs) -> Dict[str, torch.Tensor]:
         """
         Compute loss
-        
+
         Args:
             x: Input [batch_size, input_dim]
             outputs: forward() output dict
             **kwargs: Additional args
-            
+
         Returns:
             Dict with 'total_loss' (required) and other losses (e.g., 'recon_loss', 'kl_loss')
         """
         pass
-    
+
     def fit(
             self,
             train_loader: DataLoader,
@@ -120,7 +120,7 @@ class BaseModel(ABC, nn.Module):
             **kwargs) -> Dict[str, list]:
         """
         Train with optional validation and early stopping
-        
+
         Args:
             train_loader: Training DataLoader
             val_loader: Validation DataLoader (enables early stopping)
@@ -132,7 +132,7 @@ class BaseModel(ABC, nn.Module):
             verbose: 0=quiet, 1=epoch logs, 2=epoch+batch logs
             verbose_every: Print frequency for epoch logs
             **kwargs: Forwarded to forward()/compute_loss() and optimizer weight_decay
-            
+
         Returns:
             history: Dict with train/val loss curves
         """
@@ -204,7 +204,7 @@ class BaseModel(ABC, nn.Module):
         if verbose >= 1:
             print("\n✓ Training finished!")
         return history
-    
+
     def _prepare_batch(self, batch_data: Any, device: str) -> Tuple[torch.Tensor, Dict[str, Any]]:
         """
         Prepare batch for training/inference
@@ -225,62 +225,62 @@ class BaseModel(ABC, nn.Module):
 
         x = batch_data.to(device).float()
         return x, {}
-    
-    def _train_epoch(self, train_loader: DataLoader, optimizer: torch.optim.Optimizer, 
+
+    def _train_epoch(self, train_loader: DataLoader, optimizer: torch.optim.Optimizer,
                      device: str, verbose: int = 1, **kwargs) -> Dict[str, float]:
         """Train single epoch"""
         self.train()
         total_loss = 0
         total_recon_loss = 0
         n_batches = 0
-        
+
         for batch_idx, batch_data in enumerate(train_loader):
             x, batch_kwargs = self._prepare_batch(batch_data, device)
-            
+
             optimizer.zero_grad()
             outputs = self.forward(x, **batch_kwargs, **kwargs)
             losses = self.compute_loss(x, outputs, **batch_kwargs, **kwargs)
-            
+
             loss = losses['total_loss']
             loss.backward()
             optimizer.step()
-            
+
             total_loss += loss.item()
             total_recon_loss += losses.get('recon_loss', loss).item()
             n_batches += 1
-            
+
             if verbose >= 2:
                 print(f"  Batch {batch_idx+1}/{len(train_loader)} | Loss: {loss.item():.4f}")
-        
+
         return {
             'total_loss': total_loss / n_batches,
             'recon_loss': total_recon_loss / n_batches
         }
-    
-    def _validate_epoch(self, val_loader: DataLoader, device: str, 
+
+    def _validate_epoch(self, val_loader: DataLoader, device: str,
                        verbose: int = 1, **kwargs) -> Dict[str, float]:
         """Validate single epoch"""
         self.eval()
         total_loss = 0
         total_recon_loss = 0
         n_batches = 0
-        
+
         with torch.no_grad():
             for batch_data in val_loader:
                 x, batch_kwargs = self._prepare_batch(batch_data, device)
-                
+
                 outputs = self.forward(x, **batch_kwargs, **kwargs)
                 losses = self.compute_loss(x, outputs, **batch_kwargs, **kwargs)
-                
+
                 total_loss += losses['total_loss'].item()
                 total_recon_loss += losses.get('recon_loss', losses['total_loss']).item()
                 n_batches += 1
-        
+
         return {
             'total_loss': total_loss / n_batches,
             'recon_loss': total_recon_loss / n_batches
         }
-    
+
     def _iter_loader(self, data_loader: DataLoader, device: str) -> Iterator[Tuple[torch.Tensor, Dict[str, Any]]]:
         """Iterate over DataLoader yielding (x, batch_kwargs) on device"""
         for batch_data in data_loader:
@@ -290,12 +290,12 @@ class BaseModel(ABC, nn.Module):
     def extract_latent(self, data_loader, device='cuda', return_reconstructions: bool = False):
         """
         Extract latent representations
-        
+
         Args:
             data_loader: DataLoader
             device: Computation device
             return_reconstructions: If True, also return reconstructions via decode()
-            
+
         Returns:
             Dict with 'latent' (and optionally 'reconstruction', 'labels')
         """
@@ -338,12 +338,12 @@ class BaseModel(ABC, nn.Module):
         if return_reconstructions:
             result["reconstruction"] = np.concatenate(reconstructions, axis=0)
         return result
-    
+
     def save_model(self, path: str):
         """Save model weights and config"""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         torch.save({
             'model_state_dict': self.state_dict(),
             'config': {
@@ -353,7 +353,7 @@ class BaseModel(ABC, nn.Module):
                 'model_name': self.model_name
             }
         }, path)
-    
+
     def load_model(self, path: str) -> Dict[str, Any]:
         """Load model weights and config"""
         checkpoint = torch.load(path, map_location='cpu')

@@ -24,37 +24,49 @@ from pathlib import Path
 from dataclasses import dataclass
 
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_DATASETS_ROOT = Path(
+    os.environ.get("PANODE_DATASETS_ROOT", str(_REPO_ROOT / "data"))
+)
+DEFAULT_DATA_PATH = Path(
+    os.environ.get(
+        "PANODE_DEFAULT_DATASET",
+        str(DEFAULT_DATASETS_ROOT / "DevelopmentDatasets" / "setty.h5ad"),
+    )
+)
+
+
 @dataclass
 class BenchmarkConfig:
     """Configuration for benchmark runs."""
-    
+
     # Data
-    data_path: Path = Path("/home/zeyufu/Desktop/datasets/DevelopmentDatasets/setty.h5ad")
+    data_path: Path = DEFAULT_DATA_PATH
     data_type: str = "trajectory"
-    
+
     # Model architecture
     latent_dim: int = 10  # Standard latent dimension for all models (allows fair comparison)
-    
+
     # Training
     lr: float = 1e-3  # Standard learning rate for all models
     batch_size: int = 128  # Consistent batch size for ALL models (including attention)
     epochs: int = 600   # Optimal: all models converge (recon Δ < 1% / 50ep window)
     patience: int = 100  # Early stopping patience (set to 0 or negative to disable)
     early_stopping: bool = False  # Disable by default for epoch series experiments
-    
-    # Data preprocessing  
+
+    # Data preprocessing
     hvg_top_genes: int = 3000
     max_cells: int = 3000  # Subsample to 3000 cells for benchmarking
-    
+
     # Metrics
     dre_k: int = 10
-    
+
     # Device
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
-    
+
     # Reproducibility
     seed: int = 42
-    
+
     # Logging
     verbose_every: int = 50
 
