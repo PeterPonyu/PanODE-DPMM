@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite the software metadata below and the associated manuscript once it is public."
+title: "PanODE-DPMM"
+type: software
+authors:
+  - name: "PanODE-DPMM contributors"
+abstract: "Research code for single-cell representation learning with DPMM-regularised autoencoders, ablation variants, external baselines, and publication figure tooling."
+repository-code: "https://github.com/PeterPonyu/PanODE-DPMM"
+url: "https://github.com/PeterPonyu/PanODE-DPMM"
+license: MIT
+version: 0.1.0
+date-released: 2026-03-27

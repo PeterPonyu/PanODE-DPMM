@@ -1,0 +1,14 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        files: >-
+          ^(\.github/|README\.md$|CHANGELOG\.md$|CONTRIBUTING\.md$|CODE_OF_CONDUCT\.md$|SECURITY\.md$|LICENSE$|CITATION\.cff$|pyproject\.toml$|\.editorconfig$|\.env\.example$|\.pre-commit-config\.yaml$|\.gitignore$)
+      - id: check-merge-conflict
+        files: >-
+          ^(\.github/|README\.md$|CHANGELOG\.md$|CONTRIBUTING\.md$|CODE_OF_CONDUCT\.md$|SECURITY\.md$|LICENSE$|CITATION\.cff$|pyproject\.toml$|\.editorconfig$|\.env\.example$|\.pre-commit-config\.yaml$|\.gitignore$)
+      - id: check-toml
+        files: ^pyproject\.toml$
+      - id: check-yaml
+        files: ^\.github/|^\.pre-commit-config\.yaml$

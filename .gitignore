@@ -1,10 +1,19 @@
 # ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+.ipynb_checkpoints/
 *.egg-info/
 dist/
 build/
 *.egg
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
 
 # ── Environment ──────────────────────────────────────────────────────────────
 .conda/
@@ -23,61 +32,37 @@ node_modules/
 .next/
 model-arch-viewer/.next/
 model-arch-viewer/node_modules/
+model-arch-viewer/tsconfig.tsbuildinfo
+model-arch-viewer/public/statistical
+model-arch-viewer/public/subplots/*
+!model-arch-viewer/public/subplots/.gitkeep
 
-# ── Large benchmark artifacts (regenerable) ──────────────────────────────────
-benchmarks/benchmark_results/cache/
-benchmarks/benchmark_results/models/
-benchmarks/benchmark_results/*/latents/
-benchmarks/benchmark_results/*/plots/
-benchmarks/benchmark_results/seed_pipeline.log
+# ── Manuscript sources (kept private/off-repo) ──────────────────────────────
+article/*
+!article/README.md
+
+# ── Local benchmark / experiment outputs (regenerable) ──────────────────────
+benchmarks/benchmark_results/**
+!benchmarks/benchmark_results/
+!benchmarks/benchmark_results/README.md
 benchmarks/training_dynamics_results/
 benchmarks/biological_validation/results/
 benchmarks/paper_figures/
-metrics/latent_extensions/results/
-
-# ── Experiment results (selectively tracked) ──────────────────────────────
-# Ignore bulk data but keep figure outputs needed by article and blueprints
-# -- Full-catalogue experiment runs (entirely regenerable) --
-experiments/results/ablation_dpmm_full/
-experiments/results/ablation_topic_full/
-experiments/results/full_comparison_all/
-experiments/results/full_vs_external_all/
-experiments/results/external_full/
-experiments/results/mixed/
-experiments/results/external/
-# -- Per-series bulk data (keep only figures/) --
-experiments/results/*/ablation/tables/
-experiments/results/*/ablation/series/
-experiments/results/*/ablation/cache/
-experiments/results/*/ablation/latents/
-experiments/results/*/ablation/figures/training_curves/
-experiments/results/*/vs_external/tables/
-experiments/results/*/vs_external/series/
-experiments/results/*/vs_external/cache/
-experiments/results/*/vs_external/latents/
+experiments/results/**
+!experiments/results/
+!experiments/results/README.md
 lightning_logs/
-
-# ── Benchmark result exports (regenerable) ─────────────────────────────────
-benchmarks/benchmark_results/*/csv/
-benchmarks/benchmark_results/statistical_exports/
-benchmarks/benchmark_results/external/
+metrics/latent_extensions/results/
 
 # ── Logs ─────────────────────────────────────────────────────────────────────
 *.log
 retrain_log.txt
-
-# ── Model checkpoints (regenerable) ─────────────────────────────────────────
-experiments/results/*/models/
-experiments/results/dpmm_diagnostics/*.npz
 
 # ── Refined figure generation artifacts ─────────────────────────────────────
 refined_figures/output/
 
 # ── Duplicate fonts (canonical copy in fonts/) ──────────────────────────────
 vcd/fonts/
-
-# ── Compiled article PDF (regenerable) ──────────────────────────────────────
-article/dpmm/main_mdpi.pdf
 
 # ── LaTeX compilation artifacts ─────────────────────────────────────────────
 *.aux
