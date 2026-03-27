@@ -43,7 +43,6 @@ __all__ = [
     "BaseModel",
     # models
     "CellBLASTModel",
-    "GMVAEModel",
     "SCALEXModel",
     "scDiffusionModel",
     "siVAEModel",
@@ -57,7 +56,6 @@ __all__ = [
     "DisentanglementVAEModel",
     # factories
     "create_cellblast_model",
-    "create_gmvae_model",
     "create_scalex_model",
     "create_scdiffusion_model",
     "create_sivae_model",
@@ -69,11 +67,13 @@ __all__ = [
     "create_scgcc_model",
     "create_scsmd_model",
     "create_disentanglement_vae_model",
-    # scVI-family (optional)
-    "SCVIModel",
-    "PeakVIModel",
-    "PoissonVIModel",
-    "create_scvi_model",
-    "create_peakvi_model",
-    "create_poissonvi_model",
 ]
+
+if _GEOOPT_AVAILABLE:
+    __all__ += ["GMVAEModel", "create_gmvae_model"]
+
+if _SCVI_AVAILABLE:
+    __all__ += [
+        "SCVIModel", "PeakVIModel", "PoissonVIModel",
+        "create_scvi_model", "create_peakvi_model", "create_poissonvi_model",
+    ]

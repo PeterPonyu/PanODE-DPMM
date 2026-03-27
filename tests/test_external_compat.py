@@ -7,15 +7,18 @@ import warnings
 
 import pytest
 
+_geoopt_available = importlib.util.find_spec("geoopt") is not None
+
 
 @pytest.mark.parametrize(
     ("legacy_name", "canonical_name"),
     [
         ("benchmarks.external_models.base_model", "eval_lib.baselines.models.base_model"),
         ("benchmarks.external_models.scalex_model", "eval_lib.baselines.models.scalex_model"),
-        (
+        pytest.param(
             "benchmarks.external_models.distributions.PoincareNormal.layers",
             "eval_lib.baselines.models.distributions.PoincareNormal.layers",
+            marks=pytest.mark.skipif(not _geoopt_available, reason="geoopt not installed"),
         ),
     ],
 )
@@ -32,7 +35,8 @@ def test_legacy_external_models_package_reexports_factories() -> None:
     legacy_pkg = importlib.import_module("benchmarks.external_models")
     canonical_pkg = importlib.import_module("eval_lib.baselines.models")
     assert legacy_pkg.create_scalex_model is canonical_pkg.create_scalex_model
-    assert legacy_pkg.create_gmvae_model is canonical_pkg.create_gmvae_model
+    if _geoopt_available:
+        assert legacy_pkg.create_gmvae_model is canonical_pkg.create_gmvae_model
 
 
 def test_legacy_external_registry_reexports_canonical_objects() -> None:

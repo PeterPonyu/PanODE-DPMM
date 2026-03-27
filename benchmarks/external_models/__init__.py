@@ -63,7 +63,10 @@ _COMPAT_SUBMODULES = [
 
 
 def _alias_submodule(relative_name: str) -> None:
-    target = import_module(f"{_CANONICAL_PACKAGE}.{relative_name}")
+    try:
+        target = import_module(f"{_CANONICAL_PACKAGE}.{relative_name}")
+    except ImportError:
+        return
     sys.modules[f"{__name__}.{relative_name}"] = target
 
 
