@@ -3,7 +3,7 @@
 Merge Internal + External Results and Visualise Comparison
 ==========================================================
 
-Combines the **12 internal PanODE-LAB models** (from ``full_comparison``)
+Combines the **12 internal PanODE-DPMM models** (from ``full_comparison``)
 with all **external baselines** (from the external benchmark runner) into a
 single merged experiment, then generates publication-quality statistical
 comparison figures using the REA framework.
@@ -81,113 +81,28 @@ from eval_lib.viz.rea import (
     needs_method_split,
     MIN_XTICK_FONTSIZE)
 from eval_lib.experiment.merge import MergedExperimentConfig
-from eval_lib.baselines.registry import EXTERNAL_MODELS
 
 # Reuse helpers from visualize_experiment (DRY)
-from experiments.visualize_experiment import (
+from eval_lib.experiment.templates.visualize_experiment import (
     METRIC_GROUPS,
     DEFAULT_PALETTE,
-    _MAX_HEIGHT_TO_WIDTH,
     _adaptive_ncols,
     _adaptive_params,
     _compute_hspace,
-    _enforce_max_aspect,
     _build_sig_pairs,
     _smooth)
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Method ordering constants
-# ═══════════════════════════════════════════════════════════════════════════════
-
-# Internal models — same order as full_comparison preset
-INTERNAL_METHODS = [
-    "Pure-AE", "Pure-Trans-AE", "Pure-Contr-AE",
-    "DPMM-Base", "DPMM-Trans", "DPMM-Contr",
-]
-
-# External baselines — ordered from eval_lib.baselines.registry
-EXTERNAL_METHODS = list(EXTERNAL_MODELS.keys())
-
-# ── Logical method groups for multi-figure mode ──────────────────────────────
-#
-# When the total method count exceeds METHOD_GROUP_THRESHOLD, figures are
-# automatically split into logical groups rather than crammed into one
-# unreadable plot.  The "focal method" (best-performing proposed model) is
-# included in every group as the comparison anchor.
-#
-# Groups:
-#   1. internal  — all 12 proposed PanODE-LAB models
-#   2. external  — all external baselines + the focal model as reference
-#   3. topN      — top-K performers from both pools (cross-pool ranking)
-#
-METHOD_GROUP_THRESHOLD = 15   # auto-split when n_methods exceeds this
-
-FOCAL_METHOD = "Pure-Trans-AE"  # best-performing proposed model (anchor)
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# Merged experiment configuration
-# ═══════════════════════════════════════════════════════════════════════════════
-
-DEFAULT_INTERNAL_DIR = "mixed/full_comparison"
-DEFAULT_EXTERNAL_DIR = "external"
-DEFAULT_MERGED_NAME = "full_vs_external"
-DEFAULT_OUTPUT_ROOT = Path("experiments/results")
-
-
-def build_merged_config(
-    internal_name: str = DEFAULT_INTERNAL_DIR,
-    external_name: str = DEFAULT_EXTERNAL_DIR,
-    merged_name: str = DEFAULT_MERGED_NAME,
-    output_root: Path = DEFAULT_OUTPUT_ROOT,
-    internal_methods: list = None,
-    external_methods: list = None) -> MergedExperimentConfig:
-    """Create a MergedExperimentConfig combining internal + external results.
-
-    Parameters
-    ----------
-    internal_name : str
-        Subdirectory name under ``output_root`` for internal models.
-    external_name : str
-        Subdirectory name under ``output_root`` for external baselines.
-    merged_name : str
-        Output subdirectory name for merged results.
-    output_root : Path
-        Root directory for experiments/results.
-    internal_methods : list or None
-        Internal method names (default: all 12).
-    external_methods : list or None
-        External method names (default: all 15).
-
-    Returns
-    -------
-    MergedExperimentConfig
-        Ready for ``build_merged_tables()``.
-    """
-    if internal_methods is None:
-        internal_methods = list(INTERNAL_METHODS)
-    if external_methods is None:
-        external_methods = list(EXTERNAL_METHODS)
-
-    return MergedExperimentConfig(
-        name=merged_name,
-        sources=[
-            {
-                "tables": str(output_root / internal_name / "tables"),
-                "series": str(output_root / internal_name / "series"),
-                "methods": internal_methods,
-            },
-            {
-                "tables": str(output_root / external_name / "tables"),
-                "series": str(output_root / external_name / "series"),
-                "methods": external_methods,
-            },
-        ],
-        output_root=output_root,
-        description=(
-            f"Merged comparison: {len(internal_methods)} internal PanODE-LAB "
-            f"models + {len(external_methods)} external baselines"
-        ))
+from experiments.merge_visualize_support import (
+    DEFAULT_EXTERNAL_DIR,
+    DEFAULT_INTERNAL_DIR,
+    DEFAULT_MERGED_NAME,
+    DEFAULT_OUTPUT_ROOT,
+    FOCAL_METHOD,
+    INTERNAL_METHODS,
+    METHOD_GROUP_THRESHOLD,
+    build_merged_config,
+    build_method_groups,
+    enforce_max_aspect,
+)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -324,7 +239,7 @@ def visualize_merged(
 
     # Enforce aspect ratio cap (height/width ≤ 21:17)
     if ncols is None:
-        final_ncols = _enforce_max_aspect(
+        final_ncols = enforce_max_aspect(
             n_metrics=len(flat_metrics),
             per_row_height=final_h,
             hspace=computed_hspace,
@@ -434,71 +349,6 @@ def visualize_merged(
 # Multi-figure grouped visualisation
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _build_method_groups(
-    all_methods: list[str],
-    tables_dir,
-    *,
-    focal_method: str = FOCAL_METHOD,
-    top_n: int = 10,
-    ranking_metric: str = "NMI") -> dict[str, list[str]]:
-    """Split methods into logical groups for multi-figure mode.
-
-    Returns a dict  ``{ group_name: [method_names_in_order] }``.
-
-    Groups produced:
-      - ``internal``  : all methods from INTERNAL_METHODS (present in data)
-      - ``external``  : external baselines + the focal/proposed model
-      - ``topN``      : the top-N performers across both pools, ranked by
-                        cross-dataset mean of *ranking_metric*
-    """
-    internal_set = set(INTERNAL_METHODS)
-    present_internal = [m for m in all_methods if m in internal_set]
-    present_external = [m for m in all_methods if m not in internal_set]
-
-    groups: dict[str, list[str]] = {}
-
-    # Group 1: Internal models
-    if present_internal:
-        groups["internal"] = list(present_internal)
-
-    # Group 2: External baselines + focal reference
-    if present_external:
-        ext_list = list(present_external)
-        if focal_method and focal_method in all_methods and focal_method not in ext_list:
-            ext_list.append(focal_method)          # anchor last
-        groups["external"] = ext_list
-
-    # Group 3: Top-N cross-pool (ranked by mean of ranking_metric)
-    try:
-        import glob as _g
-        csvs = sorted(_g.glob(str(tables_dir / "*.csv")))
-        if csvs:
-            scores: dict[str, list[float]] = {m: [] for m in all_methods}
-            for csv_path in csvs:
-                df = pd.read_csv(csv_path, index_col=0)
-                if ranking_metric in df.columns:
-                    for method in all_methods:
-                        if method in df.index:
-                            val = df.loc[method, ranking_metric]
-                            if pd.notna(val):
-                                scores[method].append(float(val))
-            # Mean score per method
-            mean_scores = {m: np.mean(vals) if vals else -999
-                           for m, vals in scores.items()}
-            ranked = sorted(mean_scores, key=lambda m: mean_scores[m],
-                            reverse=True)[:top_n]
-            # Preserve logical order: internals first, then externals
-            ranked_internal = [m for m in present_internal if m in ranked]
-            ranked_external = [m for m in present_external if m in ranked]
-            top_list = ranked_internal + ranked_external
-            if top_list:
-                groups["topN"] = top_list
-    except Exception as exc:
-        print(f"  WARNING: Could not build top-N group: {exc}")
-
-    return groups
-
-
 def visualize_merged_grouped(
     merged_cfg: MergedExperimentConfig,
     *,
@@ -532,7 +382,7 @@ def visualize_merged_grouped(
     When the merged experiment has too many methods (>METHOD_GROUP_THRESHOLD)
     for a single readable figure, this function splits them into:
 
-      1. **internal** — all 12 proposed PanODE-LAB models
+    1. **internal** — all 12 proposed PanODE-DPMM models
       2. **external** — all external baselines + the focal model as reference
       3. **topN**     — cross-pool top performers ranked by *ranking_metric*
 
@@ -549,8 +399,12 @@ def visualize_merged_grouped(
 
     _apply_font(font_family)
 
-    method_groups = _build_method_groups(
+    try:
+        method_groups = build_method_groups(
         all_methods, tables_dir, top_n=top_n, ranking_metric=ranking_metric)
+    except Exception as exc:
+        print(f"  WARNING: Could not build grouped method sets: {exc}")
+        method_groups = {"internal": list(all_methods)}
 
     print(f"\n{'='*70}")
     print(f"Multi-figure grouped visualisation: {merged_cfg.name}")
@@ -651,7 +505,7 @@ def visualize_merged_grouped(
 
         # Enforce aspect ratio cap (height/width ≤ 21:17)
         if ncols is None:
-            final_ncols = _enforce_max_aspect(
+            final_ncols = enforce_max_aspect(
                 n_metrics=len(flat_metrics),
                 per_row_height=final_h,
                 hspace=computed_hspace,

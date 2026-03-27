@@ -50,7 +50,6 @@ def _resolve_font_dir() -> Path | None:
 
     1. ``$PANODE_FONT_DIR`` environment variable (CI / other machines)
     2. ``<repo_root>/fonts/`` (project-relative)
-    3. ``~/Desktop/fonts`` (legacy developer path)
 
     Returns the first existing directory, or ``None``.
     """
@@ -58,7 +57,6 @@ def _resolve_font_dir() -> Path | None:
     candidates = [
         os.environ.get("PANODE_FONT_DIR", ""),
         str(Path(__file__).resolve().parent.parent.parent / "fonts"),
-        str(Path.home() / "Desktop" / "fonts"),
     ]
     for c in candidates:
         p = Path(c)
