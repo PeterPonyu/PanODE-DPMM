@@ -69,7 +69,7 @@ $^{1}$ \quad State Key Laboratory of Trauma and Chemical Poisoning, Institute of
 
 \section{Introduction}\label{sec:intro}
 
-How much geometric structure should a latent space impose during training, and what does that structure cost? Most autoencoder pipelines for single-cell RNA sequencing (scRNA-seq) side-step this question: the encoder is trained with a reconstruction objective alone, and cluster structure is recovered post hoc by running $K$-means or Leiden~\cite{traag2019leiden} on the embedding~\cite{lopez2018deep,gronbech2020scvae}. The resulting latent spaces often achieve high label concordance (NMI, ARI) but poor cluster compactness and boundary quality, because no training signal penalizes geometric diffuseness~\cite{zheng2017massively,hwang2018single}. Recent geometry-aware approaches regularize the latent manifold directly~\cite{duque2022grae}, yet none integrate an adaptive, data-driven cluster prior that jointly controls cluster count and boundary quality during representation learning.
+How much geometric structure should a latent space impose during training, and what does that structure cost? Most autoencoder pipelines for single-cell RNA sequencing (scRNA-seq) sidestep this question: the encoder is trained with a reconstruction objective alone, and cluster structure is recovered post hoc by running $K$-means or Leiden~\cite{traag2019leiden} on the embedding~\cite{lopez2018deep,gronbech2020scvae}. The resulting latent spaces often achieve high label concordance (NMI, ARI) but poor cluster compactness and boundary quality, because no training signal penalizes geometric diffuseness~\cite{zheng2017massively,hwang2018single}. Recent geometry-aware approaches regularize the latent manifold directly~\cite{duque2022grae}, yet none integrate an adaptive, data-driven cluster prior that jointly controls cluster count and boundary quality during representation learning.
 
 An alternative is to impose a structured nonparametric prior that explicitly regularizes the latent manifold. Dirichlet Process Mixture Models (DPMMs)~\cite{ferguson1973bayesian,neal2000markov} are attractive for this role because they do not require the cluster count to be specified in advance: an online Bayesian Gaussian Mixture~\cite{blei2006variational} adaptively partitions the latent space, creating and merging components as the data warrant. A concurrent approach, scDAC~\cite{an2024scdac}, couples an autoencoder with a DPMM for adaptive clustering but focuses on concordance optimization rather than characterizing the full geometry--concordance trade-off. More broadly, directly constraining the latent distribution toward a mixture of Gaussians may pull representations away from the configurations that maximize label recovery---a trade-off that has not been systematically characterized on a large single-cell benchmark.
 
@@ -150,7 +150,7 @@ DPMM-Base & 0.506 & 0.320 & \textbf{0.374} & \textbf{0.868} & \textbf{0.682} & \
 The catalogue-level pattern is unambiguous: the DPMM prior buys geometry at the expense of label recovery. Pure-AE leads on concordance (NMI~0.609, ARI~0.406) while DPMM-Base leads on geometry (ASW~0.374, DAV~0.868). The improvements are large---ASW rises by 127\%, DAV falls by 47\%---but so are the costs ($-$17\% NMI, $-$21\% ARI). The composite score (0.400 vs.\ 0.393) favors DPMM-Base by only 1.8\%, a margin driven entirely by the ASW component outweighing concordance losses. This narrow composite margin should not be mistaken for a decisive win; rather, it signals a genuine regime difference. The two models optimize different aspects of latent quality, and the preferred choice depends on whether the downstream task rewards tight clusters (trajectory inference, visualization) or accurate $K$-means label assignment.
 
 \subsection{Internal Ablation}
-Figure~\ref{fig:ablation} presents the ablation analysis comparing Pure-AE, DPMM-Base, and DPMM-FM on the 8 core datasets where all three variants were evaluated.
+Figure~\ref{fig:ablation} presents the ablation analysis comparing Pure-AE, DPMM-Base, and DPMM-FM on the 12 core datasets where all three variants were evaluated.
 
 \begin{figure}[H]
 \centering
@@ -159,11 +159,11 @@ Figure~\ref{fig:ablation} presents the ablation analysis comparing Pure-AE, DPMM
 \label{fig:ablation}
 \end{figure}
 
-Table~\ref{tab:dpmm_ablation_core} quantifies the three-model comparison on the 8 core datasets.
+Table~\ref{tab:dpmm_ablation_core} quantifies the three-model comparison on the 12 core datasets.
 
 \begin{table}[H]
 \centering
-\caption{\textbf{Three-model ablation on 8 core datasets.} Mean metric values. Best per column in bold. The composite score (NMI+ARI+ASW)/3 weights concordance 2:1 over geometry and does not reflect projection fidelity, where DPMM-FM leads.}
+\caption{\textbf{Three-model ablation on 12 core datasets.} Mean metric values. Best per column in bold. The composite score (NMI+ARI+ASW)/3 weights concordance 2:1 over geometry and does not reflect projection fidelity, where DPMM-FM leads.}
 \label{tab:dpmm_ablation_core}
 {\small
 \begin{tabular}{lcccccccc}
@@ -193,7 +193,7 @@ Figure~\ref{fig:sensitivity} shows hyperparameter sensitivity for DPMM-Base and 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{Fig3_sensitivity_training_dpmm}
-\caption{\textbf{Hyperparameter sensitivity analysis.} Panel~(a): experimental workflow showing 12~datasets evaluated under systematic hyperparameter sweeps ($>$1200 training runs). Panels~(b)--(j): boxplot grids for ten hyperparameters---warmup ratio, latent dimension, encoder size, dropout rate, learning rate, epochs, batch size, weight decay, and HVG count---each showing NMI, ARI, ASW, DAV, DRE-UMAP, and LSE across their swept ranges. Red boxes mark default configurations; metric variance~$\leq$5\% across stable ranges confirms robustness.}
+\caption{\textbf{Sensitivity analysis and training dynamics.} Panel~(a): four 11-metric sensitivity heatmaps summarizing mean-rank performance across the 12-dataset sensitivity suite for DPMM warmup ratio, DPMM latent dimension, FM flow weight, and FM noise scale. Dashed outlines mark default settings. Panel~(b): training-loss trajectories on four representative datasets for Pure-AE, DPMM-Base, and DPMM-FM, decomposing total, reconstruction, DPMM, and flow losses over training.}
 \label{fig:sensitivity}
 \end{figure}
 
@@ -208,12 +208,12 @@ To assess whether the improved geometry carries biological meaning, we perform p
 \end{figure}
 
 \subsection{External Benchmark}
-Figure~\ref{fig:external} presents the full external comparison, evaluating the DPMM family against 18 external baselines---including scVI~\cite{lopez2018deep}, CellBLAST~\cite{cao2020searching}, SCALEX~\cite{xiong2022online}, $\beta$-VAE~\cite{higgins2017beta}, and others---across 30 metrics spanning concordance, geometry, projection fidelity, and latent-structure quality.
+Figure~\ref{fig:external} summarizes the unified 12-dataset external comparison, contrasting the best DPMM variant with 11 representative external baselines---including scVI~\cite{lopez2018deep}, CellBLAST~\cite{cao2020searching}, SCALEX~\cite{xiong2022online}, $\beta$-VAE~\cite{higgins2017beta}, and the MoCo-style CLEAR baseline---across the full 41-metric panel spanning concordance, geometry, projection fidelity, and latent-structure quality.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{Fig5_external_dpmm}
-\caption{\textbf{External benchmark.} Panel~(a): experimental workflow showing 11~external baselines evaluated alongside the best DPMM variant under a unified preprocessing pipeline (3k~HVGs, log$_{1}$p normalization) across 12~datasets and 41~metrics. Panels~(b)--(d): metric boxplot grids for proposed models, classical baselines (PCA, ICA, NMF, FA, Truncated-SVD, UMAP, t-SNE), and deep/probabilistic baselines (scVI~\cite{lopez2018deep}, scDHA~\cite{tran2021scdha}, SCALEX~\cite{xiong2022online}, $\beta$-VAE~\cite{higgins2017beta}, CLEAR~\cite{han2022clear}, and others), organized by clustering concordance, DRE-UMAP, DRE-tSNE, LSE intrinsic, DREX, and LSEX families.}
+\caption{\textbf{External benchmark.} Panel~(a): experimental workflow showing 11 representative external baselines evaluated alongside the best DPMM variant under a unified preprocessing pipeline (3k~HVGs, log$_{1}$p normalization) across 12~datasets and 41~metrics. Panels~(b)--(d): metric boxplot grids for proposed models, classical baselines (PCA, ICA, NMF, FA, Truncated-SVD, UMAP, t-SNE), and deep/probabilistic baselines (scVI~\cite{lopez2018deep}, scDHA~\cite{tran2021scdha}, SCALEX~\cite{xiong2022online}, $\beta$-VAE~\cite{higgins2017beta}, CLEAR, and others), organized by clustering concordance, DRE-UMAP, DRE-tSNE, LSE intrinsic, DREX, and LSEX families.}
 \label{fig:external}
 \end{figure}
 
@@ -221,7 +221,7 @@ Table~\ref{tab:dpmm_external_winrate} quantifies the external win rates.
 
 \input{tables/external_winrate}
 
-DPMM-Base achieves a core win rate of 70.5\%, winning 31 of 44 core-metric comparisons against external baselines, with 176 total significant wins across all metrics. This advantage is concentrated on ASW and DAV; on NMI alone, several external baselines (scVI~\cite{lopez2018deep}, CLEAR~\cite{han2022clear}) match or exceed DPMM-Base on individual datasets, consistent with the geometry--concordance trade-off observed internally.
+DPMM-Base achieves a core win rate of 70.5\%, winning 31 of 44 core-metric comparisons against external baselines, with 176 total significant wins across all metrics. This advantage is concentrated on ASW and DAV; on NMI alone, several external baselines---notably scVI~\cite{lopez2018deep} and CLEAR---match or exceed DPMM-Base on individual datasets, consistent with the geometry--concordance trade-off observed internally.
 
 \subsection{Downstream Classification}
 Table~\ref{tab:dpmm_knn} reports $k$NN classification accuracy and macro-F1 as a supervised probe of representation quality.
