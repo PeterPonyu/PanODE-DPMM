@@ -23,6 +23,7 @@ This module provides encoder architectures for single-cell representation learni
    - Leverages cell-cell neighbourhood structure via attention
    - Requires torch_geometric; gracefully unavailable otherwise
 """
+
 from typing import Literal
 
 import torch
@@ -42,8 +43,10 @@ except ImportError:
 # MLP ENCODERS (Baseline)
 # =============================================================================
 
+
 class MLPEncoder(nn.Module):
     """Simple MLP encoder (fastest baseline)."""
+
     def __init__(
         self,
         input_dim: int,
@@ -53,7 +56,8 @@ class MLPEncoder(nn.Module):
         dropout: float = 0.1,
         use_vae: bool = False,
         var_eps: float = 1e-4,
-        use_residual: bool = False):
+        use_residual: bool = False,
+    ):
         super().__init__()
         self.use_vae = use_vae
         self.var_eps = var_eps
@@ -94,6 +98,7 @@ class MLPEncoder(nn.Module):
 # MULTI-HEAD PROJECTION TRANSFORMER
 # =============================================================================
 
+
 class MultiHeadProjectionEncoder(nn.Module):
     """
     Multi-Head Projection Transformer Encoder.
@@ -105,6 +110,7 @@ class MultiHeadProjectionEncoder(nn.Module):
 
     This design prevents the single-token collapse problem.
     """
+
     def __init__(
         self,
         input_dim: int,
@@ -116,7 +122,8 @@ class MultiHeadProjectionEncoder(nn.Module):
         output_dim: int = 32,
         num_tokens: int = 8,
         use_vae: bool = False,
-        var_eps: float = 1e-4):
+        var_eps: float = 1e-4,
+    ):
         super().__init__()
         self.input_dim = input_dim
         self.d_model = d_model
@@ -126,14 +133,17 @@ class MultiHeadProjectionEncoder(nn.Module):
         self.var_eps = var_eps
 
         # Multiple projection heads
-        self.projection_heads = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(input_dim, d_model),
-                nn.LayerNorm(d_model),
-                nn.GELU(),
-                nn.Dropout(dropout))
-            for _ in range(num_tokens)
-        ])
+        self.projection_heads = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Linear(input_dim, d_model),
+                    nn.LayerNorm(d_model),
+                    nn.GELU(),
+                    nn.Dropout(dropout),
+                )
+                for _ in range(num_tokens)
+            ]
+        )
 
         # Token type embeddings
         self.token_embeddings = nn.Parameter(torch.randn(1, num_tokens, d_model) * 0.02)
@@ -144,13 +154,16 @@ class MultiHeadProjectionEncoder(nn.Module):
             nhead=nhead,
             dim_feedforward=dim_feedforward,
             dropout=dropout,
-            activation='gelu',
-            batch_first=True)
+            activation="gelu",
+            batch_first=True,
+        )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
         # Aggregation
         self.aggregation_query = nn.Parameter(torch.randn(1, 1, d_model) * 0.02)
-        self.cross_attention = nn.MultiheadAttention(d_model, nhead, dropout=dropout, batch_first=True)
+        self.cross_attention = nn.MultiheadAttention(
+            d_model, nhead, dropout=dropout, batch_first=True
+        )
 
         # Output
         self.final_norm = nn.LayerNorm(d_model)
@@ -197,6 +210,7 @@ class MultiHeadProjectionEncoder(nn.Module):
 # HYBRID MLP-ATTENTION ENCODER
 # =============================================================================
 
+
 class HybridMLPAttentionEncoder(nn.Module):
     """
     Hybrid MLP + Attention Encoder.
@@ -206,6 +220,7 @@ class HybridMLPAttentionEncoder(nn.Module):
     2. Multi-head attention refines across batch
     3. Residual connection preserves MLP stability
     """
+
     def __init__(
         self,
         input_dim: int,
@@ -216,7 +231,8 @@ class HybridMLPAttentionEncoder(nn.Module):
         dropout: float = 0.1,
         use_vae: bool = False,
         var_eps: float = 1e-4,
-        attention_weight: float = 0.3):
+        attention_weight: float = 0.3,
+    ):
         super().__init__()
         self.use_vae = use_vae
         self.var_eps = var_eps
@@ -231,7 +247,8 @@ class HybridMLPAttentionEncoder(nn.Module):
             nn.Linear(hidden_dim, hidden_dim),
             nn.LayerNorm(hidden_dim),
             nn.GELU(),
-            nn.Dropout(dropout))
+            nn.Dropout(dropout),
+        )
 
         # Attention refinement
         self.attention = nn.MultiheadAttention(hidden_dim, nhead, dropout=dropout, batch_first=True)
@@ -275,6 +292,7 @@ class HybridMLPAttentionEncoder(nn.Module):
 # GAT (GRAPH ATTENTION) ENCODER
 # =============================================================================
 
+
 class GATConvEncoder(nn.Module):
     """Graph Attention Network encoder for cell-graph–aware representation learning.
 
@@ -303,8 +321,7 @@ class GATConvEncoder(nn.Module):
         super().__init__()
         if GATConv is None:
             raise ImportError(
-                "GATConvEncoder requires torch_geometric. "
-                "Install with: pip install torch-geometric"
+                "GATConvEncoder requires torch_geometric. Install with: pip install torch-geometric"
             )
         self.use_vae = use_vae
         self.var_eps = var_eps
@@ -325,8 +342,13 @@ class GATConvEncoder(nn.Module):
         # Additional hidden layers: (hidden_dim * num_heads) → hidden_dim (concat)
         for _ in range(num_layers - 1):
             self.convs.append(
-                GATConv(hidden_dim * num_heads, hidden_dim, heads=num_heads,
-                        dropout=dropout, concat=True)
+                GATConv(
+                    hidden_dim * num_heads,
+                    hidden_dim,
+                    heads=num_heads,
+                    dropout=dropout,
+                    concat=True,
+                )
             )
             self.bns.append(nn.BatchNorm1d(hidden_dim * num_heads))
             self.dropouts.append(nn.Dropout(dropout))
@@ -335,13 +357,12 @@ class GATConvEncoder(nn.Module):
 
         # Output heads
         if use_vae:
-            self.mu_head = GATConv(gat_out_dim, output_dim, heads=1,
-                                   concat=False, dropout=dropout)
-            self.var_head = GATConv(gat_out_dim, output_dim, heads=1,
-                                    concat=False, dropout=dropout)
+            self.mu_head = GATConv(gat_out_dim, output_dim, heads=1, concat=False, dropout=dropout)
+            self.var_head = GATConv(gat_out_dim, output_dim, heads=1, concat=False, dropout=dropout)
         else:
-            self.output_conv = GATConv(gat_out_dim, output_dim, heads=1,
-                                       concat=False, dropout=dropout)
+            self.output_conv = GATConv(
+                gat_out_dim, output_dim, heads=1, concat=False, dropout=dropout
+            )
 
     def forward(
         self,
@@ -363,9 +384,7 @@ class GATConvEncoder(nn.Module):
         """
         residual = None
         h = x
-        for i, (conv, bn, drop) in enumerate(
-            zip(self.convs, self.bns, self.dropouts)
-        ):
+        for i, (conv, bn, drop) in enumerate(zip(self.convs, self.bns, self.dropouts)):
             h = conv(h, edge_index)
             h = bn(h)
             h = F.relu(h)
@@ -393,8 +412,9 @@ class GATConvEncoder(nn.Module):
 # ENCODER FACTORY
 # =============================================================================
 
+
 def create_encoder(
-    encoder_type: Literal['mlp', 'transformer', 'hybrid', 'gat'],
+    encoder_type: Literal["mlp", "transformer", "hybrid", "gat"],
     input_dim: int,
     output_dim: int,
     hidden_dim: int = 128,
@@ -409,7 +429,8 @@ def create_encoder(
     attention_weight: float = 0.3,
     # GAT-specific
     gat_num_heads: int = 4,
-    gat_use_residual: bool = True) -> nn.Module:
+    gat_use_residual: bool = True,
+) -> nn.Module:
     """
     Factory function to create encoder.
 
@@ -437,7 +458,7 @@ def create_encoder(
     Returns:
         Encoder module
     """
-    if encoder_type == 'mlp':
+    if encoder_type == "mlp":
         return MLPEncoder(
             input_dim=input_dim,
             hidden_dim=hidden_dim,
@@ -445,8 +466,9 @@ def create_encoder(
             num_layers=num_layers,
             dropout=dropout,
             use_vae=use_vae,
-            var_eps=var_eps)
-    elif encoder_type == 'transformer':
+            var_eps=var_eps,
+        )
+    elif encoder_type == "transformer":
         return MultiHeadProjectionEncoder(
             input_dim=input_dim,
             d_model=d_model,
@@ -457,8 +479,9 @@ def create_encoder(
             output_dim=output_dim,
             num_tokens=num_tokens,
             use_vae=use_vae,
-            var_eps=var_eps)
-    elif encoder_type == 'hybrid':
+            var_eps=var_eps,
+        )
+    elif encoder_type == "hybrid":
         return HybridMLPAttentionEncoder(
             input_dim=input_dim,
             hidden_dim=hidden_dim,
@@ -468,12 +491,14 @@ def create_encoder(
             dropout=dropout,
             use_vae=use_vae,
             var_eps=var_eps,
-            attention_weight=attention_weight)
-    elif encoder_type == 'gat':
+            attention_weight=attention_weight,
+        )
+    elif encoder_type == "gat":
         if GATConv is None:
             raise ImportError(
                 "encoder_type='gat' requires torch_geometric. "
-                "Install with: pip install torch-geometric")
+                "Install with: pip install torch-geometric"
+            )
         return GATConvEncoder(
             input_dim=input_dim,
             hidden_dim=hidden_dim,
@@ -483,6 +508,9 @@ def create_encoder(
             dropout=dropout,
             use_vae=use_vae,
             var_eps=var_eps,
-            use_residual=gat_use_residual)
+            use_residual=gat_use_residual,
+        )
     else:
-        raise ValueError(f"Unknown encoder type: {encoder_type}. Use 'mlp', 'transformer', 'hybrid', or 'gat'.")
+        raise ValueError(
+            f"Unknown encoder type: {encoder_type}. Use 'mlp', 'transformer', 'hybrid', or 'gat'."
+        )

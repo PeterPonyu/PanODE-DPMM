@@ -11,19 +11,12 @@ class VanillaEncoderLayer(nn.Module):
         self.latent_dim = args.latent_dim
         self.feature_dim = feature_dim
 
-        self.variational = nn.Linear(
-            self.feature_dim,
-            4 * self.latent_dim
-        )
+        self.variational = nn.Linear(self.feature_dim, 4 * self.latent_dim)
         self.manifold = geoopt.manifolds.Lorentz()
 
     def forward(self, feature):
         feature = self.variational(feature)
-        mean, logsigma = torch.split(
-            feature,
-            [2 * self.latent_dim, 2 * self.latent_dim],
-            dim=-1
-        )
+        mean, logsigma = torch.split(feature, [2 * self.latent_dim, 2 * self.latent_dim], dim=-1)
 
         mean = mean.view(*mean.shape[:-1], self.latent_dim, 2)
         mean = self.manifold.expmap0(F.pad(mean, (1, 0)))

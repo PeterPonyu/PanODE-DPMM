@@ -18,8 +18,12 @@ from eval_lib.experiment.merge import MergedExperimentConfig
 
 # Internal models — same order as the full comparison preset.
 INTERNAL_METHODS = [
-    "Pure-AE", "Pure-Trans-AE", "Pure-Contr-AE",
-    "DPMM-Base", "DPMM-Trans", "DPMM-Contr",
+    "Pure-AE",
+    "Pure-Trans-AE",
+    "Pure-Contr-AE",
+    "DPMM-Base",
+    "DPMM-Trans",
+    "DPMM-Contr",
 ]
 
 # External baselines — ordered from the canonical eval_lib registry.
@@ -117,8 +121,7 @@ def build_method_groups(
                     scores[method].append(float(val))
 
     mean_scores = {
-        method: np.mean(vals) if vals else float("-inf")
-        for method, vals in scores.items()
+        method: np.mean(vals) if vals else float("-inf") for method, vals in scores.items()
     }
     ranked = sorted(mean_scores, key=lambda method: mean_scores[method], reverse=True)[:top_n]
     ranked_internal = [m for m in present_internal if m in ranked]

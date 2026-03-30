@@ -58,8 +58,8 @@ _FS_TICK = max(FONTSIZE_TICK, 7)
 # Subplot generators
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def gen_component_umap(umap_emb, latent, labels, comp_prefix, ds_name,
-                       model, out_path, n_comp=3):
+
+def gen_component_umap(umap_emb, latent, labels, comp_prefix, ds_name, model, out_path, n_comp=3):
     """Generate UMAP panels colored by latent component intensity.
 
     Layout: 1×3 grid for 3 components (compact for per-dataset grouping).
@@ -78,29 +78,37 @@ def gen_component_umap(umap_emb, latent, labels, comp_prefix, ds_name,
     _grid = _root.grid(1, 1, row_gap=0.04, col_gap=0.04)
     axes = [[_grid[r][c].add_axes(fig) for c in range(1)] for r in range(1)]
     axes = np.array(axes).reshape(1, 1)
-    if 1 == 1 and 1 > 1: axes = axes.flatten()
-    for _ax in np.atleast_1d(axes).flat: style_axes(_ax)
+    if 1 == 1 and 1 > 1:
+        axes = axes.flatten()
+    for _ax in np.atleast_1d(axes).flat:
+        style_axes(_ax)
 
     for k in range(K):
         row, col = divmod(k, ncols)
         ax = axes[row, col]
         vals = latent[:, k]
-        sc = ax.scatter(umap_emb[:, 0], umap_emb[:, 1],
-                        c=vals, s=SCATTER_SIZE_UMAP, alpha=0.70,
-                        cmap="viridis", rasterized=True)
+        sc = ax.scatter(
+            umap_emb[:, 0],
+            umap_emb[:, 1],
+            c=vals,
+            s=SCATTER_SIZE_UMAP,
+            alpha=0.70,
+            cmap="viridis",
+            rasterized=True,
+        )
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.set_title(f"{comp_prefix}{k+1}", fontsize=_FS_TITLE,
-                     pad=1, fontweight="normal")
+        ax.set_title(f"{comp_prefix}{k + 1}", fontsize=_FS_TITLE, pad=1, fontweight="normal")
         for sp in ax.spines.values():
             sp.set_linewidth(LINE_WIDTH_SPINE)
         # Colorbar outside each cell (right edge)
-        cb = plt.colorbar(sc, ax=ax, fraction=0.046, pad=0.06,
-                          aspect=18)
+        cb = plt.colorbar(sc, ax=ax, fraction=0.046, pad=0.06, aspect=18)
         cb.ax.tick_params(labelsize=max(_FS_TICK - 2, 12), length=1.5)
         cb.ax.yaxis.set_major_locator(
-            __import__('matplotlib.ticker', fromlist=['MaxNLocator'])
-            .MaxNLocator(nbins=4, prune='both'))
+            __import__("matplotlib.ticker", fromlist=["MaxNLocator"]).MaxNLocator(
+                nbins=4, prune="both"
+            )
+        )
         cb.outline.set_linewidth(0.3)
 
     # Hide unused axes
@@ -108,14 +116,14 @@ def gen_component_umap(umap_emb, latent, labels, comp_prefix, ds_name,
         row, col = divmod(k, ncols)
         axes[row, col].set_visible(False)
 
-    fig.suptitle(f"{short} — {ds_name}",
-                 fontsize=_FS_TITLE + 0.5, y=1.01, fontweight="normal")
+    fig.suptitle(f"{short} — {ds_name}", fontsize=_FS_TITLE + 0.5, y=1.01, fontweight="normal")
     fig.tight_layout(pad=0.5, h_pad=0.6, w_pad=0.5)
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
 
-def gen_gene_umap(umap_emb, top_gene_expr, top_gene_names, labels,
-                  comp_prefix, ds_name, model, out_path, n_comp=3):
+def gen_gene_umap(
+    umap_emb, top_gene_expr, top_gene_names, labels, comp_prefix, ds_name, model, out_path, n_comp=3
+):
     """Generate UMAP panels colored by top positively correlated gene expression.
 
     Layout: 1×3 grid for 3 components (compact for per-dataset grouping).
@@ -132,29 +140,39 @@ def gen_gene_umap(umap_emb, top_gene_expr, top_gene_names, labels,
     _grid = _root.grid(1, 1, row_gap=0.04, col_gap=0.04)
     axes = [[_grid[r][c].add_axes(fig) for c in range(1)] for r in range(1)]
     axes = np.array(axes).reshape(1, 1)
-    if 1 == 1 and 1 > 1: axes = axes.flatten()
-    for _ax in np.atleast_1d(axes).flat: style_axes(_ax)
+    if 1 == 1 and 1 > 1:
+        axes = axes.flatten()
+    for _ax in np.atleast_1d(axes).flat:
+        style_axes(_ax)
 
     for k in range(K):
         row, col = divmod(k, ncols)
         ax = axes[row, col]
         expr = top_gene_expr[:, k]
         gene_name = str(top_gene_names[k])[:12]
-        sc = ax.scatter(umap_emb[:, 0], umap_emb[:, 1],
-                        c=expr, s=SCATTER_SIZE_UMAP, alpha=0.70,
-                        cmap="magma", rasterized=True)
+        sc = ax.scatter(
+            umap_emb[:, 0],
+            umap_emb[:, 1],
+            c=expr,
+            s=SCATTER_SIZE_UMAP,
+            alpha=0.70,
+            cmap="magma",
+            rasterized=True,
+        )
         ax.set_xticks([])
         ax.set_yticks([])
-        ax.set_title(f"{comp_prefix}{k+1}: {gene_name}",
-                     fontsize=_FS_TITLE, pad=1, fontweight="normal")
+        ax.set_title(
+            f"{comp_prefix}{k + 1}: {gene_name}", fontsize=_FS_TITLE, pad=1, fontweight="normal"
+        )
         for sp in ax.spines.values():
             sp.set_linewidth(LINE_WIDTH_SPINE)
-        cb = plt.colorbar(sc, ax=ax, fraction=0.046, pad=0.06,
-                          aspect=18)
+        cb = plt.colorbar(sc, ax=ax, fraction=0.046, pad=0.06, aspect=18)
         cb.ax.tick_params(labelsize=max(_FS_TICK - 2, 12), length=1.5)
         cb.ax.yaxis.set_major_locator(
-            __import__('matplotlib.ticker', fromlist=['MaxNLocator'])
-            .MaxNLocator(nbins=4, prune='both'))
+            __import__("matplotlib.ticker", fromlist=["MaxNLocator"]).MaxNLocator(
+                nbins=4, prune="both"
+            )
+        )
         cb.outline.set_linewidth(0.3)
 
     # Hide unused axes
@@ -162,8 +180,7 @@ def gen_gene_umap(umap_emb, top_gene_expr, top_gene_names, labels,
         row, col = divmod(k, ncols)
         axes[row, col].set_visible(False)
 
-    fig.suptitle(f"{short} — {ds_name}",
-                 fontsize=_FS_TITLE + 0.5, y=1.01, fontweight="normal")
+    fig.suptitle(f"{short} — {ds_name}", fontsize=_FS_TITLE + 0.5, y=1.01, fontweight="normal")
     fig.tight_layout(pad=0.5, h_pad=0.6, w_pad=0.5)
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
@@ -171,6 +188,7 @@ def gen_gene_umap(umap_emb, top_gene_expr, top_gene_names, labels,
 # ═══════════════════════════════════════════════════════════════════════════════
 # Main entry point
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def generate(series, out_dir):
     """Generate all subplot PNGs for Figure 8 (Latent UMAP Projections).
@@ -207,29 +225,35 @@ def generate(series, out_dir):
             # Component intensity UMAP (2×3 grid)
             fname_comp = f"comp_umap_{ds_name}_{safe_m}.png"
             gen_component_umap(
-                umap_emb, latent, labels, comp_prefix, ds_name,
-                model, sub_dir / fname_comp)
-            comp_umap_files.setdefault(ds_name, []).append(
-                {"file": fname_comp, "model": model})
+                umap_emb, latent, labels, comp_prefix, ds_name, model, sub_dir / fname_comp
+            )
+            comp_umap_files.setdefault(ds_name, []).append({"file": fname_comp, "model": model})
 
             # Gene expression UMAP (2×3 grid)
             fname_gene = f"gene_umap_{ds_name}_{safe_m}.png"
             gen_gene_umap(
-                umap_emb, top_gene_expr, top_gene_names, labels,
-                comp_prefix, ds_name, model, sub_dir / fname_gene)
-            gene_umap_files.setdefault(ds_name, []).append(
-                {"file": fname_gene, "model": model})
+                umap_emb,
+                top_gene_expr,
+                top_gene_names,
+                labels,
+                comp_prefix,
+                ds_name,
+                model,
+                sub_dir / fname_gene,
+            )
+            gene_umap_files.setdefault(ds_name, []).append({"file": fname_gene, "model": model})
 
-    avail_models = list({e["model"]
-                         for ds_files in comp_umap_files.values()
-                         for e in ds_files})
+    avail_models = list({e["model"] for ds_files in comp_umap_files.values() for e in ds_files})
 
-    manifest = build_manifest(sub_dir, {
-        "comp_umap": comp_umap_files,
-        "gene_umap": gene_umap_files,
-        "models": avail_models,
-        "datasets": list(comp_umap_files.keys()),
-    })
+    manifest = build_manifest(
+        sub_dir,
+        {
+            "comp_umap": comp_umap_files,
+            "gene_umap": gene_umap_files,
+            "models": avail_models,
+            "datasets": list(comp_umap_files.keys()),
+        },
+    )
     return manifest
 
 
@@ -238,7 +262,10 @@ if __name__ == "__main__":
     parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots")
+    out = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots"
+    )
     out.mkdir(parents=True, exist_ok=True)
     generate(args.series, out)

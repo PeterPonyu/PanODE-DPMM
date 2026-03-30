@@ -77,14 +77,13 @@ __all__ = [
 # Helpers
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def smooth(arr: np.ndarray, window: int) -> np.ndarray:
     """Moving-average smoothing for a 1-D array."""
     return pd.Series(arr).rolling(window=max(1, window), min_periods=1).mean().values
 
 
-def build_color_map(
-    methods: Sequence[str],
-    palette: str = "husl") -> dict[str, tuple[float, ...]]:
+def build_color_map(methods: Sequence[str], palette: str = "husl") -> dict[str, tuple[float, ...]]:
     """Build a {method_name: colour} dict from a named seaborn palette."""
     colors = sns.color_palette(palette, len(methods))
     return dict(zip(methods, colors))
@@ -127,18 +126,13 @@ def _safe_save_figure(fig: plt.Figure, save_path: Path, dpi: int, max_pixels: in
 
 def _detect_columns(df: pd.DataFrame):
     """Return booleans for optional columns present with real data."""
-    has_val = ("val_loss" in df.columns
-               and df["val_loss"].notna().any())
-    has_recon = ("recon_loss" in df.columns
-                 and df["recon_loss"].notna().any())
-    has_val_recon = ("val_recon_loss" in df.columns
-                     and df["val_recon_loss"].notna().any())
+    has_val = "val_loss" in df.columns and df["val_loss"].notna().any()
+    has_recon = "recon_loss" in df.columns and df["recon_loss"].notna().any()
+    has_val_recon = "val_recon_loss" in df.columns and df["val_recon_loss"].notna().any()
     return has_val, has_recon, has_val_recon
 
 
-def _load_series(
-    series_dir: str | Path,
-    glob_pattern: str = "*_dfs.csv") -> pd.DataFrame:
+def _load_series(series_dir: str | Path, glob_pattern: str = "*_dfs.csv") -> pd.DataFrame:
     """Load and concatenate all series CSVs from *series_dir*."""
     series_dir = Path(series_dir)
     files = sorted(series_dir.glob(glob_pattern))
@@ -156,6 +150,7 @@ def _load_series(
 # Aggregated loss curves  (cross-dataset mean ± std)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def plot_aggregated_loss(
     series_dir: str | Path,
     output_dir: str | Path,
@@ -170,7 +165,8 @@ def plot_aggregated_loss(
     dpi: int = 200,
     font_family: str = "Arial",
     filename: str = "aggregated_loss.pdf",
-    glob_pattern: str = "*_dfs.csv") -> Path:
+    glob_pattern: str = "*_dfs.csv",
+) -> Path:
     """Aggregated 2+-panel loss figure with mean ± std across datasets.
 
     Parameters
@@ -217,7 +213,7 @@ def plot_aggregated_loss(
     if methods is None:
         methods = list(dict.fromkeys(combined["hue"]))
 
-    n_methods = len(methods)
+    n_methods = len(methods)  # noqa: F841
     if color_map is None:
         color_map = build_color_map(methods, palette)
 
@@ -251,8 +247,7 @@ def plot_aggregated_loss(
         datasets_in = method_df["dataset"].unique()
 
         epoch_counts = [
-            int(method_df[method_df["dataset"] == d]["epoch"].max())
-            for d in datasets_in
+            int(method_df[method_df["dataset"] == d]["epoch"].max()) for d in datasets_in
         ]
         max_ep = min(epoch_counts)
         epochs = np.arange(1, max_ep + 1)
@@ -276,11 +271,9 @@ def plot_aggregated_loss(
             c = color_map[method_name]
 
             axes[panel_idx].plot(
-                epochs, mean, color=c, alpha=line_alpha,
-                label=method_name, linewidth=1.2)
-            axes[panel_idx].fill_between(
-                epochs, mean - std, mean + std,
-                color=c, alpha=fill_alpha)
+                epochs, mean, color=c, alpha=line_alpha, label=method_name, linewidth=1.2
+            )
+            axes[panel_idx].fill_between(epochs, mean - std, mean + std, color=c, alpha=fill_alpha)
 
     for ax, title in zip(axes, panel_titles):
         ax.set_xlabel("Epoch")
@@ -301,6 +294,7 @@ def plot_aggregated_loss(
 # Per-dataset individual loss curves
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def plot_individual_loss(
     series_dir: str | Path,
     output_dir: str | Path,
@@ -311,7 +305,8 @@ def plot_individual_loss(
     show_recon: bool = False,
     dpi: int = 200,
     font_family: str = "Arial",
-    glob_pattern: str = "*_dfs.csv") -> list[Path]:
+    glob_pattern: str = "*_dfs.csv",
+) -> list[Path]:
     """Generate individual loss-curve plots for each dataset.
 
     Parameters
@@ -376,13 +371,10 @@ def plot_individual_loss(
             c = color_map.get(method_name, None)
             for pi, col in enumerate(ds_cols):
                 sm = smooth(subset[col].values, w)
-                axs[pi].plot(
-                    subset["epoch"], sm, label=method_name,
-                    alpha=0.8, color=c)
+                axs[pi].plot(subset["epoch"], sm, label=method_name, alpha=0.8, color=c)
 
         for ax, t in zip(axs, ds_titles):
-            ax.set(xlabel="Epoch", ylabel="Loss",
-                   title=f"{ds_name} — {t}")
+            ax.set(xlabel="Epoch", ylabel="Loss", title=f"{ds_name} — {t}")
             ax.legend(fontsize=8, loc="upper right")
             ax.grid(True, alpha=0.3)
             sns.despine(ax=ax)
@@ -400,6 +392,7 @@ def plot_individual_loss(
 # Convenience wrapper  (mirrors visualize_experiment.py interface)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def plot_training_curves(
     series_dir: str | Path,
     output_dir: str | Path,
@@ -414,7 +407,8 @@ def plot_training_curves(
     figsize: tuple[float, float] | None = None,
     dpi: int = 200,
     font_family: str = "Arial",
-    glob_pattern: str = "*_dfs.csv") -> list[Path]:
+    glob_pattern: str = "*_dfs.csv",
+) -> list[Path]:
     """One-call convenience — aggregated + optional per-dataset loss curves.
 
     Parameters
@@ -442,7 +436,8 @@ def plot_training_curves(
         figsize=figsize,
         dpi=dpi,
         font_family=font_family,
-        glob_pattern=glob_pattern)
+        glob_pattern=glob_pattern,
+    )
     saved.append(agg)
     print(f"  Aggregated loss → {agg}")
 
@@ -457,7 +452,8 @@ def plot_training_curves(
             show_recon=show_recon,
             dpi=dpi,
             font_family=font_family,
-            glob_pattern=glob_pattern)
+            glob_pattern=glob_pattern,
+        )
         saved.extend(indiv)
         for p in indiv:
             print(f"    {p}")

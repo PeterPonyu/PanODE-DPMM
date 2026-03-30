@@ -11,5 +11,5 @@ templates/run_experiment.py
 templates/visualize_experiment.py
 """
 
-from .config import ExperimentConfig
-from .merge import MergedExperimentConfig
+from .config import ExperimentConfig  # noqa: F401
+from .merge import MergedExperimentConfig  # noqa: F401

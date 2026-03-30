@@ -73,10 +73,8 @@ class ExtendedDimensionalityReductionEvaluator:
 
     @staticmethod
     def _subsample_aligned(
-        x_high: np.ndarray,
-        x_low: np.ndarray,
-        max_samples: int = 2000,
-        random_state: int = 42) -> tuple[np.ndarray, np.ndarray]:
+        x_high: np.ndarray, x_low: np.ndarray, max_samples: int = 2000, random_state: int = 42
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Subsample both arrays in the same way for tractable computation."""
         if x_high.shape[0] <= max_samples:
             return x_high, x_low
@@ -153,9 +151,7 @@ class ExtendedDimensionalityReductionEvaluator:
 
     # ==================== 3. Distance correlations ====================
 
-    def distance_spearman_score(
-        self, X_high: np.ndarray, X_low: np.ndarray
-    ) -> float:
+    def distance_spearman_score(self, X_high: np.ndarray, X_low: np.ndarray) -> float:
         """
         Spearman rank correlation between pairwise distances in high- and
         low-dimensional spaces.
@@ -180,9 +176,7 @@ class ExtendedDimensionalityReductionEvaluator:
             warnings.warn(f"Error computing distance Spearman: {e}")
             return 0.0
 
-    def distance_pearson_score(
-        self, X_high: np.ndarray, X_low: np.ndarray
-    ) -> float:
+    def distance_pearson_score(self, X_high: np.ndarray, X_low: np.ndarray) -> float:
         """
         Pearson correlation between pairwise distances in high- and
         low-dimensional spaces.
@@ -276,7 +270,8 @@ class ExtendedDimensionalityReductionEvaluator:
         X_low: np.ndarray,
         n_neighbors: int = 15,
         max_samples: int = 2000,
-        random_state: int = 42) -> dict[str, float]:
+        random_state: int = 42,
+    ) -> dict[str, float]:
         """
         Comprehensive evaluation of extended DR quality metrics.
 
@@ -293,8 +288,7 @@ class ExtendedDimensionalityReductionEvaluator:
         self._validate_inputs(X_high, X_low)
 
         self._log(
-            f"Starting extended DR evaluation "
-            f"(n_samples={X_high.shape[0]}, k={n_neighbors})..."
+            f"Starting extended DR evaluation (n_samples={X_high.shape[0]}, k={n_neighbors})..."
         )
 
         # Subsample for tractability
@@ -304,35 +298,39 @@ class ExtendedDimensionalityReductionEvaluator:
 
         # 1. Trustworthiness
         self._log("Computing trustworthiness...")
-        results['trustworthiness'] = self.trustworthiness_score(xh, xl, n_neighbors)
+        results["trustworthiness"] = self.trustworthiness_score(xh, xl, n_neighbors)
 
         # 2. Continuity
         self._log("Computing continuity...")
-        results['continuity'] = self.continuity_score(xh, xl, n_neighbors)
+        results["continuity"] = self.continuity_score(xh, xl, n_neighbors)
 
         # 3. Distance correlations
         self._log("Computing distance correlations...")
-        results['distance_spearman'] = self.distance_spearman_score(xh, xl)
-        results['distance_pearson'] = self.distance_pearson_score(xh, xl)
+        results["distance_spearman"] = self.distance_spearman_score(xh, xl)
+        results["distance_pearson"] = self.distance_pearson_score(xh, xl)
 
         # 4. Local scale quality
         self._log("Computing local scale quality...")
-        results['local_scale_quality'] = self.local_scale_quality_score(xh, xl, n_neighbors)
+        results["local_scale_quality"] = self.local_scale_quality_score(xh, xl, n_neighbors)
 
         # 5. Neighborhood symmetry
-        results['neighborhood_symmetry'] = self._safe_float(
-            0.5 * (results['trustworthiness'] + results['continuity'])
+        results["neighborhood_symmetry"] = self._safe_float(
+            0.5 * (results["trustworthiness"] + results["continuity"])
         )
 
         # 6. Overall quality
-        results['overall_quality'] = float(np.mean([
-            results['trustworthiness'],
-            results['continuity'],
-            results['distance_spearman'],
-            results['distance_pearson'],
-            results['local_scale_quality'],
-            results['neighborhood_symmetry'],
-        ]))
+        results["overall_quality"] = float(
+            np.mean(
+                [
+                    results["trustworthiness"],
+                    results["continuity"],
+                    results["distance_spearman"],
+                    results["distance_pearson"],
+                    results["local_scale_quality"],
+                    results["neighborhood_symmetry"],
+                ]
+            )
+        )
 
         if self.verbose:
             self._print_results(results)
@@ -364,7 +362,7 @@ class ExtendedDimensionalityReductionEvaluator:
         print(f"  Local scale quality:    {results['local_scale_quality']:.4f} ★")
         print("    └─ Consistency of local distance ratios")
 
-        overall = results['overall_quality']
+        overall = results["overall_quality"]
 
         print("\n[Overall Assessment]")
         print(f"  Mean quality score:     {overall:.4f}")
@@ -385,7 +383,8 @@ class ExtendedDimensionalityReductionEvaluator:
         self,
         method_results_dict: dict[str, tuple[np.ndarray, np.ndarray]],
         n_neighbors: int = 15,
-        max_samples: int = 2000) -> pd.DataFrame:
+        max_samples: int = 2000,
+    ) -> pd.DataFrame:
         """
         Compare multiple dimensionality reduction methods using DREX metrics.
 
@@ -405,25 +404,25 @@ class ExtendedDimensionalityReductionEvaluator:
             original_verbose = self.verbose
             self.verbose = False
 
-            results = self.comprehensive_evaluation(
-                X_high, X_low, n_neighbors, max_samples
-            )
+            results = self.comprehensive_evaluation(X_high, X_low, n_neighbors, max_samples)
 
             self.verbose = original_verbose
 
-            comparison_results.append({
-                'Method': method_name,
-                'Trustworthiness': results['trustworthiness'],
-                'Continuity': results['continuity'],
-                'Dist_Spearman': results['distance_spearman'],
-                'Dist_Pearson': results['distance_pearson'],
-                'Local_Scale': results['local_scale_quality'],
-                'Nbr_Symmetry': results['neighborhood_symmetry'],
-                'Overall_Quality': results['overall_quality'],
-            })
+            comparison_results.append(
+                {
+                    "Method": method_name,
+                    "Trustworthiness": results["trustworthiness"],
+                    "Continuity": results["continuity"],
+                    "Dist_Spearman": results["distance_spearman"],
+                    "Dist_Pearson": results["distance_pearson"],
+                    "Local_Scale": results["local_scale_quality"],
+                    "Nbr_Symmetry": results["neighborhood_symmetry"],
+                    "Overall_Quality": results["overall_quality"],
+                }
+            )
 
         df = pd.DataFrame(comparison_results)
-        df = df.sort_values('Overall_Quality', ascending=False)
+        df = df.sort_values("Overall_Quality", ascending=False)
 
         if self.verbose:
             self._print_comparison_table(df)
@@ -435,11 +434,11 @@ class ExtendedDimensionalityReductionEvaluator:
 
         print(f"\n{'=' * 100}")
         print("              Extended DR Method Comparison (DREX)")
-        print('=' * 100)
+        print("=" * 100)
 
-        pd.set_option('display.float_format', '{:.4f}'.format)
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.width', None)
+        pd.set_option("display.float_format", "{:.4f}".format)
+        pd.set_option("display.max_columns", None)
+        pd.set_option("display.width", None)
 
         print(df.to_string(index=False))
 
@@ -448,10 +447,11 @@ class ExtendedDimensionalityReductionEvaluator:
             f"(Overall score: {df.iloc[0]['Overall_Quality']:.4f})"
         )
 
-        print('=' * 100)
+        print("=" * 100)
 
 
 # ==================== Convenience functions ====================
+
 
 def evaluate_extended_dimensionality_reduction(
     X_high: np.ndarray,
@@ -459,7 +459,8 @@ def evaluate_extended_dimensionality_reduction(
     n_neighbors: int = 15,
     max_samples: int = 2000,
     random_state: int = 42,
-    verbose: bool = True) -> dict[str, float]:
+    verbose: bool = True,
+) -> dict[str, float]:
     """
     Convenience function to evaluate extended DR quality.
 
@@ -482,16 +483,15 @@ def evaluate_extended_dimensionality_reduction(
             neighborhood_symmetry, overall_quality
     """
     evaluator = ExtendedDimensionalityReductionEvaluator(verbose=verbose)
-    return evaluator.comprehensive_evaluation(
-        X_high, X_low, n_neighbors, max_samples, random_state
-    )
+    return evaluator.comprehensive_evaluation(X_high, X_low, n_neighbors, max_samples, random_state)
 
 
 def compare_extended_dr_methods(
     method_results_dict: dict[str, tuple[np.ndarray, np.ndarray]],
     n_neighbors: int = 15,
     max_samples: int = 2000,
-    verbose: bool = True) -> pd.DataFrame:
+    verbose: bool = True,
+) -> pd.DataFrame:
     """
     Convenience function to compare multiple DR methods using DREX metrics.
 

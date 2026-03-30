@@ -15,6 +15,7 @@ from .base_model import BaseModel
 
 class myBottleneck(nn.Module):
     """ResNet bottleneck block"""
+
     def __init__(self, in_planes, planes, stride=1):
         super().__init__()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
@@ -29,7 +30,8 @@ class myBottleneck(nn.Module):
         if stride != 1 or in_planes != planes * 4:
             self.shortcut = nn.Sequential(
                 nn.Conv2d(in_planes, planes * 4, kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * 4))
+                nn.BatchNorm2d(planes * 4),
+            )
 
     def forward(self, x):
         out = self.relu(self.bn1(self.conv1(x)))
@@ -41,6 +43,7 @@ class myBottleneck(nn.Module):
 
 class NBLoss(nn.Module):
     """Negative Binomial loss"""
+
     def forward(self, x, mean, disp):
         eps = 1e-8
 
@@ -51,7 +54,9 @@ class NBLoss(nn.Module):
         # compute in float64 for stability
         x64, mean64, disp64 = x.double(), mean.double(), disp.double()
         t1 = torch.lgamma(disp64 + eps) + torch.lgamma(x64 + 1.0) - torch.lgamma(x64 + disp64 + eps)
-        t2 = (disp64 + x64) * torch.log1p(mean64 / (disp64 + eps)) + x64 * (torch.log(disp64 + eps) - torch.log(mean64 + eps))
+        t2 = (disp64 + x64) * torch.log1p(mean64 / (disp64 + eps)) + x64 * (
+            torch.log(disp64 + eps) - torch.log(mean64 + eps)
+        )
         out = t1 + t2
         out = torch.where(torch.isfinite(out), out, torch.zeros_like(out))
         return out.mean().to(x.dtype)
@@ -59,6 +64,7 @@ class NBLoss(nn.Module):
 
 class AutoEncoder(nn.Module):
     """ResNet-based convolutional autoencoder"""
+
     def __init__(self, block, layers, input_dim, latent_dim, img_size: int):
         super().__init__()
         self.img_size = img_size
@@ -85,7 +91,9 @@ class AutoEncoder(nn.Module):
         self.fc_decode = nn.Linear(latent_dim, self.flatten_size)
 
         self.decoder_channels = 256 * 4
-        self.upsample1 = nn.ConvTranspose2d(self.decoder_channels, 128, kernel_size=4, stride=2, padding=1)
+        self.upsample1 = nn.ConvTranspose2d(
+            self.decoder_channels, 128, kernel_size=4, stride=2, padding=1
+        )
         self.upsample2 = nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1)
         self.upsample3 = nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1)
         self.upsample4 = nn.ConvTranspose2d(32, 16, kernel_size=4, stride=2, padding=1)
@@ -158,6 +166,7 @@ class AutoEncoder(nn.Module):
 
 class MutualNet(nn.Module):
     """MLP for soft clustering via mutual information"""
+
     def __init__(self, num_cluster: int, latent_dim: int, hidden_dims=None):
         super().__init__()
         hidden_dims = hidden_dims or [128, 64]
@@ -193,7 +202,8 @@ class scSMDModel(BaseModel):
         latent_dim: int = 10,
         n_clusters: int = 10,
         img_size: int | None = None,
-        model_name: str = "scSMD"):
+        model_name: str = "scSMD",
+    ):
         """
         Args:
             input_dim: Gene dimension
@@ -201,12 +211,20 @@ class scSMDModel(BaseModel):
             n_clusters: Number of clusters
             img_size: Image size for reshaping (default: sqrt(input_dim))
         """
-        super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=[], model_name=model_name)
+        super().__init__(
+            input_dim=input_dim, latent_dim=latent_dim, hidden_dims=[], model_name=model_name
+        )
         self.n_clusters = n_clusters
         self.img_size = img_size or max(64, int(np.sqrt(input_dim)))
         self.adjusted_input_dim = self.img_size * self.img_size
 
-        self.autoencoder = AutoEncoder(myBottleneck, layers=[1, 1, 1], input_dim=self.adjusted_input_dim, latent_dim=latent_dim, img_size=self.img_size)
+        self.autoencoder = AutoEncoder(
+            myBottleneck,
+            layers=[1, 1, 1],
+            input_dim=self.adjusted_input_dim,
+            latent_dim=latent_dim,
+            img_size=self.img_size,
+        )
         self.mutual_net = MutualNet(num_cluster=n_clusters, latent_dim=latent_dim)
         self.nb_loss = NBLoss()
 
@@ -219,10 +237,12 @@ class scSMDModel(BaseModel):
         x = x / denom
 
         if x.size(1) < self.adjusted_input_dim:
-            pad = torch.zeros(x.size(0), self.adjusted_input_dim - x.size(1), device=x.device, dtype=x.dtype)
+            pad = torch.zeros(
+                x.size(0), self.adjusted_input_dim - x.size(1), device=x.device, dtype=x.dtype
+            )
             x = torch.cat([x, pad], dim=1)
         elif x.size(1) > self.adjusted_input_dim:
-            x = x[:, :self.adjusted_input_dim]
+            x = x[:, : self.adjusted_input_dim]
 
         return x.view(-1, 1, self.img_size, self.img_size)
 
@@ -242,9 +262,21 @@ class scSMDModel(BaseModel):
         """Forward pass"""
         x_img = self._preprocess(x)
         mean, disp, u, y = self.autoencoder(x_img)
-        return {"mean": mean, "disp": disp, "latent": u, "reconstruction_img": y, "input_img": x_img}
+        return {
+            "mean": mean,
+            "disp": disp,
+            "latent": u,
+            "reconstruction_img": y,
+            "input_img": x_img,
+        }
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], cluster_centers: torch.Tensor | None = None, **kwargs):
+    def compute_loss(
+        self,
+        x: torch.Tensor,
+        outputs: dict[str, torch.Tensor],
+        cluster_centers: torch.Tensor | None = None,
+        **kwargs,
+    ):
         """Compute loss: MSE + NB (+ optional cluster pulling)"""
         x_img = outputs["input_img"]
         y = outputs["reconstruction_img"]
@@ -264,7 +296,12 @@ class scSMDModel(BaseModel):
             loss_cluster = nn.MSELoss()(u, cluster_centers[closest])
             loss = loss_recon + 0.1 * loss_cluster
 
-        return {"total_loss": loss, "recon_loss": loss_recon, "nb_loss": loss_nb, "cluster_loss": loss_cluster}
+        return {
+            "total_loss": loss,
+            "recon_loss": loss_recon,
+            "nb_loss": loss_nb,
+            "cluster_loss": loss_cluster,
+        }
 
     def fit(
         self,
@@ -277,7 +314,8 @@ class scSMDModel(BaseModel):
         patience: int = 10,
         verbose: int = 1,
         pretrain_epochs: int = 200,
-        **kwargs):
+        **kwargs,
+    ):
         """
         Three-phase training:
         1. Pretrain: AE with reconstruction + NB loss
@@ -310,7 +348,7 @@ class scSMDModel(BaseModel):
                 n += 1
 
             if verbose >= 1 and (ep + 1) % 50 == 0:
-                print(f"Pretrain {ep+1:3d}/{pretrain_epochs} | Loss: {tot/max(n,1):.4f}")
+                print(f"Pretrain {ep + 1:3d}/{pretrain_epochs} | Loss: {tot / max(n, 1):.4f}")
 
         # Initialize clusters with KMeans
         self.eval()
@@ -340,7 +378,7 @@ class scSMDModel(BaseModel):
                 tot += float(loss.item())
                 n += 1
             if verbose >= 1 and (ep + 1) % 25 == 0:
-                print(f"Phase1 {ep+1:3d}/{phase1_epochs} | Loss: {tot/max(n,1):.4f}")
+                print(f"Phase1 {ep + 1:3d}/{phase1_epochs} | Loss: {tot / max(n, 1):.4f}")
 
         # Phase 2: Mutual information optimization
         phase2_epochs = max(0, epochs - pretrain_epochs - phase1_epochs)
@@ -369,13 +407,15 @@ class scSMDModel(BaseModel):
                 n += 1
 
             if verbose >= 1 and (ep + 1) % 10 == 0:
-                print(f"Phase2 {ep+1:3d}/{phase2_epochs} | Loss: {tot/max(n,1):.4f}")
+                print(f"Phase2 {ep + 1:3d}/{phase2_epochs} | Loss: {tot / max(n, 1):.4f}")
 
         self.is_trained = True
         return {"train_loss": []}
 
 
-def create_scsmd_model(input_dim: int, latent_dim: int = 10, n_clusters: int = 10, **kwargs) -> scSMDModel:
+def create_scsmd_model(
+    input_dim: int, latent_dim: int = 10, n_clusters: int = 10, **kwargs
+) -> scSMDModel:
     """
     Create scSMD model
 

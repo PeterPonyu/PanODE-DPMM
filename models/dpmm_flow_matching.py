@@ -180,7 +180,9 @@ class DPMMFlowMatchingModel(DPMMODEModel):
             return bool(self.dpmm_fitted)
         return True
 
-    def _sample_flow_targets(self, latent: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def _sample_flow_targets(
+        self, latent: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         z_target = latent.detach() if self.flow_detach_target else latent
         z_source = torch.randn_like(z_target) * self.flow_noise_scale
         t = torch.rand(z_target.size(0), device=z_target.device)
@@ -193,7 +195,9 @@ class DPMMFlowMatchingModel(DPMMODEModel):
         velocity_pred = self.flow_field(z_t, t)
         return F.mse_loss(velocity_pred, velocity_target)
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         loss_dict = super().compute_loss(x, outputs, **kwargs)
         flow_loss = torch.tensor(0.0, device=x.device)
         if self._flow_active():
@@ -203,7 +207,9 @@ class DPMMFlowMatchingModel(DPMMODEModel):
         return loss_dict
 
     @torch.no_grad()
-    def sample_latent_prior(self, n_samples: int, device: str | torch.device = "cpu", steps: int | None = None) -> torch.Tensor:
+    def sample_latent_prior(
+        self, n_samples: int, device: str | torch.device = "cpu", steps: int | None = None
+    ) -> torch.Tensor:
         """Sample from the learned latent flow by Euler integration from Gaussian noise."""
         self.eval()
         device = torch.device(device)
@@ -295,8 +301,8 @@ class DPMMFlowMatchingModel(DPMMODEModel):
         # If smoothing is off or FM has not been trained, fall back to base
         if not use_smooth or not self._flow_active():
             return super().extract_latent(
-                data_loader, device=device,
-                return_reconstructions=return_reconstructions, **kwargs)
+                data_loader, device=device, return_reconstructions=return_reconstructions, **kwargs
+            )
 
         self.eval()
         self.to(device)

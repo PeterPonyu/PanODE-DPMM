@@ -53,17 +53,17 @@ _DATASETS = ["setty", "dentate", "lung", "endo"]
 OUT_DIR = ROOT / "experiments" / "results" / "dpmm_diagnostics"
 
 # BGM fitting parameters — match models/dpmm_base.py defaults
-_BGM_KWARGS = dict(
-    n_components=30,
-    weight_concentration_prior_type="dirichlet_process",
-    weight_concentration_prior=1.0,
-    mean_precision_prior=0.1,
-    covariance_type="diag",
-    init_params="kmeans",
-    max_iter=200,
-    reg_covar=1e-5,
-    random_state=42,
-)
+_BGM_KWARGS = {
+    "n_components": 30,
+    "weight_concentration_prior_type": "dirichlet_process",
+    "weight_concentration_prior": 1.0,
+    "mean_precision_prior": 0.1,
+    "covariance_type": "diag",
+    "init_params": "kmeans",
+    "max_iter": 200,
+    "reg_covar": 1e-5,
+    "random_state": 42,
+}
 
 _KNN_K = 15
 

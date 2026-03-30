@@ -29,30 +29,28 @@ from refined_figures.fig04_biological_full import generate as gen_fig4
 from refined_figures.fig05_external import generate as gen_fig5
 
 GENERATORS = {
-    "1":  ("Architecture Overview",                gen_fig1),
-    "2":  ("Final DPMM-only Validation",           gen_fig2),
-    "3":  ("Sensitivity + Training Dynamics",      gen_fig3),
-    "4":  ("Biological Validation Full",           gen_fig4),
-    "5":  ("External Benchmark (full metrics)",    gen_fig5),
+    "1": ("Architecture Overview", gen_fig1),
+    "2": ("Final DPMM-only Validation", gen_fig2),
+    "3": ("Sensitivity + Training Dynamics", gen_fig3),
+    "4": ("Biological Validation Full", gen_fig4),
+    "5": ("External Benchmark (full metrics)", gen_fig5),
 }
 
 LEGACY_ALIASES = {}
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate all refined publication figures")
+    parser = argparse.ArgumentParser(description="Generate all refined publication figures")
     parser.add_argument("--series", default="dpmm", choices=["dpmm"])
-    parser.add_argument("--figures", nargs="+", default=["all"],
-                        help="Figure numbers to generate, or 'all'")
-    parser.add_argument("--output-dir", default=None,
-                        help="Override output directory")
+    parser.add_argument(
+        "--figures", nargs="+", default=["all"], help="Figure numbers to generate, or 'all'"
+    )
+    parser.add_argument("--output-dir", default=None, help="Override output directory")
     args = parser.parse_args()
 
     series = require_dpmm(args.series)
 
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "refined_figures" / "output" / series)
+    out = Path(args.output_dir) if args.output_dir else ROOT / "refined_figures" / "output" / series
     out.mkdir(parents=True, exist_ok=True)
 
     figs = list(GENERATORS.keys()) if "all" in args.figures else args.figures
@@ -65,9 +63,9 @@ def main():
             continue
         label, gen_fn = entry
         try:
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print(f"  Fig {fig_id}: {label}")
-            print(f"{'='*60}")
+            print(f"{'=' * 60}")
             gen_fn(series, out)
             n_ok += 1
         except Exception as e:

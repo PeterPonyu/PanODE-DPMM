@@ -2,6 +2,7 @@
 scDHMap: Hyperbolic VAE with ZINB reconstruction and t-SNE repulsion
 Latent space on Lorentz hyperboloid, with Poincaré ball interface
 """
+
 import math
 
 import numpy as np
@@ -33,12 +34,16 @@ def poincare2lorentz(x: torch.Tensor) -> torch.Tensor:
 
 def lorentz_distance_mat(u: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
     """Pairwise hyperbolic distances in Lorentz model"""
-    minkowski_prod = -torch.matmul(u[..., 0:1], v[..., 0:1].transpose(-1, -2)) + torch.matmul(u[..., 1:], v[..., 1:].transpose(-1, -2))
+    minkowski_prod = -torch.matmul(u[..., 0:1], v[..., 0:1].transpose(-1, -2)) + torch.matmul(
+        u[..., 1:], v[..., 1:].transpose(-1, -2)
+    )
     clamped = (-minkowski_prod).clamp(min=1.0 + eps, max=1e6)
     return torch.acosh(clamped)
 
 
-def _binary_search_perplexity(dists: np.ndarray, perplexity: float, tol: float = 1e-5) -> np.ndarray:
+def _binary_search_perplexity(
+    dists: np.ndarray, perplexity: float, tol: float = 1e-5
+) -> np.ndarray:
     """Binary search for Gaussian kernel bandwidth matching target perplexity"""
     low = -np.inf
     high = np.inf
@@ -77,6 +82,7 @@ def compute_gaussian_perplexity(dists: np.ndarray, perplexity: float) -> np.ndar
 
 class HyperbolicWrappedNorm(Distribution):
     """Wrapped normal distribution on Lorentz hyperboloid"""
+
     arg_constraints = {"loc": constraints.real_vector, "scale": constraints.positive}
     support = constraints.real_vector
     has_rsample = True
@@ -86,11 +92,18 @@ class HyperbolicWrappedNorm(Distribution):
         self.scale = scale.clamp(min=1e-6, max=10.0)
         self.dim = loc.shape[-1] - 1
         self.device = loc.device
-        super().__init__(batch_shape=self.loc.shape[:-1], event_shape=self.loc.shape[-1:], validate_args=validate_args)
+        super().__init__(
+            batch_shape=self.loc.shape[:-1],
+            event_shape=self.loc.shape[-1:],
+            validate_args=validate_args,
+        )
 
     def sample(self):
         shape = self._extended_shape(torch.Size())
-        v = torch.randn(shape[:-1] + (self.dim), device=self.device, dtype=self.loc.dtype) * self.scale
+        v = (
+            torch.randn(shape[:-1] + (self.dim), device=self.device, dtype=self.loc.dtype)
+            * self.scale
+        )
         v_norm = v.norm(dim=-1, keepdim=True).clamp_min(eps).clamp(max=3.0)
         exp_v = torch.cat([torch.cosh(v_norm), torch.sinh(v_norm) * v / v_norm], dim=-1)
         return self._mobius_mat_vec(self.loc, exp_v)
@@ -107,15 +120,20 @@ class HyperbolicWrappedNorm(Distribution):
         return torch.cat([A, C], dim=-1)
 
     def log_prob(self, value):
-        minkowski_prod = value[..., 0:1] * self.loc[..., 0:1] - torch.sum(value[..., 1:] * self.loc[..., 1:], dim=-1, keepdim=True)
+        minkowski_prod = value[..., 0:1] * self.loc[..., 0:1] - torch.sum(
+            value[..., 1:] * self.loc[..., 1:], dim=-1, keepdim=True
+        )
         minkowski_prod = minkowski_prod.clamp(min=1.0 + eps, max=1e6)
         dist = torch.acosh(minkowski_prod).clamp(max=10.0)
-        log_prob_val = -dist ** 2 / (2 * self.scale ** 2) - 0.5 * self.dim * torch.log(2 * math.pi * self.scale ** 2)
+        log_prob_val = -(dist**2) / (2 * self.scale**2) - 0.5 * self.dim * torch.log(
+            2 * math.pi * self.scale**2
+        )
         return log_prob_val.clamp(min=-100, max=100)
 
 
 class ZINBLoss(nn.Module):
     """Zero-Inflated Negative Binomial loss"""
+
     def forward(self, x, mean, disp, pi, scale_factor=None):
         eps_ = 1e-10
         if scale_factor is not None:
@@ -123,7 +141,9 @@ class ZINBLoss(nn.Module):
             mean = mean * scale_factor
 
         t1 = torch.lgamma(disp + eps_) + torch.lgamma(x + 1.0) - torch.lgamma(x + disp + eps_)
-        t2 = (disp + x) * torch.log(1.0 + (mean / (disp + eps_))) + (x * (torch.log(disp + eps_) - torch.log(mean + eps_)))
+        t2 = (disp + x) * torch.log(1.0 + (mean / (disp + eps_))) + (
+            x * (torch.log(disp + eps_) - torch.log(mean + eps_))
+        )
         nb_final = t1 + t2
 
         nb_case = nb_final - torch.log(1.0 - pi + eps_)
@@ -145,6 +165,7 @@ class DispAct(nn.Module):
 
 class scDHMapCore(nn.Module):
     """Core hyperbolic VAE with ZINB decoder"""
+
     def __init__(self, input_dim, encode_layers, decode_layers, z_dim, dropout, device):
         super().__init__()
         self.input_dim = input_dim
@@ -211,7 +232,13 @@ class scDHMapCore(nn.Module):
 
     def kld_loss(self, q_z, z):
         """KL divergence from prior (origin on hyperboloid)"""
-        loc = torch.cat([torch.ones(z.shape[0], 1, device=self.device), torch.zeros(z.shape[0], self.z_dim, device=self.device)], dim=-1)
+        loc = torch.cat(
+            [
+                torch.ones(z.shape[0], 1, device=self.device),
+                torch.zeros(z.shape[0], self.z_dim, device=self.device),
+            ],
+            dim=-1,
+        )
         p_z = HyperbolicWrappedNorm(loc, torch.ones(z.shape[0], self.z_dim, device=self.device))
         kl = (q_z.log_prob(z) - p_z.log_prob(z)).clamp(min=-1000, max=1000)
         return kl.mean()
@@ -242,7 +269,8 @@ class scDHMapModel(BaseModel):
         beta: float = 1.0,
         gamma: float = 1.0,
         perplexity: float = 30.0,
-        model_name: str = "scDHMap"):
+        model_name: str = "scDHMap",
+    ):
         """
         Args:
             input_dim: Input dimension
@@ -255,7 +283,12 @@ class scDHMapModel(BaseModel):
             gamma: t-SNE repulsion parameter
             perplexity: t-SNE perplexity
         """
-        super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=encoder_layers or [], model_name=model_name)
+        super().__init__(
+            input_dim=input_dim,
+            latent_dim=latent_dim,
+            hidden_dims=encoder_layers or [],
+            model_name=model_name,
+        )
         self.alpha = alpha
         self.beta = beta
         self.gamma = gamma
@@ -268,7 +301,8 @@ class scDHMapModel(BaseModel):
             decode_layers=decoder_layers or [16, 32, 64, 128],
             z_dim=latent_dim,
             dropout=dropout,
-            device=torch.device("cpu"))
+            device=torch.device("cpu"),
+        )
 
     def to(self, *args, **kwargs):
         super().to(*args, **kwargs)
@@ -301,7 +335,15 @@ class scDHMapModel(BaseModel):
             "reconstruction": mean,
         }
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], x_raw=None, sf=None, p_tensor=None, **kwargs):
+    def compute_loss(
+        self,
+        x: torch.Tensor,
+        outputs: dict[str, torch.Tensor],
+        x_raw=None,
+        sf=None,
+        p_tensor=None,
+        **kwargs,
+    ):
         """Compute loss: ZINB + KL + optional t-SNE"""
         if x_raw is None:
             x_raw = x
@@ -309,7 +351,9 @@ class scDHMapModel(BaseModel):
         if self.likelihood != "zinb":
             raise ValueError("Only ZINB is supported")
 
-        recon = self.core.zinb(x=x_raw, mean=outputs["mean"], disp=outputs["disp"], pi=outputs["pi"], scale_factor=sf)
+        recon = self.core.zinb(
+            x=x_raw, mean=outputs["mean"], disp=outputs["disp"], pi=outputs["pi"], scale_factor=sf
+        )
         kld = self.core.kld_loss(outputs["q_z"], outputs["z"])
 
         tsne = torch.tensor(0.0, device=x.device)
@@ -332,7 +376,8 @@ class scDHMapModel(BaseModel):
         pretrain_epochs: int = 400,
         x_pca: np.ndarray | None = None,
         enable_batch_tsne: bool = False,
-        **kwargs):
+        **kwargs,
+    ):
         """
         Two-phase training:
         1. Pretrain: ZINB + KL only
@@ -344,7 +389,8 @@ class scDHMapModel(BaseModel):
             filter(lambda p: p.requires_grad, self.parameters()),
             lr=lr,
             weight_decay=weight_decay,
-            amsgrad=True)
+            amsgrad=True,
+        )
 
         def _unpack_batch(batch):
             if not isinstance(batch, (list, tuple)):
@@ -391,14 +437,15 @@ class scDHMapModel(BaseModel):
                 n += 1
 
             if verbose >= 1 and (ep + 1) % 50 == 0:
-                print(f"Pretrain {ep+1:3d}/{pretrain_epochs} | Loss: {tot/max(n,1):.6f}")
+                print(f"Pretrain {ep + 1:3d}/{pretrain_epochs} | Loss: {tot / max(n, 1):.6f}")
 
         # Phase 2: Main training
         opt = torch.optim.Adam(
             filter(lambda p: p.requires_grad, self.parameters()),
             lr=lr / 2,
             weight_decay=weight_decay,
-            amsgrad=True)
+            amsgrad=True,
+        )
 
         for ep in range(epochs):
             self.train()
@@ -434,7 +481,7 @@ class scDHMapModel(BaseModel):
                 n += 1
 
             if verbose >= 1 and (ep + 1) % 50 == 0:
-                print(f"Train {ep+1:3d}/{epochs} | Loss: {tot/max(n,1):.6f}")
+                print(f"Train {ep + 1:3d}/{epochs} | Loss: {tot / max(n, 1):.6f}")
 
         return {"train_loss": []}
 

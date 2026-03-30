@@ -82,8 +82,7 @@ def _sort_value_keys(keys: list[str]) -> list[str]:
 def _load_sensitivity_frame(csv_path: Path, source: str) -> pd.DataFrame:
     if not csv_path.exists():
         raise FileNotFoundError(f"Missing sensitivity CSV: {csv_path}")
-    usecols = {"Model", "method", "Sweep", "SweepVal", "Dataset",
-               *[m for m, _, _ in _METRICS]}
+    usecols = {"Model", "method", "Sweep", "SweepVal", "Dataset", *[m for m, _, _ in _METRICS]}
     df = pd.read_csv(csv_path, usecols=lambda col: col in usecols)
     df = df[df["Dataset"].isin(SENSITIVITY_DATASETS)].copy()
     df["SweepValKey"] = df["SweepVal"].map(_canonical_value)
@@ -91,7 +90,8 @@ def _load_sensitivity_frame(csv_path: Path, source: str) -> pd.DataFrame:
     if source == "dpmm":
         model_names = df[model_col].astype(str).str.lower()
         keep = model_names.str.contains("dpmm") & ~model_names.str.contains(
-            "trans|cont|contrast|flow")
+            "trans|cont|contrast|flow"
+        )
         df = df[keep].copy()
     elif source == "fm":
         df = df[df[model_col].astype(str).str.contains("DPMM-FM", na=False)].copy()
@@ -100,8 +100,7 @@ def _load_sensitivity_frame(csv_path: Path, source: str) -> pd.DataFrame:
 
 def _panel_rank_matrix(df, sweep_name):
     sub = df[df["Sweep"] == sweep_name].copy()
-    value_keys = _sort_value_keys(
-        sub["SweepValKey"].dropna().astype(str).unique().tolist())
+    value_keys = _sort_value_keys(sub["SweepValKey"].dropna().astype(str).unique().tolist())
     raw = np.full((len(_METRICS), len(value_keys)), np.nan, dtype=float)
     for col_idx, vk in enumerate(value_keys):
         vdf = sub[sub["SweepValKey"] == vk]
@@ -129,10 +128,9 @@ def _draw_sensitivity_panel(ax, rank_matrix, value_keys, title, default_value):
     im = ax.imshow(rank_matrix, aspect="auto", cmap="Blues", vmin=0.0, vmax=1.0)
     ax.set_title(title, fontsize=11.5, loc="left", pad=3, color="black")
     ax.set_yticks(range(len(_METRICS)))
-    ax.set_yticklabels([l for _, l, _ in _METRICS], fontsize=9.0, color="black")
+    ax.set_yticklabels([lbl for _, lbl, _ in _METRICS], fontsize=9.0, color="black")
     ax.set_xticks(range(len(value_keys)))
-    ax.set_xticklabels(value_keys, fontsize=9.0, rotation=30, ha="right",
-                        color="black")
+    ax.set_xticklabels(value_keys, fontsize=9.0, rotation=30, ha="right", color="black")
     ax.tick_params(axis="both", length=0, colors="black")
     ax.set_xticks(np.arange(-0.5, len(value_keys), 1), minor=True)
     ax.set_yticks(np.arange(-0.5, len(_METRICS), 1), minor=True)
@@ -141,9 +139,17 @@ def _draw_sensitivity_panel(ax, rank_matrix, value_keys, title, default_value):
     dk = _canonical_value(default_value)
     if dk in value_keys:
         di = value_keys.index(dk)
-        ax.add_patch(mpatches.Rectangle(
-            (di - 0.5, -0.5), 1.0, len(_METRICS),
-            fill=False, edgecolor="black", linewidth=1.4, linestyle="--"))
+        ax.add_patch(
+            mpatches.Rectangle(
+                (di - 0.5, -0.5),
+                1.0,
+                len(_METRICS),
+                fill=False,
+                edgecolor="black",
+                linewidth=1.4,
+                linestyle="--",
+            )
+        )
     return im
 
 
@@ -171,12 +177,13 @@ def _load_latest_history(model_name, dataset):
     candidates = []
     rerun_dir = preferred_core_model_dir(model_name)
     if rerun_dir is not None and rerun_dir.exists():
-        candidates.extend(sorted(
-            rerun_dir.glob(f"{safe}_{dataset}_*_history.json"), reverse=True))
-    candidates.extend(sorted(
-        DYNAMICS_DIR.glob(f"{model_name}_{dataset}_*_history.json"), reverse=True))
-    candidates.extend(sorted(
-        DYNAMICS_DIR.glob(f"{model_name}_{dataset}_history.json"), reverse=True))
+        candidates.extend(sorted(rerun_dir.glob(f"{safe}_{dataset}_*_history.json"), reverse=True))
+    candidates.extend(
+        sorted(DYNAMICS_DIR.glob(f"{model_name}_{dataset}_*_history.json"), reverse=True)
+    )
+    candidates.extend(
+        sorted(DYNAMICS_DIR.glob(f"{model_name}_{dataset}_history.json"), reverse=True)
+    )
     if not candidates:
         return None
     with open(candidates[0], encoding="utf-8") as f:
@@ -190,8 +197,14 @@ def _draw_training_panel(ax, model_name, dataset, show_ylabel, show_xlabel):
         ax.text(0.5, 0.5, "No history", ha="center", va="center", fontsize=9)
         return
     epochs = np.arange(1, len(history.get("train_loss", [])) + 1)
-    for key in ("train_loss", "recon_loss", "dpmm_loss", "flow_loss",
-                "contrastive_loss", "moco_loss"):
+    for key in (
+        "train_loss",
+        "recon_loss",
+        "dpmm_loss",
+        "flow_loss",
+        "contrastive_loss",
+        "moco_loss",
+    ):
         vals = history.get(key)
         if not vals or len(vals) != len(epochs):
             continue
@@ -213,6 +226,7 @@ def _draw_training_panel(ax, model_name, dataset, show_ylabel, show_xlabel):
 
 
 # ── Main generation ───────────────────────────────────────────────────────
+
 
 def generate(series, out_dir):
     series = require_dpmm(series)
@@ -246,22 +260,32 @@ def generate(series, out_dir):
         ax = sens_grid[row][col].add_axes(fig)
         panel_df = dpmm_df if source == "dpmm" else fm_df
         rank_matrix, value_keys = _panel_rank_matrix(panel_df, sweep_name)
-        image = _draw_sensitivity_panel(ax, rank_matrix, value_keys,
-                                         title, default_value)
+        image = _draw_sensitivity_panel(ax, rank_matrix, value_keys, title, default_value)
 
     # Vertical colorbar to the right of panel (a), matching Fig 4 style
     if image is not None:
-        cbar_ax = fig.add_axes([sens_region.left + sens_region.width + 0.015,
-                                sens_region.bottom + sens_region.height * 0.15,
-                                0.008, sens_region.height * 0.70])
+        cbar_ax = fig.add_axes(
+            [
+                sens_region.left + sens_region.width + 0.015,
+                sens_region.bottom + sens_region.height * 0.15,
+                0.008,
+                sens_region.height * 0.70,
+            ]
+        )
         cbar = fig.colorbar(image, cax=cbar_ax)
         cbar.ax.tick_params(labelsize=8.0, colors="black")
         cbar.set_label("Within-sweep rank", fontsize=8.5, color="black")
 
-    fig.text(sens_region.left - 0.035,
-             sens_region.bottom + sens_region.height + 0.005,
-             "(a)", fontsize=14, fontweight="bold",
-             ha="left", va="bottom", transform=fig.transFigure)
+    fig.text(
+        sens_region.left - 0.035,
+        sens_region.bottom + sens_region.height + 0.005,
+        "(a)",
+        fontsize=14,
+        fontweight="bold",
+        ha="left",
+        va="bottom",
+        transform=fig.transFigure,
+    )
 
     # ── Panel (b): Training dynamics ─────────────────────────────────────
     n_ds = len(_TRAIN_DATASETS)
@@ -280,13 +304,23 @@ def generate(series, out_dir):
         loc="upper center",
         bbox_to_anchor=(0.48, legend_y),
         bbox_transform=fig.transFigure,
-        ncol=4, frameon=False, fontsize=8.5,
-        handlelength=1.4, columnspacing=0.6)
+        ncol=4,
+        frameon=False,
+        fontsize=8.5,
+        handlelength=1.4,
+        columnspacing=0.6,
+    )
 
-    fig.text(train_region.left - 0.035,
-             train_region.bottom + train_region.height + 0.040,
-             "(b)", fontsize=14, fontweight="bold",
-             ha="left", va="bottom", transform=fig.transFigure)
+    fig.text(
+        train_region.left - 0.035,
+        train_region.bottom + train_region.height + 0.040,
+        "(b)",
+        fontsize=14,
+        fontweight="bold",
+        ha="left",
+        va="bottom",
+        transform=fig.transFigure,
+    )
 
     for ridx, dataset in enumerate(_TRAIN_DATASETS):
         row_axes = []
@@ -294,17 +328,22 @@ def generate(series, out_dir):
             ax = train_grid[ridx][cidx].add_axes(fig)
             row_axes.append(ax)
             _draw_training_panel(
-                ax, model_name, dataset,
-                show_ylabel=(cidx == 0),
-                show_xlabel=(ridx == n_ds - 1))
+                ax, model_name, dataset, show_ylabel=(cidx == 0), show_xlabel=(ridx == n_ds - 1)
+            )
             if ridx == 0:
                 ax.set_title(
-                    _TRAIN_DISPLAY.get(model_name, model_name),
-                    fontsize=10.5, pad=2, color="black")
-        mid_y = (row_axes[0].get_position().y0 +
-                 row_axes[0].get_position().height / 2)
-        fig.text(train_region.left - 0.045, mid_y, dataset,
-                 ha="right", va="center", fontsize=10.5, color="black")
+                    _TRAIN_DISPLAY.get(model_name, model_name), fontsize=10.5, pad=2, color="black"
+                )
+        mid_y = row_axes[0].get_position().y0 + row_axes[0].get_position().height / 2
+        fig.text(
+            train_region.left - 0.045,
+            mid_y,
+            dataset,
+            ha="right",
+            va="center",
+            fontsize=10.5,
+            color="black",
+        )
 
     out_path = out_dir / f"Fig3_sensitivity_training_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)
@@ -316,6 +355,9 @@ if __name__ == "__main__":
     parser.add_argument("--series", default="dpmm", choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "refined_figures" / "output" / args.series)
+    out = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "refined_figures" / "output" / args.series
+    )
     generate(args.series, out)

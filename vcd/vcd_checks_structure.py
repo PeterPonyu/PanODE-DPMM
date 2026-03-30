@@ -26,6 +26,7 @@ from .vcd_core import _fig_bbox, _overlap_area, _safe_bbox, _shrink, _sides_outs
 # Pass 16: Significance bracket annotation issues
 # ===============================================================================
 
+
 def _check_significance_brackets(fig, renderer, border_tol_px=5.0):
     """Pass 16: Detect significance bracket annotation issues.
 
@@ -41,7 +42,7 @@ def _check_significance_brackets(fig, renderer, border_tol_px=5.0):
     """
     issues: list[dict] = []
     fig_bb = _fig_bbox(fig)
-    star_pattern = re.compile(r'^(\*{1,3}|ns)$')
+    star_pattern = re.compile(r"^(\*{1,3}|ns)$")
 
     # Collect all significance annotation texts and bracket lines
     star_texts = []
@@ -49,7 +50,7 @@ def _check_significance_brackets(fig, renderer, border_tol_px=5.0):
 
     for ax in fig.get_axes():
         for child in ax.get_children():
-            if hasattr(child, 'get_text'):
+            if hasattr(child, "get_text"):
                 txt = child.get_text().strip()
                 if star_pattern.match(txt) and child.get_visible():
                     bb = _safe_bbox(child, renderer)
@@ -57,31 +58,33 @@ def _check_significance_brackets(fig, renderer, border_tol_px=5.0):
                         star_texts.append((txt, bb, child))
 
             # Lines with zorder >= 10 and clip_on=False are likely brackets
-            if hasattr(child, 'get_xdata') and hasattr(child, 'get_zorder'):
+            if hasattr(child, "get_xdata") and hasattr(child, "get_zorder"):
                 if child.get_zorder() >= 10 and not child.get_clip_on():
                     bb = _safe_bbox(child, renderer)
                     if bb:
                         bracket_lines.append(("bracket_line", bb, child))
 
     # a) Check star texts for truncation at figure border
-    for txt, bb, artist in star_texts:
+    for txt, bb, artist in star_texts:  # noqa: B007
         sides = _sides_outside(bb, fig_bb, border_tol_px)
         if sides:
-            issues.append({
-                "type": "bracket_text_truncation",
-                "severity": "warning",
-                "detail": (
-                    f"Significance text '{txt}' extends beyond "
-                    f"figure border ({', '.join(sides)})"
-                ),
-                "elements": [f"sig_text:{txt}"],
-            })
+            issues.append(
+                {
+                    "type": "bracket_text_truncation",
+                    "severity": "warning",
+                    "detail": (
+                        f"Significance text '{txt}' extends beyond "
+                        f"figure border ({', '.join(sides)})"
+                    ),
+                    "elements": [f"sig_text:{txt}"],
+                }
+            )
 
     # b) Check star texts overlapping other (non-bracket) texts
     all_texts = []
     for ax in fig.get_axes():
         for child in ax.get_children():
-            if hasattr(child, 'get_text') and child.get_visible():
+            if hasattr(child, "get_text") and child.get_visible():
                 other_txt = child.get_text().strip()
                 if other_txt and not star_pattern.match(other_txt):
                     bb = _safe_bbox(child, renderer)
@@ -95,30 +98,30 @@ def _check_significance_brackets(fig, renderer, border_tol_px=5.0):
             if shrunk_sig and shrunk_other and shrunk_sig.overlaps(shrunk_other):
                 area = _overlap_area(sig_bb, other_bb)
                 if area > 10:
-                    issues.append({
-                        "type": "bracket_text_overlap",
-                        "severity": "warning",
-                        "detail": (
-                            f"Significance '{sig_txt}' overlaps "
-                            f"label '{other_txt}' ({area:.0f} px\u00b2)"
-                        ),
-                        "elements": [f"sig_text:{sig_txt}",
-                                     f"label:{other_txt}"],
-                    })
+                    issues.append(
+                        {
+                            "type": "bracket_text_overlap",
+                            "severity": "warning",
+                            "detail": (
+                                f"Significance '{sig_txt}' overlaps "
+                                f"label '{other_txt}' ({area:.0f} px\u00b2)"
+                            ),
+                            "elements": [f"sig_text:{sig_txt}", f"label:{other_txt}"],
+                        }
+                    )
 
     # c) Check bracket lines for figure-border truncation
-    for tag, bb, artist in bracket_lines:
+    for tag, bb, artist in bracket_lines:  # noqa: B007
         sides = _sides_outside(bb, fig_bb, border_tol_px)
         if sides:
-            issues.append({
-                "type": "bracket_line_truncation",
-                "severity": "warning",
-                "detail": (
-                    f"Bracket line extends beyond "
-                    f"figure border ({', '.join(sides)})"
-                ),
-                "elements": [tag],
-            })
+            issues.append(
+                {
+                    "type": "bracket_line_truncation",
+                    "severity": "warning",
+                    "detail": (f"Bracket line extends beyond figure border ({', '.join(sides)})"),
+                    "elements": [tag],
+                }
+            )
 
     return issues
 
@@ -126,6 +129,7 @@ def _check_significance_brackets(fig, renderer, border_tol_px=5.0):
 # ===============================================================================
 # Per-axes summary helper
 # ===============================================================================
+
 
 def _per_axes_summary(fig, renderer, infos):
     """Per-subplot conflict summary (Layer 1).
@@ -136,7 +140,7 @@ def _per_axes_summary(fig, renderer, infos):
     per_ax: dict[str, list[dict]] = {}
 
     for ax in fig.get_axes():
-        if getattr(ax, '_is_legend_cell', False):
+        if getattr(ax, "_is_legend_cell", False):
             continue
         title = ax.get_title() or f"ax@{id(ax):#x}"
         aid = id(ax)
@@ -152,10 +156,13 @@ def _per_axes_summary(fig, renderer, infos):
             per_ax[title] = ax_issues
             continue
 
-        local_data = [a for a in infos
-                      if a.ax_id == aid
-                      and a.kind in ("collection", "line", "image", "patch")
-                      and not any(s in a.tag for s in ("Spine", "Wedge", "FancyBbox"))]
+        local_data = [
+            a
+            for a in infos
+            if a.ax_id == aid
+            and a.kind in ("collection", "line", "image", "patch")
+            and not any(s in a.tag for s in ("Spine", "Wedge", "FancyBbox"))
+        ]
 
         for da in local_data:
             area = _overlap_area(leg_bb, da.bbox)
@@ -167,19 +174,24 @@ def _per_axes_summary(fig, renderer, infos):
                     # extend across the full axes, so legend overlap is
                     # unavoidable -- downgrade to info like lines.
                     # FillBetween polys span the full axes like lines.
-                    if (da.kind == "line" or da.kind == "patch"
-                            or "Rectangle" in da.tag
-                            or "FillBetween" in da.tag):
+                    if (
+                        da.kind == "line"
+                        or da.kind == "patch"
+                        or "Rectangle" in da.tag
+                        or "FillBetween" in da.tag
+                    ):
                         sev = "info"
                     else:
                         sev = "warning"
-                    ax_issues.append({
-                        "type": "subplot_legend_overlap",
-                        "severity": sev,
-                        "detail": (
-                            f"[{title}] Legend occludes '{da.tag}' "
-                            f"({frac:.0%}, {area:.0f} px\u00b2)"
-                        ),
-                    })
+                    ax_issues.append(
+                        {
+                            "type": "subplot_legend_overlap",
+                            "severity": sev,
+                            "detail": (
+                                f"[{title}] Legend occludes '{da.tag}' "
+                                f"({frac:.0%}, {area:.0f} px\u00b2)"
+                            ),
+                        }
+                    )
         per_ax[title] = ax_issues
     return per_ax

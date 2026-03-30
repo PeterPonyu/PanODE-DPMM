@@ -13,7 +13,6 @@ Shared helpers (``load_model``, ``load_data_with_genes``) are defined here
 and imported by the sub-modules to avoid duplication.
 """
 
-import numpy as np
 import torch
 
 
@@ -57,6 +56,5 @@ def load_data_with_genes(dataset, seed=42, max_cells=3000, hvg=3000):
     adata = load_data(data_path, max_cells=max_cells, hvg_top_genes=hvg, seed=seed)
     gene_names = list(adata.var_names)
 
-    splitter = DataSplitter(
-        adata=adata, batch_size=128, random_seed=seed, verbose=False)
+    splitter = DataSplitter(adata=adata, batch_size=128, random_seed=seed, verbose=False)
     return splitter, gene_names

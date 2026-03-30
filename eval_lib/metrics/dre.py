@@ -46,7 +46,9 @@ class DimensionalityReductionEvaluator:
             )
 
         if k >= X_high.shape[0]:
-            raise ValueError(f"k ({k}) must be smaller than the number of samples ({X_high.shape[0]}).")
+            raise ValueError(
+                f"k ({k}) must be smaller than the number of samples ({X_high.shape[0]})."
+            )
 
         if X_high.ndim != 2 or X_low.ndim != 2:
             raise ValueError("Input data must be 2D arrays.")
@@ -73,7 +75,11 @@ class DimensionalityReductionEvaluator:
 
             distance_corr_tuple = spearmanr(D_high.ravel(), D_low.ravel())
             # spearmanr returns (correlation, pvalue); extract first element robustly
-            distance_corr = distance_corr_tuple[0] if isinstance(distance_corr_tuple, tuple) else distance_corr_tuple  # type: ignore[index]
+            distance_corr = (
+                distance_corr_tuple[0]
+                if isinstance(distance_corr_tuple, tuple)
+                else distance_corr_tuple
+            )  # type: ignore[index]
             # Cast to native float for downstream type stability
             return float(distance_corr) if not np.isnan(distance_corr) else 0.0  # type: ignore[arg-type]
 
@@ -243,13 +249,15 @@ class DimensionalityReductionEvaluator:
         """
         self._validate_inputs(X_high, X_low, k)
 
-        self._log(f"Starting dimensionality reduction evaluation (n_samples={X_high.shape[0]}, k={k})...")
+        self._log(
+            f"Starting dimensionality reduction evaluation (n_samples={X_high.shape[0]}, k={k})..."
+        )
 
         results: dict[str, float] = {}
 
         # 1. Distance correlation
         self._log("Computing distance correlation...")
-        results['distance_correlation'] = self.distance_correlation_score(X_high, X_low)
+        results["distance_correlation"] = self.distance_correlation_score(X_high, X_low)
 
         # 2. Ranking matrices
         self._log("Computing ranking matrices...")
@@ -268,16 +276,20 @@ class DimensionalityReductionEvaluator:
         qnx_values = self.compute_qnx_series(corank)
         Q_local, Q_global, K_max = self.get_q_local_global(qnx_values)
 
-        results['Q_local'] = float(Q_local)
-        results['Q_global'] = float(Q_global)
-        results['K_max'] = int(K_max)
+        results["Q_local"] = float(Q_local)
+        results["Q_global"] = float(Q_global)
+        results["K_max"] = int(K_max)
 
-        overall_quality = float(np.mean([
-            results['distance_correlation'],
-            results['Q_local'],
-            results['Q_global'],
-        ]))
-        results['overall_quality'] = overall_quality
+        overall_quality = float(
+            np.mean(
+                [
+                    results["distance_correlation"],
+                    results["Q_local"],
+                    results["Q_global"],
+                ]
+            )
+        )
+        results["overall_quality"] = overall_quality
 
         if self.verbose:
             self._print_results(results)
@@ -304,7 +316,7 @@ class DimensionalityReductionEvaluator:
         print("\n[Auxiliary]")
         print(f"  Local–global split point (K_max): {results['K_max']}")
 
-        overall_quality = results['overall_quality']
+        overall_quality = results["overall_quality"]
 
         print("\n[Overall Assessment]")
         print(f"  Mean quality score: {overall_quality:.4f}")
@@ -322,7 +334,9 @@ class DimensionalityReductionEvaluator:
 
         print("=" * 60)
 
-    def compare_methods(self, method_results_dict: dict[str, tuple[np.ndarray, np.ndarray]], k: int = 10) -> pd.DataFrame:
+    def compare_methods(
+        self, method_results_dict: dict[str, tuple[np.ndarray, np.ndarray]], k: int = 10
+    ) -> pd.DataFrame:
         """
         Compare multiple dimensionality reduction methods.
 
@@ -345,22 +359,28 @@ class DimensionalityReductionEvaluator:
 
             self.verbose = original_verbose
 
-            overall_quality = float(np.mean([
-                results['distance_correlation'],
-                results['Q_local'],
-                results['Q_global'],
-            ]))
+            overall_quality = float(
+                np.mean(
+                    [
+                        results["distance_correlation"],
+                        results["Q_local"],
+                        results["Q_global"],
+                    ]
+                )
+            )
 
-            comparison_results.append({
-                'Method': method_name,
-                'Distance_Correlation': results['distance_correlation'],
-                'Q_Local': results['Q_local'],
-                'Q_Global': results['Q_global'],
-                'Overall_Quality': overall_quality,
-            })
+            comparison_results.append(
+                {
+                    "Method": method_name,
+                    "Distance_Correlation": results["distance_correlation"],
+                    "Q_Local": results["Q_local"],
+                    "Q_Global": results["Q_global"],
+                    "Overall_Quality": overall_quality,
+                }
+            )
 
         df = pd.DataFrame(comparison_results)
-        df = df.sort_values('Overall_Quality', ascending=False)
+        df = df.sort_values("Overall_Quality", ascending=False)
 
         if self.verbose:
             self._print_comparison_table(df)
@@ -372,11 +392,11 @@ class DimensionalityReductionEvaluator:
 
         print(f"\n{'=' * 90}")
         print("                    Dimensionality Reduction Method Comparison")
-        print('=' * 90)
+        print("=" * 90)
 
-        pd.set_option('display.float_format', '{:.4f}'.format)
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.width', None)
+        pd.set_option("display.float_format", "{:.4f}".format)
+        pd.set_option("display.max_columns", None)
+        pd.set_option("display.width", None)
 
         print(df.to_string(index=False))
 
@@ -385,10 +405,11 @@ class DimensionalityReductionEvaluator:
             f"(Overall score: {df.iloc[0]['Overall_Quality']:.4f})"
         )
 
-        print('=' * 90)
+        print("=" * 90)
 
 
 # ==================== Convenience functions ====================
+
 
 def evaluate_dimensionality_reduction(
     X_high: np.ndarray, X_low: np.ndarray, k: int = 10, verbose: bool = True
@@ -410,9 +431,8 @@ def evaluate_dimensionality_reduction(
 
 
 def compare_dimensionality_reduction_methods(
-    method_results_dict: dict[str, tuple[np.ndarray, np.ndarray]],
-    k: int = 10,
-    verbose: bool = True) -> pd.DataFrame:
+    method_results_dict: dict[str, tuple[np.ndarray, np.ndarray]], k: int = 10, verbose: bool = True
+) -> pd.DataFrame:
     """
     Convenience function to compare different dimensionality reduction methods.
 

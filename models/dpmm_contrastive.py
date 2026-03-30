@@ -10,6 +10,7 @@ Single-phase training:
 - Phase 1: Train AE/VAE with DPMM clustering + contrastive learning (fit method)
 
 """
+
 import math
 from typing import Literal
 
@@ -44,7 +45,10 @@ def _act(name: str) -> nn.Module:
 
 class _Layer1D(nn.Module):
     """Normalization + Activation + Dropout layer"""
-    def __init__(self, dim: int, norm: str | None = None, act: str | None = None, drop: float = 0.0):
+
+    def __init__(
+        self, dim: int, norm: str | None = None, act: str | None = None, drop: float = 0.0
+    ):
         super().__init__()
         layers = []
         if norm == "bn":
@@ -63,6 +67,7 @@ class _Layer1D(nn.Module):
 
 class MLP(nn.Module):
     """Configurable MLP with flexible normalization, activation, and dropout"""
+
     def __init__(
         self,
         features: list,
@@ -71,7 +76,8 @@ class MLP(nn.Module):
         norm: str | None = None,
         hid_norm: str | None = None,
         drop: float = 0.0,
-        hid_drop: float = 0.0):
+        hid_drop: float = 0.0,
+    ):
         super().__init__()
         layers = []
         for i in range(1, len(features)):
@@ -97,6 +103,7 @@ class DataAugmentation(nn.Module):
     - scHSC: Laplacian smoothing based augmentation
     - scGPCL: Heterogeneous dropout
     """
+
     def __init__(
         self,
         noise_prob: float = 0.2,
@@ -104,7 +111,7 @@ class DataAugmentation(nn.Module):
         mask_prob: float = 0.1,
         scale_range: tuple[float, float] = (0.8, 1.2),
         feature_dropout: float = 0.2,  # From scSimGCL
-        edge_dropout: float = 0.2,     # From scSimGCL
+        edge_dropout: float = 0.2,  # From scSimGCL
     ):
         super().__init__()
         self.noise_prob = noise_prob
@@ -149,13 +156,12 @@ class DataAugmentation(nn.Module):
 
 class MomentumEncoder(nn.Module):
     """Momentum-updated encoder for MoCo"""
+
     def __init__(self, encoder: nn.Module, latent_dim: int, embedding_dim: int = 128):
         super().__init__()
         self.encoder = encoder
         self.projector = nn.Sequential(
-            nn.Linear(latent_dim, latent_dim),
-            nn.ReLU(),
-            nn.Linear(latent_dim, embedding_dim)
+            nn.Linear(latent_dim, latent_dim), nn.ReLU(), nn.Linear(latent_dim, embedding_dim)
         )
         self.apply(weight_init)
 
@@ -175,6 +181,7 @@ class MomentumContrast(nn.Module):
     - scGPCL: Instance-level + Prototype-level contrastive
     - scHSC: Hard sample weighting
     """
+
     def __init__(
         self,
         latent_dim: int,
@@ -184,7 +191,8 @@ class MomentumContrast(nn.Module):
         temperature: float = 0.2,
         device: torch.device = torch.device("cuda"),
         use_prototype: bool = True,  # From scGPCL
-        n_prototypes: int = 10):
+        n_prototypes: int = 10,
+    ):
         super().__init__()
         self.queue_size = queue_size
         self.momentum = momentum
@@ -199,7 +207,7 @@ class MomentumContrast(nn.Module):
             nn.Linear(latent_dim, latent_dim),
             nn.BatchNorm1d(latent_dim),
             nn.ReLU(),
-            nn.Linear(latent_dim, embedding_dim)
+            nn.Linear(latent_dim, embedding_dim),
         )
 
         # Key projector (momentum-updated copy)
@@ -207,11 +215,13 @@ class MomentumContrast(nn.Module):
             nn.Linear(latent_dim, latent_dim),
             nn.BatchNorm1d(latent_dim),
             nn.ReLU(),
-            nn.Linear(latent_dim, embedding_dim)
+            nn.Linear(latent_dim, embedding_dim),
         )
 
         # Initialize key projector with query projector weights
-        for param_q, param_k in zip(self.query_projector.parameters(), self.key_projector.parameters()):
+        for param_q, param_k in zip(
+            self.query_projector.parameters(), self.key_projector.parameters()
+        ):
             param_k.data.copy_(param_q.data)
             param_k.requires_grad = False
 
@@ -230,7 +240,9 @@ class MomentumContrast(nn.Module):
     @torch.no_grad()
     def _momentum_update(self):
         """Update key projector with momentum"""
-        for param_q, param_k in zip(self.query_projector.parameters(), self.key_projector.parameters()):
+        for param_q, param_k in zip(
+            self.query_projector.parameters(), self.key_projector.parameters()
+        ):
             param_k.data = param_k.data * self.momentum + param_q.data * (1.0 - self.momentum)
 
     @torch.no_grad()
@@ -240,7 +252,7 @@ class MomentumContrast(nn.Module):
         ptr = int(self.queue_ptr)
 
         if ptr + batch_size <= self.queue_size:
-            self.queue[:, ptr:ptr + batch_size] = keys.T
+            self.queue[:, ptr : ptr + batch_size] = keys.T
         else:
             part1_size = self.queue_size - ptr
             self.queue[:, ptr:] = keys[:part1_size].T
@@ -250,7 +262,9 @@ class MomentumContrast(nn.Module):
         ptr = (ptr + batch_size) % self.queue_size
         self.queue_ptr[0] = ptr
 
-    def forward(self, z_query: torch.Tensor, z_key: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self, z_query: torch.Tensor, z_key: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Compute contrastive logits and labels
 
@@ -301,24 +315,26 @@ class MomentumContrast(nn.Module):
         sim_12 = torch.mm(h1, h2.T) / self.temperature
         sim_22 = torch.mm(h2, h2.T) / self.temperature
 
-        batch_size = h1.size(0)
+        batch_size = h1.size(0)  # noqa: F841
 
         # Symmetric loss (scAGCL)
         pos_sim = torch.diag(sim_12)
 
         # Loss from view 1
         neg_sim_1 = torch.cat([sim_11, sim_12], dim=1)
-        neg_sim_1 = neg_sim_1 - torch.diag(torch.diag(sim_11)).repeat(1, 2)[:, :neg_sim_1.size(1)]
+        neg_sim_1 = neg_sim_1 - torch.diag(torch.diag(sim_11)).repeat(1, 2)[:, : neg_sim_1.size(1)]
         l1 = -pos_sim + torch.logsumexp(neg_sim_1, dim=1)
 
         # Loss from view 2
         neg_sim_2 = torch.cat([sim_22, sim_12.T], dim=1)
-        neg_sim_2 = neg_sim_2 - torch.diag(torch.diag(sim_22)).repeat(1, 2)[:, :neg_sim_2.size(1)]
+        neg_sim_2 = neg_sim_2 - torch.diag(torch.diag(sim_22)).repeat(1, 2)[:, : neg_sim_2.size(1)]
         l2 = -pos_sim + torch.logsumexp(neg_sim_2, dim=1)
 
         return (l1.mean() + l2.mean()) / 2
 
-    def prototype_contrastive_loss(self, z: torch.Tensor, cluster_assignments: torch.Tensor | None = None) -> torch.Tensor:
+    def prototype_contrastive_loss(
+        self, z: torch.Tensor, cluster_assignments: torch.Tensor | None = None
+    ) -> torch.Tensor:
         """scGPCL-style prototype contrastive loss"""
         if not self.use_prototype:
             return torch.tensor(0.0, device=z.device)
@@ -347,12 +363,23 @@ class MomentumContrast(nn.Module):
 
 class InformationBottleneck(nn.Module):
     """Compress and reconstruct latent space"""
+
     def __init__(self, latent_dim: int, bottleneck_dim: int, norm: str = "bn", drop: float = 0.1):
         super().__init__()
-        self.compress = MLP([latent_dim, latent_dim//2, bottleneck_dim],
-                           norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
-        self.expand = MLP([bottleneck_dim, latent_dim//2, latent_dim],
-                         norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
+        self.compress = MLP(
+            [latent_dim, latent_dim // 2, bottleneck_dim],
+            norm=norm,
+            hid_norm=norm,
+            hid_drop=drop,
+            out_act=None,
+        )
+        self.expand = MLP(
+            [bottleneck_dim, latent_dim // 2, latent_dim],
+            norm=norm,
+            hid_norm=norm,
+            hid_drop=drop,
+            out_act=None,
+        )
 
     def forward(self, z):
         z_bottleneck = self.compress(z)
@@ -362,6 +389,7 @@ class InformationBottleneck(nn.Module):
 
 class DPMMContrastiveAutoEncoder(nn.Module):
     """Autoencoder with MoCo contrastive learning, optional VAE, bottleneck, and ODE components."""
+
     def __init__(
         self,
         input_dim: int,
@@ -387,7 +415,8 @@ class DPMMContrastiveAutoEncoder(nn.Module):
         aug_noise_std: float = 0.1,
         aug_mask_prob: float = 0.1,
         aug_feature_dropout: float = 0.2,  # scSimGCL-style
-        device: torch.device = torch.device("cuda")):
+        device: torch.device = torch.device("cuda"),
+    ):
         super().__init__()
         self.use_vae = use_vae
         self.var_eps = var_eps
@@ -397,16 +426,27 @@ class DPMMContrastiveAutoEncoder(nn.Module):
 
         # Encoder
         if use_vae:
-            self.encoder_backbone = MLP([input_dim] + encoder_dims,
-                                        norm=norm, hid_norm=norm, hid_drop=drop, out_act="mish")
+            self.encoder_backbone = MLP(
+                [input_dim] + encoder_dims, norm=norm, hid_norm=norm, hid_drop=drop, out_act="mish"
+            )
             self.mu_head = nn.Linear(encoder_dims[-1], latent_dim)
             self.var_head = nn.Linear(encoder_dims[-1], latent_dim)
         else:
-            self.encoder = MLP([input_dim] + encoder_dims + [latent_dim],
-                              norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
+            self.encoder = MLP(
+                [input_dim] + encoder_dims + [latent_dim],
+                norm=norm,
+                hid_norm=norm,
+                hid_drop=drop,
+                out_act=None,
+            )
 
-        self.decoder = MLP([latent_dim] + decoder_dims + [input_dim],
-                          norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
+        self.decoder = MLP(
+            [latent_dim] + decoder_dims + [input_dim],
+            norm=norm,
+            hid_norm=norm,
+            hid_drop=drop,
+            out_act=None,
+        )
 
         self.use_bottleneck = use_bottleneck
         self.apply(weight_init)
@@ -432,7 +472,8 @@ class DPMMContrastiveAutoEncoder(nn.Module):
                 temperature=moco_temperature,
                 device=device,
                 use_prototype=use_prototype,  # scGPCL-style
-                n_prototypes=n_prototypes)
+                n_prototypes=n_prototypes,
+            )
 
     def encode_vae(self, x: torch.Tensor):
         """VAE encoding: returns (mu, var)"""
@@ -511,7 +552,7 @@ class DPMMODEContrastiveModel(BaseModel):
         dpmm_loss_weight: float = 1.0,
         dpmm_refit_interval: int = 10,
         n_components: int = 50,
-        dpmm_loss_type: Literal['nll', 'kl', 'energy', 'student_t', 'mmd', 'soft_nll'] = 'kl',
+        dpmm_loss_type: Literal["nll", "kl", "energy", "student_t", "mmd", "soft_nll"] = "kl",
         student_t_df: float = 3.0,
         mmd_bandwidth: float = 1.0,
         model_name: str = "DPMMODEContrastive",
@@ -529,8 +570,14 @@ class DPMMODEContrastiveModel(BaseModel):
         # Augmentation parameters
         aug_noise_prob: float = 0.2,
         aug_noise_std: float = 0.1,
-        aug_mask_prob: float = 0.1):
-        super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=encoder_dims or [], model_name=model_name)
+        aug_mask_prob: float = 0.1,
+    ):
+        super().__init__(
+            input_dim=input_dim,
+            latent_dim=latent_dim,
+            hidden_dims=encoder_dims or [],
+            model_name=model_name,
+        )
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -552,7 +599,8 @@ class DPMMODEContrastiveModel(BaseModel):
             aug_noise_prob=aug_noise_prob,
             aug_noise_std=aug_noise_std,
             aug_mask_prob=aug_mask_prob,
-            device=self.device)
+            device=self.device,
+        )
 
         self.dpmm_warmup_ratio = dpmm_warmup_ratio
         self.dpmm_loss_weight = dpmm_loss_weight
@@ -570,11 +618,14 @@ class DPMMODEContrastiveModel(BaseModel):
         # Safety guard: VAE Gaussian prior N(0,I) conflicts with DPMM clustering prior
         if self.use_vae and self.dpmm_loss_weight > 0:
             import warnings
+
             warnings.warn(
                 f"{self.model_name}: use_vae=True with dpmm_loss_weight={self.dpmm_loss_weight} "
                 f"creates conflicting KL objectives (Gaussian N(0,I) vs DPMM mixture). "
                 f"Forcing dpmm_loss_weight=0.0 and dpmm_warmup_ratio=1.0.",
-                UserWarning, stacklevel=2)
+                UserWarning,
+                stacklevel=2,
+            )
             self.dpmm_loss_weight = 0.0
             self.dpmm_warmup_ratio = 1.0
 
@@ -594,8 +645,7 @@ class DPMMODEContrastiveModel(BaseModel):
             z = self.ae.encode_ae(x)
         return z
 
-
-    def extract_latent(self, data_loader, device='cuda', return_reconstructions: bool = False):
+    def extract_latent(self, data_loader, device="cuda", return_reconstructions: bool = False):
         """Extract latent representations from DataLoader."""
         self.eval()
         self.to(device)
@@ -624,7 +674,9 @@ class DPMMODEContrastiveModel(BaseModel):
     def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass (Phase 1: AE/VAE + MoCo training without ODE)"""
         if self.ae.use_bottleneck:
-            x_hat, z, x_le_hat, z_ld, mu, var, moco_logits, moco_labels, z_aug_q, z_aug_k = self.ae(x)
+            x_hat, z, x_le_hat, z_ld, mu, var, moco_logits, moco_labels, z_aug_q, z_aug_k = self.ae(
+                x
+            )
             recon = (x_hat, x_le_hat)
         else:
             x_hat, z, _, _, mu, var, moco_logits, moco_labels, z_aug_q, z_aug_k = self.ae(x)
@@ -642,7 +694,9 @@ class DPMMODEContrastiveModel(BaseModel):
             result["z_aug_k"] = z_aug_k
         return result
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         """Compute loss: reconstruction + DPMM + contrastive (Phase 1)"""
         loss_dict = {}
 
@@ -655,7 +709,7 @@ class DPMMODEContrastiveModel(BaseModel):
             loss_dict["recon_ae"] = recon_ae
             loss_dict["recon_bottleneck"] = recon_bottleneck
         else:
-            x_hat, = outputs["reconstruction"]
+            (x_hat,) = outputs["reconstruction"]
             recon = self.recon_loss_fn(x_hat, x)
             loss_dict["recon_ae"] = recon
 
@@ -664,17 +718,17 @@ class DPMMODEContrastiveModel(BaseModel):
         # DPMM clustering loss
         dpmm = torch.tensor(0.0, device=x.device)
         if self.dpmm_fitted and self.dpmm_params is not None:
-            if self.dpmm_loss_type == 'nll':
+            if self.dpmm_loss_type == "nll":
                 dpmm = self._dpmm_loss_nll(outputs["latent"])
-            elif self.dpmm_loss_type == 'kl':
+            elif self.dpmm_loss_type == "kl":
                 dpmm = self._dpmm_loss_kl(outputs["latent"])
-            elif self.dpmm_loss_type == 'energy':
+            elif self.dpmm_loss_type == "energy":
                 dpmm = self._dpmm_loss_energy(outputs["latent"])
-            elif self.dpmm_loss_type == 'student_t':
+            elif self.dpmm_loss_type == "student_t":
                 dpmm = self._dpmm_loss_student_t(outputs["latent"])
-            elif self.dpmm_loss_type == 'mmd':
+            elif self.dpmm_loss_type == "mmd":
                 dpmm = self._dpmm_loss_mmd(outputs["latent"])
-            elif self.dpmm_loss_type == 'soft_nll':
+            elif self.dpmm_loss_type == "soft_nll":
                 dpmm = self._dpmm_loss_soft_nll(outputs["latent"])
         loss_dict["dpmm_loss"] = dpmm
 
@@ -707,7 +761,12 @@ class DPMMODEContrastiveModel(BaseModel):
 
         # Total loss with all contrastive components
         contrastive_total = moco_loss + 0.5 * sym_loss + 0.3 * proto_loss
-        total = recon + self.dpmm_loss_weight * dpmm + self.kl_weight * kl_vae + self.moco_weight * contrastive_total
+        total = (
+            recon
+            + self.dpmm_loss_weight * dpmm
+            + self.kl_weight * kl_vae
+            + self.moco_weight * contrastive_total
+        )
         loss_dict["total_loss"] = total
 
         return loss_dict
@@ -715,8 +774,12 @@ class DPMMODEContrastiveModel(BaseModel):
     def _update_dpmm_params(self, bgm: BayesianGaussianMixture, device: torch.device):
         """Extract DPMM parameters from fitted sklearn model"""
         means = torch.as_tensor(bgm.means_, dtype=torch.float32, device=device)
-        weight_concentration = torch.as_tensor(bgm.weight_concentration_, dtype=torch.float32, device=device)
-        precisions_cholesky = torch.as_tensor(bgm.precisions_cholesky_, dtype=torch.float32, device=device)
+        weight_concentration = torch.as_tensor(
+            bgm.weight_concentration_, dtype=torch.float32, device=device
+        )
+        precisions_cholesky = torch.as_tensor(
+            bgm.precisions_cholesky_, dtype=torch.float32, device=device
+        )
         weights = torch.as_tensor(bgm.weights_, dtype=torch.float32, device=device)
 
         precisions_cholesky = torch.clamp(precisions_cholesky, min=1e-6, max=1e6)
@@ -726,7 +789,7 @@ class DPMMODEContrastiveModel(BaseModel):
             "weight_concentration": weight_concentration,
             "precisions_cholesky": precisions_cholesky,
             "weights": weights,
-            "covariances": 1.0 / (precisions_cholesky ** 2 + 1e-10),
+            "covariances": 1.0 / (precisions_cholesky**2 + 1e-10),
         }
         self.dpmm_fitted = True
 
@@ -742,7 +805,7 @@ class DPMMODEContrastiveModel(BaseModel):
         precisions = dp["precisions_cholesky"] ** 2
 
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
 
         log_gauss = -0.5 * (n_features * math.log(2.0 * math.pi) + mahalanobis) + log_det
         log_prob = torch.logsumexp(log_gauss + log_weights, dim=1)
@@ -760,7 +823,7 @@ class DPMMODEContrastiveModel(BaseModel):
 
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
         precisions = dp["precisions_cholesky"] ** 2
-        weighted_dist = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        weighted_dist = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
 
         temperature = 1.0
         soft_assign = torch.softmax(-weighted_dist / temperature, dim=1)
@@ -780,7 +843,7 @@ class DPMMODEContrastiveModel(BaseModel):
 
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
         precisions = dp["precisions_cholesky"] ** 2
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
 
         log_det = torch.sum(torch.log(dp["precisions_cholesky"] + eps), dim=1)
 
@@ -807,11 +870,11 @@ class DPMMODEContrastiveModel(BaseModel):
         dpmm_samples = means + stds * torch.randn_like(means)
 
         def rbf_kernel(x, y, bandwidth):
-            xx = torch.sum(x ** 2, dim=1, keepdim=True)
-            yy = torch.sum(y ** 2, dim=1, keepdim=True)
+            xx = torch.sum(x**2, dim=1, keepdim=True)
+            yy = torch.sum(y**2, dim=1, keepdim=True)
             xy = torch.mm(x, y.T)
             dists = xx + yy.T - 2 * xy
-            return torch.exp(-dists / (2 * bandwidth ** 2))
+            return torch.exp(-dists / (2 * bandwidth**2))
 
         bandwidth = self.mmd_bandwidth
         k_xx = rbf_kernel(z, z, bandwidth).mean()
@@ -833,7 +896,7 @@ class DPMMODEContrastiveModel(BaseModel):
         precisions = dp["precisions_cholesky"] ** 2
 
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
 
         log_gauss = -0.5 * (n_features * math.log(2.0 * math.pi) + mahalanobis) + log_det
         log_prob = torch.logsumexp(log_gauss + log_weights, dim=1)
@@ -846,7 +909,7 @@ class DPMMODEContrastiveModel(BaseModel):
 
     def _kl_gaussian(self, mu: torch.Tensor, var: torch.Tensor) -> torch.Tensor:
         """KL divergence for Gaussian"""
-        kl_per_sample = 0.5 * torch.sum(var + mu ** 2 - 1.0 - torch.log(var + 1e-10), dim=1)
+        kl_per_sample = 0.5 * torch.sum(var + mu**2 - 1.0 - torch.log(var + 1e-10), dim=1)
         return kl_per_sample.mean()
 
     def _refit_dpmm(self, train_loader, device: torch.device, verbose: int = 1) -> bool:
@@ -872,7 +935,8 @@ class DPMMODEContrastiveModel(BaseModel):
                 init_params="kmeans",
                 max_iter=100,
                 tol=1e-3,
-                random_state=42)
+                random_state=42,
+            )
             bgm.fit(z_all)
 
             if not np.isfinite(bgm.lower_bound_):
@@ -900,7 +964,8 @@ class DPMMODEContrastiveModel(BaseModel):
         verbose: int = 1,
         verbose_every: int = 1,
         weight_decay: float = 1e-5,
-        **kwargs):
+        **kwargs,
+    ):
         """Phase 1: Train AE/VAE + MoCo with periodic DPMM refitting
 
         Args:
@@ -911,7 +976,7 @@ class DPMMODEContrastiveModel(BaseModel):
         optimizer = torch.optim.AdamW(self.parameters(), lr=lr, weight_decay=weight_decay)
 
         dpmm_warmup_epochs = int(epochs * self.dpmm_warmup_ratio)
-        best_loss = float('inf')
+        best_loss = float("inf")
         patience_counter = 0
 
         train_losses, recon_losses, dpmm_losses, moco_losses = [], [], [], []
@@ -922,9 +987,12 @@ class DPMMODEContrastiveModel(BaseModel):
         for epoch in range(epochs):
             if epoch < dpmm_warmup_epochs:
                 self.dpmm_fitted = False
-            elif epoch == dpmm_warmup_epochs or (epoch - dpmm_warmup_epochs) % self.dpmm_refit_interval == 0:
+            elif (
+                epoch == dpmm_warmup_epochs
+                or (epoch - dpmm_warmup_epochs) % self.dpmm_refit_interval == 0
+            ):
                 if verbose >= 1 and ((epoch + 1) % verbose_every == 0 or epoch == 0):
-                    print(f"Epoch {epoch+1}: Refitting DPMM...")
+                    print(f"Epoch {epoch + 1}: Refitting DPMM...")
                 self._refit_dpmm(train_loader, torch.device(device), verbose=verbose)
 
             self.train()
@@ -966,12 +1034,16 @@ class DPMMODEContrastiveModel(BaseModel):
             dpmm_losses.append(avg_dpmm)
             moco_losses.append(avg_moco)
 
-            do_print = (verbose >= 1) and (((epoch + 1) % verbose_every == 0) or (epoch == 0) or (epoch + 1 == epochs))
+            do_print = (verbose >= 1) and (
+                ((epoch + 1) % verbose_every == 0) or (epoch == 0) or (epoch + 1 == epochs)
+            )
 
             if do_print:
                 phase = "Warmup" if epoch < dpmm_warmup_epochs else f"DPMM[{self.dpmm_loss_type}]"
-                print(f"Epoch {epoch+1:3d}/{epochs} [Phase1-{phase}+MoCo] | "
-                      f"Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | DPMM: {avg_dpmm:.4f} | MoCo: {avg_moco:.4f}")
+                print(
+                    f"Epoch {epoch + 1:3d}/{epochs} [Phase1-{phase}+MoCo] | "
+                    f"Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | DPMM: {avg_dpmm:.4f} | MoCo: {avg_moco:.4f}"
+                )
 
             if avg_loss < best_loss:
                 best_loss = avg_loss
@@ -982,7 +1054,7 @@ class DPMMODEContrastiveModel(BaseModel):
                 patience_counter += 1
                 if patience_counter >= patience:
                     if verbose >= 1:
-                        print(f"\nEarly stopping at epoch {epoch+1}")
+                        print(f"\nEarly stopping at epoch {epoch + 1}")
                     break
 
         return {
@@ -993,7 +1065,9 @@ class DPMMODEContrastiveModel(BaseModel):
         }
 
 
-def create_dpmmode_contrastive_model(input_dim: int, latent_dim: int = 32, **kwargs) -> DPMMODEContrastiveModel:
+def create_dpmmode_contrastive_model(
+    input_dim: int, latent_dim: int = 32, **kwargs
+) -> DPMMODEContrastiveModel:
     """
     Create DPMMODEContrastive model.
 

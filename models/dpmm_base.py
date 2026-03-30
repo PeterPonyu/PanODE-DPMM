@@ -4,6 +4,7 @@ DPMMODE: Autoencoder with DPMM Clustering
 Single-phase training:
 - Phase 1: Train AE/VAE with DPMM clustering (fit method)
 """
+
 import math
 from typing import Literal
 
@@ -24,6 +25,7 @@ def weight_init(m):
         nn.init.xavier_normal_(m.weight)
         nn.init.constant_(m.bias, 0.01)
 
+
 def _act(name: str) -> nn.Module:
     if name == "relu":
         return nn.ReLU()
@@ -33,9 +35,13 @@ def _act(name: str) -> nn.Module:
         return nn.Sigmoid()
     raise ValueError(f"Unknown activation: {name}")
 
+
 class _Layer1D(nn.Module):
     """Normalization + Activation + Dropout layer"""
-    def __init__(self, dim: int, norm: str | None = None, act: str | None = None, drop: float = 0.0):
+
+    def __init__(
+        self, dim: int, norm: str | None = None, act: str | None = None, drop: float = 0.0
+    ):
         super().__init__()
         layers = []
         if norm == "bn":
@@ -51,8 +57,10 @@ class _Layer1D(nn.Module):
     def forward(self, x):
         return self.net(x)
 
+
 class MLP(nn.Module):
     """Configurable MLP with flexible normalization, activation, and dropout"""
+
     def __init__(
         self,
         features: list,
@@ -61,7 +69,8 @@ class MLP(nn.Module):
         norm: str | None = None,
         hid_norm: str | None = None,
         drop: float = 0.0,
-        hid_drop: float = 0.0):
+        hid_drop: float = 0.0,
+    ):
         super().__init__()
         layers = []
         for i in range(1, len(features)):
@@ -78,22 +87,36 @@ class MLP(nn.Module):
     def forward(self, x):
         return self.net(x)
 
+
 class InformationBottleneck(nn.Module):
     """Compress and reconstruct latent space"""
+
     def __init__(self, latent_dim: int, bottleneck_dim: int, norm: str = "bn", drop: float = 0.1):
         super().__init__()
-        self.compress = MLP([latent_dim, latent_dim//2, bottleneck_dim],
-                           norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
-        self.expand = MLP([bottleneck_dim, latent_dim//2, latent_dim],
-                         norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
+        self.compress = MLP(
+            [latent_dim, latent_dim // 2, bottleneck_dim],
+            norm=norm,
+            hid_norm=norm,
+            hid_drop=drop,
+            out_act=None,
+        )
+        self.expand = MLP(
+            [bottleneck_dim, latent_dim // 2, latent_dim],
+            norm=norm,
+            hid_norm=norm,
+            hid_drop=drop,
+            out_act=None,
+        )
 
     def forward(self, z):
         z_bottleneck = self.compress(z)
         z_reconstructed = self.expand(z_bottleneck)
         return z_bottleneck, z_reconstructed
 
+
 class DPMMAutoEncoder(nn.Module):
     """Autoencoder with optional VAE and bottleneck components."""
+
     def __init__(
         self,
         input_dim: int,
@@ -106,7 +129,8 @@ class DPMMAutoEncoder(nn.Module):
         bottleneck_dim: int | None = None,
         use_vae: bool = False,
         var_eps: float = 1e-4,
-        **kwargs):
+        **kwargs,
+    ):
         super().__init__()
         self.use_vae = use_vae
         self.var_eps = var_eps
@@ -115,17 +139,28 @@ class DPMMAutoEncoder(nn.Module):
         # Encoder: shared backbone + VAE heads (mu, var) or direct embedding
         if use_vae:
             # VAE mode: encoder backbone + mu/var heads
-            self.encoder_backbone = MLP([input_dim] + encoder_dims,
-                                        norm=norm, hid_norm=norm, hid_drop=drop, out_act="mish")
+            self.encoder_backbone = MLP(
+                [input_dim] + encoder_dims, norm=norm, hid_norm=norm, hid_drop=drop, out_act="mish"
+            )
             self.mu_head = nn.Linear(encoder_dims[-1], latent_dim)
             self.var_head = nn.Linear(encoder_dims[-1], latent_dim)
         else:
             # AE mode: direct encoder
-            self.encoder = MLP([input_dim] + encoder_dims + [latent_dim],
-                              norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
+            self.encoder = MLP(
+                [input_dim] + encoder_dims + [latent_dim],
+                norm=norm,
+                hid_norm=norm,
+                hid_drop=drop,
+                out_act=None,
+            )
 
-        self.decoder = MLP([latent_dim] + decoder_dims + [input_dim],
-                          norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
+        self.decoder = MLP(
+            [latent_dim] + decoder_dims + [input_dim],
+            norm=norm,
+            hid_norm=norm,
+            hid_drop=drop,
+            out_act=None,
+        )
 
         self.use_bottleneck = use_bottleneck
         self.apply(weight_init)
@@ -170,6 +205,7 @@ class DPMMAutoEncoder(nn.Module):
             x_hat = self.decoder(z)
             return x_hat, z, None, None, mu, var
 
+
 class DPMMODEModel(BaseModel):
     """DPMMODE: AE/VAE with DPMM clustering."""
 
@@ -185,7 +221,7 @@ class DPMMODEModel(BaseModel):
         dpmm_loss_weight: float = 1.0,
         dpmm_refit_interval: int = 10,
         n_components: int = 50,
-        dpmm_loss_type: Literal['nll', 'kl', 'energy', 'student_t', 'mmd', 'soft_nll'] = 'kl',
+        dpmm_loss_type: Literal["nll", "kl", "energy", "student_t", "mmd", "soft_nll"] = "kl",
         student_t_df: float = 3.0,
         mmd_bandwidth: float = 1.0,
         model_name: str = "DPMMODE",
@@ -193,8 +229,14 @@ class DPMMODEModel(BaseModel):
         bottleneck_dim: int | None = None,
         use_vae: bool = False,
         kl_weight: float = 0.1,
-        **kwargs):
-        super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=encoder_dims or [], model_name=model_name)
+        **kwargs,
+    ):
+        super().__init__(
+            input_dim=input_dim,
+            latent_dim=latent_dim,
+            hidden_dims=encoder_dims or [],
+            model_name=model_name,
+        )
         self.ae = DPMMAutoEncoder(
             input_dim=input_dim,
             encoder_dims=encoder_dims or [256, 128],
@@ -204,7 +246,8 @@ class DPMMODEModel(BaseModel):
             drop=dropout_rate,
             use_bottleneck=use_bottleneck,
             bottleneck_dim=bottleneck_dim,
-            use_vae=use_vae)
+            use_vae=use_vae,
+        )
         self.dpmm_warmup_ratio = dpmm_warmup_ratio
         self.dpmm_loss_weight = dpmm_loss_weight
         self.dpmm_refit_interval = dpmm_refit_interval
@@ -221,11 +264,14 @@ class DPMMODEModel(BaseModel):
         # Safety guard: VAE Gaussian prior N(0,I) conflicts with DPMM clustering prior
         if self.use_vae and self.dpmm_loss_weight > 0:
             import warnings
+
             warnings.warn(
                 f"{self.model_name}: use_vae=True with dpmm_loss_weight={self.dpmm_loss_weight} "
                 f"creates conflicting KL objectives (Gaussian N(0,I) vs DPMM mixture). "
                 f"Forcing dpmm_loss_weight=0.0 and dpmm_warmup_ratio=1.0.",
-                UserWarning, stacklevel=2)
+                UserWarning,
+                stacklevel=2,
+            )
             self.dpmm_loss_weight = 0.0
             self.dpmm_warmup_ratio = 1.0
 
@@ -237,8 +283,9 @@ class DPMMODEModel(BaseModel):
         else:
             return self.ae.encode_ae(x)
 
-    def extract_latent(self, data_loader, device='cuda',
-                       return_reconstructions: bool = False, **kwargs):
+    def extract_latent(
+        self, data_loader, device="cuda", return_reconstructions: bool = False, **kwargs
+    ):
         """Extract latent representations from DataLoader."""
         self.eval()
         self.to(device)
@@ -277,7 +324,9 @@ class DPMMODEModel(BaseModel):
             result["var"] = var
         return result
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         """
         Compute loss: reconstruction + DPMM regularization (Phase 1 only)
         """
@@ -292,7 +341,7 @@ class DPMMODEModel(BaseModel):
             loss_dict["recon_ae"] = recon_ae
             loss_dict["recon_bottleneck"] = recon_bottleneck
         else:
-            x_hat, = outputs["reconstruction"]
+            (x_hat,) = outputs["reconstruction"]
             recon = self.recon_loss_fn(x_hat, x)
             loss_dict["recon_ae"] = recon
 
@@ -301,17 +350,17 @@ class DPMMODEModel(BaseModel):
         # DPMM clustering loss
         dpmm = torch.tensor(0.0, device=x.device)
         if self.dpmm_fitted and self.dpmm_params is not None:
-            if self.dpmm_loss_type == 'nll':
+            if self.dpmm_loss_type == "nll":
                 dpmm = self._dpmm_loss_nll(outputs["latent"])
-            elif self.dpmm_loss_type == 'kl':
+            elif self.dpmm_loss_type == "kl":
                 dpmm = self._dpmm_loss_kl(outputs["latent"])
-            elif self.dpmm_loss_type == 'energy':
+            elif self.dpmm_loss_type == "energy":
                 dpmm = self._dpmm_loss_energy(outputs["latent"])
-            elif self.dpmm_loss_type == 'student_t':
+            elif self.dpmm_loss_type == "student_t":
                 dpmm = self._dpmm_loss_student_t(outputs["latent"])
-            elif self.dpmm_loss_type == 'mmd':
+            elif self.dpmm_loss_type == "mmd":
                 dpmm = self._dpmm_loss_mmd(outputs["latent"])
-            elif self.dpmm_loss_type == 'soft_nll':
+            elif self.dpmm_loss_type == "soft_nll":
                 dpmm = self._dpmm_loss_soft_nll(outputs["latent"])
 
         loss_dict["dpmm_loss"] = dpmm
@@ -331,8 +380,12 @@ class DPMMODEModel(BaseModel):
     def _update_dpmm_params(self, bgm: BayesianGaussianMixture, device: torch.device):
         """Extract DPMM parameters from fitted sklearn model"""
         means = torch.as_tensor(bgm.means_, dtype=torch.float32, device=device)
-        weight_concentration = torch.as_tensor(bgm.weight_concentration_, dtype=torch.float32, device=device)
-        precisions_cholesky = torch.as_tensor(bgm.precisions_cholesky_, dtype=torch.float32, device=device)
+        weight_concentration = torch.as_tensor(
+            bgm.weight_concentration_, dtype=torch.float32, device=device
+        )
+        precisions_cholesky = torch.as_tensor(
+            bgm.precisions_cholesky_, dtype=torch.float32, device=device
+        )
         weights = torch.as_tensor(bgm.weights_, dtype=torch.float32, device=device)
 
         # Numerical stability
@@ -343,7 +396,7 @@ class DPMMODEModel(BaseModel):
             "weight_concentration": weight_concentration,
             "precisions_cholesky": precisions_cholesky,
             "weights": weights,
-            "covariances": 1.0 / (precisions_cholesky ** 2 + 1e-10),  # diagonal covariance
+            "covariances": 1.0 / (precisions_cholesky**2 + 1e-10),  # diagonal covariance
         }
         self.dpmm_fitted = True
 
@@ -356,7 +409,9 @@ class DPMMODEModel(BaseModel):
         eps = 1e-10
 
         # Compute log weights using stick-breaking construction
-        digamma_sum = torch.special.digamma(dp["weight_concentration"][0] + dp["weight_concentration"][1])
+        digamma_sum = torch.special.digamma(
+            dp["weight_concentration"][0] + dp["weight_concentration"][1]
+        )
         digamma_a = torch.special.digamma(dp["weight_concentration"][0])
         digamma_b = torch.special.digamma(dp["weight_concentration"][1])
 
@@ -371,7 +426,7 @@ class DPMMODEModel(BaseModel):
 
         # Mahalanobis distance
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
 
         # Log Gaussian
         log_gauss = -0.5 * (n_features * math.log(2.0 * math.pi) + mahalanobis) + log_det
@@ -399,7 +454,7 @@ class DPMMODEModel(BaseModel):
 
         # Mahalanobis distance
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)  # (batch, n_components, dim)
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
 
         # Log probability per component
         log_gauss = -0.5 * (n_features * math.log(2.0 * math.pi) + mahalanobis) + log_det
@@ -418,14 +473,14 @@ class DPMMODEModel(BaseModel):
         Energy-based distance to nearest cluster
         """
         dp = self.dpmm_params
-        weights = dp["weights"]
+        weights = dp["weights"]  # noqa: F841
 
         # Compute weighted distances to all clusters
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)  # (batch, n_components, dim)
 
         # Use precision as inverse variance (higher precision = tighter cluster)
         precisions = dp["precisions_cholesky"] ** 2
-        weighted_dist = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)  # (batch, n_components)
+        weighted_dist = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)  # (batch, n_components)
 
         # Soft assignment: use Gaussian kernel
         temperature = 1.0
@@ -452,7 +507,7 @@ class DPMMODEModel(BaseModel):
         # Compute Mahalanobis distance
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
         precisions = dp["precisions_cholesky"] ** 2
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
 
         # Student's t log probability
         # log p(x) = log(Gamma((df+d)/2)) - log(Gamma(df/2)) - (d/2)log(df*pi)
@@ -495,11 +550,11 @@ class DPMMODEModel(BaseModel):
         # Compute MMD with RBF kernel
         def rbf_kernel(x, y, bandwidth):
             # x: (n, d), y: (m, d)
-            xx = torch.sum(x ** 2, dim=1, keepdim=True)  # (n, 1)
-            yy = torch.sum(y ** 2, dim=1, keepdim=True)  # (m, 1)
+            xx = torch.sum(x**2, dim=1, keepdim=True)  # (n, 1)
+            yy = torch.sum(y**2, dim=1, keepdim=True)  # (m, 1)
             xy = torch.mm(x, y.T)  # (n, m)
             dists = xx + yy.T - 2 * xy  # (n, m)
-            return torch.exp(-dists / (2 * bandwidth ** 2))
+            return torch.exp(-dists / (2 * bandwidth**2))
 
         bandwidth = self.mmd_bandwidth
 
@@ -530,7 +585,7 @@ class DPMMODEModel(BaseModel):
 
         # Mahalanobis distance
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
 
         # Log Gaussian
         log_gauss = -0.5 * (n_features * math.log(2.0 * math.pi) + mahalanobis) + log_det
@@ -551,7 +606,7 @@ class DPMMODEModel(BaseModel):
         KL divergence between N(mu, var) and N(0, I)
         """
         # KL divergence formula for Gaussian
-        kl_per_sample = 0.5 * torch.sum(var + mu ** 2 - 1.0 - torch.log(var + 1e-10), dim=1)
+        kl_per_sample = 0.5 * torch.sum(var + mu**2 - 1.0 - torch.log(var + 1e-10), dim=1)
         return kl_per_sample.mean()
 
     def _refit_dpmm(self, train_loader, device: torch.device, verbose: int = 1) -> bool:
@@ -577,7 +632,8 @@ class DPMMODEModel(BaseModel):
                 init_params="kmeans",
                 max_iter=100,
                 tol=1e-3,
-                random_state=42)
+                random_state=42,
+            )
             bgm.fit(z_all)
 
             if not np.isfinite(bgm.lower_bound_):
@@ -605,7 +661,8 @@ class DPMMODEModel(BaseModel):
         verbose: int = 1,
         verbose_every: int = 1,
         weight_decay: float = 1e-5,
-        **kwargs):
+        **kwargs,
+    ):
         """
         Phase 1: Train AE/VAE with periodic DPMM refitting
 
@@ -618,7 +675,7 @@ class DPMMODEModel(BaseModel):
         self.current_epoch = 0
 
         dpmm_warmup_epochs = int(epochs * self.dpmm_warmup_ratio)
-        best_loss = float('inf')
+        best_loss = float("inf")
         patience_counter = 0
 
         # Initialize loss tracking
@@ -638,15 +695,18 @@ class DPMMODEModel(BaseModel):
             self.current_epoch = epoch
             if epoch < dpmm_warmup_epochs:
                 self.dpmm_fitted = False
-            elif epoch == dpmm_warmup_epochs or (epoch - dpmm_warmup_epochs) % self.dpmm_refit_interval == 0:
+            elif (
+                epoch == dpmm_warmup_epochs
+                or (epoch - dpmm_warmup_epochs) % self.dpmm_refit_interval == 0
+            ):
                 do_print_refit = (verbose >= 1) and (
                     ((epoch + 1) % verbose_every == 0) or (epoch == 0) or (epoch + 1 == epochs)
                 )
                 if do_print_refit:
-                    print(f"Epoch {epoch+1}: Refitting DPMM...")
+                    print(f"Epoch {epoch + 1}: Refitting DPMM...")
                 success = self._refit_dpmm(train_loader, torch.device(device), verbose=verbose)
                 if not success and do_print_refit:
-                    print(f"Epoch {epoch+1}: DPMM refitting failed")
+                    print(f"Epoch {epoch + 1}: DPMM refitting failed")
 
             self.train()
             epoch_loss = 0.0
@@ -668,7 +728,7 @@ class DPMMODEModel(BaseModel):
 
                 if not torch.isfinite(loss):
                     if verbose >= 2:
-                        print(f"Warning: Non-finite loss at epoch {epoch+1}, skipping batch")
+                        print(f"Warning: Non-finite loss at epoch {epoch + 1}, skipping batch")
                     continue
 
                 loss.backward()
@@ -702,7 +762,9 @@ class DPMMODEModel(BaseModel):
             avg_dpmm = epoch_dpmm / n_batches
             avg_kl_vae = epoch_kl_vae / n_batches if self.use_vae else 0.0
             avg_recon_ae = epoch_recon_ae / n_batches
-            avg_recon_bottleneck = epoch_recon_bottleneck / n_batches if self.ae.use_bottleneck else 0.0
+            avg_recon_bottleneck = (
+                epoch_recon_bottleneck / n_batches if self.ae.use_bottleneck else 0.0
+            )
             avg_flow = epoch_flow / n_batches if has_flow_loss else 0.0
 
             # Record losses
@@ -724,8 +786,10 @@ class DPMMODEModel(BaseModel):
 
             if do_print:
                 phase = "Warmup" if epoch < dpmm_warmup_epochs else f"DPMM[{self.dpmm_loss_type}]"
-                log_msg = (f"Epoch {epoch+1:3d}/{epochs} [Phase1-{phase}] | "
-                          f"Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | DPMM: {avg_dpmm:.4f}")
+                log_msg = (
+                    f"Epoch {epoch + 1:3d}/{epochs} [Phase1-{phase}] | "
+                    f"Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | DPMM: {avg_dpmm:.4f}"
+                )
 
                 if self.use_vae:
                     log_msg += f" | KL: {avg_kl_vae:.4f}"
@@ -747,7 +811,7 @@ class DPMMODEModel(BaseModel):
                 patience_counter += 1
                 if patience_counter >= patience:
                     if verbose >= 1:
-                        print(f"\nEarly stopping at epoch {epoch+1}")
+                        print(f"\nEarly stopping at epoch {epoch + 1}")
                     break
 
         # Return training history
@@ -786,7 +850,15 @@ def create_dpmmode_model(input_dim: int, latent_dim: int = 32, **kwargs) -> DPMM
         use_vae: Use VAE instead of AE
     """
     # Strip ODE-related kwargs for backward compatibility
-    for _k in ("use_latent_dynamics", "ae_reg", "ode_reg", "ode_epochs",
-               "ode_lr", "ode_consistency_weight", "ode_recon_weight", "use_ode"):
+    for _k in (
+        "use_latent_dynamics",
+        "ae_reg",
+        "ode_reg",
+        "ode_epochs",
+        "ode_lr",
+        "ode_consistency_weight",
+        "ode_recon_weight",
+        "use_ode",
+    ):
         kwargs.pop(_k, None)
     return DPMMODEModel(input_dim=input_dim, latent_dim=latent_dim, **kwargs)

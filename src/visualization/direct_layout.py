@@ -16,7 +16,6 @@ from .panel_geometry import normalize_layout_rect
 NumberList = Sequence[float] | int
 
 
-
 def _normalize_weights(spec: NumberList) -> list[float]:
     if isinstance(spec, int):
         if spec <= 0:
@@ -26,7 +25,6 @@ def _normalize_weights(spec: NumberList) -> list[float]:
     if not weights or any(v <= 0 for v in weights):
         raise ValueError(f"weights must be positive, got {spec!r}")
     return weights
-
 
 
 def _normalize_gaps(gap: float | Sequence[float] | None, n_items: int) -> list[float]:
@@ -41,7 +39,6 @@ def _normalize_gaps(gap: float | Sequence[float] | None, n_items: int) -> list[f
     if len(gaps) != n_gaps:
         raise ValueError(f"expected {n_gaps} gap values, got {gap!r}")
     return gaps
-
 
 
 def _gap_from_space(total: float, weights: list[float], space: float | None) -> float | None:
@@ -183,7 +180,6 @@ class LayoutRegion:
 
     def add_axes(self, fig, **kwargs):
         return fig.add_axes(self.as_tuple(), **kwargs)
-
 
 
 def bind_figure_region(fig, rect: Sequence[float] | None = None) -> LayoutRegion:

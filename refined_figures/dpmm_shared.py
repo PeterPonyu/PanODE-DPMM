@@ -297,7 +297,9 @@ def load_merged_external_tables() -> dict[str, pd.DataFrame]:
             if parts:
                 merged[dataset] = pd.concat(parts, ignore_index=True)
     if not merged:
-        raise FileNotFoundError("No merged tables produced from external_full + full_comparison_all")
+        raise FileNotFoundError(
+            "No merged tables produced from external_full + full_comparison_all"
+        )
     return merged
 
 
@@ -317,7 +319,9 @@ def find_bio_file(model: str, dataset: str, suffix: str) -> Path | None:
     return None
 
 
-def load_importance_payload(model: str, dataset: str) -> tuple[np.ndarray | None, np.ndarray | None]:
+def load_importance_payload(
+    model: str, dataset: str
+) -> tuple[np.ndarray | None, np.ndarray | None]:
     path = find_bio_file(model, dataset, "importance.npz")
     if path is None:
         return None, None
@@ -327,7 +331,9 @@ def load_importance_payload(model: str, dataset: str) -> tuple[np.ndarray | None
     return importance, gene_names
 
 
-def load_correlation_payload(model: str, dataset: str) -> tuple[np.ndarray | None, np.ndarray | None]:
+def load_correlation_payload(
+    model: str, dataset: str
+) -> tuple[np.ndarray | None, np.ndarray | None]:
     path = find_bio_file(model, dataset, "correlation.npz")
     if path is None:
         return None, None
@@ -356,10 +362,16 @@ def load_umap_payload(model: str, dataset: str) -> dict | None:
 def load_best_enrichment(model: str, dataset: str) -> tuple[pd.DataFrame | None, str | None]:
     pattern = re.compile(r"_comp(\d+)\.csv$")
     candidates: list[Path] = []
-    for base in [BIO_RESULTS_ROOT / model, BIO_RESULTS_ROOT / _safe_model_name(model), BIO_RESULTS_ROOT]:
+    for base in [
+        BIO_RESULTS_ROOT / model,
+        BIO_RESULTS_ROOT / _safe_model_name(model),
+        BIO_RESULTS_ROOT,
+    ]:
         if not base.exists():
             continue
-        candidates.extend(sorted(base.glob(f"{_safe_model_name(model)}_{dataset}_enrichment_comp*.csv")))
+        candidates.extend(
+            sorted(base.glob(f"{_safe_model_name(model)}_{dataset}_enrichment_comp*.csv"))
+        )
     if not candidates:
         return None, None
 
@@ -368,7 +380,9 @@ def load_best_enrichment(model: str, dataset: str) -> tuple[pd.DataFrame | None,
     best_score: float | None = None
     for csv_path in candidates:
         df = pd.read_csv(csv_path)
-        p_col = next((c for c in ["Adjusted P-value", "p.adjust", "padj", "qvalue"] if c in df.columns), None)
+        p_col = next(
+            (c for c in ["Adjusted P-value", "p.adjust", "padj", "qvalue"] if c in df.columns), None
+        )
         if p_col is None or df.empty:
             continue
         score = float(pd.to_numeric(df[p_col], errors="coerce").min())
@@ -392,6 +406,8 @@ def parse_overlap_count(value) -> float:
         return 1.0
 
 
-def available_methods(methods: Iterable[str], frame: pd.DataFrame, method_col: str = "method") -> list[str]:
+def available_methods(
+    methods: Iterable[str], frame: pd.DataFrame, method_col: str = "method"
+) -> list[str]:
     present = set(frame[method_col].astype(str))
     return [name for name in methods if name in present]

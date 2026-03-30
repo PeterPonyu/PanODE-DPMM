@@ -41,6 +41,7 @@ MANIFEST_NAME = "run_manifest.jsonl"
 # Write API
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def append_run(
     results_dir: str | Path = DEFAULT_OUTPUT_DIR,
     *,
@@ -54,7 +55,8 @@ def append_run(
     seed: int = 42,
     csv_path: str = "",
     models: list[str] | None = None,
-    extra: dict[str, Any] | None = None) -> Path:
+    extra: dict[str, Any] | None = None,
+) -> Path:
     """Append one line to the run manifest.
 
     Parameters
@@ -108,12 +110,14 @@ def append_run(
 # Read API
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def list_runs(
     results_dir: str | Path = DEFAULT_OUTPUT_DIR,
     *,
     last: int | None = None,
     script: str | None = None,
-    dataset: str | None = None) -> pd.DataFrame:
+    dataset: str | None = None,
+) -> pd.DataFrame:
     """Return a DataFrame of all recorded runs.
 
     Parameters
@@ -159,9 +163,8 @@ def list_runs(
 
 
 def compare_runs(
-    tag_a: str,
-    tag_b: str,
-    results_dir: str | Path = DEFAULT_OUTPUT_DIR) -> pd.DataFrame:
+    tag_a: str, tag_b: str, results_dir: str | Path = DEFAULT_OUTPUT_DIR
+) -> pd.DataFrame:
     """Load CSVs for two runs and return a merged comparison DataFrame.
 
     Merges on ``Model`` column with suffixes ``_a`` / ``_b`` and computes
@@ -199,19 +202,16 @@ def compare_runs(
 # CLI entry-point
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _cli():
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Browse / compare benchmark runs")
-    parser.add_argument("--results-dir", type=str,
-                        default=str(DEFAULT_OUTPUT_DIR))
-    parser.add_argument("--last", type=int, default=None,
-                        help="Show only the last N runs")
+    parser = argparse.ArgumentParser(description="Browse / compare benchmark runs")
+    parser.add_argument("--results-dir", type=str, default=str(DEFAULT_OUTPUT_DIR))
+    parser.add_argument("--last", type=int, default=None, help="Show only the last N runs")
     parser.add_argument("--script", type=str, default=None)
     parser.add_argument("--dataset", type=str, default=None)
-    parser.add_argument("--compare", nargs=2, metavar="TAG",
-                        help="Compare two run tags")
+    parser.add_argument("--compare", nargs=2, metavar="TAG", help="Compare two run tags")
     args = parser.parse_args()
 
     rdir = Path(args.results_dir)
@@ -221,15 +221,13 @@ def _cli():
         print(df.to_string(index=False))
         return
 
-    df = list_runs(rdir, last=args.last, script=args.script,
-                   dataset=args.dataset)
+    df = list_runs(rdir, last=args.last, script=args.script, dataset=args.dataset)
     if df.empty:
         print("No runs found.")
         return
 
     # Compact display
-    show_cols = ["timestamp", "script", "tag", "dataset", "epochs", "lr",
-                 "seed", "csv_path"]
+    show_cols = ["timestamp", "script", "tag", "dataset", "epochs", "lr", "seed", "csv_path"]
     show = [c for c in show_cols if c in df.columns]
     print(df[show].to_string(index=False))
 

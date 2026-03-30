@@ -13,6 +13,7 @@ from matplotlib.transforms import Bbox
 # Geometry helpers
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _safe_bbox(artist, renderer) -> Bbox | None:
     """Try to extract display-coords BBox from any artist."""
     try:
@@ -71,8 +72,7 @@ def _is_colorbar_axes(ax) -> bool:
     Matplotlib marks colorbar axes with ``_colorbar_info`` (>=3.6) or
     the older ``_colorbar`` attribute.
     """
-    return (hasattr(ax, '_colorbar_info')
-            or getattr(ax, '_colorbar', None) is not None)
+    return hasattr(ax, "_colorbar_info") or getattr(ax, "_colorbar", None) is not None
 
 
 def _artist_label(artist, hint: str = "") -> str:
@@ -92,21 +92,24 @@ def _artist_label(artist, hint: str = "") -> str:
 # ArtistInfo carrier
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 class _ArtistInfo:
     """Lightweight carrier for an artist + its display bbox + metadata."""
+
     __slots__ = ("artist", "bbox", "tag", "kind", "ax_id")
 
     def __init__(self, artist, bbox, tag, kind, ax_id=None):
         self.artist = artist
         self.bbox = bbox
         self.tag = tag
-        self.kind = kind        # "text" | "patch" | "collection" | "line" | "image" | "legend"
-        self.ax_id = ax_id      # id(ax) if owned by a specific axes
+        self.kind = kind  # "text" | "patch" | "collection" | "line" | "image" | "legend"
+        self.ax_id = ax_id  # id(ax) if owned by a specific axes
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Artist collector
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
     """Walk *fig* and collect all visible artists with valid bboxes."""
@@ -134,39 +137,47 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
             if title_obj and title_obj.get_text().strip():
                 bb = _safe_bbox(title_obj, renderer)
                 if bb:
-                    infos.append(_ArtistInfo(
-                        title_obj, bb,
-                        _artist_label(title_obj, f"{pfx}title"),
-                        "text", aid))
+                    infos.append(
+                        _ArtistInfo(
+                            title_obj, bb, _artist_label(title_obj, f"{pfx}title"), "text", aid
+                        )
+                    )
 
         if _collect_axis_text:
             # Axis labels
-            for lbl, hint in [(ax.xaxis.label, f"{pfx}xlabel"),
-                              (ax.yaxis.label, f"{pfx}ylabel")]:
+            for lbl, hint in [(ax.xaxis.label, f"{pfx}xlabel"), (ax.yaxis.label, f"{pfx}ylabel")]:
                 if lbl.get_text().strip():
                     bb = _safe_bbox(lbl, renderer)
                     if bb:
-                        infos.append(_ArtistInfo(lbl, bb,
-                                                 _artist_label(lbl, hint),
-                                                 "text", aid))
+                        infos.append(_ArtistInfo(lbl, bb, _artist_label(lbl, hint), "text", aid))
 
             # Tick labels
             for tl in ax.get_xticklabels():
                 if tl.get_text().strip():
                     bb = _safe_bbox(tl, renderer)
                     if bb:
-                        infos.append(_ArtistInfo(
-                            tl, bb,
-                            _artist_label(tl, "cbar_tick" if is_cbar else "xtick"),
-                            "text", aid))
+                        infos.append(
+                            _ArtistInfo(
+                                tl,
+                                bb,
+                                _artist_label(tl, "cbar_tick" if is_cbar else "xtick"),
+                                "text",
+                                aid,
+                            )
+                        )
             for tl in ax.get_yticklabels():
                 if tl.get_text().strip():
                     bb = _safe_bbox(tl, renderer)
                     if bb:
-                        infos.append(_ArtistInfo(
-                            tl, bb,
-                            _artist_label(tl, "cbar_tick" if is_cbar else "ytick"),
-                            "text", aid))
+                        infos.append(
+                            _ArtistInfo(
+                                tl,
+                                bb,
+                                _artist_label(tl, "cbar_tick" if is_cbar else "ytick"),
+                                "text",
+                                aid,
+                            )
+                        )
 
         if not is_cbar:
             # Manual ax.text() objects
@@ -174,9 +185,9 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
                 if txt.get_text().strip():
                     bb = _safe_bbox(txt, renderer)
                     if bb:
-                        infos.append(_ArtistInfo(
-                            txt, bb, _artist_label(txt, "annotation"),
-                            "text", aid))
+                        infos.append(
+                            _ArtistInfo(txt, bb, _artist_label(txt, "annotation"), "text", aid)
+                        )
 
             # Legend
             legend = ax.get_legend()
@@ -184,21 +195,21 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
                 seen_legend_ids.add(id(legend))
                 bb = _safe_bbox(legend, renderer)
                 if bb:
-                    infos.append(_ArtistInfo(
-                        legend, bb, "legend_box", "legend", aid))
+                    infos.append(_ArtistInfo(legend, bb, "legend_box", "legend", aid))
                 for txt in legend.get_texts():
                     if txt.get_text().strip():
                         tbb = _safe_bbox(txt, renderer)
                         if tbb:
-                            infos.append(_ArtistInfo(
-                                txt, tbb,
-                                _artist_label(txt, "legend_text"),
-                                "text", aid))
+                            infos.append(
+                                _ArtistInfo(
+                                    txt, tbb, _artist_label(txt, "legend_text"), "text", aid
+                                )
+                            )
 
         # ── Graphical artists ──────────────────────────────────────────
         for child in ax.get_children():
             if isinstance(child, Text):
-                continue   # already handled above
+                continue  # already handled above
             if not getattr(child, "get_visible", lambda: True)():
                 continue
             if child is ax.patch:
@@ -215,30 +226,19 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
                 continue
 
             if isinstance(child, PathCollection):
-                infos.append(_ArtistInfo(
-                    child, bb,
-                    _artist_label(child, "scatter"),
-                    "collection", aid))
+                infos.append(
+                    _ArtistInfo(child, bb, _artist_label(child, "scatter"), "collection", aid)
+                )
             elif isinstance(child, (PolyCollection, LineCollection)):
-                infos.append(_ArtistInfo(
-                    child, bb,
-                    _artist_label(child, "poly"),
-                    "collection", aid))
+                infos.append(
+                    _ArtistInfo(child, bb, _artist_label(child, "poly"), "collection", aid)
+                )
             elif isinstance(child, Patch):
-                infos.append(_ArtistInfo(
-                    child, bb,
-                    _artist_label(child, "patch"),
-                    "patch", aid))
+                infos.append(_ArtistInfo(child, bb, _artist_label(child, "patch"), "patch", aid))
             elif isinstance(child, Line2D):
-                infos.append(_ArtistInfo(
-                    child, bb,
-                    _artist_label(child, "line"),
-                    "line", aid))
+                infos.append(_ArtistInfo(child, bb, _artist_label(child, "line"), "line", aid))
             elif isinstance(child, AxesImage):
-                infos.append(_ArtistInfo(
-                    child, bb,
-                    _artist_label(child, "image"),
-                    "image", aid))
+                infos.append(_ArtistInfo(child, bb, _artist_label(child, "image"), "image", aid))
 
     # ── Figure-level text (suptitle and fig.text) ────────────────────────
     _fig_suptitle_obj = getattr(fig, "_suptitle", None)
@@ -250,24 +250,34 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
         bb = _safe_bbox(txt, renderer)
         if bb:
             tag = "suptitle" if (txt is _fig_suptitle_obj) else "fig_text"
-            infos.append(_ArtistInfo(
-                txt, bb, _artist_label(txt, tag), "text", None))
+            infos.append(_ArtistInfo(txt, bb, _artist_label(txt, tag), "text", None))
     # Only add fig._suptitle if it wasn't already in fig.texts
-    if (_fig_suptitle_obj is not None
-            and _fig_suptitle_obj.get_text().strip()
-            and _fig_suptitle_obj not in getattr(fig, "texts", [])):
+    if (
+        _fig_suptitle_obj is not None
+        and _fig_suptitle_obj.get_text().strip()
+        and _fig_suptitle_obj not in getattr(fig, "texts", [])
+    ):
         if getattr(_fig_suptitle_obj, "get_visible", lambda: True)():
             bb = _safe_bbox(_fig_suptitle_obj, renderer)
             if bb:
-                infos.append(_ArtistInfo(
-                    _fig_suptitle_obj, bb,
-                    _artist_label(_fig_suptitle_obj, "suptitle"),
-                    "text", None))
+                infos.append(
+                    _ArtistInfo(
+                        _fig_suptitle_obj,
+                        bb,
+                        _artist_label(_fig_suptitle_obj, "suptitle"),
+                        "text",
+                        None,
+                    )
+                )
 
     # ── Figure-level legends (fig.legend / shared legends) ─────────────────
     fig_legends = list(getattr(fig, "legends", []) or [])
     for child in fig.get_children():
-        if hasattr(child, "get_texts") and hasattr(child, "_legend_box") and id(child) not in seen_legend_ids:
+        if (
+            hasattr(child, "get_texts")
+            and hasattr(child, "_legend_box")
+            and id(child) not in seen_legend_ids
+        ):
             fig_legends.append(child)
 
     for legend in fig_legends:
@@ -278,15 +288,13 @@ def _collect_artists(fig, renderer) -> list[_ArtistInfo]:
         seen_legend_ids.add(id(legend))
         bb = _safe_bbox(legend, renderer)
         if bb:
-            infos.append(_ArtistInfo(
-                legend, bb, "fig_legend_box", "legend", None))
+            infos.append(_ArtistInfo(legend, bb, "fig_legend_box", "legend", None))
         for txt in legend.get_texts():
             if txt.get_text().strip():
                 tbb = _safe_bbox(txt, renderer)
                 if tbb:
-                    infos.append(_ArtistInfo(
-                        txt, tbb,
-                        _artist_label(txt, "fig_legend_text"),
-                        "text", None))
+                    infos.append(
+                        _ArtistInfo(txt, tbb, _artist_label(txt, "fig_legend_text"), "text", None)
+                    )
 
     return infos

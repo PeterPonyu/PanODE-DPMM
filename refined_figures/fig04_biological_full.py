@@ -48,11 +48,12 @@ def _full_gene_labels(genes, max_len=14):
     labels = []
     for gene in np.asarray(genes).astype(str):
         s = str(gene)
-        labels.append(s[:max_len - 1] + "\u2026" if len(s) > max_len else s)
+        labels.append(s[: max_len - 1] + "\u2026" if len(s) > max_len else s)
     return labels
 
 
 # ── Matrix preparation ───────────────────────────────────────────────────
+
 
 def _prepare_importance(matrix, gene_names, top_n=TOP_N_GENES, max_components=10):
     if matrix is None or gene_names is None:
@@ -85,9 +86,11 @@ def _prepare_importance(matrix, gene_names, top_n=TOP_N_GENES, max_components=10
                 if len(selected) >= top_n:
                     break
     top_idx = sorted(selected)
+
     def _sort_key(i):
         dom = int(np.argmax(imp_z[:, i]))
         return (dom, -imp_z[dom, i])
+
     top_idx_final = sorted(top_idx, key=_sort_key)
     return imp_z[:, top_idx_final], gene_names[top_idx_final]
 
@@ -126,14 +129,17 @@ def _prepare_correlation(matrix, gene_names, top_n=TOP_N_GENES, max_components=1
                 if len(selected) >= top_n:
                     break
     top_idx = sorted(selected)
+
     def _sort_key(i):
         dom = int(np.argmax(pos_mat[:, i]))
         return (dom, -pos_mat[dom, i])
+
     top_idx_sorted = sorted(top_idx, key=_sort_key)
     return matrix[:, top_idx_sorted], gene_names[top_idx_sorted]
 
 
 # ── Drawing helpers ──────────────────────────────────────────────────────
+
 
 def _draw_importance(ax, matrix, genes, title):
     if matrix is None or genes is None:
@@ -141,16 +147,16 @@ def _draw_importance(ax, matrix, genes, title):
         ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=8)
         return None
     vlim = max(abs(matrix.min()), abs(matrix.max()), 1.0)
-    im = ax.imshow(matrix, aspect="auto", cmap="RdBu_r",
-                   interpolation="nearest", vmin=-vlim, vmax=vlim)
-    ax.set_title(title, fontsize=12.0, loc="left", pad=3, fontweight="normal",
-                 color="black")
+    im = ax.imshow(
+        matrix, aspect="auto", cmap="RdBu_r", interpolation="nearest", vmin=-vlim, vmax=vlim
+    )
+    ax.set_title(title, fontsize=12.0, loc="left", pad=3, fontweight="normal", color="black")
     ax.set_yticks(range(matrix.shape[0]))
-    ax.set_yticklabels([f"D{i+1}" for i in range(matrix.shape[0])],
-                       fontsize=9.5, color="black")
+    ax.set_yticklabels([f"D{i + 1}" for i in range(matrix.shape[0])], fontsize=9.5, color="black")
     ax.set_xticks(range(len(genes)))
-    ax.set_xticklabels(_full_gene_labels(genes), fontsize=9.0, rotation=90,
-                       ha="center", color="black")
+    ax.set_xticklabels(
+        _full_gene_labels(genes), fontsize=9.0, rotation=90, ha="center", color="black"
+    )
     return im
 
 
@@ -160,18 +166,18 @@ def _draw_correlation(ax, matrix, genes, title):
         ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=8)
         return None
     im = ax.imshow(matrix, aspect="auto", cmap="YlOrRd", vmin=0, vmax=1)
-    ax.set_title(title, fontsize=12.0, loc="left", pad=3, fontweight="normal",
-                 color="black")
+    ax.set_title(title, fontsize=12.0, loc="left", pad=3, fontweight="normal", color="black")
     ax.set_yticks(range(matrix.shape[0]))
-    ax.set_yticklabels([f"D{i+1}" for i in range(matrix.shape[0])],
-                       fontsize=9.5, color="black")
+    ax.set_yticklabels([f"D{i + 1}" for i in range(matrix.shape[0])], fontsize=9.5, color="black")
     ax.set_xticks(range(len(genes)))
-    ax.set_xticklabels(_full_gene_labels(genes), fontsize=9.0, rotation=90,
-                       ha="center", color="black")
+    ax.set_xticklabels(
+        _full_gene_labels(genes), fontsize=9.0, rotation=90, ha="center", color="black"
+    )
     return im
 
 
 # ── UMAP drawing helpers ─────────────────────────────────────────────────
+
 
 def _draw_intensity_row(axes, payload, dataset):
     if not payload:
@@ -188,10 +194,10 @@ def _draw_intensity_row(axes, payload, dataset):
     for k in range(K):
         ax = axes[k]
         vals = latent[:, k]
-        sc = ax.scatter(umap_emb[:, 0], umap_emb[:, 1],
-                        c=vals, s=4, alpha=0.55, cmap="viridis")
-        ax.set_xticks([]); ax.set_yticks([])
-        ax.set_title(f"Dim{k+1}", fontsize=11.0, pad=2, color="black")
+        sc = ax.scatter(umap_emb[:, 0], umap_emb[:, 1], c=vals, s=4, alpha=0.55, cmap="viridis")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"Dim{k + 1}", fontsize=11.0, pad=2, color="black")
         for sp in ax.spines.values():
             sp.set_linewidth(0.3)
         cax = ax.inset_axes([1.02, 0.05, 0.04, 0.40])
@@ -221,10 +227,10 @@ def _draw_gene_row(axes, payload, dataset):
         ax = axes[k]
         expr = top_gene_expr[:, k]
         gene = str(names[k])[:10]
-        sc = ax.scatter(umap_emb[:, 0], umap_emb[:, 1],
-                        c=expr, s=4, alpha=0.55, cmap="magma")
-        ax.set_xticks([]); ax.set_yticks([])
-        ax.set_title(f"D{k+1}: {gene}", fontsize=10.5, pad=2, color="black")
+        sc = ax.scatter(umap_emb[:, 0], umap_emb[:, 1], c=expr, s=4, alpha=0.55, cmap="magma")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"D{k + 1}: {gene}", fontsize=10.5, pad=2, color="black")
         for sp in ax.spines.values():
             sp.set_linewidth(0.3)
         cax = ax.inset_axes([1.02, 0.05, 0.04, 0.40])
@@ -238,23 +244,26 @@ def _draw_gene_row(axes, payload, dataset):
 
 # ── Enrichment drawing helper ────────────────────────────────────────────
 
+
 def _format_term(value, width=26):
     value = " ".join(str(value).split())
-    return value[:width - 1] + "\u2026" if len(value) > width else value
+    return value[: width - 1] + "\u2026" if len(value) > width else value
 
 
 def _draw_enrichment(ax, df, component, title):
     if df is None or df.empty:
         ax.axis("off")
-        ax.text(0.5, 0.5, "No enrichment data", ha="center", va="center",
-                fontsize=9)
+        ax.text(0.5, 0.5, "No enrichment data", ha="center", va="center", fontsize=9)
         return
-    p_col = next((c for c in ["Adjusted P-value", "p.adjust", "padj", "qvalue"]
-                  if c in df.columns), None)
-    term_col = next((c for c in ["Term", "Description", "name", "term_name"]
-                     if c in df.columns), None)
-    overlap_col = next((c for c in ["Overlap", "Count", "gene_count", "size"]
-                        if c in df.columns), None)
+    p_col = next(
+        (c for c in ["Adjusted P-value", "p.adjust", "padj", "qvalue"] if c in df.columns), None
+    )
+    term_col = next(
+        (c for c in ["Term", "Description", "name", "term_name"] if c in df.columns), None
+    )
+    overlap_col = next(
+        (c for c in ["Overlap", "Count", "gene_count", "size"] if c in df.columns), None
+    )
     if p_col is None or term_col is None:
         ax.axis("off")
         return
@@ -267,27 +276,35 @@ def _draw_enrichment(ax, df, component, title):
     terms = [_format_term(val) for val in work[term_col].astype(str)]
     score = -np.log10(work[p_col].clip(lower=1e-300))
     if overlap_col is not None:
-        sizes = np.array([parse_overlap_count(val)
-                          for val in work[overlap_col]], dtype=float)
+        sizes = np.array([parse_overlap_count(val) for val in work[overlap_col]], dtype=float)
         sizes = 60 + (sizes / max(sizes.max(), 1.0)) * 180
     else:
         sizes = np.full(len(work), 100.0)
     ypos = np.arange(len(work))
     suffix = f" (c{component})" if component is not None else ""
     style_axes(ax, kind="default")
-    ax.scatter(score, ypos, s=sizes, c=score, cmap="magma_r",
-              edgecolors="black", linewidths=0.4, zorder=5)
+    ax.scatter(
+        score, ypos, s=sizes, c=score, cmap="magma_r", edgecolors="black", linewidths=0.4, zorder=5
+    )
     ax.set_yticks(ypos)
     ax.set_yticklabels([])
     ax.tick_params(axis="y", length=0, pad=0)
     ax.spines["left"].set_visible(False)
     ax.spines["right"].set_visible(False)
     for i, term in enumerate(terms):
-        ax.annotate(term, xy=(float(score.iloc[i]), ypos[i]),
-                    xytext=(-8, 0), textcoords='offset points',
-                    fontsize=8.0, ha='right', va='center', clip_on=False)
-    ax.set_title(f"{title}{suffix}", fontsize=11.5, loc="left", pad=4,
-                 fontweight="normal", color="black")
+        ax.annotate(
+            term,
+            xy=(float(score.iloc[i]), ypos[i]),
+            xytext=(-8, 0),
+            textcoords="offset points",
+            fontsize=8.0,
+            ha="right",
+            va="center",
+            clip_on=False,
+        )
+    ax.set_title(
+        f"{title}{suffix}", fontsize=11.5, loc="left", pad=4, fontweight="normal", color="black"
+    )
     ax.set_xlabel(r"$-\log_{10}$(adj p)", fontsize=10, color="black")
     ax.tick_params(axis="x", labelsize=9.5, colors="black")
     ax.xaxis.set_major_locator(MaxNLocator(nbins=5, prune="lower"))
@@ -298,6 +315,7 @@ def _draw_enrichment(ax, df, component, title):
 
 
 # ── Main generation ──────────────────────────────────────────────────────
+
 
 def generate(series, out_dir):
     series = require_dpmm(series)
@@ -317,7 +335,8 @@ def generate(series, out_dir):
     # Split into 4 rows: importance, correlation, UMAP, enrichment
     # Larger gaps between (a)/(b) and (b)/(c) for x-tick/title clearance
     panel_a, panel_b, panel_c, panel_d = root.split_rows(
-        [0.19, 0.19, 0.20, 0.20], gap=[0.07, 0.07, 0.04])
+        [0.19, 0.19, 0.20, 0.20], gap=[0.07, 0.07, 0.04]
+    )
 
     # ── Panel (a): Importance heatmaps ───────────────────────────────────
     grid_a = panel_a.grid(1, n_ds, wgap=0.05, hgap=0.06)
@@ -331,20 +350,39 @@ def generate(series, out_dir):
         if im is not None:
             imp_heatmaps.append(im)
     if imp_heatmaps:
-        cbar_ax = fig.add_axes([panel_a.left + panel_a.width + 0.015,
-                                panel_a.bottom + panel_a.height * 0.15,
-                                0.008, panel_a.height * 0.70])
+        cbar_ax = fig.add_axes(
+            [
+                panel_a.left + panel_a.width + 0.015,
+                panel_a.bottom + panel_a.height * 0.15,
+                0.008,
+                panel_a.height * 0.70,
+            ]
+        )
         cbar = fig.colorbar(imp_heatmaps[-1], cax=cbar_ax)
         cbar.ax.tick_params(labelsize=8.0, colors="black")
         cbar.set_label("Imp. (z)", fontsize=9, color="black")
     # Row annotation — closer to plotting area
-    fig.text(panel_a.left - 0.025,
-             panel_a.bottom + panel_a.height * 0.5,
-             "Perturbation\nimportance", fontsize=9.5, ha="center", va="center",
-             rotation=90, color="#555555", transform=fig.transFigure)
-    fig.text(panel_a.left - 0.03, panel_a.bottom + panel_a.height + 0.004,
-             "(a)", fontsize=14, fontweight="bold",
-             ha="left", va="bottom", transform=fig.transFigure)
+    fig.text(
+        panel_a.left - 0.025,
+        panel_a.bottom + panel_a.height * 0.5,
+        "Perturbation\nimportance",
+        fontsize=9.5,
+        ha="center",
+        va="center",
+        rotation=90,
+        color="#555555",
+        transform=fig.transFigure,
+    )
+    fig.text(
+        panel_a.left - 0.03,
+        panel_a.bottom + panel_a.height + 0.004,
+        "(a)",
+        fontsize=14,
+        fontweight="bold",
+        ha="left",
+        va="bottom",
+        transform=fig.transFigure,
+    )
 
     # ── Panel (b): Correlation heatmaps ──────────────────────────────────
     grid_b = panel_b.grid(1, n_ds, wgap=0.05, hgap=0.06)
@@ -358,20 +396,39 @@ def generate(series, out_dir):
         if im is not None:
             corr_heatmaps.append(im)
     if corr_heatmaps:
-        cbar_ax = fig.add_axes([panel_b.left + panel_b.width + 0.015,
-                                panel_b.bottom + panel_b.height * 0.15,
-                                0.008, panel_b.height * 0.70])
+        cbar_ax = fig.add_axes(
+            [
+                panel_b.left + panel_b.width + 0.015,
+                panel_b.bottom + panel_b.height * 0.15,
+                0.008,
+                panel_b.height * 0.70,
+            ]
+        )
         cbar = fig.colorbar(corr_heatmaps[-1], cax=cbar_ax)
         cbar.ax.tick_params(labelsize=8.0, colors="black")
         cbar.set_label("Pearson r", fontsize=9, color="black")
     # Row annotation — closer to plotting area
-    fig.text(panel_b.left - 0.025,
-             panel_b.bottom + panel_b.height * 0.5,
-             "Gene\u2013latent\ncorrelation", fontsize=9.5, ha="center", va="center",
-             rotation=90, color="#555555", transform=fig.transFigure)
-    fig.text(panel_b.left - 0.03, panel_b.bottom + panel_b.height + 0.004,
-             "(b)", fontsize=14, fontweight="bold",
-             ha="left", va="bottom", transform=fig.transFigure)
+    fig.text(
+        panel_b.left - 0.025,
+        panel_b.bottom + panel_b.height * 0.5,
+        "Gene\u2013latent\ncorrelation",
+        fontsize=9.5,
+        ha="center",
+        va="center",
+        rotation=90,
+        color="#555555",
+        transform=fig.transFigure,
+    )
+    fig.text(
+        panel_b.left - 0.03,
+        panel_b.bottom + panel_b.height + 0.004,
+        "(b)",
+        fontsize=14,
+        fontweight="bold",
+        ha="left",
+        va="bottom",
+        transform=fig.transFigure,
+    )
 
     # ── Panel (c): UMAP overlays ─────────────────────────────────────────
     grid_c = panel_c.grid(2, total_umap_cols, wgap=0.014, hgap=0.03)
@@ -386,15 +443,27 @@ def generate(series, out_dir):
             int_axes[0].set_ylabel("intensity", fontsize=10.0, color="black")
             gene_axes[0].set_ylabel("gene expr", fontsize=10.0, color="black")
         left = grid_c[0][c_start].left
-        right = (grid_c[0][c_start + N_COMP - 1].left +
-                 grid_c[0][c_start + N_COMP - 1].width)
+        right = grid_c[0][c_start + N_COMP - 1].left + grid_c[0][c_start + N_COMP - 1].width
         mid_x = (left + right) / 2
-        fig.text(mid_x, panel_c.bottom + panel_c.height + 0.006,
-                 dataset, ha="center", fontsize=12.0, color="black",
-                 transform=fig.transFigure)
-    fig.text(panel_c.left - 0.03, panel_c.bottom + panel_c.height + 0.004,
-             "(c)", fontsize=14, fontweight="bold",
-             ha="left", va="bottom", transform=fig.transFigure)
+        fig.text(
+            mid_x,
+            panel_c.bottom + panel_c.height + 0.006,
+            dataset,
+            ha="center",
+            fontsize=12.0,
+            color="black",
+            transform=fig.transFigure,
+        )
+    fig.text(
+        panel_c.left - 0.03,
+        panel_c.bottom + panel_c.height + 0.004,
+        "(c)",
+        fontsize=14,
+        fontweight="bold",
+        ha="left",
+        va="bottom",
+        transform=fig.transFigure,
+    )
 
     # ── Panel (d): GO enrichment ─────────────────────────────────────────
     panel_d_inset = panel_d.inset(left=0.10)
@@ -403,9 +472,16 @@ def generate(series, out_dir):
         ax = grid_d[0][c_idx].add_axes(fig)
         enrich_df, component = load_best_enrichment(model_name, dataset)
         _draw_enrichment(ax, enrich_df, component, f"{short} — {dataset}")
-    fig.text(panel_d.left - 0.03, panel_d.bottom + panel_d.height + 0.004,
-             "(d)", fontsize=14, fontweight="bold",
-             ha="left", va="bottom", transform=fig.transFigure)
+    fig.text(
+        panel_d.left - 0.03,
+        panel_d.bottom + panel_d.height + 0.004,
+        "(d)",
+        fontsize=14,
+        fontweight="bold",
+        ha="left",
+        va="bottom",
+        transform=fig.transFigure,
+    )
 
     out_path = out_dir / f"Fig4_biological_full_{series}.png"
     save_with_vcd(fig, out_path, dpi=DPI, close=True)
@@ -417,6 +493,9 @@ if __name__ == "__main__":
     parser.add_argument("--series", default="dpmm", choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "refined_figures" / "output" / args.series)
+    out = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "refined_figures" / "output" / args.series
+    )
     generate(args.series, out)

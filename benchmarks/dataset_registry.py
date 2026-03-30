@@ -8,9 +8,7 @@ import os
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-DATASETS_ROOT = Path(
-    os.environ.get("PANODE_DATASETS_ROOT", str(_REPO_ROOT / "data"))
-)
+DATASETS_ROOT = Path(os.environ.get("PANODE_DATASETS_ROOT", str(_REPO_ROOT / "data")))
 
 DATASET_REGISTRY = {
     "setty": {
@@ -56,7 +54,9 @@ DATASET_REGISTRY = {
         "desc": "Hematopoietic differentiation compendium (trajectory, ~22k cells)",
     },
     "pansci_muscle": {
-        "path": str(DATASETS_ROOT / "DevelopmentDatasets2" / "GSE247719_PanSci_05_Muscle_adata.h5ad"),
+        "path": str(
+            DATASETS_ROOT / "DevelopmentDatasets2" / "GSE247719_PanSci_05_Muscle_adata.h5ad"
+        ),
         "data_type": "mixed",
         "label_key": "Main_cell_type",
         "species": "mouse_ensembl",
@@ -487,29 +487,55 @@ ALL_DATASET_REGISTRY = {
 # Groupings for targeted experiments
 _CANCER_ORIGINAL = ["tnbc_brain", "lbm_brain", "hepatoblastoma", "bc_ec", "bcc"]
 _CANCER_EXPANDED = [
-    "scc", "lung_adre", "aml_pbmc", "bm_all", "bc_stroma", "gastric",
-    "tcell_cancer", "nk_lymphoma", "breast_cancer", "bcell_all",
-    "breast_metastasis", "tcell_liver", "mcc_pbmc", "mcc_tumor",
-    "mm_cancer", "liver_cancer", "ca_cancer", "stomach_cancer",
-    "breast_hm", "lung_adre2", "liver_colon_metastasis", "breast_hm2",
+    "scc",
+    "lung_adre",
+    "aml_pbmc",
+    "bm_all",
+    "bc_stroma",
+    "gastric",
+    "tcell_cancer",
+    "nk_lymphoma",
+    "breast_cancer",
+    "bcell_all",
+    "breast_metastasis",
+    "tcell_liver",
+    "mcc_pbmc",
+    "mcc_tumor",
+    "mm_cancer",
+    "liver_cancer",
+    "ca_cancer",
+    "stomach_cancer",
+    "breast_hm",
+    "lung_adre2",
+    "liver_colon_metastasis",
+    "breast_hm2",
 ]
 _DEV_EXPANDED = [
-    "hesc_hspc_cd8", "lsk_batch", "hsc_aged", "bm_niche", "lps_mm",
-    "progastin", "urine", "astrocytes_sci", "ad_hm",
+    "hesc_hspc_cd8",
+    "lsk_batch",
+    "hsc_aged",
+    "bm_niche",
+    "lps_mm",
+    "progastin",
+    "urine",
+    "astrocytes_sci",
+    "ad_hm",
 ]
 
 DATASET_GROUPS = {
-    "core":            list(DATASET_REGISTRY.keys()),                  # original 12
-    "four_folder_extra": list(FOUR_FOLDER_ADDITIONAL_REGISTRY.keys()), # additional raw-folder study datasets
-    "disease":         ["irall"],
-    "perturbation":    ["wtko"],
-    "cancer":          _CANCER_ORIGINAL,
+    "core": list(DATASET_REGISTRY.keys()),  # original 12
+    "four_folder_extra": list(
+        FOUR_FOLDER_ADDITIONAL_REGISTRY.keys()
+    ),  # additional raw-folder study datasets
+    "disease": ["irall"],
+    "perturbation": ["wtko"],
+    "cancer": _CANCER_ORIGINAL,
     "cancer_expanded": _CANCER_ORIGINAL + _CANCER_EXPANDED,
-    "dev_expanded":    _DEV_EXPANDED,
-    "extra":           list(EXTRA_DATASET_REGISTRY.keys()),
-    "expanded":        list(EXPANDED_DATASET_REGISTRY.keys()),
-    "sample_cancer":   ["tnbc_brain", "lbm_brain", "bc_ec"],  # small/fast
-    "all":             list(ALL_DATASET_REGISTRY.keys()),
+    "dev_expanded": _DEV_EXPANDED,
+    "extra": list(EXTRA_DATASET_REGISTRY.keys()),
+    "expanded": list(EXPANDED_DATASET_REGISTRY.keys()),
+    "sample_cancer": ["tnbc_brain", "lbm_brain", "bc_ec"],  # small/fast
+    "all": list(ALL_DATASET_REGISTRY.keys()),
 }
 
 

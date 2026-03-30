@@ -39,25 +39,34 @@ from benchmarks.figure_generators.subplot_style import (
     LINE_WIDTH_BOX,
     LINE_WIDTH_MEDIAN,
     SCATTER_SIZE_SWEEP,
+    SUBPLOT_DPI,
     apply_subplot_style,
     build_manifest,
 )
 from src.visualization import bind_figure_region, save_with_vcd, style_axes
 
-_CORE_METRICS_ALL = ["NMI", "ARI", "ASW", "DAV",
-                     "DRE_umap_overall_quality", "LSE_overall_quality"]
+_CORE_METRICS_ALL = ["NMI", "ARI", "ASW", "DAV", "DRE_umap_overall_quality", "LSE_overall_quality"]
 
 _DISPLAY = {
-    "NMI": "NMI \u2191", "ARI": "ARI \u2191", "ASW": "ASW \u2191",
-    "DAV": "DAV \u2193", "DRE_umap_overall_quality": "DRE UMAP \u2191",
+    "NMI": "NMI \u2191",
+    "ARI": "ARI \u2191",
+    "ASW": "ASW \u2191",
+    "DAV": "DAV \u2193",
+    "DRE_umap_overall_quality": "DRE UMAP \u2191",
     "LSE_overall_quality": "LSE Overall \u2191",
 }
 
 # Sweep parameters to exclude from figures (no meaningful variation)
 _EXCLUDED_SWEEPS = {"max_cells"}
 _SWEEP_PALETTE = [
-    "#4C78A8", "#6BAED6", "#9ECAE1", "#FDD49E", "#FDAE6B",
-    "#FD8D3C", "#E6550D", "#A63603",
+    "#4C78A8",
+    "#6BAED6",
+    "#9ECAE1",
+    "#FDD49E",
+    "#FDAE6B",
+    "#FD8D3C",
+    "#E6550D",
+    "#A63603",
 ]
 
 
@@ -97,9 +106,7 @@ def gen_sweep_boxplot(df, param_col, metric, out_path, dataset_col="Dataset"):
         work["_sort"] = numeric_param
     else:
         work["_sort"] = work[param_col].astype(str)
-    ordered = list(dict.fromkeys(
-        work.sort_values("_sort")[param_col].astype(str).tolist()
-    ))
+    ordered = list(dict.fromkeys(work.sort_values("_sort")[param_col].astype(str).tolist()))
     n_sv = len(ordered)
     if n_sv <= len(_SWEEP_PALETTE):
         box_colors = _SWEEP_PALETTE[:n_sv]
@@ -109,9 +116,11 @@ def gen_sweep_boxplot(df, param_col, metric, out_path, dataset_col="Dataset"):
 
     grouped = []
     for sv in ordered:
-        vals = pd.to_numeric(
-            work.loc[work[param_col].astype(str) == sv, metric],
-            errors="coerce").dropna().values
+        vals = (
+            pd.to_numeric(work.loc[work[param_col].astype(str) == sv, metric], errors="coerce")
+            .dropna()
+            .values
+        )
         grouped.append(vals)
 
     if not any(len(g) > 0 for g in grouped):
@@ -124,9 +133,14 @@ def gen_sweep_boxplot(df, param_col, metric, out_path, dataset_col="Dataset"):
     ax = layout.add_axes(fig)
 
     style_axes(ax)
-    bp = ax.boxplot(grouped, positions=np.arange(len(ordered)),
-                    widths=0.55, patch_artist=True, showfliers=False,
-                    medianprops=dict(color="black", lw=LINE_WIDTH_MEDIAN))
+    bp = ax.boxplot(
+        grouped,
+        positions=np.arange(len(ordered)),
+        widths=0.55,
+        patch_artist=True,
+        showfliers=False,
+        medianprops={"color": "black", "lw": LINE_WIDTH_MEDIAN},
+    )
     for j, patch in enumerate(bp["boxes"]):
         c = box_colors[j] if j < len(box_colors) else "#6BAED6"
         patch.set_facecolor(c)
@@ -140,16 +154,22 @@ def gen_sweep_boxplot(df, param_col, metric, out_path, dataset_col="Dataset"):
             continue
         jitter = rng.uniform(-0.15, 0.15, size=len(vals))
         c = box_colors[j] if j < len(box_colors) else "#1F77B4"
-        ax.scatter(np.full(len(vals), j) + jitter, vals, s=SCATTER_SIZE_SWEEP,
-                   color=c, edgecolors="black",
-                   linewidths=0.2, alpha=0.80, zorder=5)
+        ax.scatter(
+            np.full(len(vals), j) + jitter,
+            vals,
+            s=SCATTER_SIZE_SWEEP,
+            color=c,
+            edgecolors="black",
+            linewidths=0.2,
+            alpha=0.80,
+            zorder=5,
+        )
 
     title_text = _DISPLAY.get(metric, metric)
     ds_n = work[dataset_col].nunique() if dataset_col in work.columns else None
     if ds_n and ds_n > 1:
         title_text = f"{title_text} (n={ds_n})"
-    ax.set_title(title_text, fontsize=FONTSIZE_TITLE, pad=2,
-                 loc="left", fontweight="normal")
+    ax.set_title(title_text, fontsize=FONTSIZE_TITLE, pad=2, loc="left", fontweight="normal")
     ax.set_xticks(np.arange(len(ordered)))
     display_labels = [_format_sweep_label(v) for v in ordered]
     ax.set_xticklabels(display_labels, fontsize=FONTSIZE_TICK, rotation=0)
@@ -162,8 +182,15 @@ def gen_sweep_boxplot(df, param_col, metric, out_path, dataset_col="Dataset"):
         best_i = int(np.nanargmax(medians) if hb else np.nanargmin(medians))
         bp["boxes"][best_i].set_edgecolor("red")
         bp["boxes"][best_i].set_linewidth(1.3)
-        ax.scatter([best_i], [medians[best_i]], s=40, facecolors="none",
-                   edgecolors="#D62728", linewidths=1.2, zorder=6)
+        ax.scatter(
+            [best_i],
+            [medians[best_i]],
+            s=40,
+            facecolors="none",
+            edgecolors="#D62728",
+            linewidths=1.2,
+            zorder=6,
+        )
 
     # y-axis padding + prune edge ticks to prevent VCD truncation warnings
     ymin, ymax = ax.get_ylim()
@@ -174,7 +201,8 @@ def gen_sweep_boxplot(df, param_col, metric, out_path, dataset_col="Dataset"):
     else:
         ax.set_ylim(ymin - pad_y, ymax + pad_y * 0.3)
     from matplotlib.ticker import MaxNLocator
-    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', prune='both'))
+
+    ax.yaxis.set_major_locator(MaxNLocator(nbins="auto", prune="both"))
 
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
@@ -226,9 +254,12 @@ def generate(series, out_dir):
                 "plots": sweep_plots,
             }
 
-    manifest = build_manifest(sub_dir, {
-        "sweeps": sweep_manifest,
-    })
+    manifest = build_manifest(
+        sub_dir,
+        {
+            "sweeps": sweep_manifest,
+        },
+    )
     return manifest
 
 
@@ -237,7 +268,10 @@ if __name__ == "__main__":
     parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots")
+    out = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots"
+    )
     out.mkdir(parents=True, exist_ok=True)
     generate(args.series, out)

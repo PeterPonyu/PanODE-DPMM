@@ -75,6 +75,7 @@ QUICK_MODELS = [
 # Helpers
 # ────────────────────────────────────────────────────────────────────────────
 
+
 def check_ready(dataset_keys: list[str]) -> tuple[list[str], list[str]]:
     """Return (ready, missing) lists."""
     ready, missing = [], []
@@ -100,14 +101,12 @@ def build_model_instance(model_name: str, n_genes: int, n_clusters: int, seed: i
     np.random.seed(seed)
 
     if model_name not in MODELS:
-        raise ValueError(f"Unknown model name: {model_name}. "
-                         f"Available: {list(MODELS.keys())}")
+        raise ValueError(f"Unknown model name: {model_name}. Available: {list(MODELS.keys())}")
 
     entry = MODELS[model_name]
-    model_cls = entry['class']
-    params = {k: v for k, v in entry['params'].items()
-              if not k.startswith('fit_')}
-    params['input_dim'] = n_genes
+    model_cls = entry["class"]
+    params = {k: v for k, v in entry["params"].items() if not k.startswith("fit_")}
+    params["input_dim"] = n_genes
 
     model = model_cls(**params)
     return model.to(device)
@@ -118,7 +117,8 @@ def evaluate_dataset(
     model_names: list[str],
     seed: int,
     device: str,
-    train_kwargs: dict | None = None) -> list[dict]:
+    train_kwargs: dict | None = None,
+) -> list[dict]:
     """Run all requested models on one dataset. Return list of result dicts."""
     import anndata as ad
     from sklearn.preprocessing import LabelEncoder
@@ -130,17 +130,16 @@ def evaluate_dataset(
     )
 
     train_kwargs = train_kwargs or {}
-    meta = (EXTRA_DATASET_REGISTRY.get(dataset_key)
-            or ALL_DATASET_REGISTRY.get(dataset_key))
+    meta = EXTRA_DATASET_REGISTRY.get(dataset_key) or ALL_DATASET_REGISTRY.get(dataset_key)
     if meta is None:
         raise KeyError(f"Dataset '{dataset_key}' not found in registry.")
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  Dataset : {dataset_key}")
     print(f"  Path    : {meta['path']}")
     print(f"  Domain  : {meta.get('domain', 'N/A')}")
     print(f"  Seed    : {seed}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     adata = ad.read_h5ad(meta["path"])
     label_key = meta["label_key"]
@@ -152,7 +151,7 @@ def evaluate_dataset(
     le = LabelEncoder()
     labels = le.fit_transform(adata.obs[label_key].astype(str).values)
     n_clusters = len(le.classes_)
-    n_genes    = adata.n_vars
+    n_genes = adata.n_vars
 
     train_loader, val_loader, test_loader, test_idx = build_data_loaders(
         adata, label_key=label_key, seed=seed
@@ -179,12 +178,12 @@ def evaluate_dataset(
 
             elapsed = time.time() - t0
             row = {
-                "dataset":   dataset_key,
-                "domain":    meta.get("domain", "N/A"),
-                "model":     mname,
-                "seed":      seed,
-                "n_cells":   adata.n_obs,
-                "n_genes":   n_genes,
+                "dataset": dataset_key,
+                "domain": meta.get("domain", "N/A"),
+                "model": mname,
+                "seed": seed,
+                "n_cells": adata.n_obs,
+                "n_genes": n_genes,
                 "n_clusters": n_clusters,
                 "runtime_s": round(elapsed, 1),
                 **cluster_metrics,
@@ -201,10 +200,15 @@ def evaluate_dataset(
         except Exception as exc:
             elapsed = time.time() - t0
             print(f" FAILED ({exc})")
-            results.append({
-                "dataset": dataset_key, "model": mname, "seed": seed,
-                "error": str(exc), "runtime_s": round(elapsed, 1),
-            })
+            results.append(
+                {
+                    "dataset": dataset_key,
+                    "model": mname,
+                    "seed": seed,
+                    "error": str(exc),
+                    "runtime_s": round(elapsed, 1),
+                }
+            )
 
     return results
 
@@ -213,6 +217,7 @@ def evaluate_dataset(
 # Main
 # ────────────────────────────────────────────────────────────────────────────
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Sample benchmark runner for extra/cancer/disease datasets."
@@ -220,29 +225,51 @@ def main():
 
     # Dataset selection
     ds_group = parser.add_mutually_exclusive_group()
-    ds_group.add_argument("--all",         action="store_true",
-                          help="Run on all available (preprocessed) extra datasets.")
-    ds_group.add_argument("--datasets",    nargs="+", metavar="KEY",
-                          help="Explicit dataset keys from EXTRA_DATASET_REGISTRY.")
-    ds_group.add_argument("--group",       metavar="GROUP",
-                          help=f"Dataset group: {list(DATASET_GROUPS.keys())}")
-    ds_group.add_argument("--check-only",  action="store_true",
-                          help="Check which extra datasets are ready; do not run.")
+    ds_group.add_argument(
+        "--all", action="store_true", help="Run on all available (preprocessed) extra datasets."
+    )
+    ds_group.add_argument(
+        "--datasets",
+        nargs="+",
+        metavar="KEY",
+        help="Explicit dataset keys from EXTRA_DATASET_REGISTRY.",
+    )
+    ds_group.add_argument(
+        "--group", metavar="GROUP", help=f"Dataset group: {list(DATASET_GROUPS.keys())}"
+    )
+    ds_group.add_argument(
+        "--check-only",
+        action="store_true",
+        help="Check which extra datasets are ready; do not run.",
+    )
 
     # Model selection
-    parser.add_argument("--models",  nargs="+", metavar="MODEL", default=None,
-                        help="Model variants to include (default: all 12).")
-    parser.add_argument("--quick",   action="store_true",
-                        help="Use QUICK_MODELS (5 variants) instead of all 12.")
+    parser.add_argument(
+        "--models",
+        nargs="+",
+        metavar="MODEL",
+        default=None,
+        help="Model variants to include (default: all 12).",
+    )
+    parser.add_argument(
+        "--quick", action="store_true", help="Use QUICK_MODELS (5 variants) instead of all 12."
+    )
 
     # Run settings
-    parser.add_argument("--seed",    type=int, default=42)
-    parser.add_argument("--device",  default="auto",
-                        help="'cuda', 'cpu', or 'auto' (default: auto).")
-    parser.add_argument("--append",  action="store_true",
-                        help="Append results to existing CSV rather than overwrite.")
-    parser.add_argument("--output",  default=None,
-                        help="Custom output CSV path (default: auto-named in RESULTS_ROOT).")
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument(
+        "--device", default="auto", help="'cuda', 'cpu', or 'auto' (default: auto)."
+    )
+    parser.add_argument(
+        "--append",
+        action="store_true",
+        help="Append results to existing CSV rather than overwrite.",
+    )
+    parser.add_argument(
+        "--output",
+        default=None,
+        help="Custom output CSV path (default: auto-named in RESULTS_ROOT).",
+    )
     parser.add_argument("--no-plots", action="store_true", help="Skip figures.")
 
     args = parser.parse_args()
@@ -296,6 +323,7 @@ def main():
     if args.device == "auto":
         try:
             import torch
+
             device = "cuda" if torch.cuda.is_available() else "cpu"
         except ImportError:
             device = "cpu"
@@ -305,8 +333,10 @@ def main():
 
     # ── Run ───────────────────────────────────────────────────────────────
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_csv   = Path(args.output) if args.output else (
-        RESULTS_ROOT / "csv" / f"extra_results_{timestamp}_seed{args.seed}.csv"
+    out_csv = (
+        Path(args.output)
+        if args.output
+        else (RESULTS_ROOT / "csv" / f"extra_results_{timestamp}_seed{args.seed}.csv")
     )
     out_csv.parent.mkdir(parents=True, exist_ok=True)
 
@@ -329,20 +359,15 @@ def main():
     df.to_csv(out_csv, index=False)
 
     elapsed_total = time.time() - t_start
-    print(f"\n{'='*60}")
-    print(f"  Done!  Total time: {elapsed_total/60:.1f} min")
+    print(f"\n{'=' * 60}")
+    print(f"  Done!  Total time: {elapsed_total / 60:.1f} min")
     print(f"  Results: {out_csv}")
     print(f"  Rows   : {len(df)}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # ── Per-model ranking ─────────────────────────────────────────────────
     if "Score" in df.columns:
-        rank_df = (
-            df.groupby("model")["Score"]
-            .mean()
-            .sort_values(ascending=False)
-            .reset_index()
-        )
+        rank_df = df.groupby("model")["Score"].mean().sort_values(ascending=False).reset_index()
         rank_df.columns = ["Model", "Mean_Score"]
         rank_df["Rank"] = range(1, len(rank_df) + 1)
         print("\nRanking (by mean Score across extra datasets):")

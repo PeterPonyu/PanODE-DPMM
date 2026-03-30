@@ -42,8 +42,12 @@ _FONT_CFG = {
 
 # 6-color palette: 3 cool (Pure-AE) + 3 warm (DPMM)
 _PALETTE_12 = [
-    "#4C72B0", "#5DA5DA", "#7EB8DA",   # Pure-AE, Pure-Tfm-AE, Pure-Ctr-AE
-    "#DD8452", "#E8A07E", "#C44E52",   # DPMM-Base, DPMM-Ctr, DPMM-Tfm
+    "#4C72B0",
+    "#5DA5DA",
+    "#7EB8DA",  # Pure-AE, Pure-Tfm-AE, Pure-Ctr-AE
+    "#DD8452",
+    "#E8A07E",
+    "#C44E52",  # DPMM-Base, DPMM-Ctr, DPMM-Tfm
 ]
 
 
@@ -55,6 +59,7 @@ def _apply_style():
 # ═══════════════════════════════════════════════════════════════════════════════
 # UMAP Grid
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def plot_umap_grid(latent_dict, labels, title, save_path, n_neighbors=15, min_dist=0.5):
     """Create UMAP visualization grid for multiple latent representations.
@@ -109,16 +114,29 @@ def plot_umap_grid(latent_dict, labels, title, save_path, n_neighbors=15, min_di
             umap_coords = adata_temp.obsm["X_umap"]
 
             ax.scatter(
-                umap_coords[:, 0], umap_coords[:, 1],
-                c=labels_encoded, cmap=cmap, s=18, alpha=0.7,
-                edgecolors="none", rasterized=True)
+                umap_coords[:, 0],
+                umap_coords[:, 1],
+                c=labels_encoded,
+                cmap=cmap,
+                s=18,
+                alpha=0.7,
+                edgecolors="none",
+                rasterized=True,
+            )
             ax.set_title(name, fontsize=11, fontweight="bold")
             ax.set_xlabel("UMAP-1", fontsize=8)
             ax.set_ylabel("UMAP-2", fontsize=8)
             ax.tick_params(labelsize=7)
         except Exception as e:
-            ax.text(0.5, 0.5, f"Error:\n{str(e)[:60]}",
-                    transform=ax.transAxes, ha="center", va="center", fontsize=8)
+            ax.text(
+                0.5,
+                0.5,
+                f"Error:\n{str(e)[:60]}",
+                transform=ax.transAxes,
+                ha="center",
+                va="center",
+                fontsize=8,
+            )
             ax.set_title(name, fontsize=11, fontweight="bold")
 
     for idx in range(n, rows * cols):
@@ -155,40 +173,50 @@ _METRIC_GROUPS = {
     },
     "DRE \u2014 UMAP": {
         "cols": [
-            "DRE_umap_distance_correlation", "DRE_umap_Q_local",
-            "DRE_umap_Q_global", "DRE_umap_overall_quality",
+            "DRE_umap_distance_correlation",
+            "DRE_umap_Q_local",
+            "DRE_umap_Q_global",
+            "DRE_umap_overall_quality",
         ],
         "labels": ["DistCorr", "Q_local", "Q_global", "Overall"],
         "note": None,
     },
     "DRE \u2014 t-SNE": {
         "cols": [
-            "DRE_tsne_distance_correlation", "DRE_tsne_Q_local",
-            "DRE_tsne_Q_global", "DRE_tsne_overall_quality",
+            "DRE_tsne_distance_correlation",
+            "DRE_tsne_Q_local",
+            "DRE_tsne_Q_global",
+            "DRE_tsne_overall_quality",
         ],
         "labels": ["DistCorr", "Q_local", "Q_global", "Overall"],
         "note": None,
     },
     "DREX \u2014 UMAP": {
         "cols": [
-            "DREX_trustworthiness", "DREX_continuity",
-            "DREX_distance_spearman", "DREX_overall_quality",
+            "DREX_trustworthiness",
+            "DREX_continuity",
+            "DREX_distance_spearman",
+            "DREX_overall_quality",
         ],
         "labels": ["Trust", "Contin", "Spearman", "Overall"],
         "note": "Latent \u2192 UMAP fidelity.",
     },
     "LSE \u2014 Structure": {
         "cols": [
-            "LSE_manifold_dimensionality", "LSE_spectral_decay_rate",
-            "LSE_participation_ratio", "LSE_anisotropy_score",
+            "LSE_manifold_dimensionality",
+            "LSE_spectral_decay_rate",
+            "LSE_participation_ratio",
+            "LSE_anisotropy_score",
         ],
         "labels": ["ManifDim", "SpectDecay", "Particip.", "Anisotropy"],
         "note": None,
     },
     "LSE \u2014 Trajectory & Quality": {
         "cols": [
-            "LSE_trajectory_directionality", "LSE_noise_resilience",
-            "LSE_overall_quality", "LSE_core_quality",
+            "LSE_trajectory_directionality",
+            "LSE_noise_resilience",
+            "LSE_overall_quality",
+            "LSE_core_quality",
         ],
         "labels": ["TrajDir", "NoiseRes", "Overall", "CoreQual"],
         "note": None,
@@ -208,12 +236,16 @@ def plot_all_metrics_barplot(df, save_path, title="Benchmark Results"):
     """
     # Guard against swapped arguments
     if isinstance(save_path, str) and isinstance(title, str):
-        if (os.sep in title or title.endswith(".png")) and not (os.sep in save_path or save_path.endswith(".png")):
+        if (os.sep in title or title.endswith(".png")) and not (
+            os.sep in save_path or save_path.endswith(".png")
+        ):
             save_path, title = title, save_path
 
     _apply_style()
 
-    df_valid = df[df.get("NMI", pd.Series(dtype=float)) > 0].copy() if "NMI" in df.columns else df.copy()
+    df_valid = (
+        df[df.get("NMI", pd.Series(dtype=float)) > 0].copy() if "NMI" in df.columns else df.copy()
+    )
     if df_valid.empty:
         print("No valid results to plot.")
         return
@@ -234,7 +266,11 @@ def plot_all_metrics_barplot(df, save_path, title="Benchmark Results"):
     for panel_idx, (group_name, group_info) in enumerate(_METRIC_GROUPS.items()):
         ax = axes[panel_idx]
         metric_cols = [c for c in group_info["cols"] if c in df_valid.columns]
-        metric_labels = [group_info["labels"][i] for i, c in enumerate(group_info["cols"]) if c in df_valid.columns]
+        metric_labels = [
+            group_info["labels"][i]
+            for i, c in enumerate(group_info["cols"])
+            if c in df_valid.columns
+        ]
 
         if not metric_cols:
             ax.text(0.5, 0.5, "No data", transform=ax.transAxes, ha="center", va="center")
@@ -250,17 +286,28 @@ def plot_all_metrics_barplot(df, save_path, title="Benchmark Results"):
             offsets = y_pos + m_idx * bar_h - 0.4 + bar_h / 2
             values = vals[mcol].fillna(0).values
 
-            bars = ax.barh(offsets, values, height=bar_h, label=mlabel,
-                           color=metric_cmap(m_idx / max(n_metrics - 1, 1)),
-                           edgecolor="white", linewidth=0.3)
+            bars = ax.barh(
+                offsets,
+                values,
+                height=bar_h,
+                label=mlabel,
+                color=metric_cmap(m_idx / max(n_metrics - 1, 1)),
+                edgecolor="white",
+                linewidth=0.3,
+            )
 
             for bar, val in zip(bars, values):
                 if not np.isnan(val) and val != 0:
                     fmt = f"{val:.2f}" if abs(val) < 100 else f"{val:.0f}"
                     x_offset = max(abs(values)) * 0.02 if max(abs(values)) > 0 else 0.01
-                    ax.text(bar.get_width() + x_offset,
-                            bar.get_y() + bar.get_height() / 2,
-                            fmt, va="center", ha="left", fontsize=7)
+                    ax.text(
+                        bar.get_width() + x_offset,
+                        bar.get_y() + bar.get_height() / 2,
+                        fmt,
+                        va="center",
+                        ha="left",
+                        fontsize=7,
+                    )
 
         ax.set_yticks(y_pos)
         ax.set_yticklabels(models, fontsize=8)
@@ -268,13 +315,25 @@ def plot_all_metrics_barplot(df, save_path, title="Benchmark Results"):
         ax.set_title(group_name, fontweight="bold", fontsize=12)
 
         # Place legend outside the plot area to avoid overlapping with bars
-        ax.legend(fontsize=7, loc="upper right",
-                  bbox_to_anchor=(1.0, 1.0), framealpha=0.85,
-                  borderaxespad=0.3, handlelength=1.2, handletextpad=0.4)
+        ax.legend(
+            fontsize=7,
+            loc="upper right",
+            bbox_to_anchor=(1.0, 1.0),
+            framealpha=0.85,
+            borderaxespad=0.3,
+            handlelength=1.2,
+            handletextpad=0.4,
+        )
 
         if group_info.get("note"):
-            ax.annotate(group_info["note"], xy=(0.02, 0.02), xycoords="axes fraction",
-                        fontsize=6.5, fontstyle="italic", color="gray")
+            ax.annotate(
+                group_info["note"],
+                xy=(0.02, 0.02),
+                xycoords="axes fraction",
+                fontsize=6.5,
+                fontstyle="italic",
+                color="gray",
+            )
 
     for idx in range(n_groups, len(axes)):
         axes[idx].axis("off")
@@ -290,8 +349,10 @@ def plot_all_metrics_barplot(df, save_path, title="Benchmark Results"):
 # Core-metrics bar plot (6 panels — 2×3)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def plot_core_metrics_barplot(df, save_path, title="Benchmark Results",
-                              series="all", no_title=False, figformat="png"):
+
+def plot_core_metrics_barplot(
+    df, save_path, title="Benchmark Results", series="all", no_title=False, figformat="png"
+):
     """Horizontal bar plot of 6 core metrics (2×3) with per-model colours.
 
     Panels: NMI / ARI / ASW / DAV / DRE Overall / LSE Overall.
@@ -320,33 +381,34 @@ def plot_core_metrics_barplot(df, save_path, title="Benchmark Results",
     fig, axes = plt.subplots(2, 3, figsize=(16, max(4, 0.55 * n + 1.5)))
 
     # Resolve DRE / LSE column names (naming may vary across runs)
-    dre_col = next((c for c in df_s.columns
-                    if c == "DRE_umap_overall_quality"), None)
+    dre_col = next((c for c in df_s.columns if c == "DRE_umap_overall_quality"), None)
     if dre_col is None:
-        dre_col = next((c for c in df_s.columns
-                        if "overall_quality" in c.lower() and "dre" in c.lower()), None)
+        dre_col = next(
+            (c for c in df_s.columns if "overall_quality" in c.lower() and "dre" in c.lower()), None
+        )
     if dre_col is None:
         dre_col = "DRE_umap_overall_quality"
-    lse_col = next((c for c in df_s.columns
-                    if "overall_quality" in c.lower() and "lse" in c.lower()), None)
+    lse_col = next(
+        (c for c in df_s.columns if "overall_quality" in c.lower() and "lse" in c.lower()), None
+    )
     if lse_col is None:
-        lse_col = next((c for c in df_s.columns
-                        if c.startswith("LSE") and "overall" in c),
-                       "LSE_overall_quality")
+        lse_col = next(
+            (c for c in df_s.columns if c.startswith("LSE") and "overall" in c),
+            "LSE_overall_quality",
+        )
 
     metrics_info = [
-        ("NMI",     "NMI \u2191",                  True),
-        ("ARI",     "ARI \u2191",                  True),
-        ("ASW",     "ASW \u2191",                  True),
-        ("DAV",     "Davies\u2013Bouldin \u2193",   False),
-        (dre_col,   "DRE UMAP \u2191",             True),
-        (lse_col,   "LSE Overall \u2191",           True),
+        ("NMI", "NMI \u2191", True),
+        ("ARI", "ARI \u2191", True),
+        ("ASW", "ASW \u2191", True),
+        ("DAV", "Davies\u2013Bouldin \u2193", False),
+        (dre_col, "DRE UMAP \u2191", True),
+        (lse_col, "LSE Overall \u2191", True),
     ]
 
-    for ax, (col, label, higher_better) in zip(axes.flatten(), metrics_info):
+    for ax, (col, label, higher_better) in zip(axes.flatten(), metrics_info):  # noqa: B007
         if col not in df_s.columns:
-            ax.text(0.5, 0.5, "N/A", transform=ax.transAxes,
-                    ha="center", fontsize=10)
+            ax.text(0.5, 0.5, "N/A", transform=ax.transAxes, ha="center", fontsize=10)
             ax.set_title(label, fontweight="bold", fontsize=11)
             continue
 
@@ -354,16 +416,20 @@ def plot_core_metrics_barplot(df, save_path, title="Benchmark Results",
         colors = [get_color(m) for m in models]
         y_pos = np.arange(n)
 
-        bars = ax.barh(y_pos, vals, height=0.6, color=colors,
-                       edgecolor="white", linewidth=0.5)
+        bars = ax.barh(y_pos, vals, height=0.6, color=colors, edgecolor="white", linewidth=0.5)
 
         max_val = max(abs(vals)) if len(vals) > 0 else 1
         for bar, val in zip(bars, vals):
             x_off = max_val * 0.02
-            ax.text(bar.get_width() + x_off,
-                    bar.get_y() + bar.get_height() / 2,
-                    f"{val:.3f}", va="center", ha="left",
-                    fontsize=8, fontweight="medium")
+            ax.text(
+                bar.get_width() + x_off,
+                bar.get_y() + bar.get_height() / 2,
+                f"{val:.3f}",
+                va="center",
+                ha="left",
+                fontsize=8,
+                fontweight="medium",
+            )
 
         ax.set_yticks(y_pos)
         ax.set_yticklabels(short, fontsize=9)

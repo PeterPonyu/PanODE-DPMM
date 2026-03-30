@@ -32,17 +32,21 @@ from utils.paper_style import add_style_args, apply_cli_overrides, apply_style
 # Training: record per-epoch losses only (zero inference overhead)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def train_and_record_losses(model, train_loader, val_loader, epochs, lr, device,
-                            weight_decay=1e-5, verbose_every=50):
+
+def train_and_record_losses(
+    model, train_loader, val_loader, epochs, lr, device, weight_decay=1e-5, verbose_every=50
+):
     """Train model, record per-epoch train & val losses. No inference at all."""
     model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
-    is_dpmm = hasattr(model, 'dpmm_params')
+    is_dpmm = hasattr(model, "dpmm_params")
 
     history = {
-        "train_loss": [], "val_loss": [],
-        "recon_loss": [], "val_recon_loss": [],
+        "train_loss": [],
+        "val_loss": [],
+        "recon_loss": [],
+        "val_recon_loss": [],
     }
     if is_dpmm:
         history["dpmm_loss"] = []
@@ -54,13 +58,15 @@ def train_and_record_losses(model, train_loader, val_loader, epochs, lr, device,
         if is_dpmm:
             if epoch < dpmm_warmup_epochs:
                 model.dpmm_fitted = False
-            elif epoch == dpmm_warmup_epochs or \
-                 (epoch - dpmm_warmup_epochs) % model.dpmm_refit_interval == 0:
+            elif (
+                epoch == dpmm_warmup_epochs
+                or (epoch - dpmm_warmup_epochs) % model.dpmm_refit_interval == 0
+            ):
                 model._refit_dpmm(train_loader, torch.device(device), verbose=0)
 
         # ── Train ──
         model.train()
-        tl, tr, td = 0., 0., 0.
+        tl, tr, td = 0.0, 0.0, 0.0
         n = 0
         for batch in train_loader:
             x, kw = model._prepare_batch(batch, device)
@@ -73,40 +79,47 @@ def train_and_record_losses(model, train_loader, val_loader, epochs, lr, device,
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 10.0)
             optimizer.step()
-            tl += loss.item(); tr += ld["recon_loss"].item()
-            if is_dpmm and "dpmm_loss" in ld: td += ld["dpmm_loss"].item()
+            tl += loss.item()
+            tr += ld["recon_loss"].item()
+            if is_dpmm and "dpmm_loss" in ld:
+                td += ld["dpmm_loss"].item()
             n += 1
         if n == 0:
             continue
         history["train_loss"].append(tl / n)
         history["recon_loss"].append(tr / n)
-        if is_dpmm: history["dpmm_loss"].append(td / n)
+        if is_dpmm:
+            history["dpmm_loss"].append(td / n)
 
         # ── Validation (forward only, no grad) ──
         model.eval()
-        vl, vr, vd = 0., 0., 0.
+        vl, vr, vd = 0.0, 0.0, 0.0
         nv = 0
         with torch.no_grad():
             for batch in val_loader:
                 x, kw = model._prepare_batch(batch, device)
                 out = model.forward(x, **kw)
                 ld = model.compute_loss(x, out, **kw)
-                vl += ld["total_loss"].item(); vr += ld["recon_loss"].item()
-                if is_dpmm and "dpmm_loss" in ld: vd += ld["dpmm_loss"].item()
+                vl += ld["total_loss"].item()
+                vr += ld["recon_loss"].item()
+                if is_dpmm and "dpmm_loss" in ld:
+                    vd += ld["dpmm_loss"].item()
                 nv += 1
         if nv > 0:
             history["val_loss"].append(vl / nv)
             history["val_recon_loss"].append(vr / nv)
-            if is_dpmm: history["val_dpmm_loss"].append(vd / nv)
+            if is_dpmm:
+                history["val_dpmm_loss"].append(vd / nv)
 
         # ── Console log ──
         if (epoch + 1) % verbose_every == 0 or epoch == 0 or epoch + 1 == epochs:
-            msg = f"Epoch {epoch+1:4d}/{epochs}"
+            msg = f"Epoch {epoch + 1:4d}/{epochs}"
             msg += f" | train={history['train_loss'][-1]:.4f}"
             if history["val_loss"]:
                 msg += f"  val={history['val_loss'][-1]:.4f}"
             msg += f"  recon={history['recon_loss'][-1]:.4f}"
-            if is_dpmm: msg += f"  dpmm={history['dpmm_loss'][-1]:.4f}"
+            if is_dpmm:
+                msg += f"  dpmm={history['dpmm_loss'][-1]:.4f}"
             print(msg)
 
     return history
@@ -116,8 +129,8 @@ def train_and_record_losses(model, train_loader, val_loader, epochs, lr, device,
 # Plotting: loss decomposition curves only
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def plot_training_dynamics(history, model_name, save_path, no_title=False,
-                           figformat="png"):
+
+def plot_training_dynamics(history, model_name, save_path, no_title=False, figformat="png"):
     """Plot loss decomposition: train vs val for each loss component.
 
     Layout (compact, adaptive):
@@ -133,9 +146,14 @@ def plot_training_dynamics(history, model_name, save_path, no_title=False,
     show_dpmm = has_dpmm and any(v > 1e-8 for v in history["dpmm_loss"])
 
     panels = []  # list of (title, traces)
-    C = {"train": "#2171B5", "val": "#CB181D",
-         "recon_t": "#238B45", "recon_v": "#74C476",
-         "dpmm_t": "#E6550D", "dpmm_v": "#FDAE6B"}
+    C = {
+        "train": "#2171B5",
+        "val": "#CB181D",
+        "recon_t": "#238B45",
+        "recon_v": "#74C476",
+        "dpmm_t": "#E6550D",
+        "dpmm_v": "#FDAE6B",
+    }
 
     epochs = list(range(1, len(history["train_loss"]) + 1))
     val_epochs = list(range(1, len(history.get("val_loss", [])) + 1))
@@ -149,7 +167,9 @@ def plot_training_dynamics(history, model_name, save_path, no_title=False,
     # Panel 2: Reconstruction
     traces_recon = [("Recon (train)", epochs, history["recon_loss"], C["recon_t"], "-")]
     if history.get("val_recon_loss"):
-        traces_recon.append(("Recon (val)", val_epochs, history["val_recon_loss"], C["recon_v"], "--"))
+        traces_recon.append(
+            ("Recon (val)", val_epochs, history["val_recon_loss"], C["recon_v"], "--")
+        )
     panels.append(("Reconstruction", traces_recon, None))
 
     # Panel 3 (conditional): DPMM loss
@@ -174,8 +194,14 @@ def plot_training_dynamics(history, model_name, save_path, no_title=False,
             ax.plot(xs, ys, color=col, lw=1.3, ls=ls, label=lbl)
         if warmup_ep is not None:
             ax.axvline(warmup_ep, color="gray", ls=":", alpha=0.5, lw=0.8)
-            ax.text(warmup_ep, ax.get_ylim()[1] * 0.95, f"ep {warmup_ep}",
-                    fontsize=7, ha="left", color="gray")
+            ax.text(
+                warmup_ep,
+                ax.get_ylim()[1] * 0.95,
+                f"ep {warmup_ep}",
+                fontsize=7,
+                ha="left",
+                color="gray",
+            )
         ax.set_title(title, fontweight="bold", fontsize=10)
         ax.set_xlabel("Epoch", fontsize=8)
         ax.set_ylabel("Loss", fontsize=8)
@@ -183,8 +209,9 @@ def plot_training_dynamics(history, model_name, save_path, no_title=False,
         ax.legend(fontsize=7, framealpha=0.7)
 
     if not no_title:
-        fig.suptitle(f"Training Dynamics \u2014 {model_name}",
-                     fontsize=12, fontweight="bold", y=1.02)
+        fig.suptitle(
+            f"Training Dynamics \u2014 {model_name}", fontsize=12, fontweight="bold", y=1.02
+        )
     fig.tight_layout()
     out = Path(save_path).with_suffix(f".{figformat}")
     fig.savefig(out, dpi=mpl.rcParams["savefig.dpi"], bbox_inches="tight")
@@ -196,20 +223,22 @@ def plot_training_dynamics(history, model_name, save_path, no_title=False,
 # Main
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def main():
     parser = argparse.ArgumentParser(description="Training dynamics (loss-only)")
     parser.add_argument("--model", type=str, default="DPMM-Base")
-    parser.add_argument("--dataset", type=str, default="setty",
-                        choices=["setty", "lung", "endo"])
+    parser.add_argument("--dataset", type=str, default="setty", choices=["setty", "lung", "endo"])
     parser.add_argument("--epochs", type=int, default=600)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--verbose-every", type=int, default=50)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--output-dir", type=str, default=None)
-    parser.add_argument("--plot-only", action="store_true",
-                        help="Only plot from saved history JSON")
-    parser.add_argument("--history", type=str, default=None,
-                        help="Path to history JSON (for --plot-only)")
+    parser.add_argument(
+        "--plot-only", action="store_true", help="Only plot from saved history JSON"
+    )
+    parser.add_argument(
+        "--history", type=str, default=None, help="Path to history JSON (for --plot-only)"
+    )
     add_style_args(parser)
     args = parser.parse_args()
 
@@ -229,10 +258,13 @@ def main():
         with open(args.history) as f:
             history = json.load(f)
         model_name = Path(args.history).stem.replace("_history", "")
-        plot_training_dynamics(history, model_name,
-                               out_dir / f"{model_name}_dynamics",
-                               no_title=getattr(args, 'no_title', False),
-                               figformat=args.fig_format)
+        plot_training_dynamics(
+            history,
+            model_name,
+            out_dir / f"{model_name}_dynamics",
+            no_title=getattr(args, "no_title", False),
+            figformat=args.fig_format,
+        )
         return
 
     # ── Set up data + model ──
@@ -245,7 +277,8 @@ def main():
 
     dataset_info = DATASET_PATHS.get(args.dataset)
     if not dataset_info:
-        print(f"Unknown dataset: {args.dataset}"); return
+        print(f"Unknown dataset: {args.dataset}")
+        return
 
     data_path = dataset_info["path"]
     print(f"Loading {args.dataset} from {data_path}...")
@@ -255,7 +288,8 @@ def main():
     model_info = MODELS.get(args.model)
     if not model_info:
         print(f"Unknown model: {args.model}")
-        print(f"Available: {list(MODELS.keys())}"); return
+        print(f"Available: {list(MODELS.keys())}")
+        return
 
     params = dict(model_info["params"])
     fit_lr = params.pop("fit_lr", args.lr)
@@ -269,16 +303,24 @@ def main():
     t0 = time.time()
 
     history = train_and_record_losses(
-        model, splitter.train_loader, splitter.val_loader,
-        epochs=fit_epochs, lr=fit_lr, device=device,
-        weight_decay=fit_wd, verbose_every=args.verbose_every)
+        model,
+        splitter.train_loader,
+        splitter.val_loader,
+        epochs=fit_epochs,
+        lr=fit_lr,
+        device=device,
+        weight_decay=fit_wd,
+        verbose_every=args.verbose_every,
+    )
 
     elapsed = time.time() - t0
     print(f"\nTraining done in {elapsed:.1f}s")
 
     history["meta"] = {
-        "model": args.model, "dataset": args.dataset,
-        "epochs": fit_epochs, "time_s": elapsed,
+        "model": args.model,
+        "dataset": args.dataset,
+        "epochs": fit_epochs,
+        "time_s": elapsed,
     }
 
     # Save history JSON
@@ -290,24 +332,32 @@ def main():
 
     # Save model state (for downstream biological validation)
     model_path = out_dir / f"{tag}_model.pt"
-    torch.save({
-        "state_dict": model.state_dict(),
-        "config": {"model_name": args.model, "input_dim": splitter.n_var,
-                    "params": dict(model_info["params"])},
-    }, model_path)
+    torch.save(
+        {
+            "state_dict": model.state_dict(),
+            "config": {
+                "model_name": args.model,
+                "input_dim": splitter.n_var,
+                "params": dict(model_info["params"]),
+            },
+        },
+        model_path,
+    )
     print(f"  Model saved: {model_path}")
 
-    if hasattr(model, 'dpmm_params') and model.dpmm_params:
+    if hasattr(model, "dpmm_params") and model.dpmm_params:
         dp = out_dir / f"{tag}_dpmm_params.pt"
         torch.save({k: v.cpu() for k, v in model.dpmm_params.items()}, dp)
         print(f"  DPMM params saved: {dp}")
 
     # Plot
     plot_training_dynamics(
-        history, args.model,
+        history,
+        args.model,
         out_dir / f"{tag}_dynamics",
-        no_title=getattr(args, 'no_title', False),
-        figformat=args.fig_format)
+        no_title=getattr(args, "no_title", False),
+        figformat=args.fig_format,
+    )
 
 
 if __name__ == "__main__":

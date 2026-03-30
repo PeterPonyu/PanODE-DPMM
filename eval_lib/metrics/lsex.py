@@ -63,10 +63,7 @@ class ExtendedLatentSpaceEvaluator:
             return default
 
     @staticmethod
-    def _subsample(
-        z: np.ndarray,
-        max_samples: int = 2000,
-        random_state: int = 42) -> np.ndarray:
+    def _subsample(z: np.ndarray, max_samples: int = 2000, random_state: int = 42) -> np.ndarray:
         """Subsample latent space for tractable computation."""
         if z.shape[0] <= max_samples:
             return z
@@ -76,9 +73,7 @@ class ExtendedLatentSpaceEvaluator:
 
     # ==================== 1. Two-hop connectivity ====================
 
-    def two_hop_connectivity_score(
-        self, latent_space: np.ndarray, n_neighbors: int = 15
-    ) -> float:
+    def two_hop_connectivity_score(self, latent_space: np.ndarray, n_neighbors: int = 15) -> float:
         """
         Two-hop neighborhood reachability in the kNN graph.
 
@@ -153,9 +148,7 @@ class ExtendedLatentSpaceEvaluator:
 
     # ==================== 3. Local curvature linearity ====================
 
-    def local_curvature_score(
-        self, latent_space: np.ndarray, n_neighbors: int = 25
-    ) -> float:
+    def local_curvature_score(self, latent_space: np.ndarray, n_neighbors: int = 25) -> float:
         """
         Local curvature proxy via PCA dominance in neighborhoods.
 
@@ -202,9 +195,7 @@ class ExtendedLatentSpaceEvaluator:
 
     # ==================== 4. Neighbor entropy stability ====================
 
-    def entropy_stability_score(
-        self, latent_space: np.ndarray, n_neighbors: int = 15
-    ) -> float:
+    def entropy_stability_score(self, latent_space: np.ndarray, n_neighbors: int = 15) -> float:
         """
         Entropy stability of neighbor distance distributions.
 
@@ -246,7 +237,8 @@ class ExtendedLatentSpaceEvaluator:
         latent_space: np.ndarray,
         n_neighbors: int = 15,
         max_samples: int = 2000,
-        random_state: int = 42) -> dict:
+        random_state: int = 42,
+    ) -> dict:
         """
         Comprehensive evaluation of extended latent space quality metrics.
 
@@ -274,38 +266,32 @@ class ExtendedLatentSpaceEvaluator:
 
         # 1. Two-hop connectivity
         self._log("Computing two-hop connectivity...")
-        results['two_hop_connectivity'] = self.two_hop_connectivity_score(
-            z, n_neighbors
-        )
+        results["two_hop_connectivity"] = self.two_hop_connectivity_score(z, n_neighbors)
 
         # 2. Radial concentration
         self._log("Computing radial concentration quality...")
-        results['radial_concentration_quality'] = self.radial_concentration_score(z)
+        results["radial_concentration_quality"] = self.radial_concentration_score(z)
 
         # 3. Local curvature linearity
         curvature_k = max(10, n_neighbors + 5)
         self._log("Computing local curvature linearity...")
-        results['local_curvature_linearity'] = self.local_curvature_score(
-            z, curvature_k
-        )
+        results["local_curvature_linearity"] = self.local_curvature_score(z, curvature_k)
 
         # 4. Neighbor entropy stability
         self._log("Computing neighbor entropy stability...")
-        results['neighbor_entropy_stability'] = self.entropy_stability_score(
-            z, n_neighbors
-        )
+        results["neighbor_entropy_stability"] = self.entropy_stability_score(z, n_neighbors)
 
         # 5. Overall quality
         core_values = [
-            results['two_hop_connectivity'],
-            results['radial_concentration_quality'],
-            results['local_curvature_linearity'],
-            results['neighbor_entropy_stability'],
+            results["two_hop_connectivity"],
+            results["radial_concentration_quality"],
+            results["local_curvature_linearity"],
+            results["neighbor_entropy_stability"],
         ]
-        results['overall_quality'] = float(np.mean(core_values))
+        results["overall_quality"] = float(np.mean(core_values))
 
         # 6. Interpretation
-        results['interpretation'] = self._generate_interpretation(results)
+        results["interpretation"] = self._generate_interpretation(results)
 
         if self.verbose:
             self._print_comprehensive_results(results)
@@ -318,77 +304,67 @@ class ExtendedLatentSpaceEvaluator:
         """Generate a qualitative interpretation of the results."""
 
         interpretation: dict = {
-            'quality_level': '',
-            'strengths': [],
-            'weaknesses': [],
-            'recommendations': [],
+            "quality_level": "",
+            "strengths": [],
+            "weaknesses": [],
+            "recommendations": [],
         }
 
-        overall = results['overall_quality']
+        overall = results["overall_quality"]
 
         # Quality level
         if overall >= 0.8:
-            interpretation['quality_level'] = "Excellent"
+            interpretation["quality_level"] = "Excellent"
         elif overall >= 0.6:
-            interpretation['quality_level'] = "Good"
+            interpretation["quality_level"] = "Good"
         elif overall >= 0.4:
-            interpretation['quality_level'] = "Fair"
+            interpretation["quality_level"] = "Fair"
         else:
-            interpretation['quality_level'] = "Needs improvement"
+            interpretation["quality_level"] = "Needs improvement"
 
-        thresholds = {'high': 0.7, 'medium': 0.5, 'low': 0.3}
+        thresholds = {"high": 0.7, "medium": 0.5, "low": 0.3}
 
         # Strengths
-        if results['two_hop_connectivity'] > thresholds['high']:
-            interpretation['strengths'].append(
-                "High neighborhood graph connectivity"
-            )
-        if results['radial_concentration_quality'] > thresholds['high']:
-            interpretation['strengths'].append(
-                "Healthy radial distribution (no mode collapse)"
-            )
-        if results['local_curvature_linearity'] > thresholds['high']:
-            interpretation['strengths'].append(
-                "Locally linear structure (trajectory-like patches)"
-            )
-        if results['neighbor_entropy_stability'] > thresholds['high']:
-            interpretation['strengths'].append(
-                "Uniform local geometry (stable entropy)"
-            )
+        if results["two_hop_connectivity"] > thresholds["high"]:
+            interpretation["strengths"].append("High neighborhood graph connectivity")
+        if results["radial_concentration_quality"] > thresholds["high"]:
+            interpretation["strengths"].append("Healthy radial distribution (no mode collapse)")
+        if results["local_curvature_linearity"] > thresholds["high"]:
+            interpretation["strengths"].append("Locally linear structure (trajectory-like patches)")
+        if results["neighbor_entropy_stability"] > thresholds["high"]:
+            interpretation["strengths"].append("Uniform local geometry (stable entropy)")
 
         # Weaknesses
-        if results['two_hop_connectivity'] < thresholds['medium']:
-            interpretation['weaknesses'].append(
-                "Low graph connectivity — fragmented manifold"
-            )
-        if results['radial_concentration_quality'] < thresholds['medium']:
-            interpretation['weaknesses'].append(
+        if results["two_hop_connectivity"] < thresholds["medium"]:
+            interpretation["weaknesses"].append("Low graph connectivity — fragmented manifold")
+        if results["radial_concentration_quality"] < thresholds["medium"]:
+            interpretation["weaknesses"].append(
                 "Poor radial concentration — possible mode collapse or explosion"
             )
-        if results['local_curvature_linearity'] < thresholds['medium']:
-            interpretation['weaknesses'].append(
+        if results["local_curvature_linearity"] < thresholds["medium"]:
+            interpretation["weaknesses"].append(
                 "Weak local linearity — noisy or highly curved local patches"
             )
-        if results['neighbor_entropy_stability'] < thresholds['medium']:
-            interpretation['weaknesses'].append(
+        if results["neighbor_entropy_stability"] < thresholds["medium"]:
+            interpretation["weaknesses"].append(
                 "Unstable local geometry — uneven neighborhood structure"
             )
 
         # Recommendations
         if overall < 0.6:
-            interpretation['recommendations'].append(
+            interpretation["recommendations"].append(
                 "Consider adjusting latent dimensionality or model capacity"
             )
-        if results['two_hop_connectivity'] < 0.4:
-            interpretation['recommendations'].append(
+        if results["two_hop_connectivity"] < 0.4:
+            interpretation["recommendations"].append(
                 "Increase neighborhood size or use stronger contrastive loss"
             )
-        if results['radial_concentration_quality'] < 0.4:
-            interpretation['recommendations'].append(
+        if results["radial_concentration_quality"] < 0.4:
+            interpretation["recommendations"].append(
                 "Check for mode collapse; consider KL annealing or dropout"
             )
-        if results['neighbor_entropy_stability'] < 0.4:
-            interpretation['recommendations'].append(
+        if results["neighbor_entropy_stability"] < 0.4:
+            interpretation["recommendations"].append(
                 "Regularise latent space for more uniform local geometry"
             )
 
@@ -417,21 +393,21 @@ class ExtendedLatentSpaceEvaluator:
         print(f"  Neighbor entropy stability:    {results['neighbor_entropy_stability']:.4f} ★")
         print("    └─ Uniformity of local distance distributions")
 
-        overall = results['overall_quality']
+        overall = results["overall_quality"]
 
         print("\n[Overall Assessment]")
         print(f"  Mean quality score:            {overall:.4f}")
 
-        interp = results['interpretation']
+        interp = results["interpretation"]
         print(f"  Quality level:                 {interp['quality_level']}")
 
-        if interp['strengths']:
+        if interp["strengths"]:
             print(f"\n  Strengths: {', '.join(interp['strengths'])}")
 
-        if interp['weaknesses']:
+        if interp["weaknesses"]:
             print(f"  Weaknesses: {', '.join(interp['weaknesses'])}")
 
-        if interp['recommendations']:
+        if interp["recommendations"]:
             print(f"  Recommendations: {', '.join(interp['recommendations'])}")
 
         print("=" * 70)
@@ -442,7 +418,8 @@ class ExtendedLatentSpaceEvaluator:
         self,
         method_results_dict: dict[str, np.ndarray],
         n_neighbors: int = 15,
-        max_samples: int = 2000) -> pd.DataFrame:
+        max_samples: int = 2000,
+    ) -> pd.DataFrame:
         """
         Compare multiple latent space methods using LSEX metrics.
 
@@ -462,24 +439,24 @@ class ExtendedLatentSpaceEvaluator:
             original_verbose = self.verbose
             self.verbose = False
 
-            results = self.comprehensive_evaluation(
-                latent_space, n_neighbors, max_samples
-            )
+            results = self.comprehensive_evaluation(latent_space, n_neighbors, max_samples)
 
             self.verbose = original_verbose
 
-            comparison_results.append({
-                'Method': method_name,
-                'TwoHop_Connectivity': results['two_hop_connectivity'],
-                'Radial_Concentration': results['radial_concentration_quality'],
-                'Curvature_Linearity': results['local_curvature_linearity'],
-                'Entropy_Stability': results['neighbor_entropy_stability'],
-                'Overall_Quality': results['overall_quality'],
-                'Quality_Level': results['interpretation']['quality_level'],
-            })
+            comparison_results.append(
+                {
+                    "Method": method_name,
+                    "TwoHop_Connectivity": results["two_hop_connectivity"],
+                    "Radial_Concentration": results["radial_concentration_quality"],
+                    "Curvature_Linearity": results["local_curvature_linearity"],
+                    "Entropy_Stability": results["neighbor_entropy_stability"],
+                    "Overall_Quality": results["overall_quality"],
+                    "Quality_Level": results["interpretation"]["quality_level"],
+                }
+            )
 
         df = pd.DataFrame(comparison_results)
-        df = df.sort_values('Overall_Quality', ascending=False)
+        df = df.sort_values("Overall_Quality", ascending=False)
 
         if self.verbose:
             self._print_comparison_table(df)
@@ -491,11 +468,11 @@ class ExtendedLatentSpaceEvaluator:
 
         print(f"\n{'=' * 100}")
         print("              Extended Latent Space Method Comparison (LSEX)")
-        print('=' * 100)
+        print("=" * 100)
 
-        pd.set_option('display.float_format', '{:.4f}'.format)
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.width', None)
+        pd.set_option("display.float_format", "{:.4f}".format)
+        pd.set_option("display.max_columns", None)
+        pd.set_option("display.width", None)
 
         print(df.to_string(index=False))
 
@@ -504,17 +481,19 @@ class ExtendedLatentSpaceEvaluator:
             f"(Overall score: {df.iloc[0]['Overall_Quality']:.4f})"
         )
 
-        print('=' * 100)
+        print("=" * 100)
 
 
 # ==================== Convenience functions ====================
+
 
 def evaluate_extended_latent_space(
     latent_space: np.ndarray,
     n_neighbors: int = 15,
     max_samples: int = 2000,
     random_state: int = 42,
-    verbose: bool = True) -> dict:
+    verbose: bool = True,
+) -> dict:
     """
     Convenience function to evaluate extended latent space quality.
 
@@ -536,16 +515,15 @@ def evaluate_extended_latent_space(
             overall_quality, interpretation
     """
     evaluator = ExtendedLatentSpaceEvaluator(verbose=verbose)
-    return evaluator.comprehensive_evaluation(
-        latent_space, n_neighbors, max_samples, random_state
-    )
+    return evaluator.comprehensive_evaluation(latent_space, n_neighbors, max_samples, random_state)
 
 
 def compare_extended_latent_methods(
     method_results_dict: dict[str, np.ndarray],
     n_neighbors: int = 15,
     max_samples: int = 2000,
-    verbose: bool = True) -> pd.DataFrame:
+    verbose: bool = True,
+) -> pd.DataFrame:
     """
     Convenience function to compare multiple methods using LSEX metrics.
 

@@ -21,6 +21,7 @@ def _log_prob(kl, log_gamma_square, log_beta_square, c):
 
     return log_prob
 
+
 class Distribution(Distribution):
     def __init__(self, means, log_gamma_square):
         super().__init__()
@@ -32,29 +33,26 @@ class Distribution(Distribution):
         self.log_gamma_square = log_gamma_square
 
         # Normal base parameters
-        self.normal_mu = self.alpha                    # mean
-        self.normal_logvar = self.log_beta_square      # log variance
+        self.normal_mu = self.alpha  # mean
+        self.normal_logvar = self.log_beta_square  # log variance
 
         # ---------- FIX: make Gamma parameters valid (both > 0) ----------
-        denom = 4.0 * (self.c + 1e-6)                  # strictly positive
+        denom = 4.0 * (self.c + 1e-6)  # strictly positive
         self.gamma_a = (-self.log_gamma_square).exp() / denom + 1.0  # concentration > 0
-        self.gamma_b = (-self.normal_logvar).exp() / denom           # rate > 0
+        self.gamma_b = (-self.normal_logvar).exp() / denom  # rate > 0
 
         # ---------- FIX: define base1 so rsample() works ----------
         # Normal over alpha with variance exp(log_beta_square)
         self.base1 = Normal(
             loc=self.normal_mu,
-            scale=(0.5 * self.normal_logvar).exp()     # std = exp(0.5 * logvar)
+            scale=(0.5 * self.normal_logvar).exp(),  # std = exp(0.5 * logvar)
         )
         self.base2 = Gamma(self.gamma_a, self.gamma_b)
 
     def log_prob(self, z):
         target_mean, target_logvar = sqrt(-2 * self.c) * z[..., 0], z[..., 1]
         kl = euclidean_kl_div(
-            target_mean,
-            target_logvar,
-            self.alpha * (-2 * self.c).sqrt(),
-            self.log_beta_square
+            target_mean, target_logvar, self.alpha * (-2 * self.c).sqrt(), self.log_beta_square
         )
         return _log_prob(kl, self.log_gamma_square, self.log_beta_square, self.c)
 
@@ -69,15 +67,7 @@ class Distribution(Distribution):
 
     def kl_div(self, target_dist):
         kl1 = euclidean_kl_div(
-            self.normal_mu,
-            self.normal_logvar,
-            target_dist.normal_mu,
-            target_dist.normal_logvar
+            self.normal_mu, self.normal_logvar, target_dist.normal_mu, target_dist.normal_logvar
         )
-        kl2 = gamma_kl_div(
-            self.gamma_a,
-            self.gamma_b,
-            target_dist.gamma_a,
-            target_dist.gamma_b
-        )
+        kl2 = gamma_kl_div(self.gamma_a, self.gamma_b, target_dist.gamma_a, target_dist.gamma_b)
         return kl1 + kl2

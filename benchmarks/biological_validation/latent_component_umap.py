@@ -61,7 +61,7 @@ def extract_latent_components(model, data_loader, device):
     components = np.concatenate(all_components, axis=0)
 
     K = components.shape[1]
-    names = [f"Dim {k+1}" for k in range(K)]
+    names = [f"Dim {k + 1}" for k in range(K)]
 
     return latent, components, names
 
@@ -71,13 +71,13 @@ def compute_dpmm_responsibilities(model, components):
 
     Returns [N, n_active_components] responsibility matrix.
     """
-    if not hasattr(model, 'dpmm_params') or not model.dpmm_params:
+    if not hasattr(model, "dpmm_params") or not model.dpmm_params:
         return None, None
 
     dp = model.dpmm_params
-    means = dp["means"].cpu().numpy()     # [K, D]
+    means = dp["means"].cpu().numpy()  # [K, D]
     weights = dp["weights"].cpu().numpy()  # [K]
-    covs = dp["covariances"].cpu().numpy() # [K, D]
+    covs = dp["covariances"].cpu().numpy()  # [K, D]
 
     # Active components
     active = weights > 0.01
@@ -96,29 +96,41 @@ def compute_dpmm_responsibilities(model, components):
     for k in range(K_active):
         diff = components - means[k]  # [N, D]
         # Diagonal Gaussian: -0.5 * sum((x-mu)^2 / sigma^2)
-        log_resp[:, k] = np.log(weights[k] + 1e-10) - 0.5 * np.sum(diff**2 / (covs[k] + 1e-10), axis=1)
+        log_resp[:, k] = np.log(weights[k] + 1e-10) - 0.5 * np.sum(
+            diff**2 / (covs[k] + 1e-10), axis=1
+        )
 
     # Normalize (log-sum-exp)
     log_resp -= np.max(log_resp, axis=1, keepdims=True)
     resp = np.exp(log_resp)
     resp /= resp.sum(axis=1, keepdims=True)
 
-    comp_names = [f"DPMM Comp {i+1}" for i in range(K_active)]
+    comp_names = [f"DPMM Comp {i + 1}" for i in range(K_active)]
     return resp, comp_names
 
 
-def plot_component_umap(latent, components, comp_names, labels,
-                        save_path, title="Latent Components on UMAP",
-                        no_title=False, figformat="png", max_components=10):
+def plot_component_umap(
+    latent,
+    components,
+    comp_names,
+    labels,
+    save_path,
+    title="Latent Components on UMAP",
+    no_title=False,
+    figformat="png",
+    max_components=10,
+):
     """Project each component's intensity onto UMAP space.
 
     Layout: grid of UMAP plots (one per component) + one with cell-type labels.
     """
     try:
         import scanpy as sc
+
         use_scanpy = True
     except ImportError:
         from umap import UMAP
+
         use_scanpy = False
     from sklearn.preprocessing import LabelEncoder
 
@@ -159,8 +171,16 @@ def plot_component_umap(latent, components, comp_names, labels,
     ax = axes[0, 0]
     n_cls = len(np.unique(labels_enc))
     cmap_ct = mpl.colormaps.get_cmap("tab20" if n_cls <= 20 else "nipy_spectral")
-    ax.scatter(umap_xy[:, 0], umap_xy[:, 1], c=labels_enc, cmap=cmap_ct,
-               s=12, alpha=0.7, edgecolors="none", rasterized=True)
+    ax.scatter(
+        umap_xy[:, 0],
+        umap_xy[:, 1],
+        c=labels_enc,
+        cmap=cmap_ct,
+        s=12,
+        alpha=0.7,
+        edgecolors="none",
+        rasterized=True,
+    )
     ax.set_title("Cell Types", fontsize=13, fontweight="bold")
     ax.set_xlabel("UMAP-1", fontsize=11)
     ax.set_ylabel("UMAP-2", fontsize=11)
@@ -173,9 +193,16 @@ def plot_component_umap(latent, components, comp_names, labels,
         ax = axes[r, c]
 
         vals = components[:, k]
-        sc_plot = ax.scatter(umap_xy[:, 0], umap_xy[:, 1],
-                             c=vals, cmap="viridis", s=12, alpha=0.7,
-                             edgecolors="none", rasterized=True)
+        sc_plot = ax.scatter(
+            umap_xy[:, 0],
+            umap_xy[:, 1],
+            c=vals,
+            cmap="viridis",
+            s=12,
+            alpha=0.7,
+            edgecolors="none",
+            rasterized=True,
+        )
         ax.set_title(comp_names[k], fontsize=13, fontweight="bold")
         ax.set_xlabel("UMAP-1", fontsize=11)
         ax.set_ylabel("UMAP-2", fontsize=11)
@@ -201,14 +228,17 @@ def plot_component_umap(latent, components, comp_names, labels,
 # Main
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def main():
     parser = argparse.ArgumentParser(description="Latent component UMAP projection")
-    parser.add_argument("--model-path", required=True,
-                        help="Path to saved model .pt (from training_dynamics.py)")
+    parser.add_argument(
+        "--model-path", required=True, help="Path to saved model .pt (from training_dynamics.py)"
+    )
     parser.add_argument("--dataset", required=True, choices=["setty", "lung", "endo", "dentate"])
     parser.add_argument("--series", required=True, choices=["dpmm"])
-    parser.add_argument("--max-components", type=int, default=10,
-                        help="Max components to visualize")
+    parser.add_argument(
+        "--max-components", type=int, default=10, help="Max components to visualize"
+    )
     parser.add_argument("--output-dir", type=str, default=None)
     parser.add_argument("--seed", type=int, default=42)
     add_style_args(parser)
@@ -238,15 +268,11 @@ def main():
 
     ds_info = DATASET_PATHS[args.dataset]
     adata = load_data(ds_info["path"], max_cells=3000, hvg_top_genes=3000, seed=args.seed)
-    splitter = DataSplitter(
-        adata=adata,
-        batch_size=128, random_seed=args.seed)
+    splitter = DataSplitter(adata=adata, batch_size=128, random_seed=args.seed)
 
     # Extract components
     print("Extracting latent components...")
-    latent, components, comp_names = extract_latent_components(
-        model, splitter.test_loader, device
-    )
+    latent, components, comp_names = extract_latent_components(model, splitter.test_loader, device)
 
     # Also compute DPMM responsibilities if applicable
     if args.series == "dpmm":
@@ -255,28 +281,39 @@ def main():
             print(f"  DPMM active components: {resp.shape[1]}")
             tag = f"{model_name}_{args.dataset}_dpmm_resp"
             plot_component_umap(
-                latent, resp, resp_names, splitter.labels_test,
+                latent,
+                resp,
+                resp_names,
+                splitter.labels_test,
                 out_dir / tag,
                 title=f"DPMM Responsibilities — {model_name} ({args.dataset})",
                 max_components=args.max_components,
-                no_title=getattr(args, 'no_title', False),
-                figformat=args.fig_format)
+                no_title=getattr(args, "no_title", False),
+                figformat=args.fig_format,
+            )
 
     # Plot component intensities
     tag = f"{model_name}_{args.dataset}_components"
     plot_component_umap(
-        latent, components, comp_names, splitter.labels_test,
+        latent,
+        components,
+        comp_names,
+        splitter.labels_test,
         out_dir / tag,
         title=f"Latent Dimensions — {model_name} ({args.dataset})",
         max_components=args.max_components,
-        no_title=getattr(args, 'no_title', False),
-        figformat=args.fig_format)
+        no_title=getattr(args, "no_title", False),
+        figformat=args.fig_format,
+    )
 
     # Save intermediate data for downstream perturbation analysis
-    np.savez(out_dir / f"{model_name}_{args.dataset}_latent_data.npz",
-             latent=latent, components=components,
-             labels=np.array(splitter.labels_test),
-             gene_names=np.array(splitter.var_names if hasattr(splitter, 'var_names') else []))
+    np.savez(
+        out_dir / f"{model_name}_{args.dataset}_latent_data.npz",
+        latent=latent,
+        components=components,
+        labels=np.array(splitter.labels_test),
+        gene_names=np.array(splitter.var_names if hasattr(splitter, "var_names") else []),
+    )
     print("  Latent data saved for downstream analysis.")
 
 

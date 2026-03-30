@@ -4,6 +4,7 @@
 Usage:
     python scripts/generate_setty_importance.py
 """
+
 import gc
 import sys
 from pathlib import Path
@@ -38,9 +39,9 @@ def main():
             print(f"  [skip] {out_file.name} already exists")
             continue
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  Training {model_name} on {DATASET}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         model_info = MODELS[model_name]
         params = dict(model_info["params"])
@@ -51,13 +52,12 @@ def main():
         # Load data — match training_dynamics.py: no layer="counts"
         from benchmarks.data_utils import load_data
         from benchmarks.dataset_registry import DATASET_REGISTRY
+
         ds_info = DATASET_REGISTRY[DATASET]
-        adata = load_data(ds_info["path"], max_cells=MAX_CELLS,
-                          hvg_top_genes=HVG, seed=SEED)
+        adata = load_data(ds_info["path"], max_cells=MAX_CELLS, hvg_top_genes=HVG, seed=SEED)
         gene_names = list(adata.var_names)
 
-        splitter = DataSplitter(
-            adata=adata, batch_size=128, random_seed=SEED, verbose=False)
+        splitter = DataSplitter(adata=adata, batch_size=128, random_seed=SEED, verbose=False)
 
         model = model_info["class"](input_dim=splitter.n_var, **params)
         model = model.to(DEVICE)
@@ -77,13 +77,14 @@ def main():
         # Compute perturbation importance
         print(f"  Computing perturbation importance for {model_name}...")
         importance, mean_latent = compute_perturbation_importance(
-            model, splitter.test_loader, DEVICE,
-            delta=0.5, n_samples=500,
+            model,
+            splitter.test_loader,
+            DEVICE,
+            delta=0.5,
+            n_samples=500,
         )
 
-        np.savez(out_file,
-                 importance=importance,
-                 gene_names=np.array(gene_names))
+        np.savez(out_file, importance=importance, gene_names=np.array(gene_names))
         print(f"  ✓ Saved {out_file.name}")
 
         del model

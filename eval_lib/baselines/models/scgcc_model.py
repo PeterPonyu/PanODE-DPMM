@@ -2,6 +2,7 @@
 scGCC: Graph contrastive learning with MoCo for single-cell data
 Dual mode: PyG Data loader or tensor loader with automatic kNN graph construction
 """
+
 import warnings
 from collections.abc import Callable
 
@@ -28,11 +29,13 @@ except Exception:
 
 class TwoViewAugmenter(nn.Module):
     """Stochastic augmentation: feature masking + Gaussian noise + scale jitter"""
+
     def __init__(
         self,
         feature_mask_prob: float = 0.2,
         gaussian_noise_std: float = 0.1,
-        scale_jitter: float = 0.0):
+        scale_jitter: float = 0.0,
+    ):
         super().__init__()
         self.feature_mask_prob = float(feature_mask_prob)
         self.gaussian_noise_std = float(gaussian_noise_std)
@@ -41,12 +44,12 @@ class TwoViewAugmenter(nn.Module):
     def _augment(self, x: torch.Tensor) -> torch.Tensor:
         v = x
         if self.feature_mask_prob > 0:
-            mask = (torch.rand_like(v) < self.feature_mask_prob)
+            mask = torch.rand_like(v) < self.feature_mask_prob
             v = v.masked_fill(mask, 0.0)
         if self.gaussian_noise_std > 0:
             v = v + torch.randn_like(v) * self.gaussian_noise_std
         if self.scale_jitter > 0:
-            s = (1.0 + (torch.rand(v.size(0), 1, device=v.device) * 2 - 1.0) * self.scale_jitter)
+            s = 1.0 + (torch.rand(v.size(0), 1, device=v.device) * 2 - 1.0) * self.scale_jitter
             v = v * s
         return v
 
@@ -66,14 +69,25 @@ def dropout_edges(edge_index: torch.Tensor, p: float) -> torch.Tensor:
 
 class GATEncoder(nn.Module):
     """GAT encoder with optional MLP projection"""
+
     def __init__(self, in_channels, latent_dim, num_heads=4, dropout=0.4, use_mlp=False):
         super().__init__()
         if GATConv is None:
-            raise ImportError("torch_geometric required for scGCCModel (pip install torch-geometric).")
+            raise ImportError(
+                "torch_geometric required for scGCCModel (pip install torch-geometric)."
+            )
 
         self.gat1 = GATConv(in_channels, 128, heads=num_heads, dropout=dropout, concat=True)
-        self.gat2 = GATConv(128 * num_heads, latent_dim, heads=num_heads, dropout=dropout, concat=False)
-        self.fc = nn.Sequential(nn.Linear(latent_dim, 512), nn.ReLU(), nn.Dropout(0.4), nn.Linear(512, latent_dim)) if use_mlp else None
+        self.gat2 = GATConv(
+            128 * num_heads, latent_dim, heads=num_heads, dropout=dropout, concat=False
+        )
+        self.fc = (
+            nn.Sequential(
+                nn.Linear(latent_dim, 512), nn.ReLU(), nn.Dropout(0.4), nn.Linear(512, latent_dim)
+            )
+            if use_mlp
+            else None
+        )
         self.dropout = dropout
 
     def forward(self, x, edge_index):
@@ -85,6 +99,7 @@ class GATEncoder(nn.Module):
 
 class MoCoGraph(nn.Module):
     """MoCo with momentum encoder and queue for graph contrastive learning"""
+
     def __init__(self, num_genes, latent_dim, r=1024, m=0.99, T=0.2, heads=4, mlp=False):
         super().__init__()
         self.r = r
@@ -112,7 +127,7 @@ class MoCoGraph(nn.Module):
         ptr = int(self.queue_ptr.item())
         if self.r % batch_size != 0:
             return
-        self.queue[:, ptr:ptr + batch_size] = keys.T
+        self.queue[:, ptr : ptr + batch_size] = keys.T
         self.queue_ptr[0] = (ptr + batch_size) % self.r
 
     def forward(self, im_q, im_k, edge_index, num_seed_nodes: int):
@@ -181,7 +196,8 @@ class scGCCModel(BaseModel):
         feature_mask_prob: float = 0.2,
         gaussian_noise_std: float = 0.1,
         scale_jitter: float = 0.0,
-        edge_drop_prob: float = 0.0):
+        edge_drop_prob: float = 0.0,
+    ):
         """
         Args:
             input_dim: Gene dimension
@@ -195,8 +211,12 @@ class scGCCModel(BaseModel):
             scale_jitter: Scale jittering magnitude
             edge_drop_prob: Edge dropout probability
         """
-        super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=[], model_name=model_name)
-        self.moco = MoCoGraph(num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp)
+        super().__init__(
+            input_dim=input_dim, latent_dim=latent_dim, hidden_dims=[], model_name=model_name
+        )
+        self.moco = MoCoGraph(
+            num_genes=input_dim, latent_dim=latent_dim, r=queue_size, heads=heads, mlp=mlp
+        )
         self.criterion = nn.CrossEntropyLoss()
 
         self.edge_drop_prob = float(edge_drop_prob)
@@ -204,7 +224,8 @@ class scGCCModel(BaseModel):
             self.view_augmenter = TwoViewAugmenter(
                 feature_mask_prob=feature_mask_prob,
                 gaussian_noise_std=gaussian_noise_std,
-                scale_jitter=scale_jitter)
+                scale_jitter=scale_jitter,
+            )
         else:
             self.view_augmenter = view_augmenter
 
@@ -218,7 +239,9 @@ class scGCCModel(BaseModel):
     def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         raise NotImplementedError("Use fit() with Data batches for scGCC.")
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         raise NotImplementedError("Use fit() for scGCC.")
 
     def _full_x_from_loader(self, loader) -> torch.Tensor:
@@ -250,7 +273,8 @@ class scGCCModel(BaseModel):
         full_x: torch.Tensor | None = None,
         knn_k: int = 15,
         knn_metric: str = "cosine",
-        **kwargs):
+        **kwargs,
+    ):
         """
         Dual-mode training:
         - Mode A: PyG loader yields Data objects
@@ -265,7 +289,11 @@ class scGCCModel(BaseModel):
         def _to_pyg_batch(obj):
             if _is_pyg_data(obj):
                 return obj
-            if isinstance(obj, (list, tuple)) and len(obj) > 0 and all(_is_pyg_data(d) for d in obj):
+            if (
+                isinstance(obj, (list, tuple))
+                and len(obj) > 0
+                and all(_is_pyg_data(d) for d in obj)
+            ):
                 if Batch is None:
                     raise ImportError("torch_geometric required for list[Data].")
                 return Batch.from_data_list(list(obj))
@@ -283,7 +311,11 @@ class scGCCModel(BaseModel):
                     data = _to_pyg_batch(batch).to(device)
 
                     im_q, im_k = self.view_augmenter(data.x)
-                    edge_k = dropout_edges(data.edge_index, self.edge_drop_prob) if self.edge_drop_prob > 0 else data.edge_index
+                    edge_k = (
+                        dropout_edges(data.edge_index, self.edge_drop_prob)
+                        if self.edge_drop_prob > 0
+                        else data.edge_index
+                    )
 
                     num_seed_nodes = int(getattr(data, "batch_size", data.num_nodes))
 
@@ -298,7 +330,7 @@ class scGCCModel(BaseModel):
                     n += 1
 
                 if verbose >= 1:
-                    print(f"Epoch {ep+1:3d}/{epochs} | Train Loss: {tot/max(n,1):.4f}")
+                    print(f"Epoch {ep + 1:3d}/{epochs} | Train Loss: {tot / max(n, 1):.4f}")
             return {"train_loss": []}
 
         # Mode B: Tensor loader with kNN graph
@@ -319,7 +351,11 @@ class scGCCModel(BaseModel):
         for ep in range(epochs):
             self.train()
             im_q, im_k = self.view_augmenter(graph.x)
-            edge_k = dropout_edges(graph.edge_index, self.edge_drop_prob) if self.edge_drop_prob > 0 else graph.edge_index
+            edge_k = (
+                dropout_edges(graph.edge_index, self.edge_drop_prob)
+                if self.edge_drop_prob > 0
+                else graph.edge_index
+            )
 
             logits, labels = self.moco(im_q, im_k, edge_k, int(graph.num_nodes))
             loss = self.criterion(logits, labels)
@@ -329,7 +365,7 @@ class scGCCModel(BaseModel):
             opt.step()
 
             if verbose >= 1:
-                print(f"Epoch {ep+1:3d}/{epochs} | Train Loss: {float(loss.item()):.4f}")
+                print(f"Epoch {ep + 1:3d}/{epochs} | Train Loss: {float(loss.item()):.4f}")
 
         return {"train_loss": []}
 
@@ -342,7 +378,8 @@ class scGCCModel(BaseModel):
         edge_index: torch.Tensor | None = None,
         full_x: torch.Tensor | None = None,
         knn_k: int = 15,
-        knn_metric: str = "cosine") -> dict[str, np.ndarray]:
+        knn_metric: str = "cosine",
+    ) -> dict[str, np.ndarray]:
         """Extract latent with automatic kNN graph construction"""
         if return_reconstructions:
             warnings.warn("scGCC has no decoder; return_reconstructions ignored.")

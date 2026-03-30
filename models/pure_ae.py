@@ -26,6 +26,7 @@ except ImportError:
 # Weight Initialization
 # =============================================================================
 
+
 def weight_init(m):
     """Xavier normal initialization for linear layers."""
     if isinstance(m, nn.Linear):
@@ -37,6 +38,7 @@ def weight_init(m):
 # =============================================================================
 # Building Blocks
 # =============================================================================
+
 
 def _act(name: str) -> nn.Module:
     if name == "relu":
@@ -52,8 +54,10 @@ def _act(name: str) -> nn.Module:
 
 class _Layer1D(nn.Module):
     """Normalization + Activation + Dropout layer"""
-    def __init__(self, dim: int, norm: str | None = None,
-                 act: str | None = None, drop: float = 0.0):
+
+    def __init__(
+        self, dim: int, norm: str | None = None, act: str | None = None, drop: float = 0.0
+    ):
         super().__init__()
         layers = []
         if norm == "bn":
@@ -72,6 +76,7 @@ class _Layer1D(nn.Module):
 
 class MLP(nn.Module):
     """Configurable MLP with flexible normalization, activation, and dropout."""
+
     def __init__(
         self,
         features: list,
@@ -80,7 +85,8 @@ class MLP(nn.Module):
         norm: str | None = None,
         hid_norm: str | None = None,
         drop: float = 0.0,
-        hid_drop: float = 0.0):
+        hid_drop: float = 0.0,
+    ):
         super().__init__()
         layers = []
         for i in range(1, len(features)):
@@ -101,21 +107,29 @@ class MLP(nn.Module):
 # Deterministic Encoder (no mu/var split)
 # =============================================================================
 
+
 class DeterministicEncoder(nn.Module):
     """MLP encoder that directly outputs z (no stochastic sampling)."""
+
     def __init__(
         self,
         input_dim: int,
         latent_dim: int = 10,
         encoder_dims: list | None = None,
         norm: str = "bn",
-        drop: float = 0.2):
+        drop: float = 0.2,
+    ):
         super().__init__()
         if encoder_dims is None:
             encoder_dims = [256, 128]
         self.encoder = MLP(
             [input_dim] + encoder_dims + [latent_dim],
-            hid_act="mish", norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
+            hid_act="mish",
+            norm=norm,
+            hid_norm=norm,
+            hid_drop=drop,
+            out_act=None,
+        )
         self.apply(weight_init)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -126,8 +140,10 @@ class DeterministicEncoder(nn.Module):
 # Transformer Deterministic Encoder
 # =============================================================================
 
+
 class TransformerDeterministicEncoder(nn.Module):
     """Multi-head projection transformer encoder, outputs z directly."""
+
     def __init__(
         self,
         input_dim: int,
@@ -137,26 +153,32 @@ class TransformerDeterministicEncoder(nn.Module):
         num_layers: int = 2,
         dim_feedforward: int = 256,
         dropout: float = 0.1,
-        num_tokens: int = 8):
+        num_tokens: int = 8,
+    ):
         super().__init__()
         self.num_tokens = num_tokens
 
-        self.projection_heads = nn.ModuleList([
-            nn.Sequential(
-                nn.Linear(input_dim, d_model),
-                nn.LayerNorm(d_model),
-                nn.GELU(),
-                nn.Dropout(dropout))
-            for _ in range(num_tokens)
-        ])
-        self.token_embeddings = nn.Parameter(
-            torch.randn(1, num_tokens, d_model) * 0.02
+        self.projection_heads = nn.ModuleList(
+            [
+                nn.Sequential(
+                    nn.Linear(input_dim, d_model),
+                    nn.LayerNorm(d_model),
+                    nn.GELU(),
+                    nn.Dropout(dropout),
+                )
+                for _ in range(num_tokens)
+            ]
         )
+        self.token_embeddings = nn.Parameter(torch.randn(1, num_tokens, d_model) * 0.02)
 
         encoder_layer = nn.TransformerEncoderLayer(
-            d_model=d_model, nhead=nhead,
-            dim_feedforward=dim_feedforward, dropout=dropout,
-            activation='gelu', batch_first=True)
+            d_model=d_model,
+            nhead=nhead,
+            dim_feedforward=dim_feedforward,
+            dropout=dropout,
+            activation="gelu",
+            batch_first=True,
+        )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
         self.aggregation_query = nn.Parameter(torch.randn(1, 1, d_model) * 0.02)
@@ -183,15 +205,18 @@ class TransformerDeterministicEncoder(nn.Module):
 # Data Augmentation (for contrastive variant)
 # =============================================================================
 
+
 class DataAugmentation(nn.Module):
     """Augmentation strategies for single-cell data (feature dropout + noise)."""
+
     def __init__(
         self,
         noise_prob: float = 0.2,
         noise_std: float = 0.1,
         mask_prob: float = 0.1,
         scale_range: tuple[float, float] = (0.8, 1.2),
-        feature_dropout: float = 0.2):
+        feature_dropout: float = 0.2,
+    ):
         super().__init__()
         self.noise_prob = noise_prob
         self.noise_std = noise_std
@@ -223,15 +248,18 @@ class DataAugmentation(nn.Module):
 # Momentum Contrast (MoCo)
 # =============================================================================
 
+
 class MomentumContrast(nn.Module):
     """MoCo module: query/key projectors + memory queue + InfoNCE."""
+
     def __init__(
         self,
         latent_dim: int,
         embedding_dim: int = 128,
         queue_size: int = 4096,
         momentum: float = 0.999,
-        temperature: float = 0.2):
+        temperature: float = 0.2,
+    ):
         super().__init__()
         self.queue_size = queue_size
         self.momentum = momentum
@@ -241,12 +269,14 @@ class MomentumContrast(nn.Module):
             nn.Linear(latent_dim, latent_dim),
             nn.BatchNorm1d(latent_dim),
             nn.ReLU(),
-            nn.Linear(latent_dim, embedding_dim))
+            nn.Linear(latent_dim, embedding_dim),
+        )
         self.key_projector = nn.Sequential(
             nn.Linear(latent_dim, latent_dim),
             nn.BatchNorm1d(latent_dim),
             nn.ReLU(),
-            nn.Linear(latent_dim, embedding_dim))
+            nn.Linear(latent_dim, embedding_dim),
+        )
         for p_q, p_k in zip(self.query_projector.parameters(), self.key_projector.parameters()):
             p_k.data.copy_(p_q.data)
             p_k.requires_grad = False
@@ -265,14 +295,16 @@ class MomentumContrast(nn.Module):
         batch_size = keys.shape[0]
         ptr = int(self.queue_ptr)
         if ptr + batch_size <= self.queue_size:
-            self.queue[:, ptr:ptr + batch_size] = keys.T
+            self.queue[:, ptr : ptr + batch_size] = keys.T
         else:
             part1 = self.queue_size - ptr
             self.queue[:, ptr:] = keys[:part1].T
-            self.queue[:, :batch_size - part1] = keys[part1:].T
+            self.queue[:, : batch_size - part1] = keys[part1:].T
         self.queue_ptr[0] = (ptr + batch_size) % self.queue_size
 
-    def forward(self, z_query: torch.Tensor, z_key: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self, z_query: torch.Tensor, z_key: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         q = F.normalize(self.query_projector(z_query), dim=1)
         with torch.no_grad():
             self._momentum_update()
@@ -288,6 +320,7 @@ class MomentumContrast(nn.Module):
 # =============================================================================
 # PureAEModel — Base variant
 # =============================================================================
+
 
 class PureAEModel(BaseModel):
     """Pure Autoencoder: no KL, no clustering prior.
@@ -312,12 +345,14 @@ class PureAEModel(BaseModel):
         # Fit-specific (popped by train_and_evaluate)
         fit_lr: float = 1e-3,
         fit_weight_decay: float = 0,
-        fit_epochs: int = 1000):
+        fit_epochs: int = 1000,
+    ):
         super().__init__(
             input_dim=input_dim,
             latent_dim=latent_dim,
             hidden_dims=encoder_dims or [256, 128],
-            model_name=model_name)
+            model_name=model_name,
+        )
         if encoder_dims is None:
             encoder_dims = [256, 128]
         if decoder_dims is None:
@@ -331,12 +366,17 @@ class PureAEModel(BaseModel):
             latent_dim=latent_dim,
             encoder_dims=encoder_dims,
             norm=norm_type,
-            drop=dropout_rate)
+            drop=dropout_rate,
+        )
 
         # Decoder
         self.decoder_net = MLP(
             [latent_dim] + decoder_dims + [input_dim],
-            hid_act="mish", norm=norm_type, hid_norm=norm_type, hid_drop=dropout_rate)
+            hid_act="mish",
+            norm=norm_type,
+            hid_norm=norm_type,
+            hid_drop=dropout_rate,
+        )
         self.decoder_net.apply(weight_init)
 
     def encode(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
@@ -353,16 +393,18 @@ class PureAEModel(BaseModel):
             "latent": z,
         }
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
-                     **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         recon = self.recon_loss_fn(outputs["reconstruction"], x)
         return {
             "total_loss": recon,
             "recon_loss": recon,
         }
 
-    def extract_latent(self, data_loader, device='cuda',
-                       return_reconstructions: bool = False, **kwargs):
+    def extract_latent(
+        self, data_loader, device="cuda", return_reconstructions: bool = False, **kwargs
+    ):
         self.eval()
         self.to(device)
         latents, recons = [], []
@@ -390,13 +432,14 @@ class PureAEModel(BaseModel):
         verbose: int = 1,
         verbose_every: int = 1,
         weight_decay: float = 0,
-        **kwargs):
+        **kwargs,
+    ):
         self.to(device)
         optimizer = torch.optim.AdamW(self.parameters(), lr=lr, weight_decay=weight_decay)
 
-        best_loss = float('inf')
+        best_loss = float("inf")
         patience_counter = 0
-        train_losses, recon_losses, contrastive_losses = [], [], []
+        train_losses, recon_losses, contrastive_losses = [], [], []  # noqa: F841
 
         if verbose_every is None or verbose_every < 1:
             verbose_every = 1
@@ -430,8 +473,7 @@ class PureAEModel(BaseModel):
                 ((epoch + 1) % verbose_every == 0) or (epoch == 0) or (epoch + 1 == epochs)
             )
             if do_print:
-                print(f"Epoch {epoch+1:3d}/{epochs} [PureAE] | "
-                      f"Loss: {avg_loss:.4f}")
+                print(f"Epoch {epoch + 1:3d}/{epochs} [PureAE] | Loss: {avg_loss:.4f}")
 
             if avg_loss < best_loss:
                 best_loss = avg_loss
@@ -442,7 +484,7 @@ class PureAEModel(BaseModel):
                 patience_counter += 1
                 if patience_counter >= patience:
                     if verbose >= 1:
-                        print(f"Early stopping at epoch {epoch+1}")
+                        print(f"Early stopping at epoch {epoch + 1}")
                     break
 
         return {
@@ -454,6 +496,7 @@ class PureAEModel(BaseModel):
 # =============================================================================
 # PureAETransformerModel — Transformer variant
 # =============================================================================
+
 
 class PureAETransformerModel(BaseModel):
     """Pure AE with multi-head projection transformer encoder.
@@ -476,12 +519,11 @@ class PureAETransformerModel(BaseModel):
         model_name: str = "PureTransformerAE",
         fit_lr: float = 1e-3,
         fit_weight_decay: float = 0,
-        fit_epochs: int = 1000):
+        fit_epochs: int = 1000,
+    ):
         super().__init__(
-            input_dim=input_dim,
-            latent_dim=latent_dim,
-            hidden_dims=[d_model],
-            model_name=model_name)
+            input_dim=input_dim, latent_dim=latent_dim, hidden_dims=[d_model], model_name=model_name
+        )
         self.recon_loss_fn = nn.MSELoss()
 
         # Transformer encoder (deterministic)
@@ -493,14 +535,19 @@ class PureAETransformerModel(BaseModel):
             num_layers=num_encoder_layers,
             dim_feedforward=dim_feedforward,
             dropout=dropout_rate,
-            num_tokens=num_tokens)
+            num_tokens=num_tokens,
+        )
 
         # MLP decoder
         if decoder_dims is None:
             decoder_dims = [128, 256]
         self.decoder_net = MLP(
             [latent_dim] + decoder_dims + [input_dim],
-            hid_act="mish", norm="bn", hid_norm="bn", hid_drop=dropout_rate)
+            hid_act="mish",
+            norm="bn",
+            hid_norm="bn",
+            hid_drop=dropout_rate,
+        )
         self.decoder_net.apply(weight_init)
 
     def encode(self, x: torch.Tensor, **kwargs) -> torch.Tensor:
@@ -517,16 +564,18 @@ class PureAETransformerModel(BaseModel):
             "latent": z,
         }
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
-                     **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         recon = self.recon_loss_fn(outputs["reconstruction"], x)
         return {
             "total_loss": recon,
             "recon_loss": recon,
         }
 
-    def extract_latent(self, data_loader, device='cuda',
-                       return_reconstructions: bool = False, **kwargs):
+    def extract_latent(
+        self, data_loader, device="cuda", return_reconstructions: bool = False, **kwargs
+    ):
         self.eval()
         self.to(device)
         latents, recons = [], []
@@ -554,13 +603,14 @@ class PureAETransformerModel(BaseModel):
         verbose: int = 1,
         verbose_every: int = 1,
         weight_decay: float = 0,
-        **kwargs):
+        **kwargs,
+    ):
         self.to(device)
         optimizer = torch.optim.AdamW(self.parameters(), lr=lr, weight_decay=weight_decay)
 
-        best_loss = float('inf')
+        best_loss = float("inf")
         patience_counter = 0
-        train_losses, recon_losses, contrastive_losses = [], [], []
+        train_losses, recon_losses, contrastive_losses = [], [], []  # noqa: F841
 
         if verbose_every is None or verbose_every < 1:
             verbose_every = 1
@@ -594,8 +644,7 @@ class PureAETransformerModel(BaseModel):
                 ((epoch + 1) % verbose_every == 0) or (epoch == 0) or (epoch + 1 == epochs)
             )
             if do_print:
-                print(f"Epoch {epoch+1:3d}/{epochs} [PureTransAE] | "
-                      f"Loss: {avg_loss:.4f}")
+                print(f"Epoch {epoch + 1:3d}/{epochs} [PureTransAE] | Loss: {avg_loss:.4f}")
 
             if avg_loss < best_loss:
                 best_loss = avg_loss
@@ -606,7 +655,7 @@ class PureAETransformerModel(BaseModel):
                 patience_counter += 1
                 if patience_counter >= patience:
                     if verbose >= 1:
-                        print(f"Early stopping at epoch {epoch+1}")
+                        print(f"Early stopping at epoch {epoch + 1}")
                     break
 
         return {
@@ -618,6 +667,7 @@ class PureAETransformerModel(BaseModel):
 # =============================================================================
 # PureAEContrastiveModel — Contrastive variant
 # =============================================================================
+
 
 class PureAEContrastiveModel(BaseModel):
     """Pure AE + MoCo contrastive learning.
@@ -642,12 +692,14 @@ class PureAEContrastiveModel(BaseModel):
         model_name: str = "PureContrastiveAE",
         fit_lr: float = 1e-3,
         fit_weight_decay: float = 0,
-        fit_epochs: int = 1000):
+        fit_epochs: int = 1000,
+    ):
         super().__init__(
             input_dim=input_dim,
             latent_dim=latent_dim,
             hidden_dims=encoder_dims or [256, 128],
-            model_name=model_name)
+            model_name=model_name,
+        )
         if encoder_dims is None:
             encoder_dims = [256, 128]
         if decoder_dims is None:
@@ -662,7 +714,8 @@ class PureAEContrastiveModel(BaseModel):
             latent_dim=latent_dim,
             encoder_dims=encoder_dims,
             norm=norm_type,
-            drop=dropout_rate)
+            drop=dropout_rate,
+        )
 
         # Momentum encoder (key)
         self.momentum_encoder = DeterministicEncoder(
@@ -670,7 +723,8 @@ class PureAEContrastiveModel(BaseModel):
             latent_dim=latent_dim,
             encoder_dims=encoder_dims,
             norm=norm_type,
-            drop=dropout_rate)
+            drop=dropout_rate,
+        )
         for p_q, p_k in zip(self.encoder_net.parameters(), self.momentum_encoder.parameters()):
             p_k.data.copy_(p_q.data)
             p_k.requires_grad = False
@@ -678,7 +732,11 @@ class PureAEContrastiveModel(BaseModel):
         # Decoder
         self.decoder_net = MLP(
             [latent_dim] + decoder_dims + [input_dim],
-            hid_act="mish", norm=norm_type, hid_norm=norm_type, hid_drop=dropout_rate)
+            hid_act="mish",
+            norm=norm_type,
+            hid_norm=norm_type,
+            hid_drop=dropout_rate,
+        )
         self.decoder_net.apply(weight_init)
 
         # MoCo
@@ -687,12 +745,13 @@ class PureAEContrastiveModel(BaseModel):
             embedding_dim=moco_embedding_dim,
             queue_size=moco_queue_size,
             momentum=moco_momentum,
-            temperature=moco_temperature)
+            temperature=moco_temperature,
+        )
 
         # Augmentation
         self.augmentation = DataAugmentation(
-            noise_prob=0.2, noise_std=0.1, mask_prob=0.1,
-            feature_dropout=0.2)
+            noise_prob=0.2, noise_std=0.1, mask_prob=0.1, feature_dropout=0.2
+        )
 
         self.contrastive_loss_fn = nn.CrossEntropyLoss()
 
@@ -727,8 +786,9 @@ class PureAEContrastiveModel(BaseModel):
 
         return result
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
-                     **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         recon = self.recon_loss_fn(outputs["reconstruction"], x)
         loss_dict = {"recon_loss": recon}
         total = recon
@@ -743,8 +803,9 @@ class PureAEContrastiveModel(BaseModel):
         loss_dict["total_loss"] = total
         return loss_dict
 
-    def extract_latent(self, data_loader, device='cuda',
-                       return_reconstructions: bool = False, **kwargs):
+    def extract_latent(
+        self, data_loader, device="cuda", return_reconstructions: bool = False, **kwargs
+    ):
         self.eval()
         self.to(device)
         latents, recons = [], []
@@ -772,11 +833,12 @@ class PureAEContrastiveModel(BaseModel):
         verbose: int = 1,
         verbose_every: int = 1,
         weight_decay: float = 0,
-        **kwargs):
+        **kwargs,
+    ):
         self.to(device)
         optimizer = torch.optim.AdamW(self.parameters(), lr=lr, weight_decay=weight_decay)
 
-        best_loss = float('inf')
+        best_loss = float("inf")
         patience_counter = 0
         train_losses, recon_losses, contrastive_losses = [], [], []
 
@@ -818,8 +880,10 @@ class PureAEContrastiveModel(BaseModel):
                 ((epoch + 1) % verbose_every == 0) or (epoch == 0) or (epoch + 1 == epochs)
             )
             if do_print:
-                print(f"Epoch {epoch+1:3d}/{epochs} [PureContrAE] | "
-                      f"Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | Contra: {avg_contra:.4f}")
+                print(
+                    f"Epoch {epoch + 1:3d}/{epochs} [PureContrAE] | "
+                    f"Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | Contra: {avg_contra:.4f}"
+                )
 
             if avg_loss < best_loss:
                 best_loss = avg_loss
@@ -830,7 +894,7 @@ class PureAEContrastiveModel(BaseModel):
                 patience_counter += 1
                 if patience_counter >= patience:
                     if verbose >= 1:
-                        print(f"Early stopping at epoch {epoch+1}")
+                        print(f"Early stopping at epoch {epoch + 1}")
                     break
 
         return {

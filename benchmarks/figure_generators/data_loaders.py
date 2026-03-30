@@ -26,17 +26,26 @@ TRAIN_TS = "20260212_154957"
 PREPROC_TS = "20260212_185159"
 CROSS_TS = "20260213_123600"
 CROSS_DATASETS = {
-    "setty": "20260212_152000", "lung": "20260212_152000",
-    "endo": "20260212_152000", "dentate": "20260213_121910",
-    "hemato": "20260213_122440", "pansci_muscle": "20260213_123015",
+    "setty": "20260212_152000",
+    "lung": "20260212_152000",
+    "endo": "20260212_152000",
+    "dentate": "20260213_121910",
+    "hemato": "20260213_122440",
+    "pansci_muscle": "20260213_123015",
 }
 NEW_CROSS_DATASETS = [
-    "blood_aged", "hesc", "retina", "teeth", "pituitary", "pansci_tcell",
+    "blood_aged",
+    "hesc",
+    "retina",
+    "teeth",
+    "pituitary",
+    "pansci_tcell",
 ]
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Internal helpers
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def safe_model_name(name):
     """Filesystem-safe model name."""
@@ -59,17 +68,16 @@ def parse_sweep_value(model_name):
 # CSV loaders — auto-discover latest timestamp
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def load_base_csv(series):
     """Load latest base-ablation CSV for *series*."""
     csv_dir = RESULTS_DIR / "base" / "csv" / series
-    cand = sorted(csv_dir.glob("results_*.csv"),
-                  key=lambda x: x.name, reverse=True)
+    cand = sorted(csv_dir.glob("results_*.csv"), key=lambda x: x.name, reverse=True)
     if not cand:
         ts = BASE_TS[series]
         fallback = csv_dir / f"results_setty_3000c_ep600_lr1e-3_{ts}.csv"
         if not fallback.exists():
-            raise FileNotFoundError(
-                f"No base CSV found in {csv_dir} — run base benchmark first")
+            raise FileNotFoundError(f"No base CSV found in {csv_dir} — run base benchmark first")
         return pd.read_csv(fallback)
     best = [p for p in cand if "with_gse" not in p.name]
     return pd.read_csv(best[0] if best else cand[0])
@@ -77,27 +85,25 @@ def load_base_csv(series):
 
 def load_sensitivity_csv(series):
     csv_dir = RESULTS_DIR / "sensitivity" / "csv" / series
-    cand = sorted(csv_dir.glob("results_sensitivity_*.csv"),
-                  key=lambda x: x.name, reverse=True)
+    cand = sorted(csv_dir.glob("results_sensitivity_*.csv"), key=lambda x: x.name, reverse=True)
     if cand:
         return pd.read_csv(cand[0])
     fallback = csv_dir / f"results_sensitivity_{SENS_TS}.csv"
     if not fallback.exists():
         raise FileNotFoundError(
-            f"No sensitivity CSV found in {csv_dir} — run sensitivity sweep first")
+            f"No sensitivity CSV found in {csv_dir} — run sensitivity sweep first"
+        )
     return pd.read_csv(fallback)
 
 
 def load_training_csv(series):
     csv_dir = RESULTS_DIR / "training" / "csv" / series
-    cand = sorted(csv_dir.glob("results_training_*.csv"),
-                  key=lambda x: x.name, reverse=True)
+    cand = sorted(csv_dir.glob("results_training_*.csv"), key=lambda x: x.name, reverse=True)
     if cand:
         return pd.read_csv(cand[0])
     fallback = csv_dir / f"results_training_{TRAIN_TS}.csv"
     if not fallback.exists():
-        raise FileNotFoundError(
-            f"No training CSV found in {csv_dir} — run training sweep first")
+        raise FileNotFoundError(f"No training CSV found in {csv_dir} — run training sweep first")
     return pd.read_csv(fallback)
 
 
@@ -109,8 +115,9 @@ def load_preprocessing_csv(series):
     entry per (Dataset, Sweep, SweepVal) combination.
     """
     csv_dir = RESULTS_DIR / "preprocessing" / "csv" / series
-    cand = sorted(csv_dir.glob("results_preprocessing_*.csv"),
-                  key=lambda x: x.name)  # chronological order
+    cand = sorted(
+        csv_dir.glob("results_preprocessing_*.csv"), key=lambda x: x.name
+    )  # chronological order
     if not cand:
         return pd.read_csv(csv_dir / f"results_preprocessing_{PREPROC_TS}.csv")
     frames = []
@@ -145,9 +152,11 @@ def load_crossdata_combined(prefer_multiseed=True):
     if not csv_dir.exists():
         raise FileNotFoundError("No crossdata CSV dir found.")
 
-    for fname in ["results_combined_5seed.csv",
-                  "results_combined_3seed.csv",
-                  "results_combined_multiseed.csv"]:
+    for fname in [
+        "results_combined_5seed.csv",
+        "results_combined_3seed.csv",
+        "results_combined_multiseed.csv",
+    ]:
         p = csv_dir / fname
         if p.exists():
             df = pd.read_csv(p)
@@ -160,8 +169,7 @@ def load_crossdata_combined(prefer_multiseed=True):
             return df
 
     # Fallback: merge all combined CSVs
-    cand = sorted(csv_dir.glob("results_combined_*.csv"),
-                  key=lambda x: x.name, reverse=True)
+    cand = sorted(csv_dir.glob("results_combined_*.csv"), key=lambda x: x.name, reverse=True)
     if not cand:
         raise FileNotFoundError("No crossdata combined CSV found.")
     frames = [pd.read_csv(f) for f in cand]
@@ -205,9 +213,13 @@ def load_crossdata_per_dataset():
         parts = name.split("_")
         if len(parts) < 3 or parts[1] == "combined":
             continue
-        if (len(parts) >= 4
-                and parts[-2].isdigit() and parts[-1].isdigit()
-                and len(parts[-2]) == 8 and len(parts[-1]) == 6):
+        if (
+            len(parts) >= 4
+            and parts[-2].isdigit()
+            and parts[-1].isdigit()
+            and len(parts[-2]) == 8
+            and len(parts[-1]) == 6
+        ):
             ds = "_".join(parts[1:-2])
         else:
             ds = "_".join(parts[1:-1])
@@ -309,8 +321,7 @@ def load_joint_latent(model_name):
     return latent, labels
 
 
-def load_sweep_latents(sweep_type, series, model_names=None, n_select=4,
-                       dataset_filter=None):
+def load_sweep_latents(sweep_type, series, model_names=None, n_select=4, dataset_filter=None):
     """Load latent .npz files for sweep models.
 
     Parameters
@@ -324,8 +335,7 @@ def load_sweep_latents(sweep_type, series, model_names=None, n_select=4,
     if not lat_dir.exists():
         return []
     loaded = []
-    all_files = sorted(lat_dir.glob("*.npz"),
-                       key=lambda p: p.name, reverse=True)
+    all_files = sorted(lat_dir.glob("*.npz"), key=lambda p: p.name, reverse=True)
 
     # Apply per-dataset filter
     if dataset_filter:
@@ -355,7 +365,9 @@ def load_sweep_latents(sweep_type, series, model_names=None, n_select=4,
         name = re.sub(
             r"_(setty|lung|endo|dentate|hemato|pansci_muscle"
             r"|blood_aged|hesc|retina|teeth|pituitary|pansci_tcell)$",
-            "", name)
+            "",
+            name,
+        )
         loaded.append((name, latent))
     if len(loaded) > n_select:
         idx = np.linspace(0, len(loaded) - 1, n_select, dtype=int)
@@ -389,8 +401,7 @@ def load_dynamics_history(model_name, dataset="setty"):
 
     # Fallback to benchmark models dir
     for d in [RESULTS_DIR / "models"]:
-        candidates = sorted(d.glob(f"{model_name}*_history.json"),
-                            reverse=True)
+        candidates = sorted(d.glob(f"{model_name}*_history.json"), reverse=True)
         if candidates:
             with open(candidates[0]) as f:
                 return json.load(f)
@@ -401,11 +412,11 @@ def load_dynamics_history(model_name, dataset="setty"):
 # New experiment loaders (reviewer revisions)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def load_scalability_csv():
     """Load scalability experiment CSV (runtime/memory vs. cell count)."""
     csv_dir = RESULTS_DIR / "scalability" / "csv"
-    cand = sorted(csv_dir.glob("scalability_*.csv"),
-                  key=lambda x: x.name, reverse=True)
+    cand = sorted(csv_dir.glob("scalability_*.csv"), key=lambda x: x.name, reverse=True)
     if cand:
         return pd.read_csv(cand[0])
     return None
@@ -414,8 +425,7 @@ def load_scalability_csv():
 def load_latent_dim_csv():
     """Load latent dimension sweep CSV."""
     csv_dir = RESULTS_DIR / "latent_dim" / "csv"
-    cand = sorted(csv_dir.glob("latent_dim_*.csv"),
-                  key=lambda x: x.name, reverse=True)
+    cand = sorted(csv_dir.glob("latent_dim_*.csv"), key=lambda x: x.name, reverse=True)
     if cand:
         return pd.read_csv(cand[0])
     return None
@@ -424,8 +434,7 @@ def load_latent_dim_csv():
 def load_warmup_csv():
     """Load warmup ablation CSV."""
     csv_dir = RESULTS_DIR / "warmup" / "csv"
-    cand = sorted(csv_dir.glob("warmup_*.csv"),
-                  key=lambda x: x.name, reverse=True)
+    cand = sorted(csv_dir.glob("warmup_*.csv"), key=lambda x: x.name, reverse=True)
     if cand:
         return pd.read_csv(cand[0])
     return None
@@ -434,8 +443,7 @@ def load_warmup_csv():
 def load_transfer_csv():
     """Load cross-dataset transfer CSV(s) and merge them."""
     csv_dir = RESULTS_DIR / "transfer" / "csv"
-    cand = sorted(csv_dir.glob("transfer_*.csv"),
-                  key=lambda x: x.name, reverse=True)
+    cand = sorted(csv_dir.glob("transfer_*.csv"), key=lambda x: x.name, reverse=True)
     if not cand:
         return None
     frames = [pd.read_csv(f) for f in cand]
@@ -445,8 +453,7 @@ def load_transfer_csv():
 def load_interpretability_csv():
     """Load interpretability / gene specificity index CSV."""
     csv_dir = RESULTS_DIR / "interpretability" / "csv"
-    cand = sorted(csv_dir.glob("interpretability_*.csv"),
-                  key=lambda x: x.name, reverse=True)
+    cand = sorted(csv_dir.glob("interpretability_*.csv"), key=lambda x: x.name, reverse=True)
     if cand:
         return pd.read_csv(cand[0])
     return None
@@ -455,8 +462,7 @@ def load_interpretability_csv():
 def load_external_csv():
     """Load external model benchmark combined CSV."""
     csv_dir = RESULTS_DIR / "external" / "csv"
-    cand = sorted(csv_dir.glob("results_combined_*.csv"),
-                  key=lambda x: x.name, reverse=True)
+    cand = sorted(csv_dir.glob("results_combined_*.csv"), key=lambda x: x.name, reverse=True)
     if cand:
         return pd.read_csv(cand[0])
     return None

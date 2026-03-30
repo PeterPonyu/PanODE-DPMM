@@ -1,4 +1,5 @@
 """VCD artist-related detection passes (2-4, 6-7)."""
+
 from __future__ import annotations
 
 import numpy as np
@@ -13,7 +14,14 @@ from .vcd_core import (
 )
 
 
-def _check_truncation(infos: list[_ArtistInfo], fig_bb: Bbox, tol_px: float = 3.0, fig=None, renderer=None, tight_bb=None):
+def _check_truncation(
+    infos: list[_ArtistInfo],
+    fig_bb: Bbox,
+    tol_px: float = 3.0,
+    fig=None,
+    renderer=None,
+    tight_bb=None,
+):
     """Pass 2–3: Check if any artist extends beyond figure canvas.
 
     VCD now evaluates truncation strictly against the authored figure canvas.
@@ -26,7 +34,7 @@ def _check_truncation(infos: list[_ArtistInfo], fig_bb: Bbox, tol_px: float = 3.
     if fig is not None:
         try:
             for _ax in fig.get_axes():
-                if getattr(_ax, 'name', None) == 'polar':
+                if getattr(_ax, "name", None) == "polar":
                     _polar_ax_ids.add(id(_ax))
         except Exception:
             pass
@@ -54,9 +62,7 @@ def _check_truncation(infos: list[_ArtistInfo], fig_bb: Bbox, tol_px: float = 3.
             # small pixel overshoots that are invisible in the final
             # exported PDF.  Use a more generous info threshold for
             # these elements to reduce false-positive warnings.
-            is_border_element = any(
-                k in a.tag for k in ("xtick", "ytick", "Spine")
-            )
+            is_border_element = any(k in a.tag for k in ("xtick", "ytick", "Spine"))
             info_threshold = tol_px + 10 if is_border_element else tol_px + 4
             if overshoot < info_threshold:
                 sev = "info"
@@ -67,14 +73,18 @@ def _check_truncation(infos: list[_ArtistInfo], fig_bb: Bbox, tol_px: float = 3.
             else:
                 sev = "info"
             is_fig_level = a.tag.startswith(("suptitle", "fig_text"))
-            issues.append({
-                "type": f"{a.kind}_truncation",
-                "severity": sev,
-                "detail": (f"'{a.tag}' extends beyond figure border "
-                           f"({', '.join(sides)}, {overshoot:.0f}px)"),
-                "elements": [a.tag],
-                "is_fig_level": is_fig_level,
-            })
+            issues.append(
+                {
+                    "type": f"{a.kind}_truncation",
+                    "severity": sev,
+                    "detail": (
+                        f"'{a.tag}' extends beyond figure border "
+                        f"({', '.join(sides)}, {overshoot:.0f}px)"
+                    ),
+                    "elements": [a.tag],
+                    "is_fig_level": is_fig_level,
+                }
+            )
     return issues
 
 
@@ -89,9 +99,9 @@ def _check_artist_content_overlap(
     Also skips Spine artists — cross-axes spine/patch overlaps are
     harmless background geometry.
     """
-    graphical = [a for a in infos
-                 if a.kind in ("collection", "patch", "image")
-                 and "Spine" not in a.tag]
+    graphical = [
+        a for a in infos if a.kind in ("collection", "patch", "image") and "Spine" not in a.tag
+    ]
     issues = []
     for i in range(len(graphical)):
         for j in range(i + 1, len(graphical)):
@@ -105,13 +115,14 @@ def _check_artist_content_overlap(
                 continue
             area = _overlap_area(a.bbox, b.bbox)
             if area > min_overlap_px2:
-                issues.append({
-                    "type": "artist_overlap",
-                    "severity": "warning",
-                    "detail": (f"'{a.tag}' overlaps '{b.tag}' "
-                               f"({area:.0f} px\u00b2)"),
-                    "elements": [a.tag, b.tag],
-                })
+                issues.append(
+                    {
+                        "type": "artist_overlap",
+                        "severity": "warning",
+                        "detail": (f"'{a.tag}' overlaps '{b.tag}' ({area:.0f} px\u00b2)"),
+                        "elements": [a.tag, b.tag],
+                    }
+                )
     return issues
 
 
@@ -135,9 +146,7 @@ def _check_axes_overflow(infos: list[_ArtistInfo], fig):
         kinds = ("collection", "line", "patch")
         if getattr(ax, "name", None) == "polar":
             kinds = ("collection", "line")  # skip patch: polar wedges are full-radius by design
-        ax_artists = [a for a in infos
-                      if a.ax_id == aid
-                      and a.kind in kinds]
+        ax_artists = [a for a in infos if a.ax_id == aid and a.kind in kinds]
         for a in ax_artists:
             # Skip Spine objects — they *define* the axes border and always
             # have a bbox that coincides with or extends to axes edges.
@@ -151,13 +160,14 @@ def _check_axes_overflow(infos: list[_ArtistInfo], fig):
                 continue
             sides = _sides_outside(a.bbox, ax_bb, tol=3.0)
             if sides:
-                issues.append({
-                    "type": "axes_overflow",
-                    "severity": "info",
-                    "detail": (f"'{a.tag}' extends beyond axes border "
-                               f"({', '.join(sides)})"),
-                    "elements": [a.tag],
-                })
+                issues.append(
+                    {
+                        "type": "axes_overflow",
+                        "severity": "info",
+                        "detail": (f"'{a.tag}' extends beyond axes border ({', '.join(sides)})"),
+                        "elements": [a.tag],
+                    }
+                )
     return issues
 
 
@@ -196,8 +206,7 @@ def _check_scatter_clip_risk(fig) -> list[dict]:
             raw_sizes = child.get_sizes()
             if raw_sizes is None or len(raw_sizes) == 0:
                 continue
-            sizes = np.broadcast_to(np.asarray(raw_sizes),
-                                    (len(offsets),))
+            sizes = np.broadcast_to(np.asarray(raw_sizes), (len(offsets),))
 
             transform = child.get_offset_transform()
             if transform is None:
@@ -229,15 +238,17 @@ def _check_scatter_clip_risk(fig) -> list[dict]:
             if n_clipped > 0:
                 label = getattr(child, "_label", "") or ""
                 tag = f"scatter({label})" if label and not label.startswith("_") else "scatter"
-                issues.append({
-                    "type": "scatter_clip_risk",
-                    "severity": "warning",
-                    "detail": (
-                        f"'{tag}' has {n_clipped} marker(s) clipped at "
-                        f"axes edge ({', '.join(sorted(clipped_sides))}). "
-                        f"Set clip_on=False or add axis margin."
-                    ),
-                    "elements": [tag],
-                })
+                issues.append(
+                    {
+                        "type": "scatter_clip_risk",
+                        "severity": "warning",
+                        "detail": (
+                            f"'{tag}' has {n_clipped} marker(s) clipped at "
+                            f"axes edge ({', '.join(sorted(clipped_sides))}). "
+                            f"Set clip_on=False or add axis margin."
+                        ),
+                        "elements": [tag],
+                    }
+                )
 
     return issues

@@ -31,6 +31,7 @@ from .models import (
 # GM-VAE (optional — requires geoopt)
 try:
     from .models import create_gmvae_model
+
     _GEOOPT_AVAILABLE = True
 except ImportError:
     _GEOOPT_AVAILABLE = False
@@ -38,6 +39,7 @@ except ImportError:
 # scVI-family (optional — requires scvi-tools)
 try:
     from .models import create_peakvi_model, create_poissonvi_model, create_scvi_model
+
     _SCVI_AVAILABLE = True
 except ImportError:
     _SCVI_AVAILABLE = False
@@ -83,13 +85,13 @@ EXTERNAL_MODELS = {
     "scDiffusion": {
         "factory": create_scdiffusion_model,
         "params": {
-            "latent_dim": 64,        # UNet base channels
-            "embedding_dim": 10,     # actual latent dim
+            "latent_dim": 64,  # UNet base channels
+            "embedding_dim": 10,  # actual latent dim
             "n_timesteps": 500,
             "beta_schedule": "linear",
         },
         "fit_params": {
-            "epochs": 500,           # diffusion models need fewer epochs
+            "epochs": 500,  # diffusion models need fewer epochs
             "lr": 1e-3,
             "patience": 100,
             "verbose_every": 50,
@@ -444,11 +446,21 @@ DEEP_GRAPH_BASELINES = sorted(k for k, v in MODEL_TAXONOMY.items() if v == "deep
 # Model groups for figure panels (LAIOR-style categories)
 MODEL_GROUPS = {
     "generative": [
-        "CellBLAST", "SCALEX", "scDiffusion", "siVAE",
-        "scDAC", "scDeepCluster", "scDHMap", "scSMD",
+        "CellBLAST",
+        "SCALEX",
+        "scDiffusion",
+        "siVAE",
+        "scDAC",
+        "scDeepCluster",
+        "scDHMap",
+        "scSMD",
     ],
     "gaussian_geometric": [
-        "GMVAE", "GMVAE-Poincare", "GMVAE-PGM", "GMVAE-LearnablePGM", "GMVAE-HW",
+        "GMVAE",
+        "GMVAE-Poincare",
+        "GMVAE-PGM",
+        "GMVAE-LearnablePGM",
+        "GMVAE-HW",
     ],
     "disentanglement": ["VAE-DIP", "VAE-TC", "InfoVAE", "BetaVAE"],
     "graph_contrastive": ["CLEAR", "scGCC", "scGNN"],
@@ -461,8 +473,7 @@ def list_external_models():
     print(f"{'Model':<22} {'Latent':<8} {'Notes'}")
     print("-" * 72)
     for name, cfg in EXTERNAL_MODELS.items():
-        ld = cfg["params"].get("latent_dim",
-                               cfg["params"].get("embedding_dim", "?"))
+        ld = cfg["params"].get("latent_dim", cfg["params"].get("embedding_dim", "?"))
         print(f"{name:<22} {str(ld):<8} {cfg['notes'][:45]}")
 
 

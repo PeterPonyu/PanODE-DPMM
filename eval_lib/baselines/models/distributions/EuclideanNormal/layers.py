@@ -9,18 +9,11 @@ class VanillaEncoderLayer(nn.Module):
         self.latent_dim = int(args.latent_dim * 2)
         self.feature_dim = feature_dim
 
-        self.variational = nn.Linear(
-            self.feature_dim,
-            2 * self.latent_dim
-        )
+        self.variational = nn.Linear(self.feature_dim, 2 * self.latent_dim)
 
     def forward(self, feature):
         feature = self.variational(feature)
-        mean, logvar = torch.split(
-            feature,
-            [self.latent_dim, self.latent_dim],
-            dim=-1
-        )
+        mean, logvar = torch.split(feature, [self.latent_dim, self.latent_dim], dim=-1)
 
         return mean, logvar
 

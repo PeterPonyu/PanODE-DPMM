@@ -13,12 +13,10 @@ class Distribution:
         self.base = Normal(
             torch.zeros([*self.sigma.shape[:-1], 2], device=self.mean.device),
             self.sigma,
-            validate_args=False)
-        self.manifold = geoopt.manifolds.Lorentz()
-        self.origin = self.manifold.origin(
-            self.mean.size(),
-            device=self.mean.device
+            validate_args=False,
         )
+        self.manifold = geoopt.manifolds.Lorentz()
+        self.origin = self.manifold.origin(self.mean.size(), device=self.mean.device)
 
         self.kl_div = None
 

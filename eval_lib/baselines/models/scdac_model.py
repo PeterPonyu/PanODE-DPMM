@@ -2,6 +2,7 @@
 scDAC: Single-cell Deep AutoEncoder with Clustering via DPMM
 Combines autoencoder reconstruction with Dirichlet Process Mixture Model regularization
 """
+
 import math
 
 import numpy as np
@@ -24,7 +25,10 @@ def _act(name: str) -> nn.Module:
 
 class _Layer1D(nn.Module):
     """Normalization + Activation + Dropout layer"""
-    def __init__(self, dim: int, norm: str | None = None, act: str | None = None, drop: float = 0.0):
+
+    def __init__(
+        self, dim: int, norm: str | None = None, act: str | None = None, drop: float = 0.0
+    ):
         super().__init__()
         layers = []
         if norm == "bn":
@@ -43,6 +47,7 @@ class _Layer1D(nn.Module):
 
 class MLP(nn.Module):
     """Configurable MLP with flexible normalization, activation, and dropout"""
+
     def __init__(
         self,
         features: list,
@@ -51,7 +56,8 @@ class MLP(nn.Module):
         norm: str | None = None,
         hid_norm: str | None = None,
         drop: float = 0.0,
-        hid_drop: float = 0.0):
+        hid_drop: float = 0.0,
+    ):
         super().__init__()
         layers = []
         for i in range(1, len(features)):
@@ -71,10 +77,31 @@ class MLP(nn.Module):
 
 class scDACEAutoEncoder(nn.Module):
     """Standard autoencoder backbone"""
-    def __init__(self, input_dim: int, encoder_dims: list, latent_dim: int, decoder_dims: list, norm: str, drop: float):
+
+    def __init__(
+        self,
+        input_dim: int,
+        encoder_dims: list,
+        latent_dim: int,
+        decoder_dims: list,
+        norm: str,
+        drop: float,
+    ):
         super().__init__()
-        self.encoder = MLP([input_dim] + encoder_dims + [latent_dim], norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
-        self.decoder = MLP([latent_dim] + decoder_dims + [input_dim], norm=norm, hid_norm=norm, hid_drop=drop, out_act=None)
+        self.encoder = MLP(
+            [input_dim] + encoder_dims + [latent_dim],
+            norm=norm,
+            hid_norm=norm,
+            hid_drop=drop,
+            out_act=None,
+        )
+        self.decoder = MLP(
+            [latent_dim] + decoder_dims + [input_dim],
+            norm=norm,
+            hid_norm=norm,
+            hid_drop=drop,
+            out_act=None,
+        )
 
     def forward(self, x):
         z = self.encoder(x)
@@ -103,7 +130,8 @@ class scDACModel(BaseModel):
         dpmm_warmup_ratio: float = 0.6,
         dpmm_loss_weight: float = 1.0,
         n_components: int = 50,
-        model_name: str = "scDAC"):
+        model_name: str = "scDAC",
+    ):
         """
         Args:
             input_dim: Input dimension
@@ -116,14 +144,20 @@ class scDACModel(BaseModel):
             dpmm_loss_weight: Weight for DPMM loss
             n_components: Number of DPMM components
         """
-        super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=encoder_dims or [], model_name=model_name)
+        super().__init__(
+            input_dim=input_dim,
+            latent_dim=latent_dim,
+            hidden_dims=encoder_dims or [],
+            model_name=model_name,
+        )
         self.ae = scDACEAutoEncoder(
             input_dim=input_dim,
             encoder_dims=encoder_dims or [256, 128],
             latent_dim=latent_dim,
             decoder_dims=decoder_dims or [128, 256],
             norm=norm_type,
-            drop=dropout_rate)
+            drop=dropout_rate,
+        )
         self.dpmm_warmup_ratio = dpmm_warmup_ratio
         self.dpmm_loss_weight = dpmm_loss_weight
         self.n_components = n_components
@@ -144,7 +178,9 @@ class scDACModel(BaseModel):
         x_hat, z = self.ae(x)
         return {"reconstruction": x_hat, "latent": z}
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         """Compute loss: reconstruction + DPMM regularization"""
         recon = self.recon_loss_fn(outputs["reconstruction"], x)
 
@@ -159,8 +195,12 @@ class scDACModel(BaseModel):
         """Extract DPMM parameters from fitted sklearn model"""
         self.dpmm_params = {
             "means": torch.as_tensor(bgm.means_, dtype=torch.float32, device=device),
-            "weight_concentration": torch.as_tensor(bgm.weight_concentration_, dtype=torch.float32, device=device),
-            "precisions_cholesky": torch.as_tensor(bgm.precisions_cholesky_, dtype=torch.float32, device=device),
+            "weight_concentration": torch.as_tensor(
+                bgm.weight_concentration_, dtype=torch.float32, device=device
+            ),
+            "precisions_cholesky": torch.as_tensor(
+                bgm.precisions_cholesky_, dtype=torch.float32, device=device
+            ),
         }
 
     def _dpmm_loss(self, z: torch.Tensor) -> torch.Tensor:
@@ -168,7 +208,9 @@ class scDACModel(BaseModel):
         dp = self.dpmm_params
         n_features = z.size(1)
 
-        digamma_sum = torch.special.digamma(dp["weight_concentration"][0] + dp["weight_concentration"][1])
+        digamma_sum = torch.special.digamma(
+            dp["weight_concentration"][0] + dp["weight_concentration"][1]
+        )
         digamma_a = torch.special.digamma(dp["weight_concentration"][0])
         digamma_b = torch.special.digamma(dp["weight_concentration"][1])
 
@@ -183,7 +225,7 @@ class scDACModel(BaseModel):
         log_prob = (
             torch.sum((dp["means"] ** 2 * precisions), dim=1)
             - 2.0 * torch.mm(z, (dp["means"] * precisions).T)
-            + torch.mm(z ** 2, precisions.T)
+            + torch.mm(z**2, precisions.T)
         )
         log_gauss_pre = -0.5 * (n_features * math.log(math.pi * 2.0) + log_prob) + log_det
         log_likelihood = torch.logsumexp(log_gauss_pre + log_weights, dim=1)
@@ -199,7 +241,8 @@ class scDACModel(BaseModel):
         save_path: str | None = None,
         patience: int = 10,
         verbose: int = 1,
-        **kwargs):
+        **kwargs,
+    ):
         """
         Custom fit with DPMM refitting
 
@@ -230,7 +273,8 @@ class scDACModel(BaseModel):
                         covariance_type="diag",
                         init_params="kmeans",
                         max_iter=1000,
-                        warm_start=True).fit(z_all)
+                        warm_start=True,
+                    ).fit(z_all)
                     self._update_dpmm_params(bgm, device=torch.device(device))
                 except Exception:
                     pass
@@ -249,7 +293,9 @@ class scDACModel(BaseModel):
                 n_batches += 1
 
             if verbose >= 1:
-                print(f"Epoch {epoch+1:3d}/{epochs} | Train Loss: {total/max(n_batches,1):.4f}")
+                print(
+                    f"Epoch {epoch + 1:3d}/{epochs} | Train Loss: {total / max(n_batches, 1):.4f}"
+                )
 
         return {"train_loss": []}
 

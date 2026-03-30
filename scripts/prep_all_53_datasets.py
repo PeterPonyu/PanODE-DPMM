@@ -36,14 +36,15 @@ warnings.filterwarnings("ignore")
 import scanpy as sc
 
 # ── Output directory ─────────────────────────────────────────────────────────
-DATASETS_ROOT = Path(os.environ.get(
-    "PANODE_DATASETS_ROOT",
-    str(Path(__file__).resolve().parent.parent / "data")))
-PREP_OUT = Path(os.environ.get(
-    "PANODE_PREP_OUTDIR",
+DATASETS_ROOT = Path(
+    os.environ.get("PANODE_DATASETS_ROOT", str(Path(__file__).resolve().parent.parent / "data"))
+)
+PREP_OUT = Path(
     os.environ.get(
-        "PREP_EXTRA_OUTDIR",
-        str(DATASETS_ROOT / "extra_preprocessed"))))
+        "PANODE_PREP_OUTDIR",
+        os.environ.get("PREP_EXTRA_OUTDIR", str(DATASETS_ROOT / "extra_preprocessed")),
+    )
+)
 PREP_OUT.mkdir(parents=True, exist_ok=True)
 
 # ── Catalog of NEW datasets to prep (29 datasets) ───────────────────────────
@@ -321,11 +322,11 @@ def preprocess_dataset(key, info, max_cells=3000, hvg_genes=3000, seed=42):
         print(f"  [{key}] Already exists: {dst.name} -- skipping (use --force to redo)")
         return True
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  Processing: {key}")
     print(f"  Source:     {src.name}")
     print(f"  Desc:       {info['desc']}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # 1. Load
     print("  Loading...")
@@ -381,6 +382,7 @@ def preprocess_dataset(key, info, max_cells=3000, hvg_genes=3000, seed=42):
 def check_status():
     """Print quick prep status for all datasets."""
     import anndata as ad
+
     print(f"\n{'Dataset':<25} {'Source cells':>12} {'Prep file':>30} {'Status':>8}")
     print("-" * 85)
     for key, info in NEW_CATALOG.items():
@@ -398,13 +400,16 @@ def check_status():
                 h.file.close()
             except Exception:
                 n_classes = "ERR"
-        print(f"  {key:<25} {str(n_src):>12} {dst.name if dst.exists() else '---':>30}  [{status}] {n_classes}")
+        print(
+            f"  {key:<25} {str(n_src):>12} {dst.name if dst.exists() else '---':>30}  [{status}] {n_classes}"
+        )
 
 
 def main():
     parser = argparse.ArgumentParser(description="Prep all 53 datasets for benchmark")
-    parser.add_argument("--datasets", nargs="+", default=None,
-                        help="Dataset keys to process (default: all)")
+    parser.add_argument(
+        "--datasets", nargs="+", default=None, help="Dataset keys to process (default: all)"
+    )
     parser.add_argument("--all", action="store_true", help="Process all datasets")
     parser.add_argument("--check-only", action="store_true", help="Print status only")
     parser.add_argument("--force", action="store_true", help="Force reprocessing")
@@ -433,13 +438,18 @@ def main():
     print(f"\nPreparing {len(targets)} datasets: {targets}")
     for key in targets:
         try:
-            preprocess_dataset(key, NEW_CATALOG[key],
-                               max_cells=args.max_cells,
-                               hvg_genes=args.hvg_genes,
-                               seed=args.seed)
+            preprocess_dataset(
+                key,
+                NEW_CATALOG[key],
+                max_cells=args.max_cells,
+                hvg_genes=args.hvg_genes,
+                seed=args.seed,
+            )
         except Exception as e:
             print(f"  [{key}] FAILED: {e}")
-            import traceback; traceback.print_exc()
+            import traceback
+
+            traceback.print_exc()
 
     print("\n\nFinal status:")
     check_status()

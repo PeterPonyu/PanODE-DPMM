@@ -9,11 +9,12 @@ repos:
       - id: check-yaml
         files: ^\.github/|^\.pre-commit-config\.yaml$
       - id: trailing-whitespace
+        exclude: '\.(bst|bib|sty|tex)$'
       - id: end-of-file-fixer
-        exclude: '\.bib$'
+        exclude: '\.(bst|bib|sty|tex)$'
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.10
+    rev: v0.15.8
     hooks:
       - id: ruff
         args: [--fix]

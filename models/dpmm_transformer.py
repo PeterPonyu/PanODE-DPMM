@@ -14,6 +14,7 @@ Uses shared modules from:
 - shared_modules.py: MLP, InformationBottleneck, ODE functions
 - encoders.py: MultiHeadProjectionEncoder, HybridMLPAttentionEncoder
 """
+
 import math
 from typing import Literal
 
@@ -24,13 +25,8 @@ from sklearn.mixture import BayesianGaussianMixture
 
 try:
     from .base_model import BaseModel
-    from .encoders import (
-        HybridMLPAttentionEncoder,
-        MLPEncoder,
-        MultiHeadProjectionEncoder,
-        create_encoder,
-    )
-    from .shared_modules import MLP, InformationBottleneck, reparameterize, weight_init
+    from .encoders import create_encoder
+    from .shared_modules import MLP, InformationBottleneck
 except ImportError:
     from models.encoders import (
         create_encoder,
@@ -55,6 +51,7 @@ def _act(name: str) -> nn.Module:
 
 class DPMMTransformerAutoEncoder(nn.Module):
     """Transformer-based Autoencoder with optional VAE, bottleneck, and ODE."""
+
     def __init__(
         self,
         input_dim: int,
@@ -69,7 +66,8 @@ class DPMMTransformerAutoEncoder(nn.Module):
         bottleneck_dim: int | None = None,
         use_vae: bool = False,
         var_eps: float = 1e-4,
-        encoder_type: Literal['transformer', 'hybrid', 'mlp'] = 'transformer'):
+        encoder_type: Literal["transformer", "hybrid", "mlp"] = "transformer",
+    ):
         super().__init__()
         self.use_vae = use_vae
         self.var_eps = var_eps
@@ -88,13 +86,13 @@ class DPMMTransformerAutoEncoder(nn.Module):
             num_layers=num_encoder_layers,
             dim_feedforward=dim_feedforward,
             dropout=dropout,
-            var_eps=var_eps)
+            var_eps=var_eps,
+        )
 
         # MLP decoder
         if decoder_dims is None:
             decoder_dims = [128, 256]
         self.decoder = MLP([latent_dim] + decoder_dims + [input_dim], dropout=dropout)
-
 
         self.use_bottleneck = use_bottleneck
 
@@ -152,13 +150,13 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         dim_feedforward: int = 256,
         decoder_dims: list | None = None,
         dropout_rate: float = 0.1,
-        encoder_type: Literal['transformer', 'hybrid', 'mlp'] = 'transformer',
+        encoder_type: Literal["transformer", "hybrid", "mlp"] = "transformer",
         # DPMM params
         dpmm_warmup_ratio: float = 0.6,
         dpmm_loss_weight: float = 1.0,
         dpmm_refit_interval: int = 10,
         n_components: int = 50,
-        dpmm_loss_type: Literal['nll', 'kl', 'energy', 'student_t', 'mmd', 'soft_nll'] = 'kl',
+        dpmm_loss_type: Literal["nll", "kl", "energy", "student_t", "mmd", "soft_nll"] = "kl",
         student_t_df: float = 3.0,
         mmd_bandwidth: float = 1.0,
         model_name: str = "DPMMODETransformer",
@@ -169,8 +167,11 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         # Anti-collapse mechanisms for transformer encoder
         dpmm_anneal_epochs: int = 100,
         var_reg_weight: float = 10.0,
-        var_reg_min: float = 0.01):
-        super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=[d_model], model_name=model_name)
+        var_reg_min: float = 0.01,
+    ):
+        super().__init__(
+            input_dim=input_dim, latent_dim=latent_dim, hidden_dims=[d_model], model_name=model_name
+        )
 
         self.encoder_type = encoder_type
 
@@ -186,7 +187,8 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             use_bottleneck=use_bottleneck,
             bottleneck_dim=bottleneck_dim,
             use_vae=use_vae,
-            encoder_type=encoder_type)
+            encoder_type=encoder_type,
+        )
 
         self.dpmm_warmup_ratio = dpmm_warmup_ratio
         self.dpmm_loss_weight = dpmm_loss_weight
@@ -208,11 +210,14 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         # Safety guard: VAE Gaussian prior N(0,I) conflicts with DPMM clustering prior
         if self.use_vae and self.dpmm_loss_weight > 0:
             import warnings
+
             warnings.warn(
                 f"{self.model_name}: use_vae=True with dpmm_loss_weight={self.dpmm_loss_weight} "
                 f"creates conflicting KL objectives (Gaussian N(0,I) vs DPMM mixture). "
                 f"Forcing dpmm_loss_weight=0.0 and dpmm_warmup_ratio=1.0.",
-                UserWarning, stacklevel=2)
+                UserWarning,
+                stacklevel=2,
+            )
             self.dpmm_loss_weight = 0.0
             self.dpmm_warmup_ratio = 1.0
 
@@ -225,7 +230,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             z = self.ae.encode_ae(x)
         return z
 
-    def extract_latent(self, data_loader, device='cuda', return_reconstructions: bool = False):
+    def extract_latent(self, data_loader, device="cuda", return_reconstructions: bool = False):
         """Extract latent representations."""
         self.eval()
         self.to(device)
@@ -266,15 +271,18 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             result["var"] = var
         return result
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         """Compute loss: reconstruction + DPMM + KL (Phase 1)
 
         NOTE: Uses _compute_loss_with_kl_weight internally for KL annealing support.
         """
         return self._compute_loss_with_kl_weight(x, outputs, self.kl_weight, **kwargs)
 
-    def _compute_loss_with_kl_weight(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
-                                      kl_weight: float, **kwargs) -> dict[str, torch.Tensor]:
+    def _compute_loss_with_kl_weight(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], kl_weight: float, **kwargs
+    ) -> dict[str, torch.Tensor]:
         """Compute loss with a specific KL weight (for KL annealing)."""
         loss_dict = {}
 
@@ -286,7 +294,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             loss_dict["recon_ae"] = recon_ae
             loss_dict["recon_bottleneck"] = recon_bottleneck
         else:
-            x_hat, = outputs["reconstruction"]
+            (x_hat,) = outputs["reconstruction"]
             recon = self.recon_loss_fn(x_hat, x)
             loss_dict["recon_ae"] = recon
 
@@ -320,8 +328,12 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
     def _update_dpmm_params(self, bgm: BayesianGaussianMixture, device: torch.device):
         """Extract DPMM parameters from fitted sklearn model"""
         means = torch.as_tensor(bgm.means_, dtype=torch.float32, device=device)
-        weight_concentration = torch.as_tensor(bgm.weight_concentration_, dtype=torch.float32, device=device)
-        precisions_cholesky = torch.as_tensor(bgm.precisions_cholesky_, dtype=torch.float32, device=device)
+        weight_concentration = torch.as_tensor(
+            bgm.weight_concentration_, dtype=torch.float32, device=device
+        )
+        precisions_cholesky = torch.as_tensor(
+            bgm.precisions_cholesky_, dtype=torch.float32, device=device
+        )
         weights = torch.as_tensor(bgm.weights_, dtype=torch.float32, device=device)
 
         precisions_cholesky = torch.clamp(precisions_cholesky, min=1e-6, max=10.0)
@@ -331,7 +343,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             "weight_concentration": weight_concentration,
             "precisions_cholesky": precisions_cholesky,
             "weights": weights,
-            "covariances": 1.0 / (precisions_cholesky ** 2 + 1e-10),
+            "covariances": 1.0 / (precisions_cholesky**2 + 1e-10),
         }
         self.dpmm_fitted = True
 
@@ -347,7 +359,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         precisions = dp["precisions_cholesky"] ** 2
 
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
 
         log_gauss = -0.5 * (n_features * math.log(2.0 * math.pi) + mahalanobis) + log_det
         log_prob = torch.logsumexp(log_gauss + log_weights, dim=1)
@@ -357,7 +369,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
 
     def _kl_gaussian(self, mu: torch.Tensor, var: torch.Tensor) -> torch.Tensor:
         """KL divergence for Gaussian"""
-        kl_per_sample = 0.5 * torch.sum(var + mu ** 2 - 1.0 - torch.log(var + 1e-10), dim=1)
+        kl_per_sample = 0.5 * torch.sum(var + mu**2 - 1.0 - torch.log(var + 1e-10), dim=1)
         return kl_per_sample.mean()
 
     def _refit_dpmm(self, train_loader, device: torch.device, verbose: int = 1) -> bool:
@@ -383,7 +395,8 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
                 init_params="kmeans",
                 max_iter=100,
                 tol=1e-3,
-                random_state=42)
+                random_state=42,
+            )
             bgm.fit(z_all)
 
             if not np.isfinite(bgm.lower_bound_):
@@ -409,7 +422,8 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         verbose: int = 1,
         verbose_every: int = 1,
         weight_decay: float = 1e-5,
-        **kwargs):
+        **kwargs,
+    ):
         """Phase 1: Train Transformer AE/VAE with periodic DPMM refitting.
 
         Uses fixed KL weight (no annealing) and fixed learning rate (no scheduler).
@@ -422,7 +436,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
 
         dpmm_warmup_epochs = int(epochs * self.dpmm_warmup_ratio)
 
-        best_loss = float('inf')
+        best_loss = float("inf")
         patience_counter = 0
 
         train_losses, recon_losses, dpmm_losses, kl_losses = [], [], [], []
@@ -431,20 +445,24 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             verbose_every = 1
 
         for epoch in range(epochs):
-
             # DPMM annealing: gradual ramp after warmup to prevent collapse
             if epoch < dpmm_warmup_epochs:
                 self.dpmm_fitted = False
                 self._current_dpmm_weight = 0.0
             else:
-                anneal_progress = min(1.0, (epoch - dpmm_warmup_epochs) / max(1, self.dpmm_anneal_epochs))
+                anneal_progress = min(
+                    1.0, (epoch - dpmm_warmup_epochs) / max(1, self.dpmm_anneal_epochs)
+                )
                 self._current_dpmm_weight = self.dpmm_loss_weight * anneal_progress
 
             if epoch < dpmm_warmup_epochs:
                 pass  # no DPMM fitting during warmup
-            elif epoch == dpmm_warmup_epochs or (epoch - dpmm_warmup_epochs) % self.dpmm_refit_interval == 0:
+            elif (
+                epoch == dpmm_warmup_epochs
+                or (epoch - dpmm_warmup_epochs) % self.dpmm_refit_interval == 0
+            ):
                 if verbose >= 1 and ((epoch + 1) % verbose_every == 0 or epoch == 0):
-                    print(f"Epoch {epoch+1}: Refitting DPMM...")
+                    print(f"Epoch {epoch + 1}: Refitting DPMM...")
                 self._refit_dpmm(train_loader, torch.device(device), verbose=verbose)
 
             self.train()
@@ -470,7 +488,11 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
                 epoch_recon += loss_dict["recon_loss"].item()
                 epoch_dpmm += loss_dict["dpmm_loss"].item()
                 if "kl_vae" in loss_dict:
-                    epoch_kl += loss_dict["kl_vae"].item() if isinstance(loss_dict["kl_vae"], torch.Tensor) else loss_dict["kl_vae"]
+                    epoch_kl += (
+                        loss_dict["kl_vae"].item()
+                        if isinstance(loss_dict["kl_vae"], torch.Tensor)
+                        else loss_dict["kl_vae"]
+                    )
                 n_batches += 1
 
             if n_batches == 0:
@@ -486,12 +508,16 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             dpmm_losses.append(avg_dpmm)
             kl_losses.append(avg_kl)
 
-            do_print = (verbose >= 1) and (((epoch + 1) % verbose_every == 0) or (epoch == 0) or (epoch + 1 == epochs))
+            do_print = (verbose >= 1) and (
+                ((epoch + 1) % verbose_every == 0) or (epoch == 0) or (epoch + 1 == epochs)
+            )
 
             if do_print:
                 phase = "Warmup" if epoch < dpmm_warmup_epochs else f"DPMM[{self.dpmm_loss_type}]"
-                print(f"Epoch {epoch+1:3d}/{epochs} [Phase1-Transformer-{phase}] | "
-                      f"Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | DPMM: {avg_dpmm:.4f} | KL: {avg_kl:.4f}")
+                print(
+                    f"Epoch {epoch + 1:3d}/{epochs} [Phase1-Transformer-{phase}] | "
+                    f"Loss: {avg_loss:.4f} | Recon: {avg_recon:.4f} | DPMM: {avg_dpmm:.4f} | KL: {avg_kl:.4f}"
+                )
 
             if avg_loss < best_loss:
                 best_loss = avg_loss
@@ -502,13 +528,20 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
                 patience_counter += 1
                 if patience_counter >= patience:
                     if verbose >= 1:
-                        print(f"\nEarly stopping at epoch {epoch+1}")
+                        print(f"\nEarly stopping at epoch {epoch + 1}")
                     break
 
-        return {"train_loss": train_losses, "recon_loss": recon_losses, "dpmm_loss": dpmm_losses, "kl_loss": kl_losses}
+        return {
+            "train_loss": train_losses,
+            "recon_loss": recon_losses,
+            "dpmm_loss": dpmm_losses,
+            "kl_loss": kl_losses,
+        }
 
 
-def create_dpmmode_transformer_model(input_dim: int, latent_dim: int = 32, **kwargs) -> DPMMODETransformerModel:
+def create_dpmmode_transformer_model(
+    input_dim: int, latent_dim: int = 32, **kwargs
+) -> DPMMODETransformerModel:
     """
     Create DPMMODETransformer model.
 

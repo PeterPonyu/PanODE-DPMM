@@ -12,7 +12,7 @@ class PriorMixin:
         """Convert Dirichlet prior to logistic-normal prior parameters"""
         K = alpha.shape[0]
         mu = torch.log(alpha) - torch.log(alpha).sum() / K
-        sigma = torch.sqrt((1.0 - 2.0 / K) / alpha + torch.sum(1.0 / alpha) / (K ** 2))
+        sigma = torch.sqrt((1.0 - 2.0 / K) / alpha + torch.sum(1.0 / alpha) / (K**2))
         return mu, sigma
 
     def _kl_logistic_normal(self, mu_q, var_q, mu_p, var_p) -> torch.Tensor:
@@ -26,12 +26,18 @@ class PriorMixin:
         var_p = var_p.to(mu_q.device)
 
         kl = 0.5 * torch.sum(
-            var_q / (var_p + 1e-10) + (mu_p - mu_q) ** 2 / (var_p + 1e-10) - 1 +
-            torch.log(var_p + 1e-10) - torch.log(var_q + 1e-10), dim=1
+            var_q / (var_p + 1e-10)
+            + (mu_p - mu_q) ** 2 / (var_p + 1e-10)
+            - 1
+            + torch.log(var_p + 1e-10)
+            - torch.log(var_q + 1e-10),
+            dim=1,
         )
         return kl.mean()
 
-    def _kl_logistic_normal_free_bits(self, mu_q, var_q, mu_p, var_p, free_bits: float = 0.5) -> torch.Tensor:
+    def _kl_logistic_normal_free_bits(
+        self, mu_q, var_q, mu_p, var_p, free_bits: float = 0.5
+    ) -> torch.Tensor:
         """KL divergence with anti-collapse regularization.
 
         Uses a penalty when KL per dimension is below threshold to prevent collapse.
@@ -54,8 +60,11 @@ class PriorMixin:
 
         # Per-dimension KL: [batch, latent_dim]
         kl_per_dim = 0.5 * (
-            var_q / (var_p + 1e-10) + (mu_p - mu_q) ** 2 / (var_p + 1e-10) - 1 +
-            torch.log(var_p + 1e-10) - torch.log(var_q + 1e-10)
+            var_q / (var_p + 1e-10)
+            + (mu_p - mu_q) ** 2 / (var_p + 1e-10)
+            - 1
+            + torch.log(var_p + 1e-10)
+            - torch.log(var_q + 1e-10)
         )
 
         # Average over batch: [latent_dim]
@@ -70,7 +79,9 @@ class PriorMixin:
         return kl_per_dim_avg.sum() + penalty
 
     @staticmethod
-    def _kl_gaussian_free_bits(mu: torch.Tensor, var: torch.Tensor, free_bits: float = 0.1) -> torch.Tensor:
+    def _kl_gaussian_free_bits(
+        mu: torch.Tensor, var: torch.Tensor, free_bits: float = 0.1
+    ) -> torch.Tensor:
         """KL divergence for standard Gaussian prior N(0,1) with soft penalty for low KL.
 
         Uses a soft penalty approach to prevent posterior collapse by encouraging
@@ -85,7 +96,7 @@ class PriorMixin:
             KL divergence with soft penalty for low-KL dimensions
         """
         # Per-dimension KL for N(mu, var) vs N(0, 1): [batch, latent_dim]
-        kl_per_dim = 0.5 * (var + mu ** 2 - 1.0 - torch.log(var + 1e-10))
+        kl_per_dim = 0.5 * (var + mu**2 - 1.0 - torch.log(var + 1e-10))
 
         # Average over batch: [latent_dim]
         kl_per_dim_avg = kl_per_dim.mean(dim=0)
@@ -94,7 +105,7 @@ class PriorMixin:
         # When KL < free_bits, add a penalty proportional to the shortfall squared
         penalty_weight = 10.0  # Strength of the penalty
         shortfall = torch.clamp(free_bits - kl_per_dim_avg, min=0)
-        penalty = penalty_weight * (shortfall ** 2).sum()
+        penalty = penalty_weight * (shortfall**2).sum()
 
         return kl_per_dim_avg.sum() + penalty
 
@@ -121,7 +132,6 @@ class ReconstructionLossMixin:
         return kl.mean()
 
 
-
 class DPMMLossMixin:
     """DPMM clustering losses - ALIGNED WITH DPMMODE"""
 
@@ -130,8 +140,8 @@ class DPMMLossMixin:
         if not self.use_dpmm:
             return False
         if not self.dpmm_fitted or self.dpmm_params is None:
-            if hasattr(self, '_dpmm_warning_count'):
-                self._dpmm_warning_count = getattr(self, '_dpmm_warning_count', 0) + 1
+            if hasattr(self, "_dpmm_warning_count"):
+                self._dpmm_warning_count = getattr(self, "_dpmm_warning_count", 0) + 1
                 if self._dpmm_warning_count <= 1:
                     print(f"Warning: {loss_name} called but DPMM not fitted. Skipping DPMM loss.")
             return False
@@ -158,11 +168,11 @@ class DPMMLossMixin:
         # BUG #16 FIX: Add clamping to precisions_cholesky
         prec_chol = torch.clamp(dp["precisions_cholesky"], min=eps, max=1e6)
         log_det = torch.sum(torch.log(prec_chol), dim=1)
-        precisions = prec_chol ** 2
+        precisions = prec_chol**2
 
         # Compute Mahalanobis distance
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
         # BUG #16 FIX: Clamp mahalanobis to prevent overflow
         mahalanobis = torch.clamp(mahalanobis, max=1e6)
 
@@ -214,11 +224,11 @@ class DPMMLossMixin:
         # Compute log determinant (BUG #16 FIX: clamp precisions)
         prec_chol = torch.clamp(dp["precisions_cholesky"], min=eps, max=1e6)
         log_det = torch.sum(torch.log(prec_chol), dim=1)
-        precisions = prec_chol ** 2
+        precisions = prec_chol**2
 
         # Mahalanobis distance
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
         # BUG #16 FIX: Clamp mahalanobis
         mahalanobis = torch.clamp(mahalanobis, max=1e6)
 
@@ -243,8 +253,8 @@ class DPMMLossMixin:
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
         # BUG #16 FIX: Clamp precisions
         prec_chol = torch.clamp(dp["precisions_cholesky"], min=eps, max=1e6)
-        precisions = prec_chol ** 2
-        weighted_dist = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        precisions = prec_chol**2
+        weighted_dist = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
         # BUG #16 FIX: Clamp weighted_dist
         weighted_dist = torch.clamp(weighted_dist, min=0.0, max=1e6)
 
@@ -271,8 +281,8 @@ class DPMMLossMixin:
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
         # BUG #16 FIX: Clamp precisions
         prec_chol = torch.clamp(dp["precisions_cholesky"], min=eps, max=1e6)
-        precisions = prec_chol ** 2
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        precisions = prec_chol**2
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
         # BUG #16 FIX: Clamp mahalanobis
         mahalanobis = torch.clamp(mahalanobis, min=0.0, max=1e6)
 
@@ -306,11 +316,11 @@ class DPMMLossMixin:
         dpmm_samples = means + stds * torch.randn_like(means)
 
         def rbf_kernel(x, y, bandwidth):
-            xx = torch.sum(x ** 2, dim=1, keepdim=True)
-            yy = torch.sum(y ** 2, dim=1, keepdim=True)
+            xx = torch.sum(x**2, dim=1, keepdim=True)
+            yy = torch.sum(y**2, dim=1, keepdim=True)
             xy = torch.mm(x, y.T)
             dists = xx + yy.T - 2 * xy
-            return torch.exp(-dists / (2 * bandwidth ** 2))
+            return torch.exp(-dists / (2 * bandwidth**2))
 
         bandwidth = self.mmd_bandwidth
         k_xx = rbf_kernel(z, z, bandwidth).mean()
@@ -336,7 +346,7 @@ class DPMMLossMixin:
         precisions = dp["precisions_cholesky"] ** 2
 
         diff = z.unsqueeze(1) - dp["means"].unsqueeze(0)
-        mahalanobis = torch.sum(diff ** 2 * precisions.unsqueeze(0), dim=2)
+        mahalanobis = torch.sum(diff**2 * precisions.unsqueeze(0), dim=2)
 
         log_2pi = math.log(2.0 * math.pi)
         log_gauss = -0.5 * (n_features * log_2pi + mahalanobis) + log_det
@@ -359,7 +369,9 @@ class DPMMManagementMixin:
         Ensures all tensors are on correct device.
         """
         means = torch.as_tensor(bgm.means_, dtype=torch.float32, device=device)
-        weight_concentration = torch.as_tensor(bgm.weight_concentration_, dtype=torch.float32, device=device)
+        weight_concentration = torch.as_tensor(
+            bgm.weight_concentration_, dtype=torch.float32, device=device
+        )
         weights = torch.as_tensor(bgm.weights_, dtype=torch.float32, device=device)
 
         precisions = torch.as_tensor(bgm.precisions_, dtype=torch.float32, device=device)
@@ -372,7 +384,7 @@ class DPMMManagementMixin:
             "weight_concentration": weight_concentration,
             "precisions_cholesky": precisions_cholesky,
             "weights": weights,
-            "covariances": 1.0 / (precisions_cholesky ** 2 + 1e-10),
+            "covariances": 1.0 / (precisions_cholesky**2 + 1e-10),
         }
         self.dpmm_fitted = True
 

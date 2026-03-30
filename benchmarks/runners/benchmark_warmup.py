@@ -18,6 +18,7 @@ def standardize_labels(adata, label_key):
         print(f"  WARNING: Neither '{label_key}' nor 'cell_type' found in obs.")
     return adata
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--datasets", type=str, nargs="+", default=["setty", "endo", "dentate"])
@@ -42,21 +43,30 @@ def main():
 
         # Load data
         adata = load_or_preprocess_adata(
-            ds_info["path"], max_cells=BASE_CONFIG.max_cells, hvg_top_genes=BASE_CONFIG.hvg_top_genes,
-            seed=args.seed, cache_dir=str(out_dirs["cache"]), use_cache=True
+            ds_info["path"],
+            max_cells=BASE_CONFIG.max_cells,
+            hvg_top_genes=BASE_CONFIG.hvg_top_genes,
+            seed=args.seed,
+            cache_dir=str(out_dirs["cache"]),
+            use_cache=True,
         )
         adata = standardize_labels(adata, ds_info["label_key"])
 
         splitter = DataSplitter(
-            adata=adata, layer="counts",
-            train_size=0.7, val_size=0.15, test_size=0.15,
-            batch_size=BASE_CONFIG.batch_size, latent_dim=BASE_CONFIG.latent_dim
+            adata=adata,
+            layer="counts",
+            train_size=0.7,
+            val_size=0.15,
+            test_size=0.15,
+            batch_size=BASE_CONFIG.batch_size,
+            latent_dim=BASE_CONFIG.latent_dim,
         )
 
         for model_name in args.models:
             for warmup_ratio in [0.0, 0.3]:
                 print(f"  Model: {model_name}, Warmup Ratio: {warmup_ratio}")
                 from benchmarks.model_registry import MODELS
+
                 model_info = MODELS[model_name]
 
                 start_time = time.time()
@@ -73,7 +83,7 @@ def main():
                     device=device,
                     lr=BASE_CONFIG.lr,
                     epochs=500,
-                    data_type=ds_info["data_type"]
+                    data_type=ds_info["data_type"],
                 )
 
                 end_time = time.time()
@@ -98,6 +108,7 @@ def main():
     csv_path = out_dirs["csv"] / f"warmup_ablation_seed{args.seed}.csv"
     df.to_csv(csv_path, index=False)
     print(f"\nSaved warmup ablation results to {csv_path}")
+
 
 if __name__ == "__main__":
     main()

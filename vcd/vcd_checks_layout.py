@@ -51,6 +51,7 @@ def _resolve_tick_limit(
 # Pass 19: Font-size adequacy detection
 # ===============================================================================
 
+
 def _check_fontsize_adequacy(
     fig,
     renderer,
@@ -100,8 +101,8 @@ def _check_fontsize_adequacy(
         if not text_str:
             continue
         # Skip internal matplotlib artists (underscore prefix)
-        label = getattr(artist, '_label', '') or ''
-        if label.startswith('_'):
+        label = getattr(artist, "_label", "") or ""
+        if label.startswith("_"):
             continue
 
         fs = artist.get_fontsize()
@@ -109,8 +110,8 @@ def _check_fontsize_adequacy(
         # Dense labels (tagged via gid or very small tick labels) use a
         # relaxed threshold to avoid false alarms on intentionally compact
         # heatmap / dense bar-chart ticks.
-        gid = getattr(artist, '_gid', None) or ''
-        is_dense = 'dense_label' in str(gid) or info.tag.startswith(('xtick', 'ytick', 'cbar_tick'))
+        gid = getattr(artist, "_gid", None) or ""
+        is_dense = "dense_label" in str(gid) or info.tag.startswith(("xtick", "ytick", "cbar_tick"))
         threshold = dense_label_min_pt if is_dense else min_pt
         if effective < threshold:
             seen_sizes.setdefault(fs, []).append(text_str[:30])
@@ -123,15 +124,17 @@ def _check_fontsize_adequacy(
         sample_str = ", ".join(f"'{s}'" for s in sample)
         if n > 3:
             sample_str += f" ... +{n - 3} more"
-        issues.append({
-            "type": "fontsize_too_small",
-            "severity": "warning",
-            "detail": (
-                f"{n} text(s) at {fs:.1f}pt \u2192 effective {effective:.1f}pt "
-                f"(min {min_pt}pt): {sample_str}"
-            ),
-            "elements": examples,
-        })
+        issues.append(
+            {
+                "type": "fontsize_too_small",
+                "severity": "warning",
+                "detail": (
+                    f"{n} text(s) at {fs:.1f}pt \u2192 effective {effective:.1f}pt "
+                    f"(min {min_pt}pt): {sample_str}"
+                ),
+                "elements": examples,
+            }
+        )
 
     return issues
 
@@ -139,6 +142,7 @@ def _check_fontsize_adequacy(
 # ===============================================================================
 # Pass 20: Tick-spine overlap detection
 # ===============================================================================
+
 
 def _check_tick_spine_overlap(fig, renderer, tol_px=2.0):
     """Pass 20: Detect tick labels rendered *inside* the data area.
@@ -152,7 +156,7 @@ def _check_tick_spine_overlap(fig, renderer, tol_px=2.0):
     """
     issues = []
     for ax in fig.get_axes():
-        if getattr(ax, 'name', None) == 'polar':
+        if getattr(ax, "name", None) == "polar":
             continue
         ax_bb = _safe_bbox(ax, renderer)
         if ax_bb is None:
@@ -168,14 +172,14 @@ def _check_tick_spine_overlap(fig, renderer, tol_px=2.0):
                 continue
             # Label is "inside" if its bottom edge is above the spine
             if bb.y0 > ax_bb.y0 + tol_px and bb.y1 < ax_bb.y1 - tol_px:
-                issues.append({
-                    "type": "tick_spine_overlap",
-                    "severity": "warning",
-                    "detail": (
-                        f"X-tick '{txt[:20]}' rendered inside plot area"
-                    ),
-                    "elements": [f"xtick:{txt[:20]}"],
-                })
+                issues.append(
+                    {
+                        "type": "tick_spine_overlap",
+                        "severity": "warning",
+                        "detail": (f"X-tick '{txt[:20]}' rendered inside plot area"),
+                        "elements": [f"xtick:{txt[:20]}"],
+                    }
+                )
 
         # Y-tick labels: flag only if the ENTIRE label is to the right of the left spine
         for tl in ax.get_yticklabels():
@@ -187,14 +191,14 @@ def _check_tick_spine_overlap(fig, renderer, tol_px=2.0):
                 continue
             # Label is "inside" if its left edge is past the left spine
             if bb.x0 > ax_bb.x0 + tol_px and bb.x1 < ax_bb.x1 - tol_px:
-                issues.append({
-                    "type": "tick_spine_overlap",
-                    "severity": "warning",
-                    "detail": (
-                        f"Y-tick '{txt[:20]}' rendered inside plot area"
-                    ),
-                    "elements": [f"ytick:{txt[:20]}"],
-                })
+                issues.append(
+                    {
+                        "type": "tick_spine_overlap",
+                        "severity": "warning",
+                        "detail": (f"Y-tick '{txt[:20]}' rendered inside plot area"),
+                        "elements": [f"ytick:{txt[:20]}"],
+                    }
+                )
     return issues
 
 
@@ -202,9 +206,8 @@ def _check_tick_spine_overlap(fig, renderer, tol_px=2.0):
 # Pass 21: Global font consistency check
 # ===============================================================================
 
-def _check_font_policy(fig, renderer, infos,
-                        allowed_families=None,
-                        max_title_label_diff=2.0):
+
+def _check_font_policy(fig, renderer, infos, allowed_families=None, max_title_label_diff=2.0):
     """Pass 21: Enforce global font consistency.
 
     Checks:
@@ -252,17 +255,22 @@ def _check_font_policy(fig, renderer, infos,
     # Report wrong families
     if wrong_family_examples:
         sample = wrong_family_examples[:3]
-        issues.append({
-            "type": "font_family_violation",
-            "severity": "warning",
-            "detail": (
-                f"{len(wrong_family_examples)} text(s) use non-standard font: "
-                f"{'; '.join(sample)}"
-                + (f" ... +{len(wrong_family_examples) - 3} more"
-                   if len(wrong_family_examples) > 3 else "")
-            ),
-            "elements": wrong_family_examples[:5],
-        })
+        issues.append(
+            {
+                "type": "font_family_violation",
+                "severity": "warning",
+                "detail": (
+                    f"{len(wrong_family_examples)} text(s) use non-standard font: "
+                    f"{'; '.join(sample)}"
+                    + (
+                        f" ... +{len(wrong_family_examples) - 3} more"
+                        if len(wrong_family_examples) > 3
+                        else ""
+                    )
+                ),
+                "elements": wrong_family_examples[:5],
+            }
+        )
 
     # Report title/label size mismatch
     if title_sizes and label_sizes:
@@ -270,25 +278,29 @@ def _check_font_policy(fig, renderer, infos,
         mean_label = sum(label_sizes) / len(label_sizes)
         diff = abs(mean_title - mean_label)
         if diff > max_title_label_diff:
-            issues.append({
-                "type": "title_label_size_mismatch",
-                "severity": "info",
-                "detail": (
-                    f"Title avg {mean_title:.1f}pt vs label avg "
-                    f"{mean_label:.1f}pt (diff={diff:.1f}pt, "
-                    f"max={max_title_label_diff}pt)"
-                ),
-                "elements": [],
-            })
+            issues.append(
+                {
+                    "type": "title_label_size_mismatch",
+                    "severity": "info",
+                    "detail": (
+                        f"Title avg {mean_title:.1f}pt vs label avg "
+                        f"{mean_label:.1f}pt (diff={diff:.1f}pt, "
+                        f"max={max_title_label_diff}pt)"
+                    ),
+                    "elements": [],
+                }
+            )
 
     # Report bold usage
     if bold_count > 0:
-        issues.append({
-            "type": "bold_usage",
-            "severity": "info",
-            "detail": f"{bold_count} text(s) use bold fontweight",
-            "elements": [],
-        })
+        issues.append(
+            {
+                "type": "bold_usage",
+                "severity": "info",
+                "detail": f"{bold_count} text(s) use bold fontweight",
+                "elements": [],
+            }
+        )
 
     return issues
 
@@ -296,6 +308,7 @@ def _check_font_policy(fig, renderer, infos,
 # ===============================================================================
 # Pass 22: Label density excess detection (colorbar-aware)
 # ===============================================================================
+
 
 def _check_label_density(
     fig,
@@ -323,9 +336,9 @@ def _check_label_density(
     issues: list[dict] = []
 
     for ax in fig.get_axes():
-        if getattr(ax, 'name', None) == 'polar':
+        if getattr(ax, "name", None) == "polar":
             continue
-        if getattr(ax, '_is_legend_cell', False):
+        if getattr(ax, "_is_legend_cell", False):
             continue
         # Skip colorbar axes -- they are narrow by design and their tick
         # density is governed by the colorbar tick locator, not by data layout.
@@ -369,24 +382,24 @@ def _check_label_density(
                 if exceeds_density:
                     reasons.append(f"fill {ratio_x:.0%} of axis width")
                 if exceeds_count:
-                    reasons.append(
-                        f"{len(xtick_widths)} labels exceed policy cap {xtick_limit}"
-                    )
-                issues.append({
-                    "type": "label_density_excess",
-                    "severity": "warning",
-                    "detail": (
-                        f"X-tick labels in '{title}' "
-                        f"{' and '.join(reasons)} "
-                        f"(max_len={max_xtick_len} chars)"
-                    ),
-                    "elements": [f"xtick_density:{title}"],
-                    "axis_kind": "xtick",
-                    "axes_title": title,
-                    "num_labels": len(xtick_widths),
-                    "max_label_length": max_xtick_len,
-                    "density_ratio": ratio_x,
-                })
+                    reasons.append(f"{len(xtick_widths)} labels exceed policy cap {xtick_limit}")
+                issues.append(
+                    {
+                        "type": "label_density_excess",
+                        "severity": "warning",
+                        "detail": (
+                            f"X-tick labels in '{title}' "
+                            f"{' and '.join(reasons)} "
+                            f"(max_len={max_xtick_len} chars)"
+                        ),
+                        "elements": [f"xtick_density:{title}"],
+                        "axis_kind": "xtick",
+                        "axes_title": title,
+                        "num_labels": len(xtick_widths),
+                        "max_label_length": max_xtick_len,
+                        "density_ratio": ratio_x,
+                    }
+                )
 
         # -- Y-tick label density --
         ytick_heights = []
@@ -410,24 +423,24 @@ def _check_label_density(
                 if exceeds_density:
                     reasons.append(f"fill {ratio_y:.0%} of axis height")
                 if exceeds_count:
-                    reasons.append(
-                        f"{len(ytick_heights)} labels exceed policy cap {ytick_limit}"
-                    )
-                issues.append({
-                    "type": "label_density_excess",
-                    "severity": "warning",
-                    "detail": (
-                        f"Y-tick labels in '{title}' "
-                        f"{' and '.join(reasons)} "
-                        f"(max_len={max_ytick_len} chars)"
-                    ),
-                    "elements": [f"ytick_density:{title}"],
-                    "axis_kind": "ytick",
-                    "axes_title": title,
-                    "num_labels": len(ytick_heights),
-                    "max_label_length": max_ytick_len,
-                    "density_ratio": ratio_y,
-                })
+                    reasons.append(f"{len(ytick_heights)} labels exceed policy cap {ytick_limit}")
+                issues.append(
+                    {
+                        "type": "label_density_excess",
+                        "severity": "warning",
+                        "detail": (
+                            f"Y-tick labels in '{title}' "
+                            f"{' and '.join(reasons)} "
+                            f"(max_len={max_ytick_len} chars)"
+                        ),
+                        "elements": [f"ytick_density:{title}"],
+                        "axis_kind": "ytick",
+                        "axes_title": title,
+                        "num_labels": len(ytick_heights),
+                        "max_label_length": max_ytick_len,
+                        "density_ratio": ratio_y,
+                    }
+                )
 
     return issues
 
@@ -435,6 +448,7 @@ def _check_label_density(
 # ===============================================================================
 # Pass 32: Cross-axes text overlap detection (NEW)
 # ===============================================================================
+
 
 def _check_cross_axes_text_overlap(fig, renderer, tol_px=2.0, min_overlap_px2=10.0):
     """Pass 32: Detect text from different axes overlapping each other.
@@ -475,13 +489,16 @@ def _check_cross_axes_text_overlap(fig, renderer, tol_px=2.0, min_overlap_px2=10
     for idx, ax in enumerate(fig.get_axes()):
         # Skip colorbar axes entirely -- their ticks are right next to
         # the parent axes and would produce false positives.
-        if _is_colorbar_axes(ax) or getattr(ax, '_is_legend_cell', False):
+        if _is_colorbar_axes(ax) or getattr(ax, "_is_legend_cell", False):
             continue
         aid = id(ax)
 
         # Titles
-        for title_obj in [ax.title, getattr(ax, '_left_title', None),
-                          getattr(ax, '_right_title', None)]:
+        for title_obj in [
+            ax.title,
+            getattr(ax, "_left_title", None),
+            getattr(ax, "_right_title", None),
+        ]:
             if title_obj is None:
                 continue
             txt = title_obj.get_text().strip()
@@ -492,8 +509,7 @@ def _check_cross_axes_text_overlap(fig, renderer, tol_px=2.0, min_overlap_px2=10
                 ax_texts.append((txt[:40], bb, idx, aid, "title"))
 
         # Axis labels
-        for lbl, role in [(ax.xaxis.label, "xlabel"),
-                          (ax.yaxis.label, "ylabel")]:
+        for lbl, role in [(ax.xaxis.label, "xlabel"), (ax.yaxis.label, "ylabel")]:
             txt = lbl.get_text().strip()
             if not txt:
                 continue
@@ -531,7 +547,7 @@ def _check_cross_axes_text_overlap(fig, renderer, tol_px=2.0, min_overlap_px2=10
             # Deduplicate: only report one issue per pair of axes indices
             # for the same role combination to avoid flooding
             pair_key = (min(ax_idx_i, ax_idx_j), max(ax_idx_i, ax_idx_j))
-            role_pair = tuple(sorted([role_i, role_j]))
+            role_pair = tuple(sorted([role_i, role_j]))  # noqa: F841
 
             si = _shrink(bb_i, tol_px)
             sj = _shrink(bb_j, tol_px)
@@ -549,19 +565,21 @@ def _check_cross_axes_text_overlap(fig, renderer, tol_px=2.0, min_overlap_px2=10
                 continue
             seen_pairs.add(dedup_key)
 
-            issues.append({
-                "type": "cross_axes_text_overlap",
-                "severity": "warning",
-                "detail": (
-                    f"{role_i} '{txt_i}' (axes {ax_idx_i}) overlaps "
-                    f"{role_j} '{txt_j}' (axes {ax_idx_j}) -- "
-                    f"{area:.0f} px\u00b2; consider increasing hspace/wspace"
-                ),
-                "elements": [
-                    f"{role_i}:{txt_i}:ax{ax_idx_i}",
-                    f"{role_j}:{txt_j}:ax{ax_idx_j}",
-                ],
-            })
+            issues.append(
+                {
+                    "type": "cross_axes_text_overlap",
+                    "severity": "warning",
+                    "detail": (
+                        f"{role_i} '{txt_i}' (axes {ax_idx_i}) overlaps "
+                        f"{role_j} '{txt_j}' (axes {ax_idx_j}) -- "
+                        f"{area:.0f} px\u00b2; consider increasing hspace/wspace"
+                    ),
+                    "elements": [
+                        f"{role_i}:{txt_i}:ax{ax_idx_i}",
+                        f"{role_j}:{txt_j}:ax{ax_idx_j}",
+                    ],
+                }
+            )
 
     return issues
 
@@ -571,7 +589,7 @@ def _check_cross_axes_text_overlap(fig, renderer, tol_px=2.0, min_overlap_px2=10
 # ===============================================================================
 
 _PANEL_LABEL_RE = re.compile(
-    r'^[\(\[\{]?\s*[a-zA-Z]\s*[\)\]\}]?$'   # (a), [B], {c}, a), (A, etc.
+    r"^[\(\[\{]?\s*[a-zA-Z]\s*[\)\]\}]?$"  # (a), [B], {c}, a), (A, etc.
 )
 
 
@@ -634,19 +652,23 @@ def _check_panel_label_placement(fig, renderer, margin_px=5.0):
 
         # Is the label fully inside any axes?
         for ax_idx, ax_bb in ax_bboxes:
-            if (lbl_bb.x0 >= ax_bb.x0 - margin_px
-                    and lbl_bb.y0 >= ax_bb.y0 - margin_px
-                    and lbl_bb.x1 <= ax_bb.x1 + margin_px
-                    and lbl_bb.y1 <= ax_bb.y1 + margin_px):
-                issues.append({
-                    "type": "panel_label_inside_axes",
-                    "severity": "warning",
-                    "detail": (
-                        f"Panel label '{txt}' is inside axes {ax_idx} bounds; "
-                        f"consider placing it outside the plot area"
-                    ),
-                    "elements": [f"panel_label:{txt}", f"axes:{ax_idx}"],
-                })
+            if (
+                lbl_bb.x0 >= ax_bb.x0 - margin_px
+                and lbl_bb.y0 >= ax_bb.y0 - margin_px
+                and lbl_bb.x1 <= ax_bb.x1 + margin_px
+                and lbl_bb.y1 <= ax_bb.y1 + margin_px
+            ):
+                issues.append(
+                    {
+                        "type": "panel_label_inside_axes",
+                        "severity": "warning",
+                        "detail": (
+                            f"Panel label '{txt}' is inside axes {ax_idx} bounds; "
+                            f"consider placing it outside the plot area"
+                        ),
+                        "elements": [f"panel_label:{txt}", f"axes:{ax_idx}"],
+                    }
+                )
                 break  # only report once per label
 
     # Also check per-axes text objects (some workflows use ax.text() for labels)
@@ -667,18 +689,22 @@ def _check_panel_label_placement(fig, renderer, margin_px=5.0):
 
             # ax.text() objects in data/axes coords are inside by definition;
             # only flag if the bbox is fully within the axes display bbox
-            if (lbl_bb.x0 >= ax_bb.x0 - margin_px
-                    and lbl_bb.y0 >= ax_bb.y0 - margin_px
-                    and lbl_bb.x1 <= ax_bb.x1 + margin_px
-                    and lbl_bb.y1 <= ax_bb.y1 + margin_px):
-                issues.append({
-                    "type": "panel_label_inside_axes",
-                    "severity": "warning",
-                    "detail": (
-                        f"Panel label '{txt}' is placed inside axes {ax_idx}; "
-                        f"consider using fig.text() outside the plot area"
-                    ),
-                    "elements": [f"panel_label:{txt}", f"axes:{ax_idx}"],
-                })
+            if (
+                lbl_bb.x0 >= ax_bb.x0 - margin_px
+                and lbl_bb.y0 >= ax_bb.y0 - margin_px
+                and lbl_bb.x1 <= ax_bb.x1 + margin_px
+                and lbl_bb.y1 <= ax_bb.y1 + margin_px
+            ):
+                issues.append(
+                    {
+                        "type": "panel_label_inside_axes",
+                        "severity": "warning",
+                        "detail": (
+                            f"Panel label '{txt}' is placed inside axes {ax_idx}; "
+                            f"consider using fig.text() outside the plot area"
+                        ),
+                        "elements": [f"panel_label:{txt}", f"axes:{ax_idx}"],
+                    }
+                )
 
     return issues

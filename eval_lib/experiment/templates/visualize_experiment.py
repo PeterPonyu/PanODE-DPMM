@@ -47,7 +47,7 @@ from eval_lib.metrics.battery import METRIC_GROUPS
 from eval_lib.viz.rea import RigorousExperimentalAnalyzer, _apply_font, create_publication_figure
 
 try:
-    from src.visualization import apply_style, save_with_vcd, style_axes
+    from src.visualization import save_with_vcd
 except ImportError:
     save_with_vcd = None
 
@@ -77,6 +77,7 @@ DEFAULT_PALETTE = "husl"
 # ████  PORTABLE: Layout helpers
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _adaptive_ncols(n_methods: int) -> int:
     if n_methods <= 3:
         return 10
@@ -104,13 +105,13 @@ def _compute_hspace(
     rotation_deg: float,
     xtick_fontsize: float,
     title_fontsize: float,
-    per_row_height: float) -> float:
+    per_row_height: float,
+) -> float:
     max_label_len = max((len(m) for m in method_names), default=5)
     theta = math.radians(rotation_deg)
     char_w_in = 0.55 * xtick_fontsize / 72.0
     char_h_in = xtick_fontsize / 72.0
-    label_drop = (math.sin(theta) * max_label_len * char_w_in
-                  + math.cos(theta) * char_h_in)
+    label_drop = math.sin(theta) * max_label_len * char_w_in + math.cos(theta) * char_h_in
     title_h = title_fontsize * 1.4 / 72.0
     padding = 0.08
     gap_needed = label_drop + title_h + padding
@@ -128,6 +129,7 @@ def _build_sig_pairs(method_names: list) -> list:
 # ═══════════════════════════════════════════════════════════════════════════════
 # ████  PORTABLE: Main metric-figure generation
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def visualize(
     preset_name,
@@ -157,7 +159,8 @@ def visualize(
     font_family="Arial",
     show_legend=False,
     panel_labels=False,
-    dpi=300):
+    dpi=300,
+):
     """Load experiment results and generate metric comparison figures."""
     cfg = PRESETS[preset_name]
     if output_root is not None:
@@ -172,11 +175,11 @@ def visualize(
         print(f"ERROR: No results found in {tables_dir}")
         sys.exit(1)
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Visualising: {cfg.name}")
     print(f"Tables dir : {tables_dir}")
     print(f"Methods ({n_methods}): {method_names}")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     _apply_font(font_family)
 
@@ -184,7 +187,8 @@ def visualize(
         data_folder_path=str(tables_dir),
         method_names=method_names,
         method_order=method_names,
-        verbose=True)
+        verbose=True,
+    )
     analyzer.load_experimental_data()
     analyzer.preprocess_data()
     analyzer.print_comprehensive_summary()
@@ -204,9 +208,7 @@ def visualize(
 
     final_h = fig_height if fig_height is not None else auto_h
     final_rot = xlabel_rotation if xlabel_rotation is not None else auto_rot
-    final_xtick = (xtick_label_fontsize
-                   if xtick_label_fontsize is not None
-                   else auto_xtick)
+    final_xtick = xtick_label_fontsize if xtick_label_fontsize is not None else auto_xtick
 
     available = set(analyzer.metrics)
     groups_to_plot = metric_groups or list(METRIC_GROUPS.keys())
@@ -248,7 +250,8 @@ def visualize(
         rotation_deg=final_rot,
         xtick_fontsize=final_xtick,
         title_fontsize=title_fontsize,
-        per_row_height=final_h)
+        per_row_height=final_h,
+    )
 
     if n_methods <= 5:
         max_sig_pairs = min(len(sig_pairs), 4)
@@ -257,28 +260,29 @@ def visualize(
     else:
         max_sig_pairs = 3
 
-    common_kwargs = dict(
-        show_significance_pairs=sig_pairs,
-        max_significance_pairs=max_sig_pairs,
-        palette=palette,
-        panel_labels=panel_labels,
-        plot_type=plot_type,
-        xlabel_rotation=final_rot,
-        font_family=font_family,
-        significance_line_width=significance_line_width,
-        significance_marker_offset=significance_marker_offset,
-        bar_strip_size=bar_strip_size,
-        bar_strip_alpha=bar_strip_alpha,
-        title_fontsize=title_fontsize,
-        title_fontweight="normal",
-        axis_label_fontsize=axis_label_fontsize,
-        tick_label_fontsize=tick_label_fontsize,
-        significance_fontsize=significance_fontsize,
-        ns_fontsize=ns_fontsize,
-        ns_offset=ns_offset,
-        show_legend=show_legend,
-        dpi=dpi,
-        hspace=computed_hspace)
+    common_kwargs = {
+        "show_significance_pairs": sig_pairs,
+        "max_significance_pairs": max_sig_pairs,
+        "palette": palette,
+        "panel_labels": panel_labels,
+        "plot_type": plot_type,
+        "xlabel_rotation": final_rot,
+        "font_family": font_family,
+        "significance_line_width": significance_line_width,
+        "significance_marker_offset": significance_marker_offset,
+        "bar_strip_size": bar_strip_size,
+        "bar_strip_alpha": bar_strip_alpha,
+        "title_fontsize": title_fontsize,
+        "title_fontweight": "normal",
+        "axis_label_fontsize": axis_label_fontsize,
+        "tick_label_fontsize": tick_label_fontsize,
+        "significance_fontsize": significance_fontsize,
+        "ns_fontsize": ns_fontsize,
+        "ns_offset": ns_offset,
+        "show_legend": show_legend,
+        "dpi": dpi,
+        "hspace": computed_hspace,
+    }
 
     def _post_hoc_xtick(fig, axes, save_path):
         if xtick_label_fontsize is not None:
@@ -287,8 +291,9 @@ def visualize(
             if save_with_vcd is not None:
                 save_with_vcd(fig, Path(save_path), dpi=dpi)
             else:
-                fig.savefig(str(save_path), dpi=dpi, facecolor="white",
-                            bbox_inches="tight", pad_inches=0.05)
+                fig.savefig(
+                    str(save_path), dpi=dpi, facecolor="white", bbox_inches="tight", pad_inches=0.05
+                )
 
     figure_paths = []
 
@@ -305,8 +310,7 @@ def visualize(
             grp_ncols = min(final_ncols, len(grp_metrics))
             grp_nrows = math.ceil(len(grp_metrics) / grp_ncols)
             grp_w = fig_width_per_metric * grp_ncols
-            grp_h = (final_h * grp_nrows
-                     + final_h * computed_hspace * max(grp_nrows - 1, 0))
+            grp_h = final_h * grp_nrows + final_h * computed_hspace * max(grp_nrows - 1, 0)
             save_path = figures_dir / f"{group_key}.pdf"
 
             try:
@@ -317,7 +321,8 @@ def visualize(
                     figsize=(grp_w, grp_h),
                     ncols=grp_ncols,
                     save_path=str(save_path),
-                    **common_kwargs)
+                    **common_kwargs,
+                )
                 _post_hoc_xtick(fig, axes, save_path)
                 plt.close(fig)
                 figure_paths.append(save_path)
@@ -327,8 +332,7 @@ def visualize(
     else:
         n_rows = math.ceil(len(flat_metrics) / final_ncols)
         total_w = fig_width_per_metric * final_ncols
-        total_h = (final_h * n_rows
-                   + final_h * computed_hspace * max(n_rows - 1, 0))
+        total_h = final_h * n_rows + final_h * computed_hspace * max(n_rows - 1, 0)
         save_path = figures_dir / "all_metrics.pdf"
 
         try:
@@ -339,7 +343,8 @@ def visualize(
                 figsize=(total_w, total_h),
                 ncols=final_ncols,
                 save_path=str(save_path),
-                **common_kwargs)
+                **common_kwargs,
+            )
             _post_hoc_xtick(fig, axes, save_path)
             plt.close(fig)
             figure_paths.append(save_path)
@@ -354,9 +359,9 @@ def visualize(
 # ████  PORTABLE: Training / validation loss curve visualisation
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _smooth(arr, window):
-    return pd.Series(arr).rolling(window=max(1, window),
-                                   min_periods=1).mean().values
+    return pd.Series(arr).rolling(window=max(1, window), min_periods=1).mean().values
 
 
 def plot_training_curves(
@@ -370,7 +375,8 @@ def plot_training_curves(
     figsize=None,
     dpi=200,
     font_family="Arial",
-    palette_name=None):
+    palette_name=None,
+):
     """Plot aggregated loss curves with cross-dataset mean +/- std shading."""
     _apply_font(font_family)
 
@@ -395,12 +401,11 @@ def plot_training_curves(
         all_dfs.append(df)
     combined = pd.concat(all_dfs, ignore_index=True)
 
-    has_val = ("val_loss" in combined.columns
-               and combined["val_loss"].notna().any())
-    has_recon = ("recon_loss" in combined.columns
-                 and combined["recon_loss"].notna().any())
-    has_val_recon = ("val_recon_loss" in combined.columns
-                     and combined["val_recon_loss"].notna().any())
+    has_val = "val_loss" in combined.columns and combined["val_loss"].notna().any()
+    has_recon = "recon_loss" in combined.columns and combined["recon_loss"].notna().any()
+    has_val_recon = (
+        "val_recon_loss" in combined.columns and combined["val_recon_loss"].notna().any()
+    )
 
     methods = list(dict.fromkeys(combined["hue"]))
     n_methods = len(methods)
@@ -434,8 +439,7 @@ def plot_training_curves(
         method_df = combined[combined["hue"] == method_name]
         datasets_in = method_df["dataset"].unique()
         epoch_counts = [
-            int(method_df[method_df["dataset"] == d]["epoch"].max())
-            for d in datasets_in
+            int(method_df[method_df["dataset"] == d]["epoch"].max()) for d in datasets_in
         ]
         max_ep = min(epoch_counts)
         epochs = np.arange(1, max_ep + 1)
@@ -459,11 +463,9 @@ def plot_training_curves(
             c = color_map[method_name]
 
             axes[panel_idx].plot(
-                epochs, mean, color=c, alpha=line_alpha,
-                label=method_name, linewidth=1.2)
-            axes[panel_idx].fill_between(
-                epochs, mean - std, mean + std,
-                color=c, alpha=fill_alpha)
+                epochs, mean, color=c, alpha=line_alpha, label=method_name, linewidth=1.2
+            )
+            axes[panel_idx].fill_between(epochs, mean - std, mean + std, color=c, alpha=fill_alpha)
 
     for ax, title in zip(axes, panel_titles):
         ax.set_xlabel("Epoch")
@@ -504,13 +506,10 @@ def plot_training_curves(
                 c = color_map.get(mn, None)
                 for pi, col in enumerate(ds_cols):
                     sm = _smooth(subset[col].values, w)
-                    axs_d[pi].plot(
-                        subset["epoch"], sm, label=mn,
-                        alpha=0.8, color=c)
+                    axs_d[pi].plot(subset["epoch"], sm, label=mn, alpha=0.8, color=c)
 
             for ax, t in zip(axs_d, ds_titles):
-                ax.set(xlabel="Epoch", ylabel="Loss",
-                       title=f"{ds_name} — {t}")
+                ax.set(xlabel="Epoch", ylabel="Loss", title=f"{ds_name} — {t}")
                 ax.legend(fontsize=8, loc="upper right")
                 ax.grid(True, alpha=0.3)
                 sns.despine(ax=ax)
@@ -530,6 +529,7 @@ def plot_training_curves(
 # ████  PORTABLE: CLI entry point
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Visualise experiment results",
@@ -543,19 +543,23 @@ Examples:
       --merge my_comparison \\
       --merge-source experiments/results/ablation/tables ModelA ModelB \\
       --merge-source experiments/results/external/tables CellBLAST GMVAE
-        """)
+        """,
+    )
 
-    parser.add_argument("--preset", type=str, required=False, default=None,
-                        choices=list(PRESETS.keys()))
+    parser.add_argument(
+        "--preset", type=str, required=False, default=None, choices=list(PRESETS.keys())
+    )
     parser.add_argument("--merge", type=str, default=None, metavar="NAME")
-    parser.add_argument("--merge-source", type=str, nargs="+", action="append",
-                        default=None, metavar="TABLES_DIR")
+    parser.add_argument(
+        "--merge-source", type=str, nargs="+", action="append", default=None, metavar="TABLES_DIR"
+    )
     parser.add_argument("--summary-only", action="store_true")
     parser.add_argument("--training-curves", action="store_true")
     parser.add_argument("--per-dataset-curves", action="store_true")
     parser.add_argument("--show-recon", action="store_true")
-    parser.add_argument("--groups", type=str, nargs="+", default=None,
-                        choices=list(METRIC_GROUPS.keys()))
+    parser.add_argument(
+        "--groups", type=str, nargs="+", default=None, choices=list(METRIC_GROUPS.keys())
+    )
     parser.add_argument("--metrics", type=str, nargs="+", default=None)
     parser.add_argument("--exclude-metrics", type=str, nargs="+", default=None)
     parser.add_argument("--per-group", action="store_true")
@@ -565,9 +569,12 @@ Examples:
     viz = parser.add_argument_group("Visual tuning")
     viz.add_argument("--fig-height", type=float, default=None)
     viz.add_argument("--fig-width-per-metric", type=float, default=3.2)
-    viz.add_argument("--plot-type", type=str, default="boxplot",
-                     choices=["boxplot", "violin", "strip", "barplot",
-                              "paired_lines"])
+    viz.add_argument(
+        "--plot-type",
+        type=str,
+        default="boxplot",
+        choices=["boxplot", "violin", "strip", "barplot", "paired_lines"],
+    )
     viz.add_argument("--palette", type=str, default=None)
     viz.add_argument("--title-fontsize", type=float, default=11)
     viz.add_argument("--axis-fontsize", type=float, default=11)
@@ -622,15 +629,18 @@ Examples:
         merge_cfg = MergedExperimentConfig(
             name=args.merge,
             sources=sources,
-            output_root=(Path(args.output_root) if args.output_root
-                         else Path("experiments/results")))
+            output_root=(
+                Path(args.output_root) if args.output_root else Path("experiments/results")
+            ),
+        )
         print(f"\n{merge_cfg.summary()}\n")
         merge_cfg.build_merged_tables()
 
         temp_preset = ExperimentConfig(
             name=merge_cfg.name,
             models={m: {} for m in merge_cfg.method_names},
-            output_root=merge_cfg.output_root)
+            output_root=merge_cfg.output_root,
+        )
         PRESETS[merge_cfg.name] = temp_preset
         preset_name_for_viz = merge_cfg.name
 
@@ -662,7 +672,8 @@ Examples:
         font_family=args.font_family,
         show_legend=args.show_legend,
         panel_labels=args.panel_labels,
-        dpi=args.dpi)
+        dpi=args.dpi,
+    )
 
     if args.training_curves:
         plot_training_curves(
@@ -673,11 +684,11 @@ Examples:
             line_alpha=args.line_alpha,
             per_dataset=args.per_dataset_curves,
             show_recon=args.show_recon,
-            figsize=(tuple(args.loss_figsize)
-                     if args.loss_figsize else None),
+            figsize=(tuple(args.loss_figsize) if args.loss_figsize else None),
             dpi=args.loss_dpi,
             font_family=args.font_family,
-            palette_name=args.loss_palette)
+            palette_name=args.loss_palette,
+        )
 
 
 if __name__ == "__main__":

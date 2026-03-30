@@ -153,8 +153,7 @@ class MergedExperimentConfig:
             merged_df.to_csv(out_csv, index=False)
             series_count += 1
 
-        print(f"  Merged {merged_count} dataset tables, {series_count} series "
-              f"-> {tables_dir}")
+        print(f"  Merged {merged_count} dataset tables, {series_count} series -> {tables_dir}")
         return tables_dir
 
     def summary(self) -> str:
@@ -165,5 +164,5 @@ class MergedExperimentConfig:
             f"Sources: {len(self.sources)}",
         ]
         for i, src in enumerate(self.sources):
-            lines.append(f"  [{i+1}] {src.get('tables', '?')} -> {src.get('methods', 'ALL')}")
+            lines.append(f"  [{i + 1}] {src.get('tables', '?')} -> {src.get('methods', 'ALL')}")
         return "\n".join(lines)

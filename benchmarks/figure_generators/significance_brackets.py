@@ -23,7 +23,6 @@ Usage:
     draw_significance_brackets(ax, model_order, metric_col, series)
 """
 
-
 import numpy as np
 import pandas as pd
 
@@ -103,15 +102,17 @@ def _get_sig_pairs(metric_col, series, model_order):
         if idx_left > idx_right:
             idx_left, idx_right = idx_right, idx_left
 
-        results.append({
-            "idx_left": idx_left,
-            "idx_right": idx_right,
-            "stars": stars,
-            "p_value": p_val,
-            "effect_size": effect,
-            "cliffs_delta": cliffs,
-            "pair_label": f"{struct} vs {pure}",
-        })
+        results.append(
+            {
+                "idx_left": idx_left,
+                "idx_right": idx_right,
+                "stars": stars,
+                "p_value": p_val,
+                "effect_size": effect,
+                "cliffs_delta": cliffs,
+                "pair_label": f"{struct} vs {pure}",
+            }
+        )
 
     return results
 
@@ -120,9 +121,17 @@ def _get_sig_pairs(metric_col, series, model_order):
 # Bracket drawing
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def draw_significance_brackets(ax, model_order, metric_col, series,
-                               data_per_model=None, bracket_gap_frac=0.04,
-                               show_ns=False, show_effect=False):
+
+def draw_significance_brackets(
+    ax,
+    model_order,
+    metric_col,
+    series,
+    data_per_model=None,
+    bracket_gap_frac=0.04,
+    show_ns=False,
+    show_effect=False,
+):
     """Draw significance brackets above boxplots.
 
     Parameters
@@ -166,9 +175,7 @@ def draw_significance_brackets(ax, model_order, metric_col, series,
 
     # Find the maximum data value across all models to place brackets above
     if data_per_model is not None:
-        data_max = max(
-            (np.nanmax(d) if len(d) > 0 else ymin for d in data_per_model),
-            default=ymax)
+        data_max = max((np.nanmax(d) if len(d) > 0 else ymin for d in data_per_model), default=ymax)
     else:
         data_max = ymax
 
@@ -181,7 +188,7 @@ def draw_significance_brackets(ax, model_order, metric_col, series,
 
     n_drawn = 0
     for i, pair in enumerate(sig_pairs):
-        x_left = pair["idx_left"] + 1     # 1-based boxplot positions
+        x_left = pair["idx_left"] + 1  # 1-based boxplot positions
         x_right = pair["idx_right"] + 1
         y_bar = bracket_y_start + i * bracket_step
 
@@ -190,16 +197,31 @@ def draw_significance_brackets(ax, model_order, metric_col, series,
         bracket_color = "#333333"
 
         # Vertical ticks at each end
-        ax.plot([x_left, x_left], [y_bar - tick_h, y_bar],
-                color=bracket_color, lw=LINE_WIDTH_BRACKET,
-                clip_on=False, zorder=10)
-        ax.plot([x_right, x_right], [y_bar - tick_h, y_bar],
-                color=bracket_color, lw=LINE_WIDTH_BRACKET,
-                clip_on=False, zorder=10)
+        ax.plot(
+            [x_left, x_left],
+            [y_bar - tick_h, y_bar],
+            color=bracket_color,
+            lw=LINE_WIDTH_BRACKET,
+            clip_on=False,
+            zorder=10,
+        )
+        ax.plot(
+            [x_right, x_right],
+            [y_bar - tick_h, y_bar],
+            color=bracket_color,
+            lw=LINE_WIDTH_BRACKET,
+            clip_on=False,
+            zorder=10,
+        )
         # Horizontal bar
-        ax.plot([x_left, x_right], [y_bar, y_bar],
-                color=bracket_color, lw=LINE_WIDTH_BRACKET,
-                clip_on=False, zorder=10)
+        ax.plot(
+            [x_left, x_right],
+            [y_bar, y_bar],
+            color=bracket_color,
+            lw=LINE_WIDTH_BRACKET,
+            clip_on=False,
+            zorder=10,
+        )
 
         # Star text above the bar
         x_mid = (x_left + x_right) / 2
@@ -208,20 +230,35 @@ def draw_significance_brackets(ax, model_order, metric_col, series,
         # Annotation font size (must be ≥ 12 so 50 % composed scale → ≥ 6 pt)
         fs = max(FONTSIZE_ANNOTATION, 12)
 
-        ax.text(x_mid, y_bar + tick_h * 0.05, stars_text,
-                ha="center", va="bottom", fontsize=fs,
-                fontweight="bold", color="black",
-                clip_on=False, zorder=11)
+        ax.text(
+            x_mid,
+            y_bar + tick_h * 0.05,
+            stars_text,
+            ha="center",
+            va="bottom",
+            fontsize=fs,
+            fontweight="bold",
+            color="black",
+            clip_on=False,
+            zorder=11,
+        )
 
         # Optional effect size annotation
         if show_effect and pair["effect_size"] and pair["effect_size"] != "":
             d_val = pair["cliffs_delta"]
             if pd.notna(d_val):
                 eff_text = f"|d|={abs(d_val):.2f}"
-                ax.text(x_mid, y_bar + tick_h * 0.05 + y_range * 0.015,
-                        eff_text, ha="center", va="bottom",
-                        fontsize=max(fs - 2, 12), color="#666666",
-                        clip_on=False, zorder=11)
+                ax.text(
+                    x_mid,
+                    y_bar + tick_h * 0.05 + y_range * 0.015,
+                    eff_text,
+                    ha="center",
+                    va="bottom",
+                    fontsize=max(fs - 2, 12),
+                    color="#666666",
+                    clip_on=False,
+                    zorder=11,
+                )
 
         n_drawn += 1
 
@@ -237,8 +274,8 @@ def draw_significance_brackets(ax, model_order, metric_col, series,
 # External-model significance stars (compact: stars above each external box)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def draw_external_significance_stars(ax, model_order, metric_col, series,
-                                     data_per_model=None):
+
+def draw_external_significance_stars(ax, model_order, metric_col, series, data_per_model=None):
     """Draw compact significance stars above external-model boxplots.
 
     Instead of connecting brackets (which would crowd the plot with 11
@@ -297,10 +334,18 @@ def draw_external_significance_stars(ax, model_order, metric_col, series,
         y_star = y_top + y_range * 0.03
 
         fs = max(FONTSIZE_ANNOTATION, 12)
-        ax.text(x_pos, y_star, stars,
-                ha="center", va="bottom", fontsize=fs,
-                fontweight="bold", color="black",
-                clip_on=False, zorder=11)
+        ax.text(
+            x_pos,
+            y_star,
+            stars,
+            ha="center",
+            va="bottom",
+            fontsize=fs,
+            fontweight="bold",
+            color="black",
+            clip_on=False,
+            zorder=11,
+        )
         n_drawn += 1
 
     # Expand y-axis if needed

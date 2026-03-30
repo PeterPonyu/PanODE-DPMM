@@ -116,16 +116,16 @@ from utils.data import DataSplitter
 # Defaults -- match internal experiments exactly for fair comparison
 # ==============================================================================
 
-DEFAULT_EPOCHS     = 1000   # production; use --epochs 100 for quick runs
-DEFAULT_LR         = 1e-3
+DEFAULT_EPOCHS = 1000  # production; use --epochs 100 for quick runs
+DEFAULT_LR = 1e-3
 DEFAULT_BATCH_SIZE = 128
 DEFAULT_LATENT_DIM = 10
-DEFAULT_MAX_CELLS  = 3000
-DEFAULT_N_HVG      = 3000
-DEFAULT_SEED       = 42
-DEFAULT_PATIENCE   = 100      # external models use early stopping
-DEFAULT_VERBOSE    = 25
-DEFAULT_DRE_K      = 15       # k for DRE k-nearest-neighbour quality
+DEFAULT_MAX_CELLS = 3000
+DEFAULT_N_HVG = 3000
+DEFAULT_SEED = 42
+DEFAULT_PATIENCE = 100  # external models use early stopping
+DEFAULT_VERBOSE = 25
+DEFAULT_DRE_K = 15  # k for DRE k-nearest-neighbour quality
 
 OUTPUT_ROOT = Path("experiments/results")
 EXPERIMENT_NAME = "external"
@@ -134,6 +134,7 @@ EXPERIMENT_NAME = "external"
 # ==============================================================================
 # Single model training + metric computation
 # ==============================================================================
+
 
 def train_external_model(
     model_name: str,
@@ -145,7 +146,8 @@ def train_external_model(
     lr: float,
     patience: int,
     verbose_every: int,
-    dre_k: int = DEFAULT_DRE_K) -> dict:
+    dre_k: int = DEFAULT_DRE_K,
+) -> dict:
     """Train one external baseline, extract latent, compute full metrics.
 
     Uses ``eval_lib.metrics.battery.compute_metrics()`` -- identical to the
@@ -186,7 +188,7 @@ def train_external_model(
         torch.cuda.reset_peak_memory_stats(device)
 
     start = time.time()
-    print(f"\n{'─'*60}\n  Training: {model_name}  ({epochs} ep, lr={lr})\n{'─'*60}")
+    print(f"\n{'─' * 60}\n  Training: {model_name}  ({epochs} ep, lr={lr})\n{'─' * 60}")
 
     try:
         factory = model_cfg["factory"]
@@ -210,7 +212,8 @@ def train_external_model(
             device=str(device),
             patience=run_patience,
             verbose=1,
-            verbose_every=verbose_every)
+            verbose_every=verbose_every,
+        )
 
         elapsed = time.time() - start
         epochs_trained = len(history.get("train_loss", [])) or run_epochs
@@ -218,17 +221,14 @@ def train_external_model(
 
         peak_gpu_mb = 0.0
         if device.type == "cuda":
-            peak_gpu_mb = torch.cuda.max_memory_allocated(device) / (1024 ** 2)
+            peak_gpu_mb = torch.cuda.max_memory_allocated(device) / (1024**2)
 
         # Extract latent representations (test split for evaluation)
-        latent_dict = model.extract_latent(
-            splitter.test_loader, device=str(device))
+        latent_dict = model.extract_latent(splitter.test_loader, device=str(device))
         latent = latent_dict["latent"]
 
         # Full metric battery from eval_lib (all 6 suites)
-        metrics = compute_metrics(
-            latent, splitter.labels_test,
-            data_type=data_type, dre_k=dre_k)
+        metrics = compute_metrics(latent, splitter.labels_test, data_type=data_type, dre_k=dre_k)
         diagnostics = compute_latent_diagnostics(latent)
         n_params = sum(p.numel() for p in model.parameters())
 
@@ -242,8 +242,10 @@ def train_external_model(
             f"params {n_params:,})"
         )
         if conv_diag.get("converged") is not None:
-            print(f"  Converged: {conv_diag['converged']}  "
-                  f"(recon delta: {conv_diag.get('recon_rel_change_pct', '?')}%)")
+            print(
+                f"  Converged: {conv_diag['converged']}  "
+                f"(recon delta: {conv_diag.get('recon_rel_change_pct', '?')}%)"
+            )
 
         result = {
             "Model": model_name,
@@ -266,9 +268,17 @@ def train_external_model(
             torch.cuda.empty_cache()
             gc.collect()
             return train_external_model(
-                model_name, model_cfg, splitter,
-                torch.device("cpu"), data_type,
-                epochs, lr, patience, verbose_every, dre_k)
+                model_name,
+                model_cfg,
+                splitter,
+                torch.device("cpu"),
+                data_type,
+                epochs,
+                lr,
+                patience,
+                verbose_every,
+                dre_k,
+            )
         elapsed = time.time() - start
         print(f"  ERROR: {str(exc)[:150]}")
         traceback.print_exc()
@@ -278,7 +288,8 @@ def train_external_model(
             "Error": str(exc)[:200],
             "latent": None,
             "history": {},
-            "NMI": 0, "ARI": 0,
+            "NMI": 0,
+            "ARI": 0,
             "Epochs": epochs,
             "EpochsTrained": 0,
         }
@@ -287,6 +298,7 @@ def train_external_model(
 # ==============================================================================
 # Main benchmark loop
 # ==============================================================================
+
 
 def run_external_benchmark(
     selected_models: dict,
@@ -304,7 +316,8 @@ def run_external_benchmark(
     dre_k: int = DEFAULT_DRE_K,
     output_root: Path = OUTPUT_ROOT,
     experiment_name: str = EXPERIMENT_NAME,
-    device: torch.device = None):
+    device: torch.device = None,
+):
     """Execute external benchmark: iterate datasets x models -> CSV tables.
 
     Supports resume: already-completed datasets (CSV exists) are skipped.
@@ -347,8 +360,7 @@ def run_external_benchmark(
         if stem.endswith("_df"):
             done_datasets.add(stem[:-3])
     if done_datasets:
-        print(f"Resume: {len(done_datasets)} datasets already completed -> "
-              f"{sorted(done_datasets)}")
+        print(f"Resume: {len(done_datasets)} datasets already completed -> {sorted(done_datasets)}")
 
     total = len(datasets)
     completed = 0
@@ -363,10 +375,10 @@ def run_external_benchmark(
         label_key = ds_info.get("label_key", "cell_type")
         data_type = ds_info.get("data_type", "cluster")
 
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"[{ds_idx}/{total}] Dataset: {ds_key}")
         print(f"  Path: {ds_path}")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         if not Path(ds_path).exists():
             print("  WARNING: File not found -> skipping")
@@ -375,8 +387,8 @@ def run_external_benchmark(
         # Load and preprocess (identical to run_experiment.py)
         try:
             adata = load_or_preprocess_adata(
-                ds_path, max_cells, n_hvg, seed,
-                cache_dir=cache_dir, use_cache=True)
+                ds_path, max_cells, n_hvg, seed, cache_dir=cache_dir, use_cache=True
+            )
             adata = standardize_labels(adata, label_key)
         except Exception as e:
             print(f"  ERROR loading dataset: {e}")
@@ -390,7 +402,8 @@ def run_external_benchmark(
                 batch_size=batch_size,
                 random_seed=seed,
                 latent_dim=latent_dim,
-                verbose=True)
+                verbose=True,
+            )
         except Exception as e:
             print(f"  ERROR creating DataSplitter: {e}")
             continue
@@ -399,8 +412,17 @@ def run_external_benchmark(
         results = []
         for model_name, model_cfg in selected_models.items():
             res = train_external_model(
-                model_name, model_cfg, splitter, device,
-                data_type, epochs, lr, patience, verbose_every, dre_k)
+                model_name,
+                model_cfg,
+                splitter,
+                device,
+                data_type,
+                epochs,
+                lr,
+                patience,
+                verbose_every,
+                dre_k,
+            )
             results.append(res)
             gc.collect()
             torch.cuda.empty_cache()
@@ -416,8 +438,7 @@ def run_external_benchmark(
         df = pd.DataFrame(rows)
         csv_path = tables_dir / f"{ds_key}_df.csv"
         df.to_csv(csv_path, index=False)
-        print(f"\n  Saved: {csv_path}  "
-              f"({len(df)} methods x {len(METRIC_COLUMNS)} metrics)")
+        print(f"\n  Saved: {csv_path}  ({len(df)} methods x {len(METRIC_COLUMNS)} metrics)")
 
         # Save training series (per-epoch loss curves)
         series_rows = []
@@ -428,17 +449,18 @@ def run_external_benchmark(
             recon_loss = history.get("train_recon_loss", train_loss)
             val_recon = history.get("val_recon_loss", [])
             for ep_idx in range(len(train_loss)):
-                series_rows.append({
-                    "epoch": ep_idx + 1,
-                    "hue": res["Model"],
-                    "train_loss": train_loss[ep_idx],
-                    "val_loss": (val_loss[ep_idx]
-                                 if ep_idx < len(val_loss) else np.nan),
-                    "recon_loss": (recon_loss[ep_idx]
-                                   if ep_idx < len(recon_loss) else np.nan),
-                    "val_recon_loss": (val_recon[ep_idx]
-                                       if ep_idx < len(val_recon) else np.nan),
-                })
+                series_rows.append(
+                    {
+                        "epoch": ep_idx + 1,
+                        "hue": res["Model"],
+                        "train_loss": train_loss[ep_idx],
+                        "val_loss": (val_loss[ep_idx] if ep_idx < len(val_loss) else np.nan),
+                        "recon_loss": (recon_loss[ep_idx] if ep_idx < len(recon_loss) else np.nan),
+                        "val_recon_loss": (
+                            val_recon[ep_idx] if ep_idx < len(val_recon) else np.nan
+                        ),
+                    }
+                )
         if series_rows:
             dfs = pd.DataFrame(series_rows)
             series_path = series_dir / f"{ds_key}_dfs.csv"
@@ -450,21 +472,21 @@ def run_external_benchmark(
             if lat is not None:
                 safe_name = res["Model"].replace("/", "_").replace(" ", "_")
                 lat_path = latents_dir / f"{ds_key}_{safe_name}.npz"
-                np.savez_compressed(lat_path, latent=lat,
-                                    labels=splitter.labels_test)
+                np.savez_compressed(lat_path, latent=lat, labels=splitter.labels_test)
 
         completed += 1
         print(f"\n  Done: {ds_key}  ({completed}/{total})")
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"External benchmark finished: {completed}/{total} datasets")
     print(f"Results: {tables_dir}")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
 
 # ==============================================================================
 # CLI entry point
 # ==============================================================================
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -494,52 +516,104 @@ Examples:
 
   # Force CPU
   python -m experiments.run_external_benchmark --cpu
-        """)
+        """,
+    )
 
-    parser.add_argument("--models", nargs="+", default=None,
-                        help="External models to run (default: all). "
-                             f"Available: {list(EXTERNAL_MODELS.keys())}")
-    parser.add_argument("--skip", nargs="+", default=None,
-                        help="Models to skip (e.g. --skip scGCC scGNN)")
-    parser.add_argument("--group", type=str, default=None,
-                        choices=list(MODEL_GROUPS.keys()),
-                        help="Run only models in this group. Output goes to "
-                             "external/{group}/. "
-                             f"Groups: {list(MODEL_GROUPS.keys())}")
-    parser.add_argument("--all-groups", action="store_true",
-                        help="Run each group sequentially into separate "
-                             "subdirectories (external/{group}/)")
-    parser.add_argument("--datasets", nargs="+", default=None,
-                        help="Datasets to run (default: all 16). "
-                             f"Available: {list(SCRNA_16_DATASETS.keys())}")
-    parser.add_argument("--all-datasets", action="store_true",
-                        help="Use the full dataset catalogue (56 datasets) instead of the core 16")
-    parser.add_argument("--epochs", type=int, default=DEFAULT_EPOCHS,
-                        help=f"Training epochs (default: {DEFAULT_EPOCHS})")
-    parser.add_argument("--lr", type=float, default=DEFAULT_LR,
-                        help=f"Learning rate (default: {DEFAULT_LR})")
-    parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE,
-                        help=f"Batch size (default: {DEFAULT_BATCH_SIZE})")
-    parser.add_argument("--latent-dim", type=int, default=DEFAULT_LATENT_DIM,
-                        help=f"Latent dimension (default: {DEFAULT_LATENT_DIM})")
-    parser.add_argument("--max-cells", type=int, default=DEFAULT_MAX_CELLS,
-                        help=f"Max cells (default: {DEFAULT_MAX_CELLS})")
-    parser.add_argument("--n-hvg", type=int, default=DEFAULT_N_HVG,
-                        help=f"HVG count (default: {DEFAULT_N_HVG})")
-    parser.add_argument("--seed", type=int, default=DEFAULT_SEED,
-                        help=f"Random seed (default: {DEFAULT_SEED})")
-    parser.add_argument("--patience", type=int, default=DEFAULT_PATIENCE,
-                        help=f"Early stopping patience (default: {DEFAULT_PATIENCE})")
-    parser.add_argument("--dre-k", type=int, default=DEFAULT_DRE_K,
-                        help=f"k for DRE quality (default: {DEFAULT_DRE_K})")
-    parser.add_argument("--verbose-every", type=int, default=DEFAULT_VERBOSE,
-                        help=f"Print every N epochs (default: {DEFAULT_VERBOSE})")
-    parser.add_argument("--output-root", type=str, default=str(OUTPUT_ROOT),
-                        help="Output root directory")
-    parser.add_argument("--name", type=str, default=EXPERIMENT_NAME,
-                        help=f"Experiment name (default: {EXPERIMENT_NAME})")
-    parser.add_argument("--cpu", action="store_true",
-                        help="Force CPU execution")
+    parser.add_argument(
+        "--models",
+        nargs="+",
+        default=None,
+        help=f"External models to run (default: all). Available: {list(EXTERNAL_MODELS.keys())}",
+    )
+    parser.add_argument(
+        "--skip", nargs="+", default=None, help="Models to skip (e.g. --skip scGCC scGNN)"
+    )
+    parser.add_argument(
+        "--group",
+        type=str,
+        default=None,
+        choices=list(MODEL_GROUPS.keys()),
+        help="Run only models in this group. Output goes to "
+        "external/{group}/. "
+        f"Groups: {list(MODEL_GROUPS.keys())}",
+    )
+    parser.add_argument(
+        "--all-groups",
+        action="store_true",
+        help="Run each group sequentially into separate subdirectories (external/{group}/)",
+    )
+    parser.add_argument(
+        "--datasets",
+        nargs="+",
+        default=None,
+        help=f"Datasets to run (default: all 16). Available: {list(SCRNA_16_DATASETS.keys())}",
+    )
+    parser.add_argument(
+        "--all-datasets",
+        action="store_true",
+        help="Use the full dataset catalogue (56 datasets) instead of the core 16",
+    )
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        default=DEFAULT_EPOCHS,
+        help=f"Training epochs (default: {DEFAULT_EPOCHS})",
+    )
+    parser.add_argument(
+        "--lr", type=float, default=DEFAULT_LR, help=f"Learning rate (default: {DEFAULT_LR})"
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=DEFAULT_BATCH_SIZE,
+        help=f"Batch size (default: {DEFAULT_BATCH_SIZE})",
+    )
+    parser.add_argument(
+        "--latent-dim",
+        type=int,
+        default=DEFAULT_LATENT_DIM,
+        help=f"Latent dimension (default: {DEFAULT_LATENT_DIM})",
+    )
+    parser.add_argument(
+        "--max-cells",
+        type=int,
+        default=DEFAULT_MAX_CELLS,
+        help=f"Max cells (default: {DEFAULT_MAX_CELLS})",
+    )
+    parser.add_argument(
+        "--n-hvg", type=int, default=DEFAULT_N_HVG, help=f"HVG count (default: {DEFAULT_N_HVG})"
+    )
+    parser.add_argument(
+        "--seed", type=int, default=DEFAULT_SEED, help=f"Random seed (default: {DEFAULT_SEED})"
+    )
+    parser.add_argument(
+        "--patience",
+        type=int,
+        default=DEFAULT_PATIENCE,
+        help=f"Early stopping patience (default: {DEFAULT_PATIENCE})",
+    )
+    parser.add_argument(
+        "--dre-k",
+        type=int,
+        default=DEFAULT_DRE_K,
+        help=f"k for DRE quality (default: {DEFAULT_DRE_K})",
+    )
+    parser.add_argument(
+        "--verbose-every",
+        type=int,
+        default=DEFAULT_VERBOSE,
+        help=f"Print every N epochs (default: {DEFAULT_VERBOSE})",
+    )
+    parser.add_argument(
+        "--output-root", type=str, default=str(OUTPUT_ROOT), help="Output root directory"
+    )
+    parser.add_argument(
+        "--name",
+        type=str,
+        default=EXPERIMENT_NAME,
+        help=f"Experiment name (default: {EXPERIMENT_NAME})",
+    )
+    parser.add_argument("--cpu", action="store_true", help="Force CPU execution")
 
     args = parser.parse_args()
 
@@ -550,8 +624,10 @@ Examples:
             if m in EXTERNAL_MODELS:
                 selected[m] = EXTERNAL_MODELS[m]
             else:
-                print(f"WARNING: Unknown model '{m}' -- skipping. "
-                      f"Available: {list(EXTERNAL_MODELS.keys())}")
+                print(
+                    f"WARNING: Unknown model '{m}' -- skipping. "
+                    f"Available: {list(EXTERNAL_MODELS.keys())}"
+                )
         if not selected:
             print("ERROR: No valid models selected.")
             sys.exit(1)
@@ -576,8 +652,10 @@ Examples:
             if d in base_datasets:
                 datasets[d] = base_datasets[d]
             else:
-                print(f"WARNING: Unknown dataset '{d}' -- skipping. "
-                      f"Available: {list(base_datasets.keys())}")
+                print(
+                    f"WARNING: Unknown dataset '{d}' -- skipping. "
+                    f"Available: {list(base_datasets.keys())}"
+                )
     else:
         datasets = dict(base_datasets)
 
@@ -595,75 +673,76 @@ Examples:
         print(f"\n  scVI family included: {scvi_models} (will use registry epochs/patience)")
     else:
         from eval_lib.baselines.registry import _SCVI_AVAILABLE
+
         if _SCVI_AVAILABLE:
-            print("\n  scVI family available but not in --models; add e.g. --models scVI PeakVI PoissonVI to run them.")
+            print(
+                "\n  scVI family available but not in --models; add e.g. --models scVI PeakVI PoissonVI to run them."
+            )
         else:
-            print("\n  scVI family not installed (pip install scvi-tools for scVI, PeakVI, PoissonVI).")
+            print(
+                "\n  scVI family not installed (pip install scvi-tools for scVI, PeakVI, PoissonVI)."
+            )
 
     # -- Seed and device -------------------------------------------------------
     set_global_seed(args.seed)
-    device = (torch.device("cpu") if args.cpu else
-              torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    device = (
+        torch.device("cpu")
+        if args.cpu
+        else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    )
 
     # -- Common run kwargs -----------------------------------------------------
-    run_kwargs = dict(
-        datasets=datasets,
-        epochs=args.epochs,
-        lr=args.lr,
-        batch_size=args.batch_size,
-        latent_dim=args.latent_dim,
-        max_cells=args.max_cells,
-        n_hvg=args.n_hvg,
-        seed=args.seed,
-        patience=args.patience,
-        verbose_every=args.verbose_every,
-        dre_k=args.dre_k,
-        output_root=Path(args.output_root),
-        device=device)
+    run_kwargs = {
+        "datasets": datasets,
+        "epochs": args.epochs,
+        "lr": args.lr,
+        "batch_size": args.batch_size,
+        "latent_dim": args.latent_dim,
+        "max_cells": args.max_cells,
+        "n_hvg": args.n_hvg,
+        "seed": args.seed,
+        "patience": args.patience,
+        "verbose_every": args.verbose_every,
+        "dre_k": args.dre_k,
+        "output_root": Path(args.output_root),
+        "device": device,
+    }
 
     # -- Group filter ----------------------------------------------------------
     if args.group:
         # Run a single group into external/{group}/
         group_model_names = set(MODEL_GROUPS.get(args.group, []))
-        group_selected = {k: v for k, v in selected.items()
-                          if k in group_model_names}
+        group_selected = {k: v for k, v in selected.items() if k in group_model_names}
         if not group_selected:
             print(f"ERROR: No available models for group '{args.group}'.")
             sys.exit(1)
-        experiment_name = (f"external/{args.group}"
-                           if args.name == EXPERIMENT_NAME else args.name)
+        experiment_name = f"external/{args.group}" if args.name == EXPERIMENT_NAME else args.name
         print(f"\nGroup '{args.group}': {list(group_selected.keys())}")
         print(f"Output: {Path(args.output_root) / experiment_name}\n")
         run_external_benchmark(
-            selected_models=group_selected,
-            experiment_name=experiment_name,
-            **run_kwargs)
+            selected_models=group_selected, experiment_name=experiment_name, **run_kwargs
+        )
 
     elif args.all_groups:
         # Run every group sequentially, each into external/{group}/
         for group_name, group_model_names in MODEL_GROUPS.items():
-            group_selected = {k: v for k, v in selected.items()
-                              if k in group_model_names}
+            group_selected = {k: v for k, v in selected.items() if k in group_model_names}
             if not group_selected:
                 print(f"\nGroup '{group_name}': no available models, skipping")
                 continue
             experiment_name = f"external/{group_name}"
-            print(f"\n{'#'*70}")
+            print(f"\n{'#' * 70}")
             print(f"# GROUP: {group_name} ({len(group_selected)} models)")
             print(f"# Output: {Path(args.output_root) / experiment_name}")
-            print(f"{'#'*70}")
+            print(f"{'#' * 70}")
             run_external_benchmark(
-                selected_models=group_selected,
-                experiment_name=experiment_name,
-                **run_kwargs)
+                selected_models=group_selected, experiment_name=experiment_name, **run_kwargs
+            )
 
     else:
         # Default: all selected models into external/
         print(f"\nSelected ({len(selected)}): {list(selected.keys())}\n")
-        run_external_benchmark(
-            selected_models=selected,
-            experiment_name=args.name,
-            **run_kwargs)
+        run_external_benchmark(selected_models=selected, experiment_name=args.name, **run_kwargs)
 
 
 if __name__ == "__main__":

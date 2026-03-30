@@ -60,7 +60,7 @@ from .vcd_checks_text import (
     _check_text_overlaps,
     _check_text_vs_artist_overlap,
 )
-from .vcd_config import (
+from .vcd_config import (  # noqa: F401
     ALLOWED_FONT_FAMILIES,
     COMPLEXITY_SCORE_THRESHOLD,
     COMPOSED_SCALE,
@@ -86,7 +86,7 @@ from .vcd_config import (
     SCALE_RANGE_SPREAD_FACTOR,
     SIGNIFICANCE_PROXIMITY_PX,
 )
-from .vcd_core import (
+from .vcd_core import (  # noqa: F401
     _ArtistInfo,
     _collect_artists,
     _fig_bbox,
@@ -173,16 +173,19 @@ def detect_all_conflicts(
     issues = []
     # ── Layer 2: figure-level passes (1-11) ──
     issues.extend(_check_text_overlaps(infos, text_overlap_tol_px))
-    issues.extend(_check_truncation(
-        infos,
-        fig_bb,
-        resolved_border_tol_px,
-        fig=fig,
-        renderer=renderer,
-    ))
+    issues.extend(
+        _check_truncation(
+            infos,
+            fig_bb,
+            resolved_border_tol_px,
+            fig=fig,
+            renderer=renderer,
+        )
+    )
     issues.extend(_check_artist_content_overlap(infos, artist_overlap_min_px2))
-    issues.extend(_check_text_vs_artist_overlap(
-        infos, text_overlap_tol_px, text_artist_overlap_min_px2))
+    issues.extend(
+        _check_text_vs_artist_overlap(infos, text_overlap_tol_px, text_artist_overlap_min_px2)
+    )
     issues.extend(_check_axes_overflow(infos, fig))
     issues.extend(_check_scatter_clip_risk(fig))
     # Passes 8-10
@@ -203,90 +206,120 @@ def detect_all_conflicts(
     # Pass 17: colorbar-vs-data overlap
     issues.extend(_check_colorbar_data_overlap(fig, renderer))
     # Pass 18: legend crowding auto-fix
-    issues.extend(_check_legend_crowding_autofix(
-        fig,
-        renderer,
-        max_entries_inside=effective_policy.max_legend_entries_inside,
-        min_fontsize=effective_policy.legend_fontsize_min,
-    ))
+    issues.extend(
+        _check_legend_crowding_autofix(
+            fig,
+            renderer,
+            max_entries_inside=effective_policy.max_legend_entries_inside,
+            min_fontsize=effective_policy.legend_fontsize_min,
+        )
+    )
     # Pass 19: font-size adequacy
-    issues.extend(_check_fontsize_adequacy(
-        fig, renderer, infos,
-        min_pt=effective_policy.min_body_pt,
-        composed_scale=effective_policy.composed_scale,
-        dense_label_min_pt=effective_policy.min_dense_pt,
-    ))
+    issues.extend(
+        _check_fontsize_adequacy(
+            fig,
+            renderer,
+            infos,
+            min_pt=effective_policy.min_body_pt,
+            composed_scale=effective_policy.composed_scale,
+            dense_label_min_pt=effective_policy.min_dense_pt,
+        )
+    )
     # Pass 20: tick/spine overlap (NEW)
     issues.extend(_check_tick_spine_overlap(fig, renderer))
     # Pass 21: font policy (NEW)
-    issues.extend(_check_font_policy(
-        fig, renderer, infos,
-        allowed_families=effective_policy.allowed_fonts,
-        max_title_label_diff=effective_policy.max_title_label_diff,
-    ))
+    issues.extend(
+        _check_font_policy(
+            fig,
+            renderer,
+            infos,
+            allowed_families=effective_policy.allowed_fonts,
+            max_title_label_diff=effective_policy.max_title_label_diff,
+        )
+    )
     # Pass 22: label density excess
-    issues.extend(_check_label_density(
-        fig, renderer, infos,
-        density_threshold=LABEL_DENSITY_THRESHOLD,
-        max_xtick_labels=effective_policy.max_xtick_labels,
-        max_ytick_labels=effective_policy.max_ytick_labels,
-        heatmap_max_ticks=effective_policy.heatmap_max_ticks,
-    ))
+    issues.extend(
+        _check_label_density(
+            fig,
+            renderer,
+            infos,
+            density_threshold=LABEL_DENSITY_THRESHOLD,
+            max_xtick_labels=effective_policy.max_xtick_labels,
+            max_ytick_labels=effective_policy.max_ytick_labels,
+            heatmap_max_ticks=effective_policy.heatmap_max_ticks,
+        )
+    )
 
     # ── Layer 3: perceptual passes (23-26) ──
     # Pass 23: contrast check
-    issues.extend(_check_contrast(
-        fig, renderer, infos,
-        min_text_contrast=MIN_TEXT_CONTRAST,
-        min_line_contrast=MIN_LINE_CONTRAST))
+    issues.extend(
+        _check_contrast(
+            fig,
+            renderer,
+            infos,
+            min_text_contrast=MIN_TEXT_CONTRAST,
+            min_line_contrast=MIN_LINE_CONTRAST,
+        )
+    )
     # Pass 24: colorblind safety
-    issues.extend(_check_colorblind_safety(
-        fig, renderer,
-        min_cvd_distance=MIN_CVD_DISTANCE,
-        max_categories=CVD_MAX_CATEGORIES))
+    issues.extend(
+        _check_colorblind_safety(
+            fig, renderer, min_cvd_distance=MIN_CVD_DISTANCE, max_categories=CVD_MAX_CATEGORIES
+        )
+    )
     # Pass 25: error-bar visibility
-    issues.extend(_check_errorbar_visibility(
-        fig, renderer,
-        target_dpi=ERRORBAR_TARGET_DPI,
-        min_cap_px=ERRORBAR_MIN_CAP_PX))
+    issues.extend(
+        _check_errorbar_visibility(
+            fig, renderer, target_dpi=ERRORBAR_TARGET_DPI, min_cap_px=ERRORBAR_MIN_CAP_PX
+        )
+    )
     # Pass 26: precision excess
-    issues.extend(_check_precision_excess(
-        fig, renderer, infos,
-        max_decimals=MAX_DECIMAL_PLACES))
+    issues.extend(_check_precision_excess(fig, renderer, infos, max_decimals=MAX_DECIMAL_PLACES))
 
     # ── Layer 4: semantic passes (27-30) ──
     # Pass 27: overplotting
-    issues.extend(_check_overplotting(
-        fig, renderer,
-        alpha_point_threshold=OVERPLOT_ALPHA_THRESHOLD,
-        opaque_point_threshold=OVERPLOT_OPAQUE_THRESHOLD))
+    issues.extend(
+        _check_overplotting(
+            fig,
+            renderer,
+            alpha_point_threshold=OVERPLOT_ALPHA_THRESHOLD,
+            opaque_point_threshold=OVERPLOT_OPAQUE_THRESHOLD,
+        )
+    )
     # Pass 28: log-scale sanity
     issues.extend(_check_log_scale_sanity(fig, renderer))
     # Pass 29: scale consistency
     issues.extend(_check_scale_consistency(fig, renderer))
     # Pass 30: floating significance markers
-    issues.extend(_check_floating_significance(
-        fig, renderer,
-        proximity_px=SIGNIFICANCE_PROXIMITY_PX))
+    issues.extend(
+        _check_floating_significance(fig, renderer, proximity_px=SIGNIFICANCE_PROXIMITY_PX)
+    )
     # Pass 31: panel complexity excess
-    issues.extend(_check_panel_complexity(
-        fig, renderer,
-        max_legend_series=effective_policy.max_legend_series,
-        max_numeric_labels=effective_policy.max_numeric_bar_labels,
-        max_annotations=effective_policy.max_annotations_complexity,
-        score_threshold=effective_policy.complexity_score_threshold,
-    ))
+    issues.extend(
+        _check_panel_complexity(
+            fig,
+            renderer,
+            max_legend_series=effective_policy.max_legend_series,
+            max_numeric_labels=effective_policy.max_numeric_bar_labels,
+            max_annotations=effective_policy.max_annotations_complexity,
+            score_threshold=effective_policy.complexity_score_threshold,
+        )
+    )
 
     # ── Layer 2 continued: new layout passes (32-33) ──
     # Pass 32: cross-axes text overlap (xlabel vs title between rows)
-    issues.extend(_check_cross_axes_text_overlap(
-        fig, renderer,
-        tol_px=CROSS_AXES_TEXT_OVERLAP_TOL_PX,
-        min_overlap_px2=CROSS_AXES_TEXT_OVERLAP_MIN_PX2))
+    issues.extend(
+        _check_cross_axes_text_overlap(
+            fig,
+            renderer,
+            tol_px=CROSS_AXES_TEXT_OVERLAP_TOL_PX,
+            min_overlap_px2=CROSS_AXES_TEXT_OVERLAP_MIN_PX2,
+        )
+    )
     # Pass 33: panel label placement (inside vs outside axes)
-    issues.extend(_check_panel_label_placement(
-        fig, renderer,
-        margin_px=PANEL_LABEL_PLACEMENT_MARGIN_PX))
+    issues.extend(
+        _check_panel_label_placement(fig, renderer, margin_px=PANEL_LABEL_PLACEMENT_MARGIN_PX)
+    )
 
     issues = sort_issues(issues)
 
@@ -302,6 +335,7 @@ def detect_all_conflicts(
 # ═══════════════════════════════════════════════════════════════════════════════
 # CLI output helpers — separated from detection core
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def print_conflict_summary(
     issues: list[dict],
@@ -345,7 +379,7 @@ def print_conflict_summary(
 
     if subplot_warns:
         print(f"  -- Layer 1 (subplot-level){tag} --")
-        for title, ax_iss in subplot_warns.items():
+        for title, ax_iss in subplot_warns.items():  # noqa: B007
             for i in ax_iss:
                 print(f"    [warn] {i['detail']}")
 

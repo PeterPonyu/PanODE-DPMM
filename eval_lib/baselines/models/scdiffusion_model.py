@@ -5,6 +5,7 @@ Note: Diffusion models operate in data space, not explicit latent space like VAE
 - encode(): UNet bottleneck features projected to [B, embedding_dim]
 - decode(): Maps embedding to initial noise → reverse diffusion → [B, input_dim]
 """
+
 import math
 
 import numpy as np
@@ -39,6 +40,7 @@ def get_num_groups(channels):
 
 class ClassEmbedder(nn.Module):
     """Conditional class embedding with dropout for classifier-free guidance"""
+
     def __init__(self, embed_dim, n_classes, cond_drop_prob=0.1):
         super().__init__()
         self.embedding = nn.Embedding(n_classes + 1, embed_dim)
@@ -54,24 +56,21 @@ class ClassEmbedder(nn.Module):
 
 class ResBlock(nn.Module):
     """Residual block with time/condition embedding"""
+
     def __init__(self, in_channels, out_channels, time_channels, dropout):
         super().__init__()
 
         self.norm1 = nn.GroupNorm(get_num_groups(in_channels), in_channels)
         self.conv1 = nn.Linear(in_channels, out_channels)
 
-        self.time_proj = nn.Sequential(
-            nn.SiLU(),
-            nn.Linear(time_channels, out_channels))
+        self.time_proj = nn.Sequential(nn.SiLU(), nn.Linear(time_channels, out_channels))
 
         self.norm2 = nn.GroupNorm(get_num_groups(out_channels), out_channels)
         self.dropout = nn.Dropout(dropout)
         self.conv2 = nn.Linear(out_channels, out_channels)
 
         self.skip = (
-            nn.Linear(in_channels, out_channels)
-            if in_channels != out_channels
-            else nn.Identity()
+            nn.Linear(in_channels, out_channels) if in_channels != out_channels else nn.Identity()
         )
 
     def forward(self, x, emb):
@@ -91,6 +90,7 @@ class ResBlock(nn.Module):
 
 class DenoisingUNet(nn.Module):
     """1D UNet for noise prediction"""
+
     def __init__(
         self,
         input_dim,
@@ -99,7 +99,8 @@ class DenoisingUNet(nn.Module):
         dropout,
         channel_mult,
         n_classes=0,
-        cond_drop_prob=0.1):
+        cond_drop_prob=0.1,
+    ):
         super().__init__()
 
         self.channel_mult = channel_mult
@@ -108,14 +109,11 @@ class DenoisingUNet(nn.Module):
 
         time_dim = model_channels * 4
         self.time_embed = nn.Sequential(
-            nn.Linear(model_channels, time_dim),
-            nn.SiLU(),
-            nn.Linear(time_dim, time_dim))
+            nn.Linear(model_channels, time_dim), nn.SiLU(), nn.Linear(time_dim, time_dim)
+        )
 
         self.class_embedder = (
-            ClassEmbedder(time_dim, n_classes, cond_drop_prob)
-            if n_classes > 0
-            else None
+            ClassEmbedder(time_dim, n_classes, cond_drop_prob) if n_classes > 0 else None
         )
 
         self.input_proj = nn.Linear(input_dim, model_channels)
@@ -158,7 +156,9 @@ class DenoisingUNet(nn.Module):
             emb = emb + self.class_embedder(y)
         return emb
 
-    def extract_bottleneck(self, x: torch.Tensor, t: torch.Tensor, y: torch.Tensor | None = None) -> torch.Tensor:
+    def extract_bottleneck(
+        self, x: torch.Tensor, t: torch.Tensor, y: torch.Tensor | None = None
+    ) -> torch.Tensor:
         """Extract bottleneck features for encode()"""
         emb = self._build_cond_embedding(t, y)
         h = self.input_proj(x)
@@ -166,7 +166,7 @@ class DenoisingUNet(nn.Module):
         down_idx = 0
         for level in range(len(self.channel_mult)):
             for _ in range(self.num_res_blocks):
-                h = self.down_blocks[down_idx](h,emb)
+                h = self.down_blocks[down_idx](h, emb)
                 down_idx += 1
             if self.downsample[level] is not None:
                 h = self.downsample[level](h)
@@ -185,7 +185,7 @@ class DenoisingUNet(nn.Module):
         down_idx = 0
         for level in range(len(self.channel_mult)):
             for _ in range(self.num_res_blocks):
-                h = self.down_blocks[down_idx](h,emb)
+                h = self.down_blocks[down_idx](h, emb)
                 hs.append(h)
                 down_idx += 1
             if self.downsample[level] is not None:
@@ -198,7 +198,7 @@ class DenoisingUNet(nn.Module):
         for level in range(len(self.channel_mult)):
             for _ in range(self.num_res_blocks):
                 h = torch.cat([h, hs.pop()], dim=-1)
-                h = self.up_blocks[up_idx](h,emb)
+                h = self.up_blocks[up_idx](h, emb)
                 up_idx += 1
             if self.upsample[level] is not None:
                 h = self.upsample[level](h)
@@ -223,15 +223,16 @@ class scDiffusionModel(BaseModel):
     def __init__(
         self,
         input_dim,
-        latent_dim=128,          # UNet capacity
-        embedding_dim: int = 10, # Returned by encode()
+        latent_dim=128,  # UNet capacity
+        embedding_dim: int = 10,  # Returned by encode()
         hidden_dims=None,
         n_timesteps=1000,
         beta_schedule="linear",
         n_classes=0,
         cond_drop_prob=0.1,
         loss_type="mse",
-        model_name="scDiffusion"):
+        model_name="scDiffusion",
+    ):
         """
         Args:
             input_dim: Gene dimension
@@ -246,7 +247,12 @@ class scDiffusionModel(BaseModel):
         """
         hidden_dims = hidden_dims or [1, 2, 3, 4]
 
-        super().__init__(input_dim=input_dim, latent_dim=embedding_dim, hidden_dims=hidden_dims, model_name=model_name)
+        super().__init__(
+            input_dim=input_dim,
+            latent_dim=embedding_dim,
+            hidden_dims=hidden_dims,
+            model_name=model_name,
+        )
 
         self.n_timesteps = n_timesteps
         self.loss_type = loss_type
@@ -261,11 +267,12 @@ class scDiffusionModel(BaseModel):
             dropout=0.1,
             channel_mult=tuple(hidden_dims),
             n_classes=n_classes,
-            cond_drop_prob=cond_drop_prob)
+            cond_drop_prob=cond_drop_prob,
+        )
 
         self.latent_head = nn.Sequential(
-            nn.Linear(self.denoising_net.bottleneck_dim, embedding_dim),
-            nn.SiLU())
+            nn.Linear(self.denoising_net.bottleneck_dim, embedding_dim), nn.SiLU()
+        )
 
         self.noise_head = nn.Linear(embedding_dim, input_dim)
 
@@ -322,10 +329,8 @@ class scDiffusionModel(BaseModel):
         return sqrt_alpha_cumprod_t * x_0 + sqrt_one_minus_alpha_cumprod_t * noise
 
     def encode(
-        self,
-        x: torch.Tensor,
-        y: torch.Tensor | None = None,
-        timestep: int | None = None) -> torch.Tensor:
+        self, x: torch.Tensor, y: torch.Tensor | None = None, timestep: int | None = None
+    ) -> torch.Tensor:
         """Extract low-dimensional embedding [B, embedding_dim] from UNet bottleneck"""
         if timestep is None:
             timestep = self.n_timesteps // 2
@@ -341,7 +346,9 @@ class scDiffusionModel(BaseModel):
         init_x = self.noise_head(z)
         return self.p_sample_loop(batch_size=z.size(0), device=init_x.device, init_x=init_x, y=y)
 
-    def forward(self, x: torch.Tensor, y: torch.Tensor | None = None, **kwargs) -> dict[str, torch.Tensor]:
+    def forward(
+        self, x: torch.Tensor, y: torch.Tensor | None = None, **kwargs
+    ) -> dict[str, torch.Tensor]:
         """Training forward pass: predict noise"""
         batch_size = x.size(0)
         device = x.device
@@ -351,9 +358,17 @@ class scDiffusionModel(BaseModel):
         x_noisy = self.q_sample(x, t, noise)
         predicted_noise = self.denoising_net(x_noisy, t, y)
 
-        return {"predicted_noise": predicted_noise, "true_noise": noise, "x_noisy": x_noisy, "t": t, "y": y}
+        return {
+            "predicted_noise": predicted_noise,
+            "true_noise": noise,
+            "x_noisy": x_noisy,
+            "t": t,
+            "y": y,
+        }
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         """Compute noise prediction loss"""
         predicted_noise = outputs["predicted_noise"]
         true_noise = outputs["true_noise"]
@@ -363,14 +378,18 @@ class scDiffusionModel(BaseModel):
         elif self.loss_type == "l1":
             loss = F.l1_loss(predicted_noise, true_noise, reduction="mean")
         elif self.loss_type == "hybrid":
-            loss = F.mse_loss(predicted_noise, true_noise, reduction="mean") + 0.1 * F.l1_loss(predicted_noise, true_noise, reduction="mean")
+            loss = F.mse_loss(predicted_noise, true_noise, reduction="mean") + 0.1 * F.l1_loss(
+                predicted_noise, true_noise, reduction="mean"
+            )
         else:
             raise ValueError(f"Unknown loss type: {self.loss_type}")
 
         return {"total_loss": loss, "recon_loss": loss, "diffusion_loss": loss}
 
     @torch.no_grad()
-    def p_sample(self, x: torch.Tensor, t: int, y: torch.Tensor | None = None, clip_denoised: bool = True):
+    def p_sample(
+        self, x: torch.Tensor, t: int, y: torch.Tensor | None = None, clip_denoised: bool = True
+    ):
         """Single reverse diffusion step"""
         batch_size = x.size(0)
         t_tensor = torch.full((batch_size), t, device=x.device, dtype=torch.long)
@@ -397,7 +416,8 @@ class scDiffusionModel(BaseModel):
         device: str = "cuda",
         init_x: torch.Tensor | None = None,
         y: torch.Tensor | None = None,
-        clip_denoised: bool = True):
+        clip_denoised: bool = True,
+    ):
         """Full reverse diffusion process"""
         if init_x is None:
             x = torch.randn(batch_size, self.input_dim, device=device)
@@ -409,7 +429,13 @@ class scDiffusionModel(BaseModel):
 
         return x
 
-    def extract_latent(self, data_loader, device="cuda", timestep: int | None = None, return_reconstructions: bool = False):
+    def extract_latent(
+        self,
+        data_loader,
+        device="cuda",
+        timestep: int | None = None,
+        return_reconstructions: bool = False,
+    ):
         """
         Extract latent representations and optionally reconstructions
 
@@ -451,11 +477,8 @@ class scDiffusionModel(BaseModel):
 
 
 def create_scdiffusion_model(
-    input_dim: int,
-    latent_dim: int = 128,
-    n_classes: int = 0,
-    embedding_dim: int = 10,
-    **kwargs):
+    input_dim: int, latent_dim: int = 128, n_classes: int = 0, embedding_dim: int = 10, **kwargs
+):
     """
     Create scDiffusion model
 
@@ -467,4 +490,5 @@ def create_scdiffusion_model(
         latent_dim=latent_dim,
         n_classes=n_classes,
         embedding_dim=embedding_dim,
-        **kwargs)
+        **kwargs,
+    )

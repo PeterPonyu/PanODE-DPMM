@@ -46,6 +46,7 @@ from utils.data import DataSplitter
 # Component Coherence (Correlation-based, suitable for sparse scRNA-seq)
 # ═════════════════════════════════════════════════════════════════════════════
 
+
 def compute_component_coherence(adata, top_genes_per_component, top_n=20):
     """Compute correlation-based component coherence for sparse scRNA-seq data.
 
@@ -71,7 +72,7 @@ def compute_component_coherence(adata, top_genes_per_component, top_n=20):
     gene_q75 = np.percentile(X, 75, axis=0)
     X_bin = (X > gene_q75).astype(float)
 
-    for comp_id, gene_list in top_genes_per_component.items():
+    for comp_id, gene_list in top_genes_per_component.items():  # noqa: B007
         # gene_list may be [(gene_name, score), ...] tuples or plain strings
         raw = gene_list[:top_n]
         genes = [g[0] if isinstance(g, (list, tuple)) else g for g in raw]
@@ -101,7 +102,7 @@ def compute_component_coherence(adata, top_genes_per_component, top_n=20):
         npmi_pairs = []
         eps = 1e-12
         for i in range(len(idxs)):
-            for j in range(i+1, len(idxs)):
+            for j in range(i + 1, len(idxs)):
                 p_i = gene_vectors[:, i].sum() / n_cells
                 p_j = gene_vectors[:, j].sum() / n_cells
                 p_ij = ((gene_vectors[:, i] * gene_vectors[:, j]).sum()) / n_cells
@@ -155,8 +156,9 @@ def compute_gene_specificity(importance_matrix):
     }
 
 
-def compute_enrichment_breadth(model, data_loader, gene_names, device,
-                                organism="human", top_n_genes=50):
+def compute_enrichment_breadth(
+    model, data_loader, gene_names, device, organism="human", top_n_genes=50
+):
     """Fraction of latent components with significant GO enrichment."""
     importance, _ = compute_perturbation_importance(model, data_loader, device)
     top_genes = get_top_genes_per_component(importance, gene_names, top_n=top_n_genes)
@@ -164,7 +166,7 @@ def compute_enrichment_breadth(model, data_loader, gene_names, device,
     n_components = len(top_genes)
     n_significant = 0
 
-    for comp_id, gene_list in top_genes.items():
+    for comp_id, gene_list in top_genes.items():  # noqa: B007
         try:
             enr = run_enrichment(gene_list, organism=organism)
             if enr is not None and len(enr) > 0:
@@ -201,21 +203,25 @@ def get_organism(ds_name):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Quantitative interpretability benchmark (E3)")
-    parser.add_argument("--datasets", type=str, nargs="+",
-                        default=["setty", "lung", "endo"],
-                        choices=list(DATASET_REGISTRY.keys()))
-    parser.add_argument("--all", action="store_true",
-                        help="Run on all 12 datasets")
-    parser.add_argument("--models", type=str, nargs="+",
-                        default=["DPMM-Base",
-                                 "DPMM-Contrastive", "Pure-AE"])
+    parser = argparse.ArgumentParser(description="Quantitative interpretability benchmark (E3)")
+    parser.add_argument(
+        "--datasets",
+        type=str,
+        nargs="+",
+        default=["setty", "lung", "endo"],
+        choices=list(DATASET_REGISTRY.keys()),
+    )
+    parser.add_argument("--all", action="store_true", help="Run on all 12 datasets")
+    parser.add_argument(
+        "--models", type=str, nargs="+", default=["DPMM-Base", "DPMM-Contrastive", "Pure-AE"]
+    )
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--top-n-genes", type=int, default=30,
-                        help="Top N genes per component for coherence")
-    parser.add_argument("--skip-enrichment", action="store_true",
-                        help="Skip GO enrichment (faster)")
+    parser.add_argument(
+        "--top-n-genes", type=int, default=30, help="Top N genes per component for coherence"
+    )
+    parser.add_argument(
+        "--skip-enrichment", action="store_true", help="Skip GO enrichment (faster)"
+    )
     args = parser.parse_args()
 
     if args.all:
@@ -235,9 +241,9 @@ def main():
     for ds_name in args.datasets:
         ds_info = DATASET_REGISTRY[ds_name]
         organism = get_organism(ds_name)
-        print(f"\n{'#'*60}")
+        print(f"\n{'#' * 60}")
         print(f"# DATASET: {ds_name} (organism={organism})")
-        print(f"{'#'*60}")
+        print(f"{'#' * 60}")
 
         adata = load_or_preprocess_adata(
             ds_info["path"],
@@ -245,12 +251,18 @@ def main():
             hvg_top_genes=BASE_CONFIG.hvg_top_genes,
             seed=args.seed,
             cache_dir=str(out_dirs["cache"]),
-            use_cache=True)
+            use_cache=True,
+        )
         adata = standardize_labels(adata, ds_info["label_key"])
 
         splitter = DataSplitter(
-            adata, train_size=0.7, val_size=0.15, test_size=0.15,
-            batch_size=BASE_CONFIG.batch_size, random_seed=args.seed)
+            adata,
+            train_size=0.7,
+            val_size=0.15,
+            test_size=0.15,
+            batch_size=BASE_CONFIG.batch_size,
+            random_seed=args.seed,
+        )
 
         gene_names = list(adata.var_names)
         input_dim = splitter.n_var
@@ -276,15 +288,16 @@ def main():
                 model.fit(
                     train_loader=splitter.train_loader,
                     val_loader=splitter.val_loader,
-                    epochs=fit_epochs, lr=fit_lr,
+                    epochs=fit_epochs,
+                    lr=fit_lr,
                     weight_decay=fit_wd,
                     device=str(device),
-                    verbose_every=200, patience=9999)
+                    verbose_every=200,
+                    patience=9999,
+                )
 
                 # Compute perturbation importance
-                importance, _ = compute_perturbation_importance(
-                    model, splitter.test_loader, device
-                )
+                importance, _ = compute_perturbation_importance(model, splitter.test_loader, device)
                 top_genes = get_top_genes_per_component(
                     importance, gene_names, top_n=args.top_n_genes
                 )
@@ -310,8 +323,13 @@ def main():
                 if not args.skip_enrichment:
                     try:
                         enr_info = compute_enrichment_breadth(
-                            model, splitter.test_loader, gene_names, device,
-                            organism=organism, top_n_genes=args.top_n_genes)
+                            model,
+                            splitter.test_loader,
+                            gene_names,
+                            device,
+                            organism=organism,
+                            top_n_genes=args.top_n_genes,
+                        )
                         res["Enrichment_Breadth"] = enr_info["enrichment_breadth"]
                         res["Sig_Components"] = enr_info["n_significant"]
                         res["Total_Components"] = enr_info["n_components"]
@@ -320,45 +338,49 @@ def main():
                         res["Enrichment_Breadth"] = None
 
                 all_results.append(res)
-                print(f"  Coherence={res['Mean_Coherence']:.4f}, NPMI={res['Mean_NPMI']:.4f}, "
-                      f"Specificity={res['Gene_Specificity']:.4f}")
+                print(
+                    f"  Coherence={res['Mean_Coherence']:.4f}, NPMI={res['Mean_NPMI']:.4f}, "
+                    f"Specificity={res['Gene_Specificity']:.4f}"
+                )
                 if "Enrichment_Breadth" in res and res["Enrichment_Breadth"] is not None:
-                    print(f"  Enrichment Breadth={res['Enrichment_Breadth']:.2f} "
-                          f"({res['Sig_Components']}/{res['Total_Components']})")
+                    print(
+                        f"  Enrichment Breadth={res['Enrichment_Breadth']:.2f} "
+                        f"({res['Sig_Components']}/{res['Total_Components']})"
+                    )
 
             except Exception as e:
                 import traceback
+
                 traceback.print_exc()
-                all_results.append({
-                    "Dataset": ds_name, "Model": model_name,
-                    "Error": str(e),
-                })
+                all_results.append(
+                    {
+                        "Dataset": ds_name,
+                        "Model": model_name,
+                        "Error": str(e),
+                    }
+                )
 
     # Save results
     df = pd.DataFrame(all_results)
     csv_path = out_dirs["csv"] / f"interpretability_seed{args.seed}.csv"
     df.to_csv(csv_path, index=False)
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("INTERPRETABILITY SUMMARY")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(df.to_string(index=False))
     print(f"\nSaved: {csv_path}")
 
     # Print comparison table
     if "Mean_Coherence" in df.columns:
         pivot = df.pivot_table(
-            index="Dataset",
-            columns="Model",
-            values="Mean_Coherence",
-            aggfunc="mean")
+            index="Dataset", columns="Model", values="Mean_Coherence", aggfunc="mean"
+        )
         print("\n--- Mean Coherence by Model × Dataset ---")
         print(pivot.to_string())
 
         pivot_spec = df.pivot_table(
-            index="Dataset",
-            columns="Model",
-            values="Gene_Specificity",
-            aggfunc="mean")
+            index="Dataset", columns="Model", values="Gene_Specificity", aggfunc="mean"
+        )
         print("\n--- Gene Specificity by Model × Dataset ---")
         print(pivot_spec.to_string())
 

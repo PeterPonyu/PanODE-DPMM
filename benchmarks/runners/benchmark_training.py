@@ -60,24 +60,25 @@ from utils.data import DataSplitter
 from utils.viz import plot_all_metrics_barplot, plot_umap_grid
 
 # ── defaults ──────────────────────────────────────────────────────────────────
-DATA_PATH     = str(BASE_CONFIG.data_path)
-LATENT_DIM    = BASE_CONFIG.latent_dim     # 10
-LR            = BASE_CONFIG.lr             # 1e-3
-BATCH_SIZE    = BASE_CONFIG.batch_size     # 128
-DEVICE        = BASE_CONFIG.device
+DATA_PATH = str(BASE_CONFIG.data_path)
+LATENT_DIM = BASE_CONFIG.latent_dim  # 10
+LR = BASE_CONFIG.lr  # 1e-3
+BATCH_SIZE = BASE_CONFIG.batch_size  # 128
+DEVICE = BASE_CONFIG.device
 HVG_TOP_GENES = BASE_CONFIG.hvg_top_genes  # 3000
-MAX_CELLS     = BASE_CONFIG.max_cells      # 3000
-SEED          = BASE_CONFIG.seed           # 42
-DATA_TYPE     = BASE_CONFIG.data_type
+MAX_CELLS = BASE_CONFIG.max_cells  # 3000
+SEED = BASE_CONFIG.seed  # 42
+DATA_TYPE = BASE_CONFIG.data_type
 VERBOSE_EVERY = BASE_CONFIG.verbose_every
-DEFAULT_EPOCHS = BASE_CONFIG.epochs        # 600
-WEIGHT_DECAY  = 1e-5  # default weight decay (hardcoded in all model .fit())
+DEFAULT_EPOCHS = BASE_CONFIG.epochs  # 600
+WEIGHT_DECAY = 1e-5  # default weight decay (hardcoded in all model .fit())
 
 # ── sweep grids (4 values each for uniform Fig 3/4 layout) ─────────────────────
-LR_GRID      = [1e-4, 1e-3, 5e-3, 1e-2]
-EPOCHS_GRID  = [200, 600, 1200, 1600]
-BATCH_GRID   = [32, 64, 256, 512]
-WD_GRID      = [0.0, 1e-5, 1e-4, 1e-3]
+LR_GRID = [1e-4, 1e-3, 5e-3, 1e-2]
+EPOCHS_GRID = [200, 600, 1200, 1600]
+BATCH_GRID = [32, 64, 256, 512]
+WD_GRID = [0.0, 1e-5, 1e-4, 1e-3]
+
 
 # ── model configs (architecture fixed at sensitivity-optimal) ─────────────────
 def _dpmm_params():
@@ -85,7 +86,7 @@ def _dpmm_params():
 
 
 MODELS = {
-    "dpmm":  {"class": DPMMODEModel,  "params_fn": _dpmm_params,  "label": "DPMM-Base"},
+    "dpmm": {"class": DPMMODEModel, "params_fn": _dpmm_params, "label": "DPMM-Base"},
 }
 
 
@@ -98,60 +99,94 @@ def build_sweep():
 
         # 1. Learning rate sweep
         for lr in LR_GRID:
-            runs.append({
-                "series": sk, "name": f"{lb}(lr={lr:.0e})", "sweep": "lr",
-                "sweep_val": lr, "lr": lr, "epochs": DEFAULT_EPOCHS,
-                "batch_size": BATCH_SIZE, "weight_decay": WEIGHT_DECAY,
-            })
+            runs.append(
+                {
+                    "series": sk,
+                    "name": f"{lb}(lr={lr:.0e})",
+                    "sweep": "lr",
+                    "sweep_val": lr,
+                    "lr": lr,
+                    "epochs": DEFAULT_EPOCHS,
+                    "batch_size": BATCH_SIZE,
+                    "weight_decay": WEIGHT_DECAY,
+                }
+            )
 
         # 2. Epochs sweep
         for ep in EPOCHS_GRID:
             if ep == DEFAULT_EPOCHS:
                 continue  # covered by lr baseline
-            runs.append({
-                "series": sk, "name": f"{lb}(ep={ep})", "sweep": "epochs",
-                "sweep_val": ep, "lr": LR, "epochs": ep,
-                "batch_size": BATCH_SIZE, "weight_decay": WEIGHT_DECAY,
-            })
+            runs.append(
+                {
+                    "series": sk,
+                    "name": f"{lb}(ep={ep})",
+                    "sweep": "epochs",
+                    "sweep_val": ep,
+                    "lr": LR,
+                    "epochs": ep,
+                    "batch_size": BATCH_SIZE,
+                    "weight_decay": WEIGHT_DECAY,
+                }
+            )
 
         # 3. Batch size sweep
         for bs in BATCH_GRID:
             if bs == BATCH_SIZE:
                 continue  # covered by lr baseline
-            runs.append({
-                "series": sk, "name": f"{lb}(bs={bs})", "sweep": "batch_size",
-                "sweep_val": bs, "lr": LR, "epochs": DEFAULT_EPOCHS,
-                "batch_size": bs, "weight_decay": WEIGHT_DECAY,
-            })
+            runs.append(
+                {
+                    "series": sk,
+                    "name": f"{lb}(bs={bs})",
+                    "sweep": "batch_size",
+                    "sweep_val": bs,
+                    "lr": LR,
+                    "epochs": DEFAULT_EPOCHS,
+                    "batch_size": bs,
+                    "weight_decay": WEIGHT_DECAY,
+                }
+            )
 
         # 4. Weight decay sweep
         for wd in WD_GRID:
             if wd == WEIGHT_DECAY:
                 continue  # covered by lr baseline
-            runs.append({
-                "series": sk, "name": f"{lb}(wd={wd:.0e})", "sweep": "weight_decay",
-                "sweep_val": wd, "lr": LR, "epochs": DEFAULT_EPOCHS,
-                "batch_size": BATCH_SIZE, "weight_decay": wd,
-            })
+            runs.append(
+                {
+                    "series": sk,
+                    "name": f"{lb}(wd={wd:.0e})",
+                    "sweep": "weight_decay",
+                    "sweep_val": wd,
+                    "lr": LR,
+                    "epochs": DEFAULT_EPOCHS,
+                    "batch_size": BATCH_SIZE,
+                    "weight_decay": wd,
+                }
+            )
 
     return runs
 
 
 def train_variant(run_cfg, adata, device, verbose_every, seed):
     """Train one variant — rebuilds DataSplitter when batch_size varies."""
-    sk    = run_cfg["series"]
-    name  = run_cfg["name"]
-    mi    = MODELS[sk]
-    lr    = run_cfg["lr"]
+    sk = run_cfg["series"]
+    name = run_cfg["name"]
+    mi = MODELS[sk]
+    lr = run_cfg["lr"]
     epochs = run_cfg["epochs"]
-    bs    = run_cfg["batch_size"]
-    wd    = run_cfg["weight_decay"]
+    bs = run_cfg["batch_size"]
+    wd = run_cfg["weight_decay"]
 
     splitter = DataSplitter(
-        adata=adata, layer="counts",
-        train_size=0.7, val_size=0.15, test_size=0.15,
-        batch_size=bs, latent_dim=LATENT_DIM,
-        random_seed=seed, verbose=False)
+        adata=adata,
+        layer="counts",
+        train_size=0.7,
+        val_size=0.15,
+        test_size=0.15,
+        batch_size=bs,
+        latent_dim=LATENT_DIM,
+        random_seed=seed,
+        verbose=False,
+    )
 
     return train_and_evaluate(
         name=name,
@@ -159,7 +194,9 @@ def train_variant(run_cfg, adata, device, verbose_every, seed):
         params=mi["params_fn"](),
         splitter=splitter,
         device=device,
-        lr=lr, epochs=epochs, weight_decay=wd,
+        lr=lr,
+        epochs=epochs,
+        weight_decay=wd,
         verbose_every=verbose_every,
         data_type=DATA_TYPE,
         extra_fields={
@@ -168,7 +205,8 @@ def train_variant(run_cfg, adata, device, verbose_every, seed):
             "SweepVal": str(run_cfg["sweep_val"]),
             "BatchSize": bs,
             "WeightDecay": wd,
-        })
+        },
+    )
 
 
 def main():
@@ -204,13 +242,17 @@ def main():
 
     # ── data + train (possibly multi-dataset) ─────────────────────────────
     results, latents = [], {}
-    last_splitter = None
     for ds_key in ds_keys:
         ds_info = DATASET_REGISTRY[ds_key]
         print(f"\n--- Dataset: {ds_key} ({ds_info['data_type']}) ---")
         adata = load_or_preprocess_adata(
-            ds_info["path"], max_cells=MAX_CELLS, hvg_top_genes=HVG_TOP_GENES,
-            seed=args.seed, cache_dir=str(CACHE_DIR), use_cache=True)
+            ds_info["path"],
+            max_cells=MAX_CELLS,
+            hvg_top_genes=HVG_TOP_GENES,
+            seed=args.seed,
+            cache_dir=str(CACHE_DIR),
+            use_cache=True,
+        )
         label_key = ds_info.get("label_key", "cell_type")
         if label_key in adata.obs.columns:
             adata.obs["cell_type"] = adata.obs[label_key].copy()
@@ -225,7 +267,8 @@ def main():
             r["Dataset"] = ds_key
             r["DataType"] = ds_info["data_type"]
             results.append(r)
-            gc.collect(); torch.cuda.empty_cache()
+            gc.collect()
+            torch.cuda.empty_cache()
 
     df = pd.DataFrame(results)
 
@@ -262,13 +305,17 @@ def main():
             "series": sk,
             "datasets": ds_keys,
             "baseline": {
-                "lr": LR, "epochs": DEFAULT_EPOCHS,
-                "batch_size": BATCH_SIZE, "weight_decay": WEIGHT_DECAY,
+                "lr": LR,
+                "epochs": DEFAULT_EPOCHS,
+                "batch_size": BATCH_SIZE,
+                "weight_decay": WEIGHT_DECAY,
                 "latent_dim": LATENT_DIM,
             },
             "sweeps": {
-                "lr": LR_GRID, "epochs": EPOCHS_GRID,
-                "batch_size": BATCH_GRID, "weight_decay": WD_GRID,
+                "lr": LR_GRID,
+                "epochs": EPOCHS_GRID,
+                "batch_size": BATCH_GRID,
+                "weight_decay": WD_GRID,
             },
             "seed": args.seed,
             "models": sdf["Model"].tolist(),
@@ -289,56 +336,67 @@ def main():
         for sw in sdf["Sweep"].unique():
             swdf = sdf[sdf["Sweep"] == sw]
             print(f"\n── {sl} — {sw} sweep ──")
-            print(f"{'Model':<28} {'NMI':>7} {'ARI':>7} {'ASW':>7} {'DAV':>7} "
-                  f"{'DRE':>7} {'LSE':>7} {'s/ep':>6} {'GPU':>6} "
-                  f"{'Δ%':>7} {'Conv':>5}")
+            print(
+                f"{'Model':<28} {'NMI':>7} {'ARI':>7} {'ASW':>7} {'DAV':>7} "
+                f"{'DRE':>7} {'LSE':>7} {'s/ep':>6} {'GPU':>6} "
+                f"{'Δ%':>7} {'Conv':>5}"
+            )
             print("-" * 110)
             for _, r in swdf.iterrows():
-                rpct = f"{r['recon_rel_change_pct']:+.1f}" if pd.notna(r.get('recon_rel_change_pct')) else "N/A"
+                rpct = (
+                    f"{r['recon_rel_change_pct']:+.1f}"
+                    if pd.notna(r.get("recon_rel_change_pct"))
+                    else "N/A"
+                )
                 conv = "✓" if r.get("converged", False) else "✗"
-                print(f"{r['Model']:<28} "
-                      f"{r.get('NMI',0):>7.4f} {r.get('ARI',0):>7.4f} "
-                      f"{r.get('ASW',0):>7.4f} {r.get('DAV',0):>7.4f} "
-                      f"{r.get('DRE_umap_overall_quality',0):>7.4f} "
-                      f"{r.get('LSE_overall_quality',0):>7.4f} "
-                      f"{r.get('SecPerEpoch',0):>6.2f} "
-                      f"{r.get('PeakGPU_MB',0):>6.0f} "
-                      f"{rpct:>7} {conv:>5}")
+                print(
+                    f"{r['Model']:<28} "
+                    f"{r.get('NMI', 0):>7.4f} {r.get('ARI', 0):>7.4f} "
+                    f"{r.get('ASW', 0):>7.4f} {r.get('DAV', 0):>7.4f} "
+                    f"{r.get('DRE_umap_overall_quality', 0):>7.4f} "
+                    f"{r.get('LSE_overall_quality', 0):>7.4f} "
+                    f"{r.get('SecPerEpoch', 0):>6.2f} "
+                    f"{r.get('PeakGPU_MB', 0):>6.0f} "
+                    f"{rpct:>7} {conv:>5}"
+                )
 
     # ── plots ─────────────────────────────────────────────────────────────
     if args.no_plots or len(ds_keys) > 1:
         if len(ds_keys) > 1:
-            print("\nMulti-dataset run: skipped per-run UMAP/bar plots; CSV supports dataset-wise boxplot aggregation.")
-        print("\nPlots disabled."); return
+            print(
+                "\nMulti-dataset run: skipped per-run UMAP/bar plots; CSV supports dataset-wise boxplot aggregation."
+            )
+        print("\nPlots disabled.")
+        return
 
     generated = []
     for sk, sl in [("dpmm", "DPMM-Base")]:
         sdf = df[df["Series"] == sk]
         if sdf.empty:
             continue
-        slatents = {k: v for k, v in latents.items()
-                    if any(r["name"] == k and r["series"] == sk for r in runs)}
+        slatents = {
+            k: v
+            for k, v in latents.items()
+            if any(r["name"] == k and r["series"] == sk for r in runs)
+        }
 
         for sw in sdf["Sweep"].unique():
             swdf = sdf[sdf["Sweep"] == sw]
-            sw_latents = {k: v for k, v in slatents.items()
-                          if k in swdf["Model"].values}
+            sw_latents = {k: v for k, v in slatents.items() if k in swdf["Model"].values}
             stag = f"{sw}_{tag}"
 
             if sw_latents:
                 up = SDIRS[sk]["plots"] / f"umap_{stag}.png"
                 try:
                     # legacy plotting path only for single dataset mode
-                    plot_umap_grid(sw_latents, None,
-                                   f"{sl} — {sw}", str(up))
+                    plot_umap_grid(sw_latents, None, f"{sl} — {sw}", str(up))
                     generated.append(str(up))
                 except Exception as e:
                     print(f"UMAP ({sk}/{sw}) err: {e}")
 
             bp = SDIRS[sk]["plots"] / f"metrics_{stag}.png"
             try:
-                plot_all_metrics_barplot(swdf, str(bp),
-                                         title=f"{sl} — {sw}")
+                plot_all_metrics_barplot(swdf, str(bp), title=f"{sl} — {sw}")
                 generated.append(str(bp))
             except Exception as e:
                 print(f"Barplot ({sk}/{sw}) err: {e}")

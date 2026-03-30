@@ -13,7 +13,6 @@ Classes:
 - DataSplitter: Handles data extraction, normalization, and train/val/test splitting
 """
 
-
 import numpy as np
 import scipy.sparse as sp
 import torch
@@ -24,6 +23,7 @@ from torch.utils.data import DataLoader, TensorDataset
 # ============================================================
 # Normalization Utilities
 # ============================================================
+
 
 def is_raw_counts(X, threshold: float = 0.5) -> bool:
     """
@@ -37,12 +37,12 @@ def is_raw_counts(X, threshold: float = 0.5) -> bool:
         True if data appears to be raw counts, False otherwise
     """
     if sp.issparse(X):
-        sample_data = X.data[:min(10000, len(X.data))]
+        sample_data = X.data[: min(10000, len(X.data))]
     else:
         flat_data = X.flatten()
-        sample_data = flat_data[np.random.choice(
-            len(flat_data), min(10000, len(flat_data)), replace=False
-        )]
+        sample_data = flat_data[
+            np.random.choice(len(flat_data), min(10000, len(flat_data)), replace=False)
+        ]
 
     sample_data = sample_data[sample_data > 0]
     if len(sample_data) == 0:
@@ -72,10 +72,10 @@ def compute_dataset_stats(X) -> dict[str, float]:
     """
     X_dense = X.toarray() if sp.issparse(X) else X
     return {
-        'sparsity': np.mean(X_dense == 0),
-        'lib_size_mean': X_dense.sum(axis=1).mean(),
-        'lib_size_std': X_dense.sum(axis=1).std(),
-        'max_val': X_dense.max()
+        "sparsity": np.mean(X_dense == 0),
+        "lib_size_mean": X_dense.sum(axis=1).mean(),
+        "lib_size_std": X_dense.sum(axis=1).std(),
+        "max_val": X_dense.max(),
     }
 
 
@@ -91,17 +91,17 @@ def adaptive_normalize(X_log, stats: dict[str, float], verbose: bool = True) -> 
     Returns:
         Normalized data matrix as float32
     """
-    if stats['sparsity'] > 0.95:
+    if stats["sparsity"] > 0.95:
         if verbose:
             print("  -> High sparsity: applying conservative clipping")
         X_norm = np.clip(X_log, -5, 5).astype(np.float32)
-    elif stats['lib_size_std'] / stats['lib_size_mean'] > 2.0:
+    elif stats["lib_size_std"] / stats["lib_size_mean"] > 2.0:
         if verbose:
             print("  -> High variance: applying per-cell standardization")
         cell_means = X_log.mean(axis=1, keepdims=True)
         cell_stds = X_log.std(axis=1, keepdims=True) + 1e-6
         X_norm = np.clip((X_log - cell_means) / cell_stds, -10, 10).astype(np.float32)
-    elif stats['max_val'] > 10000:
+    elif stats["max_val"] > 10000:
         if verbose:
             print("  -> Extreme values: applying scaled normalization")
         scale = min(1.0, 10.0 / X_log.max())
@@ -155,6 +155,7 @@ def validate_data(X_norm: np.ndarray, raise_error: bool = True) -> bool:
 # Data Splitting
 # ============================================================
 
+
 class DataSplitter:
     """
     Standalone data splitter for single-cell data.
@@ -179,7 +180,7 @@ class DataSplitter:
     def __init__(
         self,
         adata,
-        layer: str = 'counts',
+        layer: str = "counts",
         train_size: float = 0.7,
         val_size: float = 0.15,
         test_size: float = 0.15,
@@ -188,7 +189,8 @@ class DataSplitter:
         latent_dim: int = 10,
         adaptive_norm: bool = True,
         verbose: bool = True,
-        skip_normalization: bool = False):
+        skip_normalization: bool = False,
+    ):
         """
         Initialize DataSplitter and process data.
 
@@ -235,9 +237,11 @@ class DataSplitter:
         if self.verbose:
             print("Dataset statistics:")
             print(f"  Cells: {X.shape[0]:,}, Genes: {X.shape[1]:,}")
-            print(f"  Sparsity: {stats['sparsity']:.2%}, "
-                  f"Lib size: {stats['lib_size_mean']:.0f}+/-{stats['lib_size_std']:.0f}, "
-                  f"Max value: {stats['max_val']:.0f}")
+            print(
+                f"  Sparsity: {stats['sparsity']:.2%}, "
+                f"Lib size: {stats['lib_size_mean']:.0f}+/-{stats['lib_size_std']:.0f}, "
+                f"Max value: {stats['max_val']:.0f}"
+            )
 
         if self.skip_normalization:
             # Data already normalized upstream — use adata.X directly
@@ -272,7 +276,11 @@ class DataSplitter:
         self.n_obs, self.n_var = X.shape
 
         # Store gene names for downstream analysis
-        self.var_names = list(adata.var_names) if hasattr(adata, 'var_names') else [f"gene_{i}" for i in range(self.n_var)]
+        self.var_names = (
+            list(adata.var_names)
+            if hasattr(adata, "var_names")
+            else [f"gene_{i}" for i in range(self.n_var)]
+        )
 
         # Generate or extract labels
         self._extract_labels(adata, X_norm)
@@ -285,9 +293,9 @@ class DataSplitter:
 
     def _extract_labels(self, adata, X_norm: np.ndarray):
         """Extract or generate cell type labels."""
-        if 'cell_type' in adata.obs.columns:
+        if "cell_type" in adata.obs.columns:
             le = LabelEncoder()
-            self.labels = le.fit_transform(adata.obs['cell_type'])
+            self.labels = le.fit_transform(adata.obs["cell_type"])
             self.label_encoder = le
             if self.verbose:
                 print(f"  Using 'cell_type' labels: {len(np.unique(self.labels))} types")
@@ -297,7 +305,7 @@ class DataSplitter:
                     n_clusters=self.latent_dim,
                     n_init=10,
                     max_iter=300,
-                    random_state=self.random_seed
+                    random_state=self.random_seed,
                 ).fit_predict(X_norm)
                 self.label_encoder = None
                 if self.verbose:
@@ -317,8 +325,8 @@ class DataSplitter:
         n_val = int(self.val_size * self.n_obs)
 
         self.train_idx = indices[:n_train]
-        self.val_idx = indices[n_train:n_train + n_val]
-        self.test_idx = indices[n_train + n_val:]
+        self.val_idx = indices[n_train : n_train + n_val]
+        self.test_idx = indices[n_train + n_val :]
 
         # Split data
         self.X_train_norm = X_norm[self.train_idx]
@@ -339,9 +347,15 @@ class DataSplitter:
 
         if self.verbose:
             print("\nData split:")
-            print(f"  Train: {len(self.train_idx):,} cells ({len(self.train_idx)/self.n_obs*100:.1f}%)")
-            print(f"  Val:   {len(self.val_idx):,} cells ({len(self.val_idx)/self.n_obs*100:.1f}%)")
-            print(f"  Test:  {len(self.test_idx):,} cells ({len(self.test_idx)/self.n_obs*100:.1f}%)")
+            print(
+                f"  Train: {len(self.train_idx):,} cells ({len(self.train_idx) / self.n_obs * 100:.1f}%)"
+            )
+            print(
+                f"  Val:   {len(self.val_idx):,} cells ({len(self.val_idx) / self.n_obs * 100:.1f}%)"
+            )
+            print(
+                f"  Test:  {len(self.test_idx):,} cells ({len(self.test_idx) / self.n_obs * 100:.1f}%)"
+            )
 
     def _create_dataloaders(self):
         """Create PyTorch DataLoaders.

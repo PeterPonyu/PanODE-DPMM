@@ -63,6 +63,7 @@ from src.visualization import bind_figure_region, save_with_vcd, style_axes
 # Data helpers
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _build_metric_matrix(per_ds, metric_col, series, seed_average=True):
     """Build per-model data arrays from per-dataset DataFrames.
 
@@ -118,8 +119,10 @@ def _build_metric_matrix(per_ds, metric_col, series, seed_average=True):
 # Subplot generators
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def gen_single_boxplot(per_ds, metric_col, metric_label, series,
-                       out_path, show_friedman=True, seed_average=True):
+
+def gen_single_boxplot(
+    per_ds, metric_col, metric_label, series, out_path, show_friedman=True, seed_average=True
+):
     """Generate one boxplot subplot PNG.
 
     When ``seed_average=False``, uses all seed-level data points
@@ -128,23 +131,28 @@ def gen_single_boxplot(per_ds, metric_col, metric_label, series,
     pre-computed Wilcoxon signed-rank tests.
     """
     data_per_model, model_order, _ = _build_metric_matrix(
-        per_ds, metric_col, series, seed_average=seed_average)
+        per_ds, metric_col, series, seed_average=seed_average
+    )
     # Clip extreme outliers (e.g. CAL = 83 M on teeth) to prevent
     # y-axis distortion that obscures real distributional differences.
     data_per_model = clip_extreme_outliers(data_per_model)
     short = [MODEL_SHORT_NAMES.get(m, m) for m in model_order]
     n_models = len(model_order)
     lower_better = {"SecPerEpoch", "PeakGPU_MB", "NumParams", "Time_s", "DAV"}
-    higher_better = METRIC_DIRECTION.get(metric_col,
-                                         metric_col not in lower_better)
+    higher_better = METRIC_DIRECTION.get(metric_col, metric_col not in lower_better)
 
     fig = plt.figure(figsize=FIGSIZE_BOXPLOT)
     layout = bind_figure_region(fig, (0.08, 0.15, 0.95, 0.92))
     ax = layout.add_axes(fig)
     style_axes(ax, kind="boxplot")
-    bp = ax.boxplot(data_per_model, vert=True, patch_artist=True,
-                    widths=0.55, showfliers=False,
-                    medianprops=dict(color="black", lw=LINE_WIDTH_MEDIAN))
+    bp = ax.boxplot(
+        data_per_model,
+        vert=True,
+        patch_artist=True,
+        widths=0.55,
+        showfliers=False,
+        medianprops={"color": "black", "lw": LINE_WIDTH_MEDIAN},
+    )
     for j, patch in enumerate(bp["boxes"]):
         patch.set_facecolor(get_color(model_order[j]))
         patch.set_alpha(0.65)
@@ -155,23 +163,28 @@ def gen_single_boxplot(per_ds, metric_col, metric_label, series,
     for j in range(n_models):
         vals = data_per_model[j]
         jitter = rng.uniform(-0.15, 0.15, size=len(vals))
-        ax.scatter(j + 1 + jitter, vals, s=SCATTER_SIZE_BOXPLOT,
-                   c=[get_color(model_order[j])],
-                   edgecolors="black", linewidths=0.2, zorder=5, alpha=0.85)
+        ax.scatter(
+            j + 1 + jitter,
+            vals,
+            s=SCATTER_SIZE_BOXPLOT,
+            c=[get_color(model_order[j])],
+            edgecolors="black",
+            linewidths=0.2,
+            zorder=5,
+            alpha=0.85,
+        )
 
     title_str = metric_label
 
     # Highlight best-performing model with red border
     if higher_better:
-        medians = [np.nanmedian(d) if len(d) else np.nan
-                   for d in data_per_model]
+        medians = [np.nanmedian(d) if len(d) else np.nan for d in data_per_model]
         if all(np.isnan(m) for m in medians):
             best_idx = 0
         else:
             best_idx = int(np.nanargmax(medians))
     else:
-        medians = [np.nanmedian(d) if len(d) else np.nan
-                   for d in data_per_model]
+        medians = [np.nanmedian(d) if len(d) else np.nan for d in data_per_model]
         if all(np.isnan(m) for m in medians):
             best_idx = 0
         else:
@@ -181,16 +194,20 @@ def gen_single_boxplot(per_ds, metric_col, metric_label, series,
 
     ax.set_xticks(range(1, n_models + 1))
     ax.set_xticklabels(short, fontsize=FONTSIZE_TICK, rotation=75, ha="right")
-    ax.set_title(title_str, fontsize=FONTSIZE_TITLE, pad=3,
-                 loc="left", fontweight="normal")
+    ax.set_title(title_str, fontsize=FONTSIZE_TITLE, pad=3, loc="left", fontweight="normal")
     ax.tick_params(labelsize=FONTSIZE_TICK)
     ax.grid(axis="y", alpha=0.2, lw=0.4)
 
     # Draw significance brackets (Wilcoxon signed-rank: structured vs pure)
-    n_brackets = draw_significance_brackets(
-        ax, model_order, metric_col, series,
+    n_brackets = draw_significance_brackets(  # noqa: F841
+        ax,
+        model_order,
+        metric_col,
+        series,
         data_per_model=data_per_model,
-        bracket_gap_frac=0.045, show_ns=False)
+        bracket_gap_frac=0.045,
+        show_ns=False,
+    )
 
     # Add y-axis padding at top and left so ytick labels
     # don't extend beyond the figure border after tight_layout.
@@ -205,7 +222,8 @@ def gen_single_boxplot(per_ds, metric_col, metric_label, series,
 
     # Prune upper y-tick to prevent the topmost label from clipping
     from matplotlib.ticker import MaxNLocator
-    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', prune='both'))
+
+    ax.yaxis.set_major_locator(MaxNLocator(nbins="auto", prune="both"))
 
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
@@ -213,6 +231,7 @@ def gen_single_boxplot(per_ds, metric_col, metric_label, series,
 def gen_cross_umap(model_name, datasets, out_path, show_legend=False):
     """Generate one cross-dataset UMAP subplot PNG."""
     import matplotlib as mpl
+
     blocks, ds_labels = [], []
     for ds in datasets:
         lat = load_cross_latent(model_name, ds)
@@ -226,16 +245,14 @@ def gen_cross_umap(model_name, datasets, out_path, show_legend=False):
         ax = layout.add_axes(fig)
         style_axes(ax, kind="umap")
         ax.axis("off")
-        ax.text(0.5, 0.5, "No data", ha="center", va="center",
-                fontsize=FONTSIZE_TITLE)
+        ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=FONTSIZE_TITLE)
         save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
         return
     X = np.vstack(blocks)
     emb = compute_umap(X)
     ds_labels = np.array(ds_labels)
     cmap = mpl.colormaps.get("tab20", mpl.colormaps["tab20"])
-    color_map = {ds: cmap(i / max(len(datasets) - 1, 1))
-                 for i, ds in enumerate(datasets)}
+    color_map = {ds: cmap(i / max(len(datasets) - 1, 1)) for i, ds in enumerate(datasets)}
 
     fig = plt.figure(figsize=FIGSIZE_UMAP)
     layout = bind_figure_region(fig, (0.05, 0.05, 0.95, 0.92))
@@ -245,19 +262,25 @@ def gen_cross_umap(model_name, datasets, out_path, show_legend=False):
         mask = ds_labels == ds
         if not np.any(mask):
             continue
-        ax.scatter(emb[mask, 0], emb[mask, 1], s=SCATTER_SIZE_UMAP,
-                   alpha=0.60, color=[color_map.get(ds, "gray")],
-                   label=ds, rasterized=True)
+        ax.scatter(
+            emb[mask, 0],
+            emb[mask, 1],
+            s=SCATTER_SIZE_UMAP,
+            alpha=0.60,
+            color=[color_map.get(ds, "gray")],
+            label=ds,
+            rasterized=True,
+        )
     ax.set_xticks([])
     ax.set_yticks([])
     short = MODEL_SHORT_NAMES.get(model_name, model_name)
-    ax.set_title(short, fontsize=FONTSIZE_TITLE, pad=2,
-                 loc="left", fontweight="normal")
+    ax.set_title(short, fontsize=FONTSIZE_TITLE, pad=2, loc="left", fontweight="normal")
     for sp in ax.spines.values():
         sp.set_linewidth(0.3)
     if show_legend:
-        ax.legend(loc="best", fontsize=FONTSIZE_LEGEND,
-                  framealpha=0.85, markerscale=2, handletextpad=0.2)
+        ax.legend(
+            loc="best", fontsize=FONTSIZE_LEGEND, framealpha=0.85, markerscale=2, handletextpad=0.2
+        )
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
 
@@ -270,6 +293,7 @@ def gen_joint_umap(model_name, out_path, show_legend=False):
     shared latent space without any post-hoc alignment.
     """
     import matplotlib as mpl
+
     latent, ds_labels = load_joint_latent(model_name)
     if latent is None or len(latent) == 0:
         fig = plt.figure(figsize=FIGSIZE_UMAP)
@@ -277,16 +301,16 @@ def gen_joint_umap(model_name, out_path, show_legend=False):
         ax = layout.add_axes(fig)
         style_axes(ax, kind="umap")
         ax.axis("off")
-        ax.text(0.5, 0.5, "No data", ha="center", va="center",
-                fontsize=FONTSIZE_TITLE)
+        ax.text(0.5, 0.5, "No data", ha="center", va="center", fontsize=FONTSIZE_TITLE)
         save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
         return
 
-    datasets_present = list(dict.fromkeys(ds_labels))   # preserve encounter order
+    datasets_present = list(dict.fromkeys(ds_labels))  # preserve encounter order
     emb = compute_umap(latent)
     cmap = mpl.colormaps.get("tab20", mpl.colormaps["tab20"])
-    color_map = {ds: cmap(i / max(len(datasets_present) - 1, 1))
-                 for i, ds in enumerate(datasets_present)}
+    color_map = {
+        ds: cmap(i / max(len(datasets_present) - 1, 1)) for i, ds in enumerate(datasets_present)
+    }
 
     fig = plt.figure(figsize=FIGSIZE_UMAP)
     layout = bind_figure_region(fig, (0.05, 0.05, 0.95, 0.92))
@@ -296,31 +320,41 @@ def gen_joint_umap(model_name, out_path, show_legend=False):
         mask = ds_labels == ds
         if not np.any(mask):
             continue
-        ax.scatter(emb[mask, 0], emb[mask, 1], s=SCATTER_SIZE_UMAP,
-                   alpha=0.60, color=[color_map.get(ds, "gray")],
-                   label=ds, rasterized=True)
+        ax.scatter(
+            emb[mask, 0],
+            emb[mask, 1],
+            s=SCATTER_SIZE_UMAP,
+            alpha=0.60,
+            color=[color_map.get(ds, "gray")],
+            label=ds,
+            rasterized=True,
+        )
     ax.set_xticks([])
     ax.set_yticks([])
     short = MODEL_SHORT_NAMES.get(model_name, model_name)
-    ax.set_title(f"{short} (joint)", fontsize=FONTSIZE_TITLE, pad=2,
-                 loc="left", fontweight="normal")
+    ax.set_title(
+        f"{short} (joint)", fontsize=FONTSIZE_TITLE, pad=2, loc="left", fontweight="normal"
+    )
     if show_legend:
-        ax.legend(loc="best", fontsize=FONTSIZE_LEGEND,
-                  framealpha=0.85, markerscale=2, handletextpad=0.2)
+        ax.legend(
+            loc="best", fontsize=FONTSIZE_LEGEND, framealpha=0.85, markerscale=2, handletextpad=0.2
+        )
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
 
 def gen_joint_umap_legend(model_name, out_path):
     """Shared legend for the joint UMAP panel (same style as per-dataset legend)."""
     import matplotlib as mpl
+
     _, ds_labels = load_joint_latent(model_name)
     if ds_labels is None:
         return
     datasets_present = list(dict.fromkeys(ds_labels))
     cmap = mpl.colormaps.get("tab20", mpl.colormaps["tab20"])
-    color_map = {ds: cmap(i / max(len(datasets_present) - 1, 1))
-                 for i, ds in enumerate(datasets_present)}
-    fig_w = FIGSIZE_UMAP[0] * 4   # extra-wide for VCD-safe legend
+    color_map = {
+        ds: cmap(i / max(len(datasets_present) - 1, 1)) for i, ds in enumerate(datasets_present)
+    }
+    fig_w = FIGSIZE_UMAP[0] * 4  # extra-wide for VCD-safe legend
     fig = plt.figure(figsize=(fig_w, 0.65))
     layout = bind_figure_region(fig, (0.0, 0.0, 1.0, 1.0))
     ax = layout.add_axes(fig)
@@ -328,26 +362,32 @@ def gen_joint_umap_legend(model_name, out_path):
     ax.set_yticks([])
     ax.axis("off")
     handles = [
-        plt.Line2D([0], [0], marker="o", ls="", color=color_map[ds],
-                    markersize=5.0, alpha=0.75)
+        plt.Line2D([0], [0], marker="o", ls="", color=color_map[ds], markersize=5.0, alpha=0.75)
         for ds in datasets_present
     ]
     n_cols = min(len(datasets_present), 8)
-    ax.legend(handles, datasets_present, loc="center",
-              ncol=n_cols,
-              fontsize=FONTSIZE_LEGEND, frameon=False,
-              handletextpad=0.3, columnspacing=0.6, markerscale=1.0)
+    ax.legend(
+        handles,
+        datasets_present,
+        loc="center",
+        ncol=n_cols,
+        fontsize=FONTSIZE_LEGEND,
+        frameon=False,
+        handletextpad=0.3,
+        columnspacing=0.6,
+        markerscale=1.0,
+    )
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
 
 def gen_umap_shared_legend(datasets, out_path):
     """Generate a standalone one-row legend image for the UMAP panel."""
     import matplotlib as mpl
-    cmap = mpl.colormaps.get("tab20", mpl.colormaps["tab20"])
-    color_map = {ds: cmap(i / max(len(datasets) - 1, 1))
-                 for i, ds in enumerate(datasets)}
 
-    fig_w = FIGSIZE_UMAP[0] * 4   # extra-wide to accommodate all labels
+    cmap = mpl.colormaps.get("tab20", mpl.colormaps["tab20"])
+    color_map = {ds: cmap(i / max(len(datasets) - 1, 1)) for i, ds in enumerate(datasets)}
+
+    fig_w = FIGSIZE_UMAP[0] * 4  # extra-wide to accommodate all labels
     fig = plt.figure(figsize=(fig_w, 0.65))
     layout = bind_figure_region(fig, (0.0, 0.0, 1.0, 1.0))
     ax = layout.add_axes(fig)
@@ -355,21 +395,30 @@ def gen_umap_shared_legend(datasets, out_path):
     ax.set_yticks([])
     ax.axis("off")
     handles = [
-        plt.Line2D([0], [0], marker="o", ls="", color=color_map[ds],
-                    markersize=5.0, alpha=0.75)
-        for ds in datasets if ds in color_map
+        plt.Line2D([0], [0], marker="o", ls="", color=color_map[ds], markersize=5.0, alpha=0.75)
+        for ds in datasets
+        if ds in color_map
     ]
     labels = [ds for ds in datasets if ds in color_map]
     n_cols = min(len(labels), 8)
-    ax.legend(handles, labels, loc="center", ncol=n_cols,
-              fontsize=FONTSIZE_LEGEND, frameon=False,
-              handletextpad=0.3, columnspacing=0.6, markerscale=1.0)
+    ax.legend(
+        handles,
+        labels,
+        loc="center",
+        ncol=n_cols,
+        fontsize=FONTSIZE_LEGEND,
+        frameon=False,
+        handletextpad=0.3,
+        columnspacing=0.6,
+        markerscale=1.0,
+    )
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Main entry point
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def generate(series, out_dir, seed_average=True):
     """Generate all subplot PNGs for Figure 2.
@@ -381,8 +430,7 @@ def generate(series, out_dir, seed_average=True):
         If False (``--per-seed``), show all seed-level observations
         (n ≈ 60 per model).
     """
-    print(f"\n  Figure 2 subplots ({series})"
-          f"{' [per-seed mode]' if not seed_average else ''}")
+    print(f"\n  Figure 2 subplots ({series}){' [per-seed mode]' if not seed_average else ''}")
     sub_dir = out_dir / "fig2"
     sub_dir.mkdir(parents=True, exist_ok=True)
 
@@ -391,17 +439,14 @@ def generate(series, out_dir, seed_average=True):
     per_ds = load_crossdata_per_dataset()
     valid_models = set(get_model_order(series))
     for ds_name in list(per_ds.keys()):
-        per_ds[ds_name] = per_ds[ds_name][
-            per_ds[ds_name]["Model"].isin(valid_models)
-        ].copy()
+        per_ds[ds_name] = per_ds[ds_name][per_ds[ds_name]["Model"].isin(valid_models)].copy()
         if per_ds[ds_name].empty:
             per_ds.pop(ds_name, None)
     datasets = sorted(per_ds.keys())
     order = get_model_order(series)
 
     # ── Data completeness diagnostic ──
-    print(f"    Data completeness: {len(datasets)} datasets, "
-          f"{len(order)} models")
+    print(f"    Data completeness: {len(datasets)} datasets, {len(order)} models")
     missing_entries = []
     for ds in datasets:
         df_ds = per_ds[ds]
@@ -412,8 +457,7 @@ def generate(series, out_dir, seed_average=True):
             for m in sorted(absent):
                 missing_entries.append((ds, m))
         if n_seeds < 5 and len(df_ds) > 0:
-            print(f"    ⚠ {ds}: only {n_seeds} seed(s) per model "
-                  f"(expected 5)")
+            print(f"    ⚠ {ds}: only {n_seeds} seed(s) per model (expected 5)")
     if missing_entries:
         print(f"    ⚠ {len(missing_entries)} missing (Model, Dataset) pairs:")
         for ds, m in missing_entries[:10]:
@@ -421,24 +465,22 @@ def generate(series, out_dir, seed_average=True):
         if len(missing_entries) > 10:
             print(f"      ... and {len(missing_entries) - 10} more")
     else:
-        print(f"    ✓ All {len(order)} models present in all "
-              f"{len(datasets)} datasets")
+        print(f"    ✓ All {len(order)} models present in all {len(datasets)} datasets")
     mode_label = "seed-averaged (n≈12)" if seed_average else "per-seed (n≈60)"
     print(f"    Boxplot mode: {mode_label}")
 
     # Panel A — cross-dataset UMAPs (3 columns in frontend)
     # No per-UMAP legend; a shared legend row is generated separately.
     for i, m in enumerate(order):
-        gen_cross_umap(m, datasets,
-                       sub_dir / f"umap_{i}_{m.replace('/', '_')}.png",
-                       show_legend=False)
+        gen_cross_umap(
+            m, datasets, sub_dir / f"umap_{i}_{m.replace('/', '_')}.png", show_legend=False
+        )
     # Shared legend row for all UMAPs
     gen_umap_shared_legend(datasets, sub_dir / "umap_legend.png")
 
     # Panel A2 — joint-training UMAPs (same 3 columns; one model per subplot)
     for i, m in enumerate(order):
-        gen_joint_umap(m, sub_dir / f"joint_umap_{i}_{m.replace('/', '_')}.png",
-                       show_legend=False)
+        gen_joint_umap(m, sub_dir / f"joint_umap_{i}_{m.replace('/', '_')}.png", show_legend=False)
     # Joint legend (inferred from first available model with joint latent)
     for m in order:
         jl, _ = load_joint_latent(m)
@@ -452,18 +494,23 @@ def generate(series, out_dir, seed_average=True):
     for col, label, _ in core_metrics:
         if any(col in per_ds[ds].columns for ds in per_ds):
             safe = col.replace("/", "_")
-            gen_single_boxplot(per_ds, col, label, series,
-                               sub_dir / f"core_{safe}.png",
-                               seed_average=seed_average)
+            gen_single_boxplot(
+                per_ds, col, label, series, sub_dir / f"core_{safe}.png", seed_average=seed_average
+            )
 
     # Panel C — extended metric boxplots (4 columns in frontend)
     for col, label, _ in ext_metrics:
         if any(col in per_ds[ds].columns for ds in per_ds):
             safe = col.replace("/", "_")
-            gen_single_boxplot(per_ds, col, label, series,
-                               sub_dir / f"ext_{safe}.png",
-                               show_friedman=False,
-                               seed_average=seed_average)
+            gen_single_boxplot(
+                per_ds,
+                col,
+                label,
+                series,
+                sub_dir / f"ext_{safe}.png",
+                show_friedman=False,
+                seed_average=seed_average,
+            )
 
     # Panel D — efficiency boxplots (3 columns in frontend)
     eff_metrics = [
@@ -474,9 +521,9 @@ def generate(series, out_dir, seed_average=True):
     for col, label, _ in eff_metrics:
         if any(col in per_ds[ds].columns for ds in per_ds):
             safe = col.replace("/", "_")
-            gen_single_boxplot(per_ds, col, label, series,
-                               sub_dir / f"eff_{safe}.png",
-                               seed_average=seed_average)
+            gen_single_boxplot(
+                per_ds, col, label, series, sub_dir / f"eff_{safe}.png", seed_average=seed_average
+            )
 
     # Write manifest
     joint_umaps = sorted([f.name for f in sub_dir.glob("joint_umap_[0-9]*.png")])
@@ -502,11 +549,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Figure 2 subplots")
     parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
-    parser.add_argument("--per-seed", action="store_true",
-                        help="Show all seed-level data points (n≈60) "
-                             "instead of seed-averaged values (n≈12)")
+    parser.add_argument(
+        "--per-seed",
+        action="store_true",
+        help="Show all seed-level data points (n≈60) instead of seed-averaged values (n≈12)",
+    )
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots")
+    out = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots"
+    )
     out.mkdir(parents=True, exist_ok=True)
     generate(args.series, out, seed_average=not args.per_seed)

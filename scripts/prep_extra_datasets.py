@@ -27,91 +27,92 @@ warnings.filterwarnings("ignore")
 import scanpy as sc
 
 # ── Dataset roots (portable; overridable via environment) ────────────────────
-DATASETS_ROOT = Path(os.environ.get(
-    "PANODE_DATASETS_ROOT",
-    str(Path(__file__).resolve().parent.parent / "data")))
+DATASETS_ROOT = Path(
+    os.environ.get("PANODE_DATASETS_ROOT", str(Path(__file__).resolve().parent.parent / "data"))
+)
 
 # ── Output directory for enriched h5ad files ─────────────────────────────────
-PREP_OUT = Path(os.environ.get(
-    "PANODE_PREP_OUTDIR",
+PREP_OUT = Path(
     os.environ.get(
-        "PREP_EXTRA_OUTDIR",
-        str(DATASETS_ROOT / "extra_preprocessed"))))
+        "PANODE_PREP_OUTDIR",
+        os.environ.get("PREP_EXTRA_OUTDIR", str(DATASETS_ROOT / "extra_preprocessed")),
+    )
+)
 PREP_OUT.mkdir(parents=True, exist_ok=True)
 
 # ── Catalog of extra datasets with preprocessing config ──────────────────────
 EXTRA_CATALOG = {
     # ── Labeled developmental ─────────────────────────────────────────────────
     "irall": {
-        "src":         str(DATASETS_ROOT / "IRALL.h5ad"),
-        "label_key":   "cell_type",      # 12 well-annotated classes
-        "leiden_res":  None,             # No Leiden needed — labels exist
-        "data_type":   "cluster",
-        "species":     "human",
-        "domain":      "disease",
-        "desc":        "IR-ALL leukemia (cluster, 41k cells, 12 cell types)",
-        "note":        "Uses existing 'cell_type' annotation",
+        "src": str(DATASETS_ROOT / "IRALL.h5ad"),
+        "label_key": "cell_type",  # 12 well-annotated classes
+        "leiden_res": None,  # No Leiden needed — labels exist
+        "data_type": "cluster",
+        "species": "human",
+        "domain": "disease",
+        "desc": "IR-ALL leukemia (cluster, 41k cells, 12 cell types)",
+        "note": "Uses existing 'cell_type' annotation",
     },
     "wtko": {
-        "src":         str(DATASETS_ROOT / "wtko0312.h5ad"),
-        "label_key":   "leiden",          # Pre-computed leiden
-        "leiden_res":  None,
-        "data_type":   "cluster",
-        "species":     "mouse",
-        "domain":      "perturbation",
-        "desc":        "WT vs KO (cluster, 10k cells, leiden pseudo-labels)",
-        "note":        "Uses existing Leiden clusters from original analysis",
+        "src": str(DATASETS_ROOT / "wtko0312.h5ad"),
+        "label_key": "leiden",  # Pre-computed leiden
+        "leiden_res": None,
+        "data_type": "cluster",
+        "species": "mouse",
+        "domain": "perturbation",
+        "desc": "WT vs KO (cluster, 10k cells, leiden pseudo-labels)",
+        "note": "Uses existing Leiden clusters from original analysis",
     },
     # ── Cancer datasets (raw, need Leiden) ───────────────────────────────────
     "tnbc_brain": {
-        "src":         str(DATASETS_ROOT / "CancerDatasets" / "GSE143423_tnbc_CancerBrainHm.h5ad"),
-        "label_key":   "cell_type",
-        "leiden_res":  0.4,
-        "data_type":   "cluster",
-        "species":     "human",
-        "domain":      "cancer",
-        "desc":        "Triple-negative breast cancer brain metastasis (7k cells, Leiden pseudo-labels)",
-        "note":        "Brain metastatic microenvironment from TNBC",
+        "src": str(DATASETS_ROOT / "CancerDatasets" / "GSE143423_tnbc_CancerBrainHm.h5ad"),
+        "label_key": "cell_type",
+        "leiden_res": 0.4,
+        "data_type": "cluster",
+        "species": "human",
+        "domain": "cancer",
+        "desc": "Triple-negative breast cancer brain metastasis (7k cells, Leiden pseudo-labels)",
+        "note": "Brain metastatic microenvironment from TNBC",
     },
     "lbm_brain": {
-        "src":         str(DATASETS_ROOT / "CancerDatasets" / "GSE143423_lbm_CancerBrainHm.h5ad"),
-        "label_key":   "cell_type",
-        "leiden_res":  0.4,
-        "data_type":   "cluster",
-        "species":     "human",
-        "domain":      "cancer",
-        "desc":        "Lung brain metastasis microenvironment (12k cells, Leiden pseudo-labels)",
-        "note":        "Brain metastatic microenvironment from lung cancer",
+        "src": str(DATASETS_ROOT / "CancerDatasets" / "GSE143423_lbm_CancerBrainHm.h5ad"),
+        "label_key": "cell_type",
+        "leiden_res": 0.4,
+        "data_type": "cluster",
+        "species": "human",
+        "domain": "cancer",
+        "desc": "Lung brain metastasis microenvironment (12k cells, Leiden pseudo-labels)",
+        "note": "Brain metastatic microenvironment from lung cancer",
     },
     "hepatoblastoma": {
-        "src":         str(DATASETS_ROOT / "CancerDatasets2" / "GSE283205_hepatoblastomaCancer.h5ad"),
-        "label_key":   "cell_type",
-        "leiden_res":  0.5,
-        "data_type":   "cluster",
-        "species":     "human",
-        "domain":      "cancer",
-        "desc":        "Hepatoblastoma pediatric liver cancer (16k cells, Leiden pseudo-labels)",
-        "note":        "Pediatric liver cancer tumor microenvironment",
+        "src": str(DATASETS_ROOT / "CancerDatasets2" / "GSE283205_hepatoblastomaCancer.h5ad"),
+        "label_key": "cell_type",
+        "leiden_res": 0.5,
+        "data_type": "cluster",
+        "species": "human",
+        "domain": "cancer",
+        "desc": "Hepatoblastoma pediatric liver cancer (16k cells, Leiden pseudo-labels)",
+        "note": "Pediatric liver cancer tumor microenvironment",
     },
     "bc_ec": {
-        "src":         str(DATASETS_ROOT / "CancerDatasets" / "GSE155109_bcECHmCancer.h5ad"),
-        "label_key":   "cell_type",
-        "leiden_res":  0.4,
-        "data_type":   "cluster",
-        "species":     "human",
-        "domain":      "cancer",
-        "desc":        "Breast cancer endothelial cells (8k cells, Leiden pseudo-labels)",
-        "note":        "Tumor endothelial cell heterogeneity in breast cancer",
+        "src": str(DATASETS_ROOT / "CancerDatasets" / "GSE155109_bcECHmCancer.h5ad"),
+        "label_key": "cell_type",
+        "leiden_res": 0.4,
+        "data_type": "cluster",
+        "species": "human",
+        "domain": "cancer",
+        "desc": "Breast cancer endothelial cells (8k cells, Leiden pseudo-labels)",
+        "note": "Tumor endothelial cell heterogeneity in breast cancer",
     },
     "bcc": {
-        "src":         str(DATASETS_ROOT / "CancerDatasets" / "GSE123813_bccHmCancer.h5ad"),
-        "label_key":   "cell_type",
-        "leiden_res":  0.8,
-        "data_type":   "cluster",
-        "species":     "human",
-        "domain":      "cancer",
-        "desc":        "Basal cell carcinoma immune TME (53k cells, Leiden pseudo-labels)",
-        "note":        "Tumor-infiltrating immune cell diversity in BCC",
+        "src": str(DATASETS_ROOT / "CancerDatasets" / "GSE123813_bccHmCancer.h5ad"),
+        "label_key": "cell_type",
+        "leiden_res": 0.8,
+        "data_type": "cluster",
+        "species": "human",
+        "domain": "cancer",
+        "desc": "Basal cell carcinoma immune TME (53k cells, Leiden pseudo-labels)",
+        "note": "Tumor-infiltrating immune cell diversity in BCC",
     },
 }
 
@@ -126,11 +127,11 @@ def preprocess_dataset(key, info, max_cells=3000, hvg_genes=3000, seed=42):
         print(f"  [{key}] Already exists: {dst.name} — skipping (use --force to redo)")
         return True
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"  Processing: {key}")
     print(f"  Source:     {src.name}")
     print(f"  Desc:       {info['desc']}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # 1. Load
     print("  Loading...")
@@ -149,7 +150,7 @@ def preprocess_dataset(key, info, max_cells=3000, hvg_genes=3000, seed=42):
         sc.pp.subsample(adata, n_obs=max_cells * 4, random_state=seed)
 
     # 4. Preprocessing (only if labels need to be computed)
-    needs_leiden = (info["leiden_res"] is not None)
+    needs_leiden = info["leiden_res"] is not None
     if needs_leiden and info["label_key"] not in adata.obs.columns:
         print("  Normalizing + log1p + HVG...")
         sc.pp.normalize_total(adata, target_sum=1e4)
@@ -171,7 +172,9 @@ def preprocess_dataset(key, info, max_cells=3000, hvg_genes=3000, seed=42):
         del adata_hvg
         gc.collect()
     elif info["label_key"] in adata.obs.columns:
-        print(f"  Using existing labels: '{info['label_key']}' ({adata.obs[info['label_key']].nunique()} classes)")
+        print(
+            f"  Using existing labels: '{info['label_key']}' ({adata.obs[info['label_key']].nunique()} classes)"
+        )
         if info["label_key"] != "cell_type":
             adata.obs["cell_type"] = adata.obs[info["label_key"]].copy()
     else:
@@ -190,6 +193,7 @@ def check_status():
     print(f"\n{'Dataset':<20} {'Source cells':>12} {'Prep file':>12} {'Status'}")
     print("-" * 70)
     import anndata as ad
+
     for key, info in EXTRA_CATALOG.items():
         dst = PREP_OUT / f"{key}_prepped.h5ad"
         try:
@@ -201,20 +205,29 @@ def check_status():
         if dst.exists():
             try:
                 h = ad.read_h5ad(dst, backed="r")
-                n_classes = f"{h.obs.get('cell_type', h.obs.iloc[:, 0]).nunique()} types" if h.obs.shape[1] > 0 else "0 types"
+                n_classes = (
+                    f"{h.obs.get('cell_type', h.obs.iloc[:, 0]).nunique()} types"
+                    if h.obs.shape[1] > 0
+                    else "0 types"
+                )
                 h.file.close()
             except Exception:
                 n_classes = "ERR"
-        print(f"  {key:<20} {str(n_src):>12} {dst.name if dst.exists() else '---':>16}  [{status}] {n_classes}")
+        print(
+            f"  {key:<20} {str(n_src):>12} {dst.name if dst.exists() else '---':>16}  [{status}] {n_classes}"
+        )
 
 
 def main():
     parser = argparse.ArgumentParser(description="Prep extra datasets for benchmark")
-    parser.add_argument("--datasets", nargs="+", default=None,
-                        help="Dataset keys to process (default: all)")
+    parser.add_argument(
+        "--datasets", nargs="+", default=None, help="Dataset keys to process (default: all)"
+    )
     parser.add_argument("--all", action="store_true", help="Process all datasets")
     parser.add_argument("--check-only", action="store_true", help="Print status only")
-    parser.add_argument("--force", action="store_true", help="Force reprocessing even if file exists")
+    parser.add_argument(
+        "--force", action="store_true", help="Force reprocessing even if file exists"
+    )
     parser.add_argument("--max-cells", type=int, default=3000)
     parser.add_argument("--hvg-genes", type=int, default=3000)
     parser.add_argument("--seed", type=int, default=42)
@@ -240,13 +253,18 @@ def main():
     print(f"\nPreparing {len(targets)} datasets: {targets}")
     for key in targets:
         try:
-            preprocess_dataset(key, EXTRA_CATALOG[key],
-                               max_cells=args.max_cells,
-                               hvg_genes=args.hvg_genes,
-                               seed=args.seed)
+            preprocess_dataset(
+                key,
+                EXTRA_CATALOG[key],
+                max_cells=args.max_cells,
+                hvg_genes=args.hvg_genes,
+                seed=args.seed,
+            )
         except Exception as e:
             print(f"  [{key}] FAILED: {e}")
-            import traceback; traceback.print_exc()
+            import traceback
+
+            traceback.print_exc()
 
     print("\n\nFinal status:")
     check_status()

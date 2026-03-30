@@ -76,8 +76,10 @@ PRESETS = {}  # placeholder — replace with project PRESETS
 #   - Log-normalisation
 #   - Caching preprocessed data for faster re-runs
 
-def load_data(path: str, max_cells: int, n_hvg: int, seed: int,
-              cache_dir: Path = None) -> "sc.AnnData":
+
+def load_data(
+    path: str, max_cells: int, n_hvg: int, seed: int, cache_dir: Path = None
+) -> "sc.AnnData":
     """Load and preprocess a single dataset.
 
     TODO: Replace with your data loading pipeline.
@@ -88,8 +90,7 @@ def load_data(path: str, max_cells: int, n_hvg: int, seed: int,
         sc.pp.subsample(adata, n_obs=max_cells, random_state=seed)
 
     if adata.n_vars > n_hvg:
-        sc.pp.highly_variable_genes(adata, n_top_genes=n_hvg,
-                                     flavor="seurat_v3", span=0.3)
+        sc.pp.highly_variable_genes(adata, n_top_genes=n_hvg, flavor="seurat_v3", span=0.3)
         adata = adata[:, adata.var["highly_variable"]].copy()
 
     return adata
@@ -99,6 +100,7 @@ def load_data(path: str, max_cells: int, n_hvg: int, seed: int,
 # ██  PROJECT-SPECIFIC: Label standardisation
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def standardize_labels(adata, label_key: str):
     """Copy *label_key* → ``adata.obs['cell_type']`` for DataSplitter.
 
@@ -106,8 +108,14 @@ def standardize_labels(adata, label_key: str):
     """
     CANDIDATE_KEYS = [
         label_key,
-        "cell_type", "celltype", "clusters", "Clusters",
-        "Cell type", "Main_cell_type", "cell.type", "CellType",
+        "cell_type",
+        "celltype",
+        "clusters",
+        "Clusters",
+        "Cell type",
+        "Main_cell_type",
+        "cell.type",
+        "CellType",
     ]
     for key in CANDIDATE_KEYS:
         if key in adata.obs.columns:
@@ -129,6 +137,7 @@ def standardize_labels(adata, label_key: str):
 #   .labels_test    (np.ndarray of string/int labels for test set)
 #   .n_var          (int — input dimensionality)
 
+
 def create_data_splitter(adata, batch_size: int, seed: int, latent_dim: int):
     """Create train/val/test data loaders from an AnnData object.
 
@@ -143,10 +152,11 @@ def create_data_splitter(adata, batch_size: int, seed: int, latent_dim: int):
 # ████  PORTABLE: Helper utilities
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def is_cuda_oom(exc: Exception) -> bool:
     """Return True if *exc* is a CUDA out-of-memory error."""
     msg = str(exc).lower()
-    return ("out of memory" in msg or "cuda" in msg and "alloc" in msg)
+    return "out of memory" in msg or "cuda" in msg and "alloc" in msg
 
 
 def _ensure_dirs(*dirs):
@@ -156,6 +166,7 @@ def _ensure_dirs(*dirs):
 
 def _set_global_seed(seed: int):
     import random
+
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -167,13 +178,15 @@ def _set_global_seed(seed: int):
 # ████  PORTABLE: Single model training + evaluation
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def train_single_model(
     model_name: str,
     model_spec: dict,
     splitter,
     cfg: ExperimentConfig,
     device: torch.device,
-    data_type: str = "cluster") -> dict:
+    data_type: str = "cluster",
+) -> dict:
     """Train one model variant, extract latent, compute full metrics.
 
     The model class must conform to the interface:
@@ -200,7 +213,7 @@ def train_single_model(
     params.pop("fit_epochs", None)
 
     start = time.time()
-    print(f"\n{'─'*60}\n  Training: {model_name}  ({cfg.epochs} epochs)\n{'─'*60}")
+    print(f"\n{'─' * 60}\n  Training: {model_name}  ({cfg.epochs} epochs)\n{'─' * 60}")
 
     try:
         model = model_cls(input_dim=splitter.n_var, **params)
@@ -215,7 +228,8 @@ def train_single_model(
             patience=cfg.patience,
             verbose=1,
             verbose_every=cfg.verbose_every,
-            weight_decay=fit_wd)
+            weight_decay=fit_wd,
+        )
 
         elapsed = time.time() - start
         epochs_trained = len(history.get("train_loss", [])) or cfg.epochs
@@ -223,16 +237,15 @@ def train_single_model(
 
         peak_gpu_mb = 0.0
         if device.type == "cuda":
-            peak_gpu_mb = torch.cuda.max_memory_allocated(device) / (1024 ** 2)
+            peak_gpu_mb = torch.cuda.max_memory_allocated(device) / (1024**2)
 
-        latent_dict = model.extract_latent(
-            splitter.test_loader, device=str(device))
+        latent_dict = model.extract_latent(splitter.test_loader, device=str(device))
         latent = latent_dict["latent"]
 
         # Full metric battery from eval_lib
         metrics = compute_metrics(
-            latent, splitter.labels_test,
-            data_type=data_type, dre_k=cfg.dre_k)
+            latent, splitter.labels_test, data_type=data_type, dre_k=cfg.dre_k
+        )
         diagnostics = compute_latent_diagnostics(latent)
         n_params = sum(p.numel() for p in model.parameters())
 
@@ -264,8 +277,8 @@ def train_single_model(
             torch.cuda.empty_cache()
             gc.collect()
             return train_single_model(
-                model_name, model_spec, splitter, cfg,
-                torch.device("cpu"), data_type)
+                model_name, model_spec, splitter, cfg, torch.device("cpu"), data_type
+            )
         elapsed = time.time() - start
         print(f"  ERROR: {str(exc)[:150]}")
         traceback.print_exc()
@@ -275,7 +288,8 @@ def train_single_model(
             "Error": str(exc)[:200],
             "latent": None,
             "history": {},
-            "NMI": 0, "ARI": 0,
+            "NMI": 0,
+            "ARI": 0,
             "Epochs": cfg.epochs,
             "EpochsTrained": 0,
         }
@@ -284,6 +298,7 @@ def train_single_model(
 # ═══════════════════════════════════════════════════════════════════════════════
 # ████  PORTABLE: Main experiment loop
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def run_experiment(cfg: ExperimentConfig, device: torch.device = None):
     """Execute full experiment: iterate datasets × models → CSV tables.
@@ -307,8 +322,7 @@ def run_experiment(cfg: ExperimentConfig, device: torch.device = None):
         if stem.endswith("_df"):
             done_datasets.add(stem[:-3])
     if done_datasets:
-        print(f"Resume: {len(done_datasets)} datasets already completed → "
-              f"{sorted(done_datasets)}")
+        print(f"Resume: {len(done_datasets)} datasets already completed → {sorted(done_datasets)}")
 
     cache_dir = cfg.output_root / cfg.name / "cache"
     _ensure_dirs(cache_dir)
@@ -326,34 +340,31 @@ def run_experiment(cfg: ExperimentConfig, device: torch.device = None):
         label_key = ds_info.get("label_key", "cell_type")
         data_type = ds_info.get("data_type", "cluster")
 
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"[{ds_idx}/{total_datasets}] Dataset: {ds_key}")
         print(f"  Path: {ds_path}")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         if not Path(ds_path).exists():
             print("  WARNING: File not found → skipping")
             continue
 
         try:
-            adata = load_data(ds_path, cfg.max_cells, cfg.n_hvg, cfg.seed,
-                              cache_dir=cache_dir)
+            adata = load_data(ds_path, cfg.max_cells, cfg.n_hvg, cfg.seed, cache_dir=cache_dir)
             adata = standardize_labels(adata, label_key)
         except Exception as e:
             print(f"  ERROR loading dataset: {e}")
             continue
 
         try:
-            splitter = create_data_splitter(
-                adata, cfg.batch_size, cfg.seed, cfg.latent_dim)
+            splitter = create_data_splitter(adata, cfg.batch_size, cfg.seed, cfg.latent_dim)
         except Exception as e:
             print(f"  ERROR creating DataSplitter: {e}")
             continue
 
         results = []
         for model_name, model_spec in cfg.models.items():
-            res = train_single_model(
-                model_name, model_spec, splitter, cfg, device, data_type)
+            res = train_single_model(model_name, model_spec, splitter, cfg, device, data_type)
             results.append(res)
             gc.collect()
             torch.cuda.empty_cache()
@@ -369,8 +380,7 @@ def run_experiment(cfg: ExperimentConfig, device: torch.device = None):
         df = pd.DataFrame(rows)
         csv_path = cfg.tables_dir / f"{ds_key}_df.csv"
         df.to_csv(csv_path, index=False)
-        print(f"\n  Saved: {csv_path}  "
-              f"({len(df)} methods × {len(METRIC_COLUMNS)} metrics)")
+        print(f"\n  Saved: {csv_path}  ({len(df)} methods × {len(METRIC_COLUMNS)} metrics)")
 
         # Save training series CSV
         series_rows = []
@@ -381,17 +391,18 @@ def run_experiment(cfg: ExperimentConfig, device: torch.device = None):
             recon_loss = history.get("train_recon_loss", train_loss)
             val_recon = history.get("val_recon_loss", [])
             for ep_idx in range(len(train_loss)):
-                series_rows.append({
-                    "epoch": ep_idx + 1,
-                    "hue": res["Model"],
-                    "train_loss": train_loss[ep_idx],
-                    "val_loss": (val_loss[ep_idx]
-                                 if ep_idx < len(val_loss) else np.nan),
-                    "recon_loss": (recon_loss[ep_idx]
-                                  if ep_idx < len(recon_loss) else np.nan),
-                    "val_recon_loss": (val_recon[ep_idx]
-                                      if ep_idx < len(val_recon) else np.nan),
-                })
+                series_rows.append(
+                    {
+                        "epoch": ep_idx + 1,
+                        "hue": res["Model"],
+                        "train_loss": train_loss[ep_idx],
+                        "val_loss": (val_loss[ep_idx] if ep_idx < len(val_loss) else np.nan),
+                        "recon_loss": (recon_loss[ep_idx] if ep_idx < len(recon_loss) else np.nan),
+                        "val_recon_loss": (
+                            val_recon[ep_idx] if ep_idx < len(val_recon) else np.nan
+                        ),
+                    }
+                )
         if series_rows:
             dfs = pd.DataFrame(series_rows)
             series_path = cfg.series_dir / f"{ds_key}_dfs.csv"
@@ -400,15 +411,16 @@ def run_experiment(cfg: ExperimentConfig, device: torch.device = None):
         completed += 1
         print(f"\n  Done: {ds_key}  ({completed}/{total_datasets})")
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Experiment '{cfg.name}' finished: {completed}/{total_datasets} datasets")
     print(f"Results: {cfg.tables_dir}")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ████  PORTABLE: CLI entry point
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -419,37 +431,41 @@ Examples:
   python -m experiments.run_experiment --preset my_ablation
   python -m experiments.run_experiment --preset my_ablation --epochs 50
   python -m experiments.run_experiment --preset my_ablation --datasets ds_a ds_b
-        """)
+        """,
+    )
     parser.add_argument(
-        "--preset", type=str, required=True,
+        "--preset",
+        type=str,
+        required=True,
         choices=list(PRESETS.keys()),
-        help="Experiment preset name")
+        help="Experiment preset name",
+    )
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--max-cells", type=int, default=None)
     parser.add_argument("--n-hvg", type=int, default=None)
     parser.add_argument("--latent-dim", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=None)
     parser.add_argument("--seed", type=int, default=None)
-    parser.add_argument("--dre-k", type=int, default=None,
-                        help="k for DRE k-nearest-neighbour quality")
-    parser.add_argument("--datasets", type=str, nargs="+", default=None,
-                        help="Run only these dataset keys")
+    parser.add_argument(
+        "--dre-k", type=int, default=None, help="k for DRE k-nearest-neighbour quality"
+    )
+    parser.add_argument(
+        "--datasets", type=str, nargs="+", default=None, help="Run only these dataset keys"
+    )
     parser.add_argument("--output-root", type=str, default=None)
     parser.add_argument("--verbose-every", type=int, default=None)
-    parser.add_argument("--cpu", action="store_true",
-                        help="Force CPU execution")
+    parser.add_argument("--cpu", action="store_true", help="Force CPU execution")
 
     # ── Model hyperparameter overrides ────────────────────────────────────
     # ██  PROJECT-SPECIFIC: Add/remove CLI flags matching your models' params
     model_grp = parser.add_argument_group(
-        "Model hyperparameters",
-        "Override model params across ALL model variants in the preset.")
-    model_grp.add_argument("--model-lr", type=float, default=None,
-                           help="Learning rate override")
-    model_grp.add_argument("--model-wd", type=float, default=None,
-                           help="Weight decay override")
-    model_grp.add_argument("--model-dropout", type=float, default=None,
-                           help="Dropout rate override")
+        "Model hyperparameters", "Override model params across ALL model variants in the preset."
+    )
+    model_grp.add_argument("--model-lr", type=float, default=None, help="Learning rate override")
+    model_grp.add_argument("--model-wd", type=float, default=None, help="Weight decay override")
+    model_grp.add_argument(
+        "--model-dropout", type=float, default=None, help="Dropout rate override"
+    )
 
     return parser.parse_args()
 
@@ -459,10 +475,9 @@ Examples:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 _MODEL_HP_MAP = {
-    'model_lr': [('fit_lr', None)],
-    'model_wd': [('fit_weight_decay', None)],
-    'model_dropout': [('dropout_rate', None), ('dropout', None),
-                      ('encoder_drop', None)],
+    "model_lr": [("fit_lr", None)],
+    "model_wd": [("fit_weight_decay", None)],
+    "model_dropout": [("dropout_rate", None), ("dropout", None), ("encoder_drop", None)],
 }
 
 
@@ -472,17 +487,23 @@ def main():
     cfg = PRESETS[args.preset]
 
     overrides = {}
-    for field_name in ('epochs', 'max_cells', 'n_hvg', 'latent_dim',
-                       'batch_size', 'seed', 'verbose_every', 'dre_k'):
-        val = getattr(args, field_name.replace('-', '_'), None)
+    for field_name in (
+        "epochs",
+        "max_cells",
+        "n_hvg",
+        "latent_dim",
+        "batch_size",
+        "seed",
+        "verbose_every",
+        "dre_k",
+    ):
+        val = getattr(args, field_name.replace("-", "_"), None)
         if val is not None:
             overrides[field_name] = val
     if args.output_root is not None:
         overrides["output_root"] = Path(args.output_root)
     if args.datasets is not None:
-        overrides["datasets"] = {
-            k: v for k, v in cfg.datasets.items() if k in args.datasets
-        }
+        overrides["datasets"] = {k: v for k, v in cfg.datasets.items() if k in args.datasets}
     if overrides:
         cfg = cfg.with_overrides(**overrides)
 
@@ -501,8 +522,11 @@ def main():
 
     _set_global_seed(cfg.seed)
 
-    device = (torch.device("cpu") if args.cpu else
-              torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    device = (
+        torch.device("cpu")
+        if args.cpu
+        else torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    )
     print(f"Device: {device}")
 
     run_experiment(cfg, device=device)

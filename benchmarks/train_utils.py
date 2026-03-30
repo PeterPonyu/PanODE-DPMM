@@ -29,8 +29,10 @@ from benchmarks.model_registry import is_cuda_oom
 # Default model parameter factories (previously duplicated 3×)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def make_dpmm_params(latent_dim=None, warmup_ratio=0.9,
-                     encoder_dims=None, decoder_dims=None, dropout=0.15):
+
+def make_dpmm_params(
+    latent_dim=None, warmup_ratio=0.9, encoder_dims=None, decoder_dims=None, dropout=0.15
+):
     """Return default DPMM-Base architecture params.
 
     Used by benchmark_sensitivity, benchmark_training, and
@@ -55,11 +57,22 @@ def make_dpmm_params(latent_dim=None, warmup_ratio=0.9,
 # Unified training → evaluation loop (previously duplicated 5×)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def train_and_evaluate(
-    name, model_cls, params, splitter, device,
-    lr=1e-3, epochs=600, weight_decay=1e-5,
-    verbose_every=50, data_type="trajectory",
-    extra_fields=None, patience=None, dre_k=15):
+    name,
+    model_cls,
+    params,
+    splitter,
+    device,
+    lr=1e-3,
+    epochs=600,
+    weight_decay=1e-5,
+    verbose_every=50,
+    data_type="trajectory",
+    extra_fields=None,
+    patience=None,
+    dre_k=15,
+):
     """Train a single model variant, compute metrics, return result dict.
 
     This is the single canonical training loop used by all benchmark
@@ -99,7 +112,7 @@ def train_and_evaluate(
         torch.cuda.reset_peak_memory_stats(device)
 
     start = time.time()
-    print(f"\n{'='*60}\nTraining: {name}\n{'='*60}")
+    print(f"\n{'=' * 60}\nTraining: {name}\n{'=' * 60}")
 
     try:
         params = dict(params)  # copy to avoid mutation
@@ -122,7 +135,8 @@ def train_and_evaluate(
             patience=fit_patience,
             verbose=1,
             verbose_every=verbose_every,
-            weight_decay=fit_wd)
+            weight_decay=fit_wd,
+        )
 
         epochs_trained = len(history.get("train_loss", [])) or fit_epochs
         elapsed = time.time() - start
@@ -130,21 +144,18 @@ def train_and_evaluate(
 
         peak_gpu_mb = 0.0
         if device.type == "cuda":
-            peak_gpu_mb = torch.cuda.max_memory_allocated(device) / (1024 ** 2)
+            peak_gpu_mb = torch.cuda.max_memory_allocated(device) / (1024**2)
 
         # Convergence diagnostics
         conv_diag = _convergence_diagnostics(history, window=50)
         print_convergence(conv_diag)
 
         # Extract latent representations
-        latent_dict = model.extract_latent(
-            splitter.test_loader, device=str(device))
+        latent_dict = model.extract_latent(splitter.test_loader, device=str(device))
         latent = latent_dict["latent"]
 
         # Compute metrics
-        metrics = compute_metrics(
-            latent, splitter.labels_test,
-            data_type=data_type, dre_k=dre_k)
+        metrics = compute_metrics(latent, splitter.labels_test, data_type=data_type, dre_k=dre_k)
         diagnostics = compute_latent_diagnostics(latent)
         n_params = sum(p.numel() for p in model.parameters())
 
@@ -182,21 +193,33 @@ def train_and_evaluate(
             torch.cuda.empty_cache()
             gc.collect()
             return train_and_evaluate(
-                name, model_cls, params, splitter, torch.device("cpu"),
-                lr=lr, epochs=epochs, weight_decay=weight_decay,
-                verbose_every=verbose_every, data_type=data_type,
-                extra_fields=extra_fields, patience=patience,
-                dre_k=dre_k)
+                name,
+                model_cls,
+                params,
+                splitter,
+                torch.device("cpu"),
+                lr=lr,
+                epochs=epochs,
+                weight_decay=weight_decay,
+                verbose_every=verbose_every,
+                data_type=data_type,
+                extra_fields=extra_fields,
+                patience=patience,
+                dre_k=dre_k,
+            )
         elapsed = time.time() - start
         print(f"ERROR: {str(exc)[:120]}")
         import traceback
+
         traceback.print_exc()
         result = {
             "Model": name,
             "Time_s": elapsed,
             "Error": str(exc)[:200],
             "latent": None,
-            "NMI": np.nan, "ARI": np.nan, "ASW": np.nan,
+            "NMI": np.nan,
+            "ARI": np.nan,
+            "ASW": np.nan,
             "Epochs": epochs,
             "EpochsTrained": 0,
         }
@@ -209,19 +232,20 @@ def train_and_evaluate(
 # Convergence printing (previously duplicated 5×)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def print_convergence(conv_diag):
     """Pretty-print convergence diagnostics dict (if available)."""
     if not conv_diag:
         return
     rpct = conv_diag.get("recon_rel_change_pct", float("nan"))
     flag = "✓ CONVERGED" if abs(rpct) < 1.0 else "✗ NOT converged"
-    print(f"  Convergence: Δ%={rpct:+.2f}%  "
-          f"(last {conv_diag['window']} ep)  {flag}")
+    print(f"  Convergence: Δ%={rpct:+.2f}%  (last {conv_diag['window']} ep)  {flag}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Output directory helpers (previously duplicated 4×)
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def setup_series_dirs(base_dir, include_latents=True):
     """Create csv/plots/meta[/latents] sub-dirs for dpmm.
@@ -233,9 +257,9 @@ def setup_series_dirs(base_dir, include_latents=True):
     sdirs = {}
     for sk in ("dpmm",):
         d = {
-            "csv":   base_dir / "csv"   / sk,
+            "csv": base_dir / "csv" / sk,
             "plots": base_dir / "plots" / sk,
-            "meta":  base_dir / "meta"  / sk,
+            "meta": base_dir / "meta" / sk,
         }
         if include_latents:
             d["latents"] = base_dir / "latents" / sk
@@ -258,7 +282,7 @@ def save_latents(latents, sdirs, tag, ds_keys=None, variants=None):
 
         # Determine paper group for this model
         if model_key in MODELS:
-            pg = _pg(MODELS[model_key]['series'])
+            pg = _pg(MODELS[model_key]["series"])
         else:
             pg = "dpmm"
 
@@ -286,6 +310,7 @@ def save_latents(latents, sdirs, tag, ds_keys=None, variants=None):
 # CLI helpers (previously duplicated 4×)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def add_common_cli_args(parser):
     """Add the standard --verbose-every / --seed / --no-plots / --datasets args."""
     from benchmarks.dataset_registry import DATASET_REGISTRY
@@ -294,14 +319,18 @@ def add_common_cli_args(parser):
     parser.add_argument("--seed", type=int, default=BASE_CONFIG.seed)
     parser.add_argument("--no-plots", action="store_true")
     parser.add_argument(
-        "--datasets", nargs="+", default=["setty"],
+        "--datasets",
+        nargs="+",
+        default=["setty"],
         choices=list(DATASET_REGISTRY.keys()),
-        help="Datasets to run (default: setty only).")
+        help="Datasets to run (default: setty only).",
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Model selection & override helpers (shared by benchmark_base, crossdata)
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def select_models(args, models_dict=None):
     """Filter *models_dict* based on ``--series`` / ``--models`` CLI flags.
@@ -320,6 +349,7 @@ def select_models(args, models_dict=None):
         Ordered subset of *models_dict* matching the selection.
     """
     from benchmarks.model_registry import MODELS, SERIES_GROUPS
+
     if models_dict is None:
         models_dict = MODELS
 

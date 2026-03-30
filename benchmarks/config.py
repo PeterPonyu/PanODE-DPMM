@@ -25,9 +25,7 @@ import numpy as np
 import torch
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DATASETS_ROOT = Path(
-    os.environ.get("PANODE_DATASETS_ROOT", str(_REPO_ROOT / "data"))
-)
+DEFAULT_DATASETS_ROOT = Path(os.environ.get("PANODE_DATASETS_ROOT", str(_REPO_ROOT / "data")))
 DEFAULT_DATA_PATH = Path(
     os.environ.get(
         "PANODE_DEFAULT_DATASET",
@@ -50,7 +48,7 @@ class BenchmarkConfig:
     # Training
     lr: float = 1e-3  # Standard learning rate for all models
     batch_size: int = 128  # Consistent batch size for ALL models (including attention)
-    epochs: int = 600   # Optimal: all models converge (recon Δ < 1% / 50ep window)
+    epochs: int = 600  # Optimal: all models converge (recon Δ < 1% / 50ep window)
     patience: int = 100  # Early stopping patience (set to 0 or negative to disable)
     early_stopping: bool = False  # Disable by default for epoch series experiments
 
@@ -77,16 +75,16 @@ BASE_CONFIG = BenchmarkConfig()
 # ──────────────────────────────────────────────────────────────────────────────
 # Canonical directory paths (single source of truth)
 # ──────────────────────────────────────────────────────────────────────────────
-_BENCHMARKS_ROOT = Path(__file__).resolve().parent          # benchmarks/
+_BENCHMARKS_ROOT = Path(__file__).resolve().parent  # benchmarks/
 
-DEFAULT_OUTPUT_DIR      = _BENCHMARKS_ROOT / "benchmark_results"
-CACHE_DIR               = DEFAULT_OUTPUT_DIR / "cache"
+DEFAULT_OUTPUT_DIR = _BENCHMARKS_ROOT / "benchmark_results"
+CACHE_DIR = DEFAULT_OUTPUT_DIR / "cache"
 STATISTICAL_EXPORTS_DIR = DEFAULT_OUTPUT_DIR / "statistical_exports"
-MODELS_DIR              = DEFAULT_OUTPUT_DIR / "models"
+MODELS_DIR = DEFAULT_OUTPUT_DIR / "models"
 
-PAPER_FIGURES_DIR       = _BENCHMARKS_ROOT / "paper_figures"
-BIO_RESULTS_DIR         = _BENCHMARKS_ROOT / "biological_validation" / "results"
-DYNAMICS_DIR            = _BENCHMARKS_ROOT / "training_dynamics_results"
+PAPER_FIGURES_DIR = _BENCHMARKS_ROOT / "paper_figures"
+BIO_RESULTS_DIR = _BENCHMARKS_ROOT / "biological_validation" / "results"
+DYNAMICS_DIR = _BENCHMARKS_ROOT / "training_dynamics_results"
 
 
 def result_subdir(benchmark_name: str, *subdirs: str) -> Path:

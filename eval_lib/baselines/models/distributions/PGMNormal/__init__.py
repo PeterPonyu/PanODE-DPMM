@@ -14,11 +14,11 @@ from .layers import (
 from .prior import get_prior
 
 __all__ = [
-    'Distribution',
-    'EncoderLayer',
-    'VanillaEncoderLayer',
-    'GeoEncoderLayer',
-    'VanillaDecoderLayer',
-    'GeoDecoderLayer',
-    'get_prior',
+    "Distribution",
+    "EncoderLayer",
+    "VanillaEncoderLayer",
+    "GeoEncoderLayer",
+    "VanillaDecoderLayer",
+    "GeoDecoderLayer",
+    "get_prior",
 ]

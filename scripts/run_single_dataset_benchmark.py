@@ -8,6 +8,7 @@ and external_full formats.
 Usage:
     python scripts/run_single_dataset_benchmark.py --dataset lung_fetal
 """
+
 import argparse
 import gc
 import sys
@@ -30,8 +31,12 @@ FULL_COMP_DIR = ROOT / "experiments" / "results" / "full_comparison_all" / "tabl
 CACHE_DIR = ROOT / "benchmarks" / "benchmark_results" / "cache"
 
 DPMM_MODELS = [
-    "Pure-AE", "Pure-Transformer-AE", "Pure-Contrastive-AE",
-    "DPMM-Base", "DPMM-Transformer", "DPMM-Contrastive",
+    "Pure-AE",
+    "Pure-Transformer-AE",
+    "Pure-Contrastive-AE",
+    "DPMM-Base",
+    "DPMM-Transformer",
+    "DPMM-Contrastive",
 ]
 
 # Short names used in existing tables
@@ -78,11 +83,15 @@ def main():
         print(f"  WARNING: No '{label_key}' column, using KMeans pseudo-labels.")
 
     splitter = DataSplitter(
-        adata=adata, layer="counts",
-        train_size=0.7, val_size=0.15, test_size=0.15,
+        adata=adata,
+        layer="counts",
+        train_size=0.7,
+        val_size=0.15,
+        test_size=0.15,
         batch_size=BASE_CONFIG.batch_size,
         latent_dim=BASE_CONFIG.latent_dim,
-        random_seed=args.seed, verbose=True,
+        random_seed=args.seed,
+        verbose=True,
     )
 
     results = []

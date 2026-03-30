@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 # Policy dataclass
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class FigurePolicy:
     """Central knob-file for every visual-conflict rule.
@@ -66,25 +67,23 @@ class FigurePolicy:
     annotation_min_fontsize: int = 8
 
     # -- Height / whitespace compaction targets ----------------------------
-    target_height_width_ratio: float = 0.50   # h/w for full-width standalone panels
-    hspace_compact_target: float = 0.35       # aim for this hspace after cleanup
-    hspace_excess_threshold: float = 0.70     # hspace above this triggers compaction
-    height_compact_min_inches: float = 4.0    # never shrink figure below this height
+    target_height_width_ratio: float = 0.50  # h/w for full-width standalone panels
+    hspace_compact_target: float = 0.35  # aim for this hspace after cleanup
+    hspace_excess_threshold: float = 0.70  # hspace above this triggers compaction
+    height_compact_min_inches: float = 4.0  # never shrink figure below this height
 
     # -- Semantic integrity guards ----------------------------------------
-    min_label_display_chars: int = 12         # never shorten a label below this
-    label_ellipsis_mode: str = "end"          # "end" or "middle"
-    protected_label_prefixes: set = field(
-        default_factory=lambda: {"↑", "↓", "+", "-", "−", "∗"}
-    )
+    min_label_display_chars: int = 12  # never shorten a label below this
+    label_ellipsis_mode: str = "end"  # "end" or "middle"
+    protected_label_prefixes: set = field(default_factory=lambda: {"↑", "↓", "+", "-", "−", "∗"})
     annotation_drop_order: list = field(
         default_factory=lambda: ["redundant", "secondary", "primary"]
     )
 
     # -- Panel complexity thresholds --------------------------------------
-    max_legend_series: int = 10               # legend entries per axes
-    max_numeric_bar_labels: int = 30          # per-bar value-label count
-    max_annotations_complexity: int = 20      # text elements per axes
+    max_legend_series: int = 10  # legend entries per axes
+    max_numeric_bar_labels: int = 30  # per-bar value-label count
+    max_annotations_complexity: int = 20  # text elements per axes
     complexity_score_threshold: float = 15.0  # weighted sum to trigger info
 
 
@@ -98,6 +97,7 @@ DEFAULT_POLICY: FigurePolicy = FigurePolicy()
 # ---------------------------------------------------------------------------
 # Helper utilities
 # ---------------------------------------------------------------------------
+
 
 def _resolve(policy: FigurePolicy | None) -> FigurePolicy:
     """Return *policy* if given, else the module-level default."""

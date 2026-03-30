@@ -26,7 +26,7 @@ from benchmarks.dataset_registry import DATASET_REGISTRY
 # ═══════════════════════════════════════════════════════════════════════════════
 
 DATASET_PATHS = {
-    k: {**v, "type": v["data_type"]}   # add legacy "type" alias
+    k: {**v, "type": v["data_type"]}  # add legacy "type" alias
     for k, v in DATASET_REGISTRY.items()
 }
 
@@ -35,8 +35,8 @@ DATASET_PATHS = {
 # Public API
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def load_data(data_path, max_cells=3000, hvg_top_genes=3000, seed=42,
-              use_cache=True):
+
+def load_data(data_path, max_cells=3000, hvg_top_genes=3000, seed=42, use_cache=True):
     """Convenience wrapper around :func:`load_or_preprocess_adata`.
 
     Returns an AnnData with HVGs selected, counts layer, and cell-type
@@ -44,12 +44,11 @@ def load_data(data_path, max_cells=3000, hvg_top_genes=3000, seed=42,
     """
     cache_dir = DEFAULT_OUTPUT_DIR / "cache"
     return load_or_preprocess_adata(
-        data_path, max_cells, hvg_top_genes, seed, cache_dir,
-        use_cache=use_cache)
+        data_path, max_cells, hvg_top_genes, seed, cache_dir, use_cache=use_cache
+    )
 
 
-def load_or_preprocess_adata(data_path, max_cells, hvg_top_genes, seed,
-                             cache_dir, use_cache=True):
+def load_or_preprocess_adata(data_path, max_cells, hvg_top_genes, seed, cache_dir, use_cache=True):
     """Load h5ad, subsample, normalise, select HVGs, and cache result.
 
     Parameters
@@ -92,14 +91,13 @@ def load_or_preprocess_adata(data_path, max_cells, hvg_top_genes, seed,
         print(f"  Subsampled to {adata.n_obs} cells")
 
     # Normalisation (only if data contains raw counts)
-    has_counts_layer = 'counts' in adata.layers
+    has_counts_layer = "counts" in adata.layers
 
     if has_counts_layer:
-        is_raw = _is_raw_counts(adata.layers['counts'])
-        print(f"  Found 'counts' layer: "
-              f"{'raw counts' if is_raw else 'already processed'}")
+        is_raw = _is_raw_counts(adata.layers["counts"])
+        print(f"  Found 'counts' layer: {'raw counts' if is_raw else 'already processed'}")
         if is_raw:
-            adata.X = adata.layers['counts'].copy()
+            adata.X = adata.layers["counts"].copy()
             if sp.issparse(adata.X):
                 adata.X = adata.X.toarray()
             sc.pp.normalize_total(adata, target_sum=1e4)
@@ -109,27 +107,29 @@ def load_or_preprocess_adata(data_path, max_cells, hvg_top_genes, seed,
             print("  Using existing X matrix (already normalized)")
     else:
         is_raw = _is_raw_counts(adata.X)
-        print(f"  No 'counts' layer found. X matrix: "
-              f"{'raw counts' if is_raw else 'already processed'}")
+        print(
+            f"  No 'counts' layer found. X matrix: "
+            f"{'raw counts' if is_raw else 'already processed'}"
+        )
         if is_raw:
             if sp.issparse(adata.X):
-                adata.layers['counts'] = adata.X.copy()
+                adata.layers["counts"] = adata.X.copy()
             else:
-                adata.layers['counts'] = sp.csr_matrix(adata.X.copy())
+                adata.layers["counts"] = sp.csr_matrix(adata.X.copy())
             sc.pp.normalize_total(adata, target_sum=1e4)
             sc.pp.log1p(adata)
             print("  Applied normalize_total + log1p")
         else:
             if sp.issparse(adata.X):
-                adata.layers['counts'] = adata.X.copy()
+                adata.layers["counts"] = adata.X.copy()
             else:
-                adata.layers['counts'] = sp.csr_matrix(adata.X.copy())
+                adata.layers["counts"] = sp.csr_matrix(adata.X.copy())
             print("  Data already normalized, skipping normalization")
 
     # HVG selection
     if hvg_top_genes is not None and adata.n_vars > hvg_top_genes:
         sc.pp.highly_variable_genes(adata, n_top_genes=hvg_top_genes)
-        adata = adata[:, adata.var['highly_variable']].copy()
+        adata = adata[:, adata.var["highly_variable"]].copy()
         print(f"  Selected {adata.n_vars} HVGs")
 
     if use_cache:
@@ -143,6 +143,7 @@ def load_or_preprocess_adata(data_path, max_cells, hvg_top_genes, seed,
 # Internal helpers
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _cache_key(data_path, max_cells, hvg_top_genes, seed):
     payload = f"{data_path}|{max_cells}|{hvg_top_genes}|{seed}"
     return hashlib.md5(payload.encode("utf-8")).hexdigest()
@@ -151,11 +152,12 @@ def _cache_key(data_path, max_cells, hvg_top_genes, seed):
 def _is_raw_counts(X, threshold: float = 0.5) -> bool:
     """Heuristic: check whether *X* contains raw integer counts."""
     if sp.issparse(X):
-        sample_data = X.data[:min(10000, len(X.data))]
+        sample_data = X.data[: min(10000, len(X.data))]
     else:
         flat_data = np.asarray(X).flatten()
-        sample_data = flat_data[np.random.choice(
-            len(flat_data), min(10000, len(flat_data)), replace=False)]
+        sample_data = flat_data[
+            np.random.choice(len(flat_data), min(10000, len(flat_data)), replace=False)
+        ]
 
     sample_data = sample_data[sample_data > 0]
     if len(sample_data) == 0:

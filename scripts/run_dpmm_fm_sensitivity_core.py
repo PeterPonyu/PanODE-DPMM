@@ -147,8 +147,15 @@ def run_dataset(ds_key: str, seed: int, epochs: int, verbose_every: int) -> list
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run DPMM-FM parameter sensitivity on the core datasets")
-    parser.add_argument("--datasets", nargs="+", default=SENSITIVITY_DATASETS, choices=sorted(ALL_DATASET_REGISTRY.keys()))
+    parser = argparse.ArgumentParser(
+        description="Run DPMM-FM parameter sensitivity on the core datasets"
+    )
+    parser.add_argument(
+        "--datasets",
+        nargs="+",
+        default=SENSITIVITY_DATASETS,
+        choices=sorted(ALL_DATASET_REGISTRY.keys()),
+    )
     parser.add_argument("--seed", type=int, default=BASE_CONFIG.seed)
     parser.add_argument("--epochs", type=int, default=800)
     parser.add_argument("--verbose-every", type=int, default=250)
@@ -161,7 +168,11 @@ def main() -> None:
     started = time.time()
     all_rows: list[dict] = []
     for ds_key in args.datasets:
-        all_rows.extend(run_dataset(ds_key, seed=args.seed, epochs=args.epochs, verbose_every=args.verbose_every))
+        all_rows.extend(
+            run_dataset(
+                ds_key, seed=args.seed, epochs=args.epochs, verbose_every=args.verbose_every
+            )
+        )
 
     summary_df = pd.DataFrame(all_rows)
     summary_df.to_csv(SUMMARY_PATH, index=False)

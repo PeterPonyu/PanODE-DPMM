@@ -4,6 +4,7 @@
 Patches the DPMM-Trans row in full_comparison_all tables and saves
 crossdata latents for the 4 core datasets (setty, dentate, lung, endo).
 """
+
 import gc
 import sys
 import time
@@ -54,11 +55,15 @@ def retrain_one_dataset(ds_key, ds_info, seed=42):
         adata.obs["cell_type"] = adata.obs[label_key].copy()
 
     splitter = DataSplitter(
-        adata=adata, layer="counts",
-        train_size=0.7, val_size=0.15, test_size=0.15,
+        adata=adata,
+        layer="counts",
+        train_size=0.7,
+        val_size=0.15,
+        test_size=0.15,
         batch_size=BASE_CONFIG.batch_size,
         latent_dim=BASE_CONFIG.latent_dim,
-        random_seed=seed, verbose=False,
+        random_seed=seed,
+        verbose=False,
     )
 
     model_info = MODELS[MODEL_NAME]
@@ -129,10 +134,7 @@ def main():
         sys.exit(1)
 
     # Get all dataset keys that have full_comparison_all tables
-    table_datasets = sorted([
-        p.stem.replace("_df", "")
-        for p in FULL_COMP_DIR.glob("*_df.csv")
-    ])
+    table_datasets = sorted([p.stem.replace("_df", "") for p in FULL_COMP_DIR.glob("*_df.csv")])
     print(f"Datasets to retrain: {len(table_datasets)}")
     print(f"Crossdata latent datasets: {CROSSDATA_DATASETS & set(table_datasets)}")
     print()
@@ -167,29 +169,37 @@ def main():
             # Save crossdata latent
             if ds_key in CROSSDATA_DATASETS and latent is not None:
                 lp = save_crossdata_latent(ds_key, latent, labels)
-                print(f" [{dt:.0f}s] var={mean_var:.4f} {'COLLAPSED' if collapsed else 'OK'} | table={'OK' if patched else 'SKIP'} | latent={lp.name}")
+                print(
+                    f" [{dt:.0f}s] var={mean_var:.4f} {'COLLAPSED' if collapsed else 'OK'} | table={'OK' if patched else 'SKIP'} | latent={lp.name}"
+                )
             else:
-                print(f" [{dt:.0f}s] var={mean_var:.4f} {'COLLAPSED' if collapsed else 'OK'} | table={'OK' if patched else 'SKIP'}")
+                print(
+                    f" [{dt:.0f}s] var={mean_var:.4f} {'COLLAPSED' if collapsed else 'OK'} | table={'OK' if patched else 'SKIP'}"
+                )
 
-            results_summary.append({
-                "dataset": ds_key,
-                "mean_var": mean_var,
-                "collapsed": collapsed,
-                "time_s": dt,
-                "NMI": result.get("NMI", np.nan),
-                "ARI": result.get("ARI", np.nan),
-            })
+            results_summary.append(
+                {
+                    "dataset": ds_key,
+                    "mean_var": mean_var,
+                    "collapsed": collapsed,
+                    "time_s": dt,
+                    "NMI": result.get("NMI", np.nan),
+                    "ARI": result.get("ARI", np.nan),
+                }
+            )
 
         except Exception as e:
             print(f" ERROR: {e}")
-            results_summary.append({
-                "dataset": ds_key,
-                "mean_var": -1,
-                "collapsed": True,
-                "time_s": time.time() - t1,
-                "NMI": np.nan,
-                "ARI": np.nan,
-            })
+            results_summary.append(
+                {
+                    "dataset": ds_key,
+                    "mean_var": -1,
+                    "collapsed": True,
+                    "time_s": time.time() - t1,
+                    "NMI": np.nan,
+                    "ARI": np.nan,
+                }
+            )
 
         gc.collect()
         torch.cuda.empty_cache()
@@ -201,9 +211,11 @@ def main():
     n_collapsed = summary_df["collapsed"].sum()
 
     print("\n" + "=" * 70)
-    print(f"DONE in {total_time/60:.1f} min")
+    print(f"DONE in {total_time / 60:.1f} min")
     print(f"OK: {n_ok}/{len(summary_df)}  COLLAPSED: {n_collapsed}/{len(summary_df)}")
-    print(f"Mean variance (non-collapsed): {summary_df.loc[~summary_df['collapsed'], 'mean_var'].mean():.4f}")
+    print(
+        f"Mean variance (non-collapsed): {summary_df.loc[~summary_df['collapsed'], 'mean_var'].mean():.4f}"
+    )
     if n_collapsed > 0:
         print(f"Still collapsed: {summary_df.loc[summary_df['collapsed'], 'dataset'].tolist()}")
     print("=" * 70)

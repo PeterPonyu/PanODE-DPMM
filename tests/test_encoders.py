@@ -19,9 +19,10 @@ from models.encoders import (
 
 # GATConv is optional
 try:
-    from torch_geometric.nn import GATConv as _GATConv
+    from torch_geometric.nn import GATConv as _GATConv  # noqa: F401
 
     from models.encoders import GATConvEncoder
+
     HAS_PYG = True
 except ImportError:
     HAS_PYG = False
@@ -48,6 +49,7 @@ def _random_edge_index(n_nodes: int, k: int = 5) -> torch.LongTensor:
 
 
 # ── MLP Encoder ──────────────────────────────────────────────────────────────
+
 
 class TestMLPEncoder:
     def test_ae_output_shape(self):
@@ -76,11 +78,12 @@ class TestMLPEncoder:
 
 # ── Transformer Encoder ─────────────────────────────────────────────────────
 
+
 class TestTransformerEncoder:
     def test_ae_output_shape(self):
         enc = MultiHeadProjectionEncoder(
-            INPUT_DIM, d_model=HIDDEN_DIM, output_dim=OUTPUT_DIM,
-            num_tokens=4, use_vae=False)
+            INPUT_DIM, d_model=HIDDEN_DIM, output_dim=OUTPUT_DIM, num_tokens=4, use_vae=False
+        )
         x = torch.randn(BATCH_SIZE, INPUT_DIM)
         out = enc(x)
         assert len(out) == 1
@@ -88,8 +91,8 @@ class TestTransformerEncoder:
 
     def test_vae_output_shape(self):
         enc = MultiHeadProjectionEncoder(
-            INPUT_DIM, d_model=HIDDEN_DIM, output_dim=OUTPUT_DIM,
-            num_tokens=4, use_vae=True)
+            INPUT_DIM, d_model=HIDDEN_DIM, output_dim=OUTPUT_DIM, num_tokens=4, use_vae=True
+        )
         x = torch.randn(BATCH_SIZE, INPUT_DIM)
         z, mu, var = enc(x)
         assert z.shape == (BATCH_SIZE, OUTPUT_DIM)
@@ -97,8 +100,8 @@ class TestTransformerEncoder:
 
     def test_var_head_bias_init(self):
         enc = MultiHeadProjectionEncoder(
-            INPUT_DIM, d_model=HIDDEN_DIM, output_dim=OUTPUT_DIM,
-            num_tokens=4, use_vae=True)
+            INPUT_DIM, d_model=HIDDEN_DIM, output_dim=OUTPUT_DIM, num_tokens=4, use_vae=True
+        )
         assert torch.allclose(
             enc.var_head.bias,
             torch.full_like(enc.var_head.bias, 0.5),
@@ -107,18 +110,17 @@ class TestTransformerEncoder:
 
 # ── Hybrid Encoder ───────────────────────────────────────────────────────────
 
+
 class TestHybridEncoder:
     def test_ae_output_shape(self):
-        enc = HybridMLPAttentionEncoder(
-            INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM, use_vae=False)
+        enc = HybridMLPAttentionEncoder(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM, use_vae=False)
         x = torch.randn(BATCH_SIZE, INPUT_DIM)
         out = enc(x)
         assert len(out) == 1
         assert out[0].shape == (BATCH_SIZE, OUTPUT_DIM)
 
     def test_var_head_bias_init(self):
-        enc = HybridMLPAttentionEncoder(
-            INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM, use_vae=True)
+        enc = HybridMLPAttentionEncoder(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM, use_vae=True)
         assert torch.allclose(
             enc.var_head.bias,
             torch.full_like(enc.var_head.bias, 0.5),
@@ -127,12 +129,18 @@ class TestHybridEncoder:
 
 # ── GAT Encoder ──────────────────────────────────────────────────────────────
 
+
 @pytest.mark.skipif(not HAS_PYG, reason="torch_geometric not installed")
 class TestGATConvEncoder:
     def test_ae_output_shape(self):
         enc = GATConvEncoder(
-            INPUT_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM,
-            num_layers=2, num_heads=2, use_vae=False)
+            INPUT_DIM,
+            hidden_dim=HIDDEN_DIM,
+            output_dim=OUTPUT_DIM,
+            num_layers=2,
+            num_heads=2,
+            use_vae=False,
+        )
         x = torch.randn(NUM_NODES, INPUT_DIM)
         edge_index = _random_edge_index(NUM_NODES)
         out = enc(x, edge_index)
@@ -141,8 +149,13 @@ class TestGATConvEncoder:
 
     def test_vae_output_shape(self):
         enc = GATConvEncoder(
-            INPUT_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM,
-            num_layers=2, num_heads=2, use_vae=True)
+            INPUT_DIM,
+            hidden_dim=HIDDEN_DIM,
+            output_dim=OUTPUT_DIM,
+            num_layers=2,
+            num_heads=2,
+            use_vae=True,
+        )
         x = torch.randn(NUM_NODES, INPUT_DIM)
         edge_index = _random_edge_index(NUM_NODES)
         z, mu, var = enc(x, edge_index)
@@ -154,11 +167,23 @@ class TestGATConvEncoder:
     def test_residual_changes_output(self):
         """Residual skip should make a difference vs no residual."""
         enc_res = GATConvEncoder(
-            INPUT_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM,
-            num_layers=2, num_heads=2, use_vae=False, use_residual=True)
+            INPUT_DIM,
+            hidden_dim=HIDDEN_DIM,
+            output_dim=OUTPUT_DIM,
+            num_layers=2,
+            num_heads=2,
+            use_vae=False,
+            use_residual=True,
+        )
         enc_nores = GATConvEncoder(
-            INPUT_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM,
-            num_layers=2, num_heads=2, use_vae=False, use_residual=False)
+            INPUT_DIM,
+            hidden_dim=HIDDEN_DIM,
+            output_dim=OUTPUT_DIM,
+            num_layers=2,
+            num_heads=2,
+            use_vae=False,
+            use_residual=False,
+        )
         # Copy weights to make them identical
         enc_nores.load_state_dict(enc_res.state_dict(), strict=False)
 
@@ -171,8 +196,13 @@ class TestGATConvEncoder:
 
     def test_single_layer(self):
         enc = GATConvEncoder(
-            INPUT_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM,
-            num_layers=1, num_heads=2, use_vae=False)
+            INPUT_DIM,
+            hidden_dim=HIDDEN_DIM,
+            output_dim=OUTPUT_DIM,
+            num_layers=1,
+            num_heads=2,
+            use_vae=False,
+        )
         x = torch.randn(NUM_NODES, INPUT_DIM)
         edge_index = _random_edge_index(NUM_NODES)
         out = enc(x, edge_index)
@@ -180,8 +210,13 @@ class TestGATConvEncoder:
 
     def test_gradient_flow(self):
         enc = GATConvEncoder(
-            INPUT_DIM, hidden_dim=HIDDEN_DIM, output_dim=OUTPUT_DIM,
-            num_layers=2, num_heads=2, use_vae=False)
+            INPUT_DIM,
+            hidden_dim=HIDDEN_DIM,
+            output_dim=OUTPUT_DIM,
+            num_layers=2,
+            num_heads=2,
+            use_vae=False,
+        )
         x = torch.randn(NUM_NODES, INPUT_DIM, requires_grad=True)
         edge_index = _random_edge_index(NUM_NODES)
         z = enc(x, edge_index)[0]
@@ -193,8 +228,13 @@ class TestGATConvEncoder:
     def test_different_head_counts(self):
         for heads in [1, 2, 4, 8]:
             enc = GATConvEncoder(
-                INPUT_DIM, hidden_dim=32, output_dim=OUTPUT_DIM,
-                num_layers=2, num_heads=heads, use_vae=False)
+                INPUT_DIM,
+                hidden_dim=32,
+                output_dim=OUTPUT_DIM,
+                num_layers=2,
+                num_heads=heads,
+                use_vae=False,
+            )
             x = torch.randn(NUM_NODES, INPUT_DIM)
             edge_index = _random_edge_index(NUM_NODES)
             out = enc(x, edge_index)
@@ -203,32 +243,33 @@ class TestGATConvEncoder:
 
 # ── Factory ──────────────────────────────────────────────────────────────────
 
+
 class TestEncoderFactory:
     def test_mlp(self):
-        enc = create_encoder('mlp', INPUT_DIM, OUTPUT_DIM, hidden_dim=HIDDEN_DIM)
+        enc = create_encoder("mlp", INPUT_DIM, OUTPUT_DIM, hidden_dim=HIDDEN_DIM)
         assert isinstance(enc, MLPEncoder)
 
     def test_transformer(self):
-        enc = create_encoder('transformer', INPUT_DIM, OUTPUT_DIM, d_model=HIDDEN_DIM)
+        enc = create_encoder("transformer", INPUT_DIM, OUTPUT_DIM, d_model=HIDDEN_DIM)
         assert isinstance(enc, MultiHeadProjectionEncoder)
 
     def test_hybrid(self):
-        enc = create_encoder('hybrid', INPUT_DIM, OUTPUT_DIM, hidden_dim=HIDDEN_DIM)
+        enc = create_encoder("hybrid", INPUT_DIM, OUTPUT_DIM, hidden_dim=HIDDEN_DIM)
         assert isinstance(enc, HybridMLPAttentionEncoder)
 
     @pytest.mark.skipif(not HAS_PYG, reason="torch_geometric not installed")
     def test_gat(self):
-        enc = create_encoder('gat', INPUT_DIM, OUTPUT_DIM, hidden_dim=HIDDEN_DIM)
+        enc = create_encoder("gat", INPUT_DIM, OUTPUT_DIM, hidden_dim=HIDDEN_DIM)
         assert isinstance(enc, GATConvEncoder)
 
     def test_unknown_raises(self):
         with pytest.raises(ValueError, match="Unknown encoder type"):
-            create_encoder('nonexistent', INPUT_DIM, OUTPUT_DIM)
+            create_encoder("nonexistent", INPUT_DIM, OUTPUT_DIM)
 
     @pytest.mark.skipif(HAS_PYG, reason="Only test when torch_geometric is absent")
     def test_gat_import_error_without_pyg(self):
         with pytest.raises(ImportError, match="torch_geometric"):
-            create_encoder('gat', INPUT_DIM, OUTPUT_DIM)
+            create_encoder("gat", INPUT_DIM, OUTPUT_DIM)
 
 
 if __name__ == "__main__":

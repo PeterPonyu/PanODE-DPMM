@@ -5,6 +5,7 @@ Pass 24: Colorblind-unfriendly palette detection.
 Pass 25: Error-bar / CI-band visibility at target DPI.
 Pass 26: Numeric precision excess in labels and annotations.
 """
+
 from __future__ import annotations
 
 import re
@@ -21,10 +22,12 @@ from .vcd_core import _safe_bbox
 # Colour helpers
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _to_rgb(color) -> tuple[float, float, float] | None:
     """Convert any matplotlib colour spec to an (R, G, B) tuple in [0,1]."""
     try:
         import matplotlib.colors as mcolors
+
         rgba = mcolors.to_rgba(color)
         return rgba[:3]
     except Exception:
@@ -33,8 +36,10 @@ def _to_rgb(color) -> tuple[float, float, float] | None:
 
 def _relative_luminance(rgb: tuple[float, float, float]) -> float:
     """WCAG 2.0 relative luminance from linear sRGB."""
+
     def _lin(c):
         return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
     r, g, b = [_lin(c) for c in rgb]
     return 0.2126 * r + 0.7152 * g + 0.0722 * b
 
@@ -48,8 +53,9 @@ def _contrast_ratio(rgb1, rgb2) -> float:
     return (lighter + 0.05) / (darker + 0.05)
 
 
-def _simulate_cvd(rgb: tuple[float, float, float],
-                   kind: str = "deuteranopia") -> tuple[float, float, float]:
+def _simulate_cvd(
+    rgb: tuple[float, float, float], kind: str = "deuteranopia"
+) -> tuple[float, float, float]:
     """Simulate colour-vision deficiency using the Brettel/Viénot model.
 
     Simplified 3×3 matrix approximation (Viénot 1999) for the two most
@@ -60,11 +66,11 @@ def _simulate_cvd(rgb: tuple[float, float, float],
         # Viénot 1999, Table 3, deuteranopia
         rr = 0.625 * r + 0.375 * g + 0.0 * b
         gg = 0.700 * r + 0.300 * g + 0.0 * b
-        bb = 0.0   * r + 0.300 * g + 0.700 * b
+        bb = 0.0 * r + 0.300 * g + 0.700 * b
     elif kind == "protanopia":
         rr = 0.567 * r + 0.433 * g + 0.0 * b
         gg = 0.558 * r + 0.442 * g + 0.0 * b
-        bb = 0.0   * r + 0.242 * g + 0.758 * b
+        bb = 0.0 * r + 0.242 * g + 0.758 * b
     else:
         return rgb
     return (max(0, min(1, rr)), max(0, min(1, gg)), max(0, min(1, bb)))
@@ -76,11 +82,14 @@ def _colour_distance_lab(rgb1, rgb2) -> float:
     Uses a linearised sRGB→XYZ→Lab path.  Not as precise as full CIEDE2000
     but sufficient for flagging near-identical colours.
     """
+
     def _to_xyz(rgb):
         r, g, b = rgb
+
         # sRGB linearise
         def _lin(c):
             return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
         rl, gl, bl = _lin(r), _lin(g), _lin(b)
         x = 0.4124564 * rl + 0.3575761 * gl + 0.1804375 * bl
         y = 0.2126729 * rl + 0.7151522 * gl + 0.0721750 * bl
@@ -90,9 +99,11 @@ def _colour_distance_lab(rgb1, rgb2) -> float:
     def _xyz_to_lab(x, y, z):
         # D65 illuminant
         xn, yn, zn = 0.95047, 1.0, 1.08883
+
         def _f(t):
-            return t ** (1/3) if t > 0.008856 else (7.787 * t + 16/116)
-        fx, fy, fz = _f(x/xn), _f(y/yn), _f(z/zn)
+            return t ** (1 / 3) if t > 0.008856 else (7.787 * t + 16 / 116)
+
+        fx, fy, fz = _f(x / xn), _f(y / yn), _f(z / zn)
         L = 116 * fy - 16
         a = 500 * (fx - fy)
         b = 200 * (fy - fz)
@@ -102,16 +113,15 @@ def _colour_distance_lab(rgb1, rgb2) -> float:
     x2, y2, z2 = _to_xyz(rgb2)
     L1, a1, b1 = _xyz_to_lab(x1, y1, z1)
     L2, a2, b2 = _xyz_to_lab(x2, y2, z2)
-    return ((L1 - L2)**2 + (a1 - a2)**2 + (b1 - b2)**2) ** 0.5
+    return ((L1 - L2) ** 2 + (a1 - a2) ** 2 + (b1 - b2) ** 2) ** 0.5
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Pass 23: Low contrast detection
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _check_contrast(fig, renderer, infos,
-                    min_text_contrast=3.0,
-                    min_line_contrast=1.8):
+
+def _check_contrast(fig, renderer, infos, min_text_contrast=3.0, min_line_contrast=1.8):
     """Pass 23: Flag text and lines with insufficient contrast against bg.
 
     Uses WCAG 2.0 contrast ratio.  Thresholds:
@@ -169,15 +179,13 @@ def _check_contrast(fig, renderer, infos,
                 continue
             cr = _contrast_ratio(fg_rgb, bg)
             if cr < min_text_contrast:
-                low_contrast_texts.append(
-                    f"'{txt[:25]}' contrast={cr:.1f}:1"
-                )
+                low_contrast_texts.append(f"'{txt[:25]}' contrast={cr:.1f}:1")
 
         # Check lines
         for child in ax.get_children():
             if isinstance(child, Line2D) and child.get_visible():
-                label = getattr(child, '_label', '') or ''
-                if label.startswith('_'):
+                label = getattr(child, "_label", "") or ""
+                if label.startswith("_"):
                     continue
                 c = _to_rgb(child.get_color())
                 if c is None:
@@ -185,37 +193,45 @@ def _check_contrast(fig, renderer, infos,
                 cr = _contrast_ratio(c, bg)
                 if cr < min_line_contrast:
                     display = label[:20] if label else "Line2D"
-                    low_contrast_lines.append(
-                        f"'{display}' contrast={cr:.1f}:1"
-                    )
+                    low_contrast_lines.append(f"'{display}' contrast={cr:.1f}:1")
 
     if low_contrast_texts:
         sample = low_contrast_texts[:4]
-        issues.append({
-            "type": "low_contrast_text",
-            "severity": "warning",
-            "detail": (
-                f"{len(low_contrast_texts)} text(s) with low contrast: "
-                f"{'; '.join(sample)}"
-                + (f" ... +{len(low_contrast_texts) - 4} more"
-                   if len(low_contrast_texts) > 4 else "")
-            ),
-            "elements": low_contrast_texts[:5],
-        })
+        issues.append(
+            {
+                "type": "low_contrast_text",
+                "severity": "warning",
+                "detail": (
+                    f"{len(low_contrast_texts)} text(s) with low contrast: "
+                    f"{'; '.join(sample)}"
+                    + (
+                        f" ... +{len(low_contrast_texts) - 4} more"
+                        if len(low_contrast_texts) > 4
+                        else ""
+                    )
+                ),
+                "elements": low_contrast_texts[:5],
+            }
+        )
 
     if low_contrast_lines:
         sample = low_contrast_lines[:4]
-        issues.append({
-            "type": "low_contrast_line",
-            "severity": "info",
-            "detail": (
-                f"{len(low_contrast_lines)} line(s) with low contrast: "
-                f"{'; '.join(sample)}"
-                + (f" ... +{len(low_contrast_lines) - 4} more"
-                   if len(low_contrast_lines) > 4 else "")
-            ),
-            "elements": low_contrast_lines[:5],
-        })
+        issues.append(
+            {
+                "type": "low_contrast_line",
+                "severity": "info",
+                "detail": (
+                    f"{len(low_contrast_lines)} line(s) with low contrast: "
+                    f"{'; '.join(sample)}"
+                    + (
+                        f" ... +{len(low_contrast_lines) - 4} more"
+                        if len(low_contrast_lines) > 4
+                        else ""
+                    )
+                ),
+                "elements": low_contrast_lines[:5],
+            }
+        )
 
     return issues
 
@@ -224,9 +240,8 @@ def _check_contrast(fig, renderer, infos,
 # Pass 24: Colorblind-unfriendly palette
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _check_colorblind_safety(fig, renderer,
-                              min_cvd_distance=10.0,
-                              max_categories=20):
+
+def _check_colorblind_safety(fig, renderer, min_cvd_distance=10.0, max_categories=20):
     """Pass 24: Detect categorical colour palettes that become ambiguous
     under simulated colour-vision deficiency (deuteranopia).
 
@@ -240,7 +255,7 @@ def _check_colorblind_safety(fig, renderer,
     issues: list[dict] = []
 
     for ax in fig.get_axes():
-        if getattr(ax, 'name', None) == 'polar':
+        if getattr(ax, "name", None) == "polar":
             continue
         title = ax.get_title() or f"ax@{id(ax):#x}"
 
@@ -250,8 +265,8 @@ def _check_colorblind_safety(fig, renderer,
         for child in ax.get_children():
             if not child.get_visible():
                 continue
-            label = getattr(child, '_label', '') or ''
-            if label.startswith('_'):
+            label = getattr(child, "_label", "") or ""
+            if label.startswith("_"):
                 continue
 
             if isinstance(child, PathCollection):
@@ -267,10 +282,10 @@ def _check_colorblind_safety(fig, renderer,
                     face_colours.append((label[:20] or "patch", rgb))
 
         # Also check bar containers
-        for container in getattr(ax, 'containers', []):
-            for patch in getattr(container, 'patches', []):
+        for container in getattr(ax, "containers", []):
+            for patch in getattr(container, "patches", []):
                 if isinstance(patch, Patch):
-                    label = getattr(container, '_label', '') or ''
+                    label = getattr(container, "_label", "") or ""
                     rgb = _to_rgb(patch.get_facecolor())
                     if rgb:
                         face_colours.append((label[:20] or "bar", rgb))
@@ -301,24 +316,27 @@ def _check_colorblind_safety(fig, renderer,
             sim_b = _simulate_cvd(rgb_b, "deuteranopia")
             dist = _colour_distance_lab(sim_a, sim_b)
             if dist < min_cvd_distance:
-                confusable_pairs.append(
-                    f"'{lbl_a}' vs '{lbl_b}' (ΔE={dist:.1f})"
-                )
+                confusable_pairs.append(f"'{lbl_a}' vs '{lbl_b}' (ΔE={dist:.1f})")
 
         if confusable_pairs:
             sample = confusable_pairs[:3]
-            issues.append({
-                "type": "colorblind_confusable",
-                "severity": "info",
-                "detail": (
-                    f"In '{title}': {len(confusable_pairs)} colour pair(s) "
-                    f"may be confusable under deuteranopia: "
-                    f"{'; '.join(sample)}"
-                    + (f" ... +{len(confusable_pairs) - 3} more"
-                       if len(confusable_pairs) > 3 else "")
-                ),
-                "elements": [p for p in confusable_pairs[:5]],
-            })
+            issues.append(
+                {
+                    "type": "colorblind_confusable",
+                    "severity": "info",
+                    "detail": (
+                        f"In '{title}': {len(confusable_pairs)} colour pair(s) "
+                        f"may be confusable under deuteranopia: "
+                        f"{'; '.join(sample)}"
+                        + (
+                            f" ... +{len(confusable_pairs) - 3} more"
+                            if len(confusable_pairs) > 3
+                            else ""
+                        )
+                    ),
+                    "elements": list(confusable_pairs[:5]),
+                }
+            )
 
     return issues
 
@@ -327,8 +345,8 @@ def _check_colorblind_safety(fig, renderer,
 # Pass 25: Error-bar / CI-band visibility
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _check_errorbar_visibility(fig, renderer, target_dpi=300,
-                                min_cap_px=1.5):
+
+def _check_errorbar_visibility(fig, renderer, target_dpi=300, min_cap_px=1.5):
     """Pass 25: Detect error bars or CI bands that are too thin to see.
 
     At publication DPI (300), a line that renders at < 1.5 px is nearly
@@ -345,15 +363,15 @@ def _check_errorbar_visibility(fig, renderer, target_dpi=300,
         title = ax.get_title() or f"ax@{id(ax):#x}"
 
         # Check errorbar containers
-        for container in getattr(ax, 'containers', []):
-            if not hasattr(container, 'lines'):
+        for container in getattr(ax, "containers", []):
+            if not hasattr(container, "lines"):
                 continue
             # ErrorbarContainer has .lines = (data_line, caplines, barlinecols)
             lines_tuple = container.lines
             if len(lines_tuple) < 3:
                 continue
             cap_lines = lines_tuple[1] if lines_tuple[1] else []
-            bar_cols = lines_tuple[2] if lines_tuple[2] else []
+            bar_cols = lines_tuple[2] if lines_tuple[2] else []  # noqa: F841
 
             for cap in cap_lines:
                 if not isinstance(cap, Line2D) or not cap.get_visible():
@@ -371,17 +389,18 @@ def _check_errorbar_visibility(fig, renderer, target_dpi=300,
 
     if thin_errorbars:
         sample = thin_errorbars[:3]
-        issues.append({
-            "type": "errorbar_invisible",
-            "severity": "info",
-            "detail": (
-                f"{len(thin_errorbars)} error-bar element(s) may be "
-                f"invisible at {target_dpi} DPI: {'; '.join(sample)}"
-                + (f" ... +{len(thin_errorbars) - 3} more"
-                   if len(thin_errorbars) > 3 else "")
-            ),
-            "elements": thin_errorbars[:5],
-        })
+        issues.append(
+            {
+                "type": "errorbar_invisible",
+                "severity": "info",
+                "detail": (
+                    f"{len(thin_errorbars)} error-bar element(s) may be "
+                    f"invisible at {target_dpi} DPI: {'; '.join(sample)}"
+                    + (f" ... +{len(thin_errorbars) - 3} more" if len(thin_errorbars) > 3 else "")
+                ),
+                "elements": thin_errorbars[:5],
+            }
+        )
 
     return issues
 
@@ -391,13 +410,10 @@ def _check_errorbar_visibility(fig, renderer, target_dpi=300,
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Pattern: a number with 5+ decimal digits (e.g. "0.123456", "-3.14159265")
-_EXCESS_PRECISION_RE = re.compile(
-    r'-?\d+\.(\d{5,})'
-)
+_EXCESS_PRECISION_RE = re.compile(r"-?\d+\.(\d{5,})")
 
 
-def _check_precision_excess(fig, renderer, infos,
-                             max_decimals=4):
+def _check_precision_excess(fig, renderer, infos, max_decimals=4):
     """Pass 26: Flag labels / annotations with excessive numeric precision.
 
     Scientific figures rarely need more than 4 decimal places in tick
@@ -426,22 +442,21 @@ def _check_precision_excess(fig, renderer, infos,
         if m:
             n_dec = len(m.group(1))
             if n_dec > max_decimals:
-                excess_examples.append(
-                    f"'{txt[:30]}' ({n_dec} decimals)"
-                )
+                excess_examples.append(f"'{txt[:30]}' ({n_dec} decimals)")
 
     if excess_examples:
         sample = excess_examples[:4]
-        issues.append({
-            "type": "precision_excess",
-            "severity": "info",
-            "detail": (
-                f"{len(excess_examples)} label(s) with >{max_decimals} "
-                f"decimal places: {'; '.join(sample)}"
-                + (f" ... +{len(excess_examples) - 4} more"
-                   if len(excess_examples) > 4 else "")
-            ),
-            "elements": excess_examples[:5],
-        })
+        issues.append(
+            {
+                "type": "precision_excess",
+                "severity": "info",
+                "detail": (
+                    f"{len(excess_examples)} label(s) with >{max_decimals} "
+                    f"decimal places: {'; '.join(sample)}"
+                    + (f" ... +{len(excess_examples) - 4} more" if len(excess_examples) > 4 else "")
+                ),
+                "elements": excess_examples[:5],
+            }
+        )
 
     return issues

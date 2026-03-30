@@ -53,13 +53,15 @@ _EXTERNAL_TICK_LABELS = {
 }
 
 
-def _draw_metric_boxplot(ax, arrays: list[np.ndarray], methods: list[str], metric_name: str, metric_label: str):
+def _draw_metric_boxplot(
+    ax, arrays: list[np.ndarray], methods: list[str], metric_name: str, metric_label: str
+):
     bp = ax.boxplot(
         arrays,
         patch_artist=True,
         widths=0.55,
         showfliers=False,
-        medianprops=dict(color="black", lw=1.1),
+        medianprops={"color": "black", "lw": 1.1},
     )
     for idx, patch in enumerate(bp["boxes"]):
         patch.set_facecolor(method_color(methods[idx]))
@@ -84,7 +86,13 @@ def _draw_metric_boxplot(ax, arrays: list[np.ndarray], methods: list[str], metri
         )
 
     ax.set_xticks(range(1, len(methods) + 1))
-    ax.set_xticklabels([_EXTERNAL_TICK_LABELS.get(m, method_short_name(m)) for m in methods], fontsize=8.5, rotation=90, ha="center", color="black")
+    ax.set_xticklabels(
+        [_EXTERNAL_TICK_LABELS.get(m, method_short_name(m)) for m in methods],
+        fontsize=8.5,
+        rotation=90,
+        ha="center",
+        color="black",
+    )
     ax.set_title(metric_label, fontsize=12.0, loc="left", pad=3, fontweight="normal", color="black")
     ax.tick_params(labelsize=9.0, colors="black")
     ax.grid(axis="y", alpha=0.20, lw=0.4)
@@ -115,8 +123,9 @@ def generate(series, out_dir):
     root = bind_figure_region(fig, (0.035, 0.06, 0.985, 0.935))
     grid = root.grid(n_rows, n_cols, wgap=0.045, hgap=0.055)
 
-    legend_handles = [Patch(facecolor=method_color(name), edgecolor="#666666", label=name)
-                      for name in methods]
+    legend_handles = [
+        Patch(facecolor=method_color(name), edgecolor="#666666", label=name) for name in methods
+    ]
     fig.legend(
         handles=legend_handles,
         labels=methods,

@@ -18,6 +18,7 @@ Each wrapper:
     3. Implements encode/decode/forward/compute_loss as thin wrappers around
        the internal scvi-tools model for compatibility.
 """
+
 import warnings
 from typing import Any
 
@@ -30,6 +31,7 @@ from .base_model import BaseModel
 try:
     import anndata as ad
     import scvi as scvi_pkg
+
     _SCVI_AVAILABLE = True
 except ImportError:
     _SCVI_AVAILABLE = False
@@ -39,8 +41,7 @@ def _check_scvi():
     """Raise helpful error if scvi-tools is not installed."""
     if not _SCVI_AVAILABLE:
         raise ImportError(
-            "scvi-tools is required for scVI-family models. "
-            "Install with: pip install scvi-tools"
+            "scvi-tools is required for scVI-family models. Install with: pip install scvi-tools"
         )
 
 
@@ -82,6 +83,7 @@ def _array_to_anndata(X: np.ndarray, layer_name: str = "counts") -> "ad.AnnData"
 #  Base adapter for all scVI-family models
 # ===========================================================================
 
+
 class _ScVIFamilyBase(BaseModel):
     """
     Shared adapter logic for scVI-family wrappers.
@@ -90,8 +92,9 @@ class _ScVIFamilyBase(BaseModel):
         _scvi_model_cls : the scvi.model class (SCVI, PEAKVI, etc.)
         _model_label    : str used in print messages
     """
-    _scvi_model_cls = None   # set by subclass
-    _model_label = "scVI"    # set by subclass
+
+    _scvi_model_cls = None  # set by subclass
+    _model_label = "scVI"  # set by subclass
 
     def __init__(
         self,
@@ -104,7 +107,8 @@ class _ScVIFamilyBase(BaseModel):
         max_epochs: int = 400,
         layer_key: str = "counts",
         model_name: str = "scvi_family",
-        **extra_model_kwargs):
+        **extra_model_kwargs,
+    ):
         """
         Args:
             input_dim: Number of input features (genes / peaks).
@@ -123,7 +127,8 @@ class _ScVIFamilyBase(BaseModel):
             input_dim=input_dim,
             latent_dim=latent_dim,
             hidden_dims=hidden_dims or [n_hidden] * n_layers,
-            model_name=model_name)
+            model_name=model_name,
+        )
         self.n_layers = n_layers
         self.n_hidden = n_hidden
         self.dropout_rate = dropout_rate
@@ -159,10 +164,8 @@ class _ScVIFamilyBase(BaseModel):
         return {"latent": z, "reconstruction": self.decode(z)}
 
     def compute_loss(
-        self,
-        x: torch.Tensor,
-        outputs: dict[str, torch.Tensor],
-        **kwargs) -> dict[str, torch.Tensor]:
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         """Training loss is handled internally by scvi-tools."""
         zero = torch.tensor(0.0, device=x.device)
         return {"total_loss": zero, "recon_loss": zero}
@@ -180,7 +183,8 @@ class _ScVIFamilyBase(BaseModel):
         patience: int = 25,
         verbose: int = 1,
         verbose_every: int = 1,
-        **kwargs) -> dict[str, list]:
+        **kwargs,
+    ) -> dict[str, list]:
         """
         Train the scVI-family model.
 
@@ -215,14 +219,16 @@ class _ScVIFamilyBase(BaseModel):
             n_train = X_train.shape[0]
             n_total = X_all.shape[0]
             train_size = n_train / n_total
-            validation_size = 1.0 - train_size
+            validation_size = 1.0 - train_size  # noqa: F841
 
         # ----- train -----
         use_gpu = device.startswith("cuda") and torch.cuda.is_available()
         if verbose >= 1:
-            print(f"[{self._model_label}] Training on {X_all.shape[0]} cells, "
-                  f"input_dim={self.input_dim}, latent_dim={self.latent_dim}, "
-                  f"max_epochs={max_epochs}")
+            print(
+                f"[{self._model_label}] Training on {X_all.shape[0]} cells, "
+                f"input_dim={self.input_dim}, latent_dim={self.latent_dim}, "
+                f"max_epochs={max_epochs}"
+            )
 
         plan_kwargs = {"lr": lr}
         train_kwargs = {
@@ -239,12 +245,11 @@ class _ScVIFamilyBase(BaseModel):
             self._scvi_model.train(
                 accelerator="gpu" if use_gpu else "cpu",
                 devices=1 if use_gpu else "auto",
-                **train_kwargs)
+                **train_kwargs,
+            )
         except TypeError:
             # Fallback for older scvi-tools API
-            self._scvi_model.train(
-                use_gpu=use_gpu,
-                **train_kwargs)
+            self._scvi_model.train(use_gpu=use_gpu, **train_kwargs)
 
         # ----- extract training history -----
         try:
@@ -265,17 +270,13 @@ class _ScVIFamilyBase(BaseModel):
     # -- extract_latent() override ------------------------------------------
 
     def extract_latent(
-        self,
-        data_loader: DataLoader,
-        device: str = "cuda",
-        return_reconstructions: bool = False) -> dict[str, np.ndarray]:
+        self, data_loader: DataLoader, device: str = "cuda", return_reconstructions: bool = False
+    ) -> dict[str, np.ndarray]:
         """
         Extract latent representations using scvi-tools' native method.
         """
         if self._scvi_model is None:
-            raise RuntimeError(
-                f"{self._model_label} model not trained. Call fit() first."
-            )
+            raise RuntimeError(f"{self._model_label} model not trained. Call fit() first.")
 
         X = _loader_to_array(data_loader)
         adata = _array_to_anndata(X, self.layer_key)
@@ -288,10 +289,9 @@ class _ScVIFamilyBase(BaseModel):
             warnings.warn(
                 f"{self._model_label}: reconstruction extraction not supported "
                 f"via scvi-tools public API. Returning zeros.",
-                stacklevel=2)
-            result["reconstruction"] = np.zeros(
-                (X.shape[0], self.input_dim), dtype=np.float32
+                stacklevel=2,
             )
+            result["reconstruction"] = np.zeros((X.shape[0], self.input_dim), dtype=np.float32)
 
         return result
 
@@ -309,12 +309,14 @@ class _ScVIFamilyBase(BaseModel):
             n_layers=self.n_layers,
             n_hidden=self.n_hidden,
             dropout_rate=self.dropout_rate,
-            **self.extra_model_kwargs)
+            **self.extra_model_kwargs,
+        )
 
 
 # ===========================================================================
 #  Concrete model classes
 # ===========================================================================
+
 
 class SCVIModel(_ScVIFamilyBase):
     """
@@ -329,14 +331,11 @@ class SCVIModel(_ScVIFamilyBase):
         >>> result = model.extract_latent(test_loader)
         >>> Z = result['latent']  # (n_cells, latent_dim)
     """
+
     _model_label = "scVI"
 
     def __init__(self, input_dim: int, latent_dim: int = 10, **kwargs):
-        super().__init__(
-            input_dim=input_dim,
-            latent_dim=latent_dim,
-            model_name="scVI",
-            **kwargs)
+        super().__init__(input_dim=input_dim, latent_dim=latent_dim, model_name="scVI", **kwargs)
 
     @property
     def _scvi_model_cls(self):
@@ -356,14 +355,11 @@ class PeakVIModel(_ScVIFamilyBase):
         >>> history = model.fit(train_loader)
         >>> result = model.extract_latent(test_loader)
     """
+
     _model_label = "PeakVI"
 
     def __init__(self, input_dim: int, latent_dim: int = 10, **kwargs):
-        super().__init__(
-            input_dim=input_dim,
-            latent_dim=latent_dim,
-            model_name="PeakVI",
-            **kwargs)
+        super().__init__(input_dim=input_dim, latent_dim=latent_dim, model_name="PeakVI", **kwargs)
 
     @property
     def _scvi_model_cls(self):
@@ -372,10 +368,7 @@ class PeakVIModel(_ScVIFamilyBase):
 
     def _create_scvi_model(self, adata):
         """PeakVI uses different parameter names."""
-        return scvi_pkg.model.PEAKVI(
-            adata,
-            n_latent=self.latent_dim,
-            **self.extra_model_kwargs)
+        return scvi_pkg.model.PEAKVI(adata, n_latent=self.latent_dim, **self.extra_model_kwargs)
 
 
 class PoissonVIModel(_ScVIFamilyBase):
@@ -390,14 +383,13 @@ class PoissonVIModel(_ScVIFamilyBase):
         >>> history = model.fit(train_loader)
         >>> result = model.extract_latent(test_loader)
     """
+
     _model_label = "PoissonVI"
 
     def __init__(self, input_dim: int, latent_dim: int = 10, **kwargs):
         super().__init__(
-            input_dim=input_dim,
-            latent_dim=latent_dim,
-            model_name="PoissonVI",
-            **kwargs)
+            input_dim=input_dim, latent_dim=latent_dim, model_name="PoissonVI", **kwargs
+        )
 
     @property
     def _scvi_model_cls(self):
@@ -416,12 +408,14 @@ class PoissonVIModel(_ScVIFamilyBase):
                 n_layers=self.n_layers,
                 n_hidden=self.n_hidden,
                 dropout_rate=self.dropout_rate,
-                **self.extra_model_kwargs)
+                **self.extra_model_kwargs,
+            )
         # Fallback: use SCVI with Poisson likelihood
         warnings.warn(
             "POISSONVI not found in scvi-tools. "
             "Falling back to SCVI with gene_likelihood='poisson'.",
-            stacklevel=2)
+            stacklevel=2,
+        )
         return scvi_pkg.model.SCVI(
             adata,
             n_latent=self.latent_dim,
@@ -429,7 +423,8 @@ class PoissonVIModel(_ScVIFamilyBase):
             n_hidden=self.n_hidden,
             dropout_rate=self.dropout_rate,
             gene_likelihood="poisson",
-            **self.extra_model_kwargs)
+            **self.extra_model_kwargs,
+        )
 
     def _setup_anndata(self, adata):
         """PoissonVI may use its own setup or fall back to SCVI's."""
@@ -442,6 +437,7 @@ class PoissonVIModel(_ScVIFamilyBase):
 # ===========================================================================
 #  Factory functions (consistent with other baselines)
 # ===========================================================================
+
 
 def create_scvi_model(input_dim: int, **kwargs) -> SCVIModel:
     """Factory: create scVI model instance."""

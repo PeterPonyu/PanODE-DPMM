@@ -107,6 +107,7 @@ from experiments.merge_visualize_support import (
 # Visualisation entry point
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def visualize_merged(
     merged_cfg: MergedExperimentConfig,
     *,
@@ -136,7 +137,8 @@ def visualize_merged(
     font_family: str = "Arial",
     show_legend: bool = False,
     panel_labels: bool = False,
-    dpi: int = 300):
+    dpi: int = 300,
+):
     """Generate metric comparison figures for merged internal + external.
 
     Mirrors ``visualize_experiment.visualize()`` logic but operates on
@@ -153,12 +155,12 @@ def visualize_merged(
         print("Run with --merge-only first, or omit --figures-only.")
         sys.exit(1)
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Visualising merged experiment: {merged_cfg.name}")
     print(f"Tables dir : {tables_dir}")
     print(f"Methods ({n_methods}): {method_names}")
     print(f"Description: {merged_cfg.description}")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     _apply_font(font_family)
 
@@ -167,7 +169,8 @@ def visualize_merged(
         data_folder_path=str(tables_dir),
         method_names=method_names,
         method_order=method_names,
-        verbose=True)
+        verbose=True,
+    )
     analyzer.load_experimental_data()
     analyzer.preprocess_data()
     analyzer.print_comprehensive_summary()
@@ -178,17 +181,13 @@ def visualize_merged(
     # ── Layout parameters ─────────────────────────────────────────────────
     os.makedirs(figures_dir, exist_ok=True)
 
-    palette = sns.color_palette(
-        palette_name if palette_name else DEFAULT_PALETTE, n_methods
-    )
+    palette = sns.color_palette(palette_name if palette_name else DEFAULT_PALETTE, n_methods)
     sig_pairs = _build_sig_pairs(method_names)
     auto_h, auto_rot, auto_xtick = _adaptive_params(n_methods)
 
     final_h = fig_height if fig_height is not None else auto_h
     final_rot = xlabel_rotation if xlabel_rotation is not None else auto_rot
-    final_xtick = (xtick_label_fontsize
-                   if xtick_label_fontsize is not None
-                   else auto_xtick)
+    final_xtick = xtick_label_fontsize if xtick_label_fontsize is not None else auto_xtick
     # Clamp to guaranteed readable minimum
     final_xtick = clamp_xtick_fontsize(final_xtick)
 
@@ -233,7 +232,8 @@ def visualize_merged(
         rotation_deg=final_rot,
         xtick_fontsize=final_xtick,
         title_fontsize=title_fontsize,
-        per_row_height=final_h)
+        per_row_height=final_h,
+    )
 
     # Enforce aspect ratio cap (height/width ≤ 21:17)
     if ncols is None:
@@ -242,36 +242,39 @@ def visualize_merged(
             per_row_height=final_h,
             hspace=computed_hspace,
             fig_width_per_metric=fig_width_per_metric,
-            ncols_init=final_ncols)
+            ncols_init=final_ncols,
+        )
 
-    common_kwargs = dict(
-        show_significance_pairs=sig_pairs,
-        palette=palette,
-        panel_labels=panel_labels,
-        plot_type=plot_type,
-        xlabel_rotation=final_rot,
-        font_family=font_family,
-        significance_line_width=significance_line_width,
-        significance_marker_offset=significance_marker_offset,
-        bar_strip_size=bar_strip_size,
-        bar_strip_alpha=bar_strip_alpha,
-        title_fontsize=title_fontsize,
-        title_fontweight="normal",
-        axis_label_fontsize=axis_label_fontsize,
-        tick_label_fontsize=tick_label_fontsize,
-        significance_fontsize=significance_fontsize,
-        ns_fontsize=ns_fontsize,
-        ns_offset=ns_offset,
-        show_legend=show_legend,
-        dpi=dpi,
-        hspace=computed_hspace)
+    common_kwargs = {
+        "show_significance_pairs": sig_pairs,
+        "palette": palette,
+        "panel_labels": panel_labels,
+        "plot_type": plot_type,
+        "xlabel_rotation": final_rot,
+        "font_family": font_family,
+        "significance_line_width": significance_line_width,
+        "significance_marker_offset": significance_marker_offset,
+        "bar_strip_size": bar_strip_size,
+        "bar_strip_alpha": bar_strip_alpha,
+        "title_fontsize": title_fontsize,
+        "title_fontweight": "normal",
+        "axis_label_fontsize": axis_label_fontsize,
+        "tick_label_fontsize": tick_label_fontsize,
+        "significance_fontsize": significance_fontsize,
+        "ns_fontsize": ns_fontsize,
+        "ns_offset": ns_offset,
+        "show_legend": show_legend,
+        "dpi": dpi,
+        "hspace": computed_hspace,
+    }
 
     def _post_hoc_xtick(fig, axes, save_path):
         if xtick_label_fontsize is not None:
             for ax in axes:
                 plt.setp(ax.xaxis.get_majorticklabels(), fontsize=final_xtick)
-            fig.savefig(str(save_path), dpi=dpi, facecolor="white",
-                        bbox_inches="tight", pad_inches=0.05)
+            fig.savefig(
+                str(save_path), dpi=dpi, facecolor="white", bbox_inches="tight", pad_inches=0.05
+            )
 
     figure_paths = []
 
@@ -288,8 +291,7 @@ def visualize_merged(
             grp_ncols = min(final_ncols, len(grp_metrics))
             grp_nrows = math.ceil(len(grp_metrics) / grp_ncols)
             grp_w = fig_width_per_metric * grp_ncols
-            grp_h = (final_h * grp_nrows
-                     + final_h * computed_hspace * max(grp_nrows - 1, 0))
+            grp_h = final_h * grp_nrows + final_h * computed_hspace * max(grp_nrows - 1, 0)
             save_path = figures_dir / f"{group_key}.pdf"
 
             print(f"  Generating: {group_key}  ({len(grp_metrics)} metrics)")
@@ -301,7 +303,8 @@ def visualize_merged(
                     figsize=(grp_w, grp_h),
                     ncols=grp_ncols,
                     save_path=str(save_path),
-                    **common_kwargs)
+                    **common_kwargs,
+                )
                 _post_hoc_xtick(fig, axes, save_path)
                 plt.close(fig)
                 figure_paths.append(save_path)
@@ -312,13 +315,14 @@ def visualize_merged(
     else:
         n_rows = math.ceil(len(flat_metrics) / final_ncols)
         total_w = fig_width_per_metric * final_ncols
-        total_h = (final_h * n_rows
-                   + final_h * computed_hspace * max(n_rows - 1, 0))
+        total_h = final_h * n_rows + final_h * computed_hspace * max(n_rows - 1, 0)
         save_path = figures_dir / "all_metrics.pdf"
 
-        print(f"  Generating unified grid: {len(flat_metrics)} metrics, "
-              f"{final_ncols} cols x {n_rows} rows  "
-              f"({total_w:.1f} x {total_h:.1f} in @ {dpi} dpi)")
+        print(
+            f"  Generating unified grid: {len(flat_metrics)} metrics, "
+            f"{final_ncols} cols x {n_rows} rows  "
+            f"({total_w:.1f} x {total_h:.1f} in @ {dpi} dpi)"
+        )
 
         try:
             fig, axes = create_publication_figure(
@@ -328,7 +332,8 @@ def visualize_merged(
                 figsize=(total_w, total_h),
                 ncols=final_ncols,
                 save_path=str(save_path),
-                **common_kwargs)
+                **common_kwargs,
+            )
             _post_hoc_xtick(fig, axes, save_path)
             plt.close(fig)
             figure_paths.append(save_path)
@@ -337,15 +342,16 @@ def visualize_merged(
             print(f"    ERROR generating unified figure: {exc}")
             traceback.print_exc()
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Figures saved to: {figures_dir}")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
     return figure_paths
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Multi-figure grouped visualisation
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def visualize_merged_grouped(
     merged_cfg: MergedExperimentConfig,
@@ -374,7 +380,8 @@ def visualize_merged_grouped(
     font_family: str = "Arial",
     show_legend: bool = False,
     panel_labels: bool = False,
-    dpi: int = 300):
+    dpi: int = 300,
+):
     """Generate **multiple** comparison figures, one per logical method group.
 
     When the merged experiment has too many methods (>METHOD_GROUP_THRESHOLD)
@@ -399,17 +406,18 @@ def visualize_merged_grouped(
 
     try:
         method_groups = build_method_groups(
-        all_methods, tables_dir, top_n=top_n, ranking_metric=ranking_metric)
+            all_methods, tables_dir, top_n=top_n, ranking_metric=ranking_metric
+        )
     except Exception as exc:
         print(f"  WARNING: Could not build grouped method sets: {exc}")
         method_groups = {"internal": list(all_methods)}
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Multi-figure grouped visualisation: {merged_cfg.name}")
     print(f"Total methods: {len(all_methods)}")
     for gname, gmethods in method_groups.items():
         print(f"  {gname:10s} ({len(gmethods):2d}): {gmethods}")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     os.makedirs(figures_dir, exist_ok=True)
 
@@ -417,8 +425,9 @@ def visualize_merged_grouped(
     # Load one analyzer briefly just to get available metrics
     _tmp_analyzer = RigorousExperimentalAnalyzer(
         data_folder_path=str(tables_dir),
-        method_names=all_methods,   # must match CSV row count
-        verbose=False)
+        method_names=all_methods,  # must match CSV row count
+        verbose=False,
+    )
     _tmp_analyzer.load_experimental_data()
     _tmp_analyzer.preprocess_data()
     available = set(_tmp_analyzer.metrics)
@@ -463,8 +472,7 @@ def visualize_merged_grouped(
             print(f"  Skipping {group_name}: only {n_methods} methods")
             continue
 
-        print(f"\n  ── {GROUP_TITLES.get(group_name, group_name)} "
-              f"({n_methods} methods) ──")
+        print(f"\n  ── {GROUP_TITLES.get(group_name, group_name)} ({n_methods} methods) ──")
 
         # Build a dedicated REA analyzer for this subset
         # NOTE: method_names must match CSV row count (all methods),
@@ -474,7 +482,8 @@ def visualize_merged_grouped(
             method_names=all_methods,
             selected_methods=group_methods,
             method_order=group_methods,
-            verbose=False)
+            verbose=False,
+        )
         analyzer.load_experimental_data()
         analyzer.preprocess_data()
 
@@ -482,16 +491,12 @@ def visualize_merged_grouped(
         auto_h, auto_rot, auto_xtick = _adaptive_params(n_methods)
         final_h = auto_h
         final_rot = xlabel_rotation if xlabel_rotation is not None else auto_rot
-        final_xtick = (xtick_label_fontsize
-                       if xtick_label_fontsize is not None
-                       else auto_xtick)
+        final_xtick = xtick_label_fontsize if xtick_label_fontsize is not None else auto_xtick
         # Clamp to guaranteed readable minimum
         final_xtick = clamp_xtick_fontsize(final_xtick)
         final_ncols = ncols if ncols is not None else _adaptive_ncols(n_methods)
 
-        palette = sns.color_palette(
-            palette_name if palette_name else DEFAULT_PALETTE, n_methods
-        )
+        palette = sns.color_palette(palette_name if palette_name else DEFAULT_PALETTE, n_methods)
         sig_pairs = _build_sig_pairs(group_methods)
 
         computed_hspace = _compute_hspace(
@@ -499,7 +504,8 @@ def visualize_merged_grouped(
             rotation_deg=final_rot,
             xtick_fontsize=final_xtick,
             title_fontsize=title_fontsize,
-            per_row_height=final_h)
+            per_row_height=final_h,
+        )
 
         # Enforce aspect ratio cap (height/width ≤ 21:17)
         if ncols is None:
@@ -508,18 +514,20 @@ def visualize_merged_grouped(
                 per_row_height=final_h,
                 hspace=computed_hspace,
                 fig_width_per_metric=fig_width_per_metric,
-                ncols_init=final_ncols)
+                ncols_init=final_ncols,
+            )
 
         n_rows = math.ceil(len(flat_metrics) / final_ncols)
         total_w = fig_width_per_metric * final_ncols
-        total_h = (final_h * n_rows
-                   + final_h * computed_hspace * max(n_rows - 1, 0))
+        total_h = final_h * n_rows + final_h * computed_hspace * max(n_rows - 1, 0)
 
         save_path = figures_dir / f"{group_name}_metrics.pdf"
         sup_title = GROUP_TITLES.get(group_name, group_name)
 
-        print(f"    {len(flat_metrics)} metrics, {final_ncols} cols × "
-              f"{n_rows} rows  ({total_w:.1f}×{total_h:.1f} in)")
+        print(
+            f"    {len(flat_metrics)} metrics, {final_ncols} cols × "
+            f"{n_rows} rows  ({total_w:.1f}×{total_h:.1f} in)"
+        )
 
         try:
             fig, axes = create_publication_figure(
@@ -549,12 +557,14 @@ def visualize_merged_grouped(
                 dpi=dpi,
                 hspace=computed_hspace,
                 suptitle=sup_title,
-                save_path=str(save_path))
+                save_path=str(save_path),
+            )
             # Apply xtick fontsize post-hoc
             for ax in axes:
                 plt.setp(ax.xaxis.get_majorticklabels(), fontsize=final_xtick)
-            fig.savefig(str(save_path), dpi=dpi, facecolor="white",
-                        bbox_inches="tight", pad_inches=0.05)
+            fig.savefig(
+                str(save_path), dpi=dpi, facecolor="white", bbox_inches="tight", pad_inches=0.05
+            )
             plt.close(fig)
             all_figure_paths.append(save_path)
             print(f"    -> {save_path}")
@@ -562,17 +572,18 @@ def visualize_merged_grouped(
             print(f"    ERROR: {exc}")
             traceback.print_exc()
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Grouped figures saved to: {figures_dir}")
     for p in all_figure_paths:
         print(f"  {p}")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
     return all_figure_paths
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Training curve visualisation for merged experiment
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def plot_merged_training_curves(
     merged_cfg: MergedExperimentConfig,
@@ -584,7 +595,8 @@ def plot_merged_training_curves(
     figsize: tuple = None,
     dpi: int = 200,
     font_family: str = "Arial",
-    palette_name: str = None):
+    palette_name: str = None,
+):
     """Plot aggregated loss curves for the merged experiment.
 
     Cross-dataset mean +/- std shading, with separate lines per method.
@@ -608,12 +620,11 @@ def plot_merged_training_curves(
         all_dfs.append(df)
     combined = pd.concat(all_dfs, ignore_index=True)
 
-    has_val = ("val_loss" in combined.columns
-               and combined["val_loss"].notna().any())
-    has_recon = ("recon_loss" in combined.columns
-                 and combined["recon_loss"].notna().any())
-    has_val_recon = ("val_recon_loss" in combined.columns
-                     and combined["val_recon_loss"].notna().any())
+    has_val = "val_loss" in combined.columns and combined["val_loss"].notna().any()
+    has_recon = "recon_loss" in combined.columns and combined["recon_loss"].notna().any()
+    has_val_recon = (
+        "val_recon_loss" in combined.columns and combined["val_recon_loss"].notna().any()
+    )
 
     methods = merged_cfg.method_names
     # Only keep methods that have series data
@@ -624,9 +635,7 @@ def plot_merged_training_curves(
         print("  No training series data found for any method.")
         return
 
-    palette_colors = sns.color_palette(
-        palette_name if palette_name else DEFAULT_PALETTE, n_methods
-    )
+    palette_colors = sns.color_palette(palette_name if palette_name else DEFAULT_PALETTE, n_methods)
     color_map = dict(zip(methods_with_data, palette_colors))
 
     loss_cols = ["train_loss"]
@@ -652,8 +661,7 @@ def plot_merged_training_curves(
         method_df = combined[combined["hue"] == method_name]
         datasets_in = method_df["dataset"].unique()
         epoch_counts = [
-            int(method_df[method_df["dataset"] == d]["epoch"].max())
-            for d in datasets_in
+            int(method_df[method_df["dataset"] == d]["epoch"].max()) for d in datasets_in
         ]
         max_ep = min(epoch_counts)
         epochs = np.arange(1, max_ep + 1)
@@ -674,10 +682,8 @@ def plot_merged_training_curves(
             mean = arr.mean(axis=0)
             std = arr.std(axis=0)
             c = color_map[method_name]
-            axes[pi].plot(epochs, mean, color=c, alpha=line_alpha,
-                          label=method_name, linewidth=1.0)
-            axes[pi].fill_between(epochs, mean - std, mean + std,
-                                  color=c, alpha=fill_alpha)
+            axes[pi].plot(epochs, mean, color=c, alpha=line_alpha, label=method_name, linewidth=1.0)
+            axes[pi].fill_between(epochs, mean - std, mean + std, color=c, alpha=fill_alpha)
 
     for ax, title in zip(axes, panel_titles):
         ax.set_xlabel("Epoch")
@@ -722,12 +728,12 @@ def plot_merged_training_curves(
                 c = color_map.get(method_name, None)
                 for pi, col in enumerate(ds_cols):
                     sm = _smooth(subset[col].values, w)
-                    axs_d[pi].plot(subset["epoch"], sm, label=method_name,
-                                   alpha=0.8, color=c, linewidth=0.8)
+                    axs_d[pi].plot(
+                        subset["epoch"], sm, label=method_name, alpha=0.8, color=c, linewidth=0.8
+                    )
 
             for ax, t in zip(axs_d, ds_titles):
-                ax.set(xlabel="Epoch", ylabel="Loss",
-                       title=f"{ds_name} — {t}")
+                ax.set(xlabel="Epoch", ylabel="Loss", title=f"{ds_name} — {t}")
                 ax.legend(fontsize=5, loc="upper right", ncol=2)
                 ax.grid(True, alpha=0.3)
                 sns.despine(ax=ax)
@@ -743,6 +749,7 @@ def plot_merged_training_curves(
 # ═══════════════════════════════════════════════════════════════════════════════
 # CLI
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -773,95 +780,137 @@ Examples:
 
   # Custom merged name
   python -m experiments.merge_and_visualize --merged-name dpmm_vs_baselines
-        """)
+        """,
+    )
 
     # ── Pipeline mode flags ───────────────────────────────────────────────
     mode_group = parser.add_mutually_exclusive_group()
-    mode_group.add_argument("--merge-only", action="store_true",
-                            help="Only merge tables, skip visualisation")
-    mode_group.add_argument("--figures-only", action="store_true",
-                            help="Skip merge, only generate figures "
-                                 "(assumes tables already exist)")
-    mode_group.add_argument("--summary-only", action="store_true",
-                            help="Merge + print statistics, no figures")
+    mode_group.add_argument(
+        "--merge-only", action="store_true", help="Only merge tables, skip visualisation"
+    )
+    mode_group.add_argument(
+        "--figures-only",
+        action="store_true",
+        help="Skip merge, only generate figures (assumes tables already exist)",
+    )
+    mode_group.add_argument(
+        "--summary-only", action="store_true", help="Merge + print statistics, no figures"
+    )
 
     # ── Source names ──────────────────────────────────────────────────────
-    parser.add_argument("--internal-name", type=str,
-                        default=DEFAULT_INTERNAL_DIR,
-                        help=f"Internal experiment name "
-                             f"(default: {DEFAULT_INTERNAL_DIR})")
-    parser.add_argument("--external-name", type=str,
-                        default=DEFAULT_EXTERNAL_DIR,
-                        help=f"External experiment name "
-                             f"(default: {DEFAULT_EXTERNAL_DIR})")
-    parser.add_argument("--merged-name", type=str,
-                        default=DEFAULT_MERGED_NAME,
-                        help=f"Merged output name "
-                             f"(default: {DEFAULT_MERGED_NAME})")
-    parser.add_argument("--output-root", type=str,
-                        default=str(DEFAULT_OUTPUT_ROOT),
-                        help="Output root directory")
+    parser.add_argument(
+        "--internal-name",
+        type=str,
+        default=DEFAULT_INTERNAL_DIR,
+        help=f"Internal experiment name (default: {DEFAULT_INTERNAL_DIR})",
+    )
+    parser.add_argument(
+        "--external-name",
+        type=str,
+        default=DEFAULT_EXTERNAL_DIR,
+        help=f"External experiment name (default: {DEFAULT_EXTERNAL_DIR})",
+    )
+    parser.add_argument(
+        "--merged-name",
+        type=str,
+        default=DEFAULT_MERGED_NAME,
+        help=f"Merged output name (default: {DEFAULT_MERGED_NAME})",
+    )
+    parser.add_argument(
+        "--output-root", type=str, default=str(DEFAULT_OUTPUT_ROOT), help="Output root directory"
+    )
 
     # ── Method selection ──────────────────────────────────────────────────
-    parser.add_argument("--internal-methods", nargs="+", default=None,
-                        help="Internal methods to include (default: all 12)")
-    parser.add_argument("--external-methods", nargs="+", default=None,
-                        help="External methods to include (default: all 15)")
+    parser.add_argument(
+        "--internal-methods",
+        nargs="+",
+        default=None,
+        help="Internal methods to include (default: all 12)",
+    )
+    parser.add_argument(
+        "--external-methods",
+        nargs="+",
+        default=None,
+        help="External methods to include (default: all 15)",
+    )
 
     # ── Metric selection ──────────────────────────────────────────────────
-    parser.add_argument("--groups", nargs="+", default=None,
-                        help="Metric groups to plot "
-                             f"(default: all; available: "
-                             f"{list(METRIC_GROUPS.keys())})")
-    parser.add_argument("--metrics", nargs="+", default=None,
-                        help="Specific metric names to include")
-    parser.add_argument("--exclude-metrics", nargs="+", default=None,
-                        help="Metric names to exclude")
+    parser.add_argument(
+        "--groups",
+        nargs="+",
+        default=None,
+        help=f"Metric groups to plot (default: all; available: {list(METRIC_GROUPS.keys())})",
+    )
+    parser.add_argument(
+        "--metrics", nargs="+", default=None, help="Specific metric names to include"
+    )
+    parser.add_argument(
+        "--exclude-metrics", nargs="+", default=None, help="Metric names to exclude"
+    )
 
     # ── Visual parameters ─────────────────────────────────────────────────
-    parser.add_argument("--per-group", action="store_true",
-                        help="One PDF per metric group (default: unified grid)")
-    parser.add_argument("--grouped", action="store_true", default=None,
-                        help="Split methods into logical sub-figures "
-                             "(internal / external / top-N). Auto-enabled "
-                             f"when n_methods > {METHOD_GROUP_THRESHOLD}")
-    parser.add_argument("--no-grouped", dest="grouped", action="store_false",
-                        help="Force single unified figure even if many methods")
-    parser.add_argument("--top-n", type=int, default=10,
-                        help="Number of top methods for the cross-pool figure "
-                             "(default: 10)")
-    parser.add_argument("--ranking-metric", type=str, default="NMI",
-                        help="Metric for ranking in top-N figure (default: NMI)")
-    parser.add_argument("--ncols", type=int, default=None,
-                        help="Override column count")
-    parser.add_argument("--fig-height", type=float, default=None,
-                        help="Per-row figure height")
-    parser.add_argument("--fig-width", type=float, default=3.2,
-                        help="Width per metric column (default: 3.2)")
-    parser.add_argument("--plot-type", type=str, default="boxplot",
-                        choices=["boxplot", "violin", "strip", "barplot",
-                                 "paired_lines"],
-                        help="Plot type (default: boxplot)")
-    parser.add_argument("--palette", type=str, default=None,
-                        help="Seaborn palette name")
-    parser.add_argument("--dpi", type=int, default=300,
-                        help="Figure DPI (default: 300)")
-    parser.add_argument("--xlabel-rotation", type=float, default=None,
-                        help="X-label rotation degrees")
-    parser.add_argument("--xtick-fontsize", type=float, default=None,
-                        help="X-tick label fontsize")
-    parser.add_argument("--show-legend", action="store_true",
-                        help="Show figure legend")
+    parser.add_argument(
+        "--per-group", action="store_true", help="One PDF per metric group (default: unified grid)"
+    )
+    parser.add_argument(
+        "--grouped",
+        action="store_true",
+        default=None,
+        help="Split methods into logical sub-figures "
+        "(internal / external / top-N). Auto-enabled "
+        f"when n_methods > {METHOD_GROUP_THRESHOLD}",
+    )
+    parser.add_argument(
+        "--no-grouped",
+        dest="grouped",
+        action="store_false",
+        help="Force single unified figure even if many methods",
+    )
+    parser.add_argument(
+        "--top-n",
+        type=int,
+        default=10,
+        help="Number of top methods for the cross-pool figure (default: 10)",
+    )
+    parser.add_argument(
+        "--ranking-metric",
+        type=str,
+        default="NMI",
+        help="Metric for ranking in top-N figure (default: NMI)",
+    )
+    parser.add_argument("--ncols", type=int, default=None, help="Override column count")
+    parser.add_argument("--fig-height", type=float, default=None, help="Per-row figure height")
+    parser.add_argument(
+        "--fig-width", type=float, default=3.2, help="Width per metric column (default: 3.2)"
+    )
+    parser.add_argument(
+        "--plot-type",
+        type=str,
+        default="boxplot",
+        choices=["boxplot", "violin", "strip", "barplot", "paired_lines"],
+        help="Plot type (default: boxplot)",
+    )
+    parser.add_argument("--palette", type=str, default=None, help="Seaborn palette name")
+    parser.add_argument("--dpi", type=int, default=300, help="Figure DPI (default: 300)")
+    parser.add_argument(
+        "--xlabel-rotation", type=float, default=None, help="X-label rotation degrees"
+    )
+    parser.add_argument("--xtick-fontsize", type=float, default=None, help="X-tick label fontsize")
+    parser.add_argument("--show-legend", action="store_true", help="Show figure legend")
 
     # ── Training curves ───────────────────────────────────────────────────
-    parser.add_argument("--training-curves", action="store_true",
-                        help="Generate training/validation loss curves")
-    parser.add_argument("--show-recon", action="store_true",
-                        help="Include reconstruction loss panels")
-    parser.add_argument("--per-dataset-curves", action="store_true",
-                        help="Generate per-dataset loss plots")
-    parser.add_argument("--smoothing-window", type=int, default=None,
-                        help="Loss curve smoothing window")
+    parser.add_argument(
+        "--training-curves", action="store_true", help="Generate training/validation loss curves"
+    )
+    parser.add_argument(
+        "--show-recon", action="store_true", help="Include reconstruction loss panels"
+    )
+    parser.add_argument(
+        "--per-dataset-curves", action="store_true", help="Generate per-dataset loss plots"
+    )
+    parser.add_argument(
+        "--smoothing-window", type=int, default=None, help="Loss curve smoothing window"
+    )
 
     args = parser.parse_args()
     output_root = Path(args.output_root)
@@ -873,7 +922,8 @@ Examples:
         merged_name=args.merged_name,
         output_root=output_root,
         internal_methods=args.internal_methods,
-        external_methods=args.external_methods)
+        external_methods=args.external_methods,
+    )
 
     print(f"\n{merged_cfg.summary()}\n")
 
@@ -902,8 +952,10 @@ Examples:
         # Auto-detect: enable grouped mode when too many methods
         use_grouped = n_total_methods > METHOD_GROUP_THRESHOLD
         if use_grouped:
-            print(f"\n  Auto-grouped mode: {n_total_methods} methods "
-                  f"> threshold ({METHOD_GROUP_THRESHOLD})")
+            print(
+                f"\n  Auto-grouped mode: {n_total_methods} methods "
+                f"> threshold ({METHOD_GROUP_THRESHOLD})"
+            )
 
     if use_grouped and not args.summary_only:
         visualize_merged_grouped(
@@ -920,7 +972,8 @@ Examples:
             xtick_label_fontsize=args.xtick_fontsize,
             xlabel_rotation=args.xlabel_rotation,
             show_legend=args.show_legend,
-            dpi=args.dpi)
+            dpi=args.dpi,
+        )
     else:
         visualize_merged(
             merged_cfg,
@@ -937,7 +990,8 @@ Examples:
             xtick_label_fontsize=args.xtick_fontsize,
             xlabel_rotation=args.xlabel_rotation,
             show_legend=args.show_legend,
-            dpi=args.dpi)
+            dpi=args.dpi,
+        )
 
     # ── Step 3 (optional): Training curves ────────────────────────────────
     if args.training_curves:
@@ -951,7 +1005,8 @@ Examples:
             per_dataset=args.per_dataset_curves,
             show_recon=args.show_recon,
             palette_name=args.palette,
-            dpi=args.dpi)
+            dpi=args.dpi,
+        )
 
     print("\nDone.")
 

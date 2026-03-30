@@ -9,8 +9,7 @@ from __future__ import annotations
 import warnings
 
 warnings.warn(
-    "benchmarks.external_model_registry is deprecated; use "
-    "eval_lib.baselines.registry instead.",
+    "benchmarks.external_model_registry is deprecated; use eval_lib.baselines.registry instead.",
     DeprecationWarning,
     stacklevel=2,
 )

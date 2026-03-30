@@ -1,4 +1,5 @@
 """VCD colorbar-related detection passes (14, 17)."""
+
 from __future__ import annotations
 
 from matplotlib.collections import LineCollection, PathCollection, PolyCollection
@@ -35,10 +36,8 @@ def _check_colorbar_internal(fig, renderer, tol_px=1.0):
             continue
 
         # Gather tick labels
-        xticks = [tl for tl in ax.get_xticklabels()
-                  if tl.get_text().strip()]
-        yticks = [tl for tl in ax.get_yticklabels()
-                  if tl.get_text().strip()]
+        xticks = [tl for tl in ax.get_xticklabels() if tl.get_text().strip()]
+        yticks = [tl for tl in ax.get_yticklabels() if tl.get_text().strip()]
         tick_labels = xticks + yticks
 
         tick_bbs: list[tuple[str, Bbox]] = []
@@ -56,16 +55,17 @@ def _check_colorbar_internal(fig, renderer, tol_px=1.0):
                 sj = _shrink(bb_j, tol_px)
                 if si and sj and si.overlaps(sj):
                     area = _overlap_area(bb_i, bb_j)
-                    issues.append({
-                        "type": "cbar_tick_overlap",
-                        "severity": "warning",
-                        "detail": (
-                            f"Colorbar tick '{txt_i}' overlaps "
-                            f"tick '{txt_j}' ({area:.0f} px\u00b2)"
-                        ),
-                        "elements": [f"cbar_tick:{txt_i}",
-                                     f"cbar_tick:{txt_j}"],
-                    })
+                    issues.append(
+                        {
+                            "type": "cbar_tick_overlap",
+                            "severity": "warning",
+                            "detail": (
+                                f"Colorbar tick '{txt_i}' overlaps "
+                                f"tick '{txt_j}' ({area:.0f} px\u00b2)"
+                            ),
+                            "elements": [f"cbar_tick:{txt_i}", f"cbar_tick:{txt_j}"],
+                        }
+                    )
 
         # b) Colorbar axis label vs tick labels
         for lbl_artist in [ax.xaxis.label, ax.yaxis.label]:
@@ -82,30 +82,32 @@ def _check_colorbar_internal(fig, renderer, tol_px=1.0):
                 bb_ts = _shrink(bb_t, tol_px)
                 if bb_ts and lbl_s.overlaps(bb_ts):
                     area = _overlap_area(lbl_bb, bb_t)
-                    issues.append({
-                        "type": "cbar_label_tick_overlap",
-                        "severity": "warning",
-                        "detail": (
-                            f"Colorbar label '{lbl_txt[:20]}' overlaps "
-                            f"tick '{txt_t}' ({area:.0f} px\u00b2)"
-                        ),
-                        "elements": [f"cbar_label:{lbl_txt[:20]}",
-                                     f"cbar_tick:{txt_t}"],
-                    })
+                    issues.append(
+                        {
+                            "type": "cbar_label_tick_overlap",
+                            "severity": "warning",
+                            "detail": (
+                                f"Colorbar label '{lbl_txt[:20]}' overlaps "
+                                f"tick '{txt_t}' ({area:.0f} px\u00b2)"
+                            ),
+                            "elements": [f"cbar_label:{lbl_txt[:20]}", f"cbar_tick:{txt_t}"],
+                        }
+                    )
 
         # c) + d) Tick labels extending beyond figure
         for txt_t, bb_t in tick_bbs:
             sides = _sides_outside(bb_t, fig_bb, 1.0)
             if sides:
-                issues.append({
-                    "type": "cbar_tick_truncation",
-                    "severity": "warning",
-                    "detail": (
-                        f"Colorbar tick '{txt_t}' extends beyond "
-                        f"figure ({', '.join(sides)})"
-                    ),
-                    "elements": [f"cbar_tick:{txt_t}"],
-                })
+                issues.append(
+                    {
+                        "type": "cbar_tick_truncation",
+                        "severity": "warning",
+                        "detail": (
+                            f"Colorbar tick '{txt_t}' extends beyond figure ({', '.join(sides)})"
+                        ),
+                        "elements": [f"cbar_tick:{txt_t}"],
+                    }
+                )
 
     return issues
 
@@ -136,11 +138,11 @@ def _check_colorbar_data_overlap(fig, renderer, auto_fix=True):
 
         # Find parent axes — the colorbar's host
         parent = None
-        if hasattr(ax, '_parent_axes'):
+        if hasattr(ax, "_parent_axes"):
             parent = ax._parent_axes
-        elif hasattr(ax, 'get_axes_locator'):
+        elif hasattr(ax, "get_axes_locator"):
             loc = ax.get_axes_locator()
-            if loc and hasattr(loc, '_parent'):
+            if loc and hasattr(loc, "_parent"):
                 parent = loc._parent
         if parent is None:
             best_area = 0
@@ -165,8 +167,9 @@ def _check_colorbar_data_overlap(fig, renderer, auto_fix=True):
         for child in parent.get_children():
             if child is ax:
                 continue
-            if isinstance(child, (PathCollection, PolyCollection,
-                                  LineCollection, Line2D, AxesImage)):
+            if isinstance(
+                child, (PathCollection, PolyCollection, LineCollection, Line2D, AxesImage)
+            ):
                 da_bb = _safe_bbox(child, renderer)
                 if da_bb:
                     data_artists.append((_artist_label(child), da_bb))
@@ -180,15 +183,16 @@ def _check_colorbar_data_overlap(fig, renderer, auto_fix=True):
                 continue
             frac = area / da_area
             if frac > 0.05:
-                issues.append({
-                    "type": "cbar_data_overlap",
-                    "severity": "warning",
-                    "detail": (
-                        f"Colorbar overlaps data '{da_tag}' "
-                        f"({frac:.0%}, {area:.0f} px\u00b2)"
-                    ),
-                    "elements": ["colorbar", da_tag],
-                    "auto_fixable": auto_fix,
-                })
+                issues.append(
+                    {
+                        "type": "cbar_data_overlap",
+                        "severity": "warning",
+                        "detail": (
+                            f"Colorbar overlaps data '{da_tag}' ({frac:.0%}, {area:.0f} px\u00b2)"
+                        ),
+                        "elements": ["colorbar", da_tag],
+                        "auto_fixable": auto_fix,
+                    }
+                )
 
     return issues

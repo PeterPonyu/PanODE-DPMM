@@ -7,6 +7,7 @@ from torch import nn
 # Replacing dgnn.utils functions with standalone implementations
 # ============================================================================
 
+
 def halfplane2disk(x, c):
     """
     Convert from Poincaré half-plane to Poincaré disk model
@@ -84,7 +85,7 @@ def disk2lorentz(x, c):
     # Unscale by curvature
     x = x / torch.sqrt(c)
 
-    x_norm_sq = (x ** 2).sum(dim=-1, keepdim=True)
+    x_norm_sq = (x**2).sum(dim=-1, keepdim=True)
 
     # Formula: (1 + ||x||^2) / (1 - ||x||^2), 2x / (1 - ||x||^2)
     x0 = (1 + x_norm_sq) / (1 - x_norm_sq + 1e-7)
@@ -130,6 +131,7 @@ def lorentz2disk(x, c):
 # Original Encoder/Decoder Layers
 # ============================================================================
 
+
 class EncoderLayer(nn.Module):
     def __init__(self, args, feature_dim) -> None:
         super().__init__()
@@ -137,22 +139,12 @@ class EncoderLayer(nn.Module):
         self.latent_dim = args.latent_dim
         self.feature_dim = feature_dim
 
-        self.variational = nn.Linear(
-            self.feature_dim,
-            4 * self.latent_dim
-        )
+        self.variational = nn.Linear(self.feature_dim, 4 * self.latent_dim)
 
     def forward(self, feature):
         feature = self.variational(feature)
         alpha, beta, logc, gamma = torch.split(
-            feature,
-            [
-                self.latent_dim,
-                self.latent_dim,
-                self.latent_dim,
-                self.latent_dim
-            ],
-            dim=-1
+            feature, [self.latent_dim, self.latent_dim, self.latent_dim, self.latent_dim], dim=-1
         )
 
         return torch.stack([alpha, beta, logc], dim=-1), gamma
@@ -179,10 +171,7 @@ class ExpEncoderLayer(nn.Module):
 
     def forward(self, feature):
         mean, gamma = self.encoder(feature)
-        mean = disk2halfplane(
-            self.manifold.expmap0(mean),
-            self.c
-        )
+        mean = disk2halfplane(self.manifold.expmap0(mean), self.c)
         mean = torch.stack([mean[..., 0], mean[..., 1].log() * 2], dim=-1)
 
         return mean, gamma
@@ -209,8 +198,6 @@ class LogDecoderLayer(nn.Module):
     def forward(self, z):
         a, b = z[..., 0], (z[..., 1] * 0.5).exp()
         z = torch.stack([a, b], dim=-1)
-        z = self.manifold.logmap0(
-            halfplane2disk(z, self.c)
-        )
+        z = self.manifold.logmap0(halfplane2disk(z, self.c))
 
         return z.reshape(*z.shape[:-2], -1)

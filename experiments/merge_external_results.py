@@ -26,7 +26,9 @@ DEFAULT_GROUPS = [
 ]
 
 
-def merge_subdirectory(base_dir: Path, groups: Iterable[str], subdir_name: str, out_dir: Path) -> dict:
+def merge_subdirectory(
+    base_dir: Path, groups: Iterable[str], subdir_name: str, out_dir: Path
+) -> dict:
     """Merge CSV files for one logical subdirectory (``tables`` or ``series``)."""
     dataset_sources: dict[str, list[tuple[str, Path]]] = defaultdict(list)
 

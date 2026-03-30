@@ -29,12 +29,14 @@ def _check_text_overlaps(infos: list[_ArtistInfo], tol_px: float = 2.5):
             sa = _shrink(a.bbox, tol_px)
             sb = _shrink(b.bbox, tol_px)
             if sa and sb and sa.overlaps(sb):
-                issues.append({
-                    "type": "text_overlap",
-                    "severity": "warning",
-                    "detail": f"'{a.tag}' overlaps '{b.tag}'",
-                    "elements": [a.tag, b.tag],
-                })
+                issues.append(
+                    {
+                        "type": "text_overlap",
+                        "severity": "warning",
+                        "detail": f"'{a.tag}' overlaps '{b.tag}'",
+                        "elements": [a.tag, b.tag],
+                    }
+                )
     return issues
 
 
@@ -46,11 +48,11 @@ def _is_significance_marker(tag: str) -> bool:
     if not tag.startswith("annotation:"):
         return False
     txt = tag.split(":", 1)[1].strip()
-    if re.fullmatch(r"\*{1,4}", txt):          # *, **, ***, ****
+    if re.fullmatch(r"\*{1,4}", txt):  # *, **, ***, ****
         return True
-    if txt.lower() in ("ns", "n.s.", "ns."):   # not-significant
+    if txt.lower() in ("ns", "n.s.", "ns."):  # not-significant
         return True
-    if re.match(r"p\s*[<>=]", txt, re.I):       # p<0.05, P = 0.01 ...
+    if re.match(r"p\s*[<>=]", txt, re.I):  # p<0.05, P = 0.01 ...
         return True
     return False
 
@@ -66,8 +68,7 @@ def _check_text_vs_artist_overlap(
     overlapping with data artists in the same panel are elevated to warnings.
     """
     texts = [a for a in infos if a.kind == "text"]
-    graphics = [a for a in infos
-                if a.kind in ("collection", "patch", "line", "image")]
+    graphics = [a for a in infos if a.kind in ("collection", "patch", "line", "image")]
     issues = []
     for t in texts:
         tb = _shrink(t.bbox, tol_px)
@@ -93,21 +94,25 @@ def _check_text_vs_artist_overlap(
                     severity = "info"
                     issue_type = "text_artist_overlap"
 
-                issues.append({
-                    "type": issue_type,
-                    "severity": severity,
-                    "detail": (f"Text '{t.tag}' overlaps content "
-                               f"'{g.tag}' ({area:.0f} px\u00b2)"),
-                    "elements": [t.tag, g.tag],
-                })
+                issues.append(
+                    {
+                        "type": issue_type,
+                        "severity": severity,
+                        "detail": (
+                            f"Text '{t.tag}' overlaps content '{g.tag}' ({area:.0f} px\u00b2)"
+                        ),
+                        "elements": [t.tag, g.tag],
+                    }
+                )
     return issues
 
 
 def _check_cross_panel_spillover(fig, renderer, tol_px=5.0):
     """Pass 8: Detect content from one axes spilling into an adjacent axes."""
     axes_list = [
-        ax for ax in fig.get_axes()
-        if not getattr(ax, '_is_legend_cell', False) and not _is_colorbar_axes(ax)
+        ax
+        for ax in fig.get_axes()
+        if not getattr(ax, "_is_legend_cell", False) and not _is_colorbar_axes(ax)
     ]
     if len(axes_list) < 2:
         return []
@@ -120,7 +125,7 @@ def _check_cross_panel_spillover(fig, renderer, tol_px=5.0):
             ax_bboxes.append((ax, bb))
 
     for i, (ax_i, bb_i) in enumerate(ax_bboxes):
-        if getattr(ax_i, '_is_legend_cell', False):
+        if getattr(ax_i, "_is_legend_cell", False):
             continue
         for child in ax_i.get_children():
             if not child.get_visible():
@@ -132,7 +137,7 @@ def _check_cross_panel_spillover(fig, renderer, tol_px=5.0):
                 for j, (ax_j, bb_j) in enumerate(ax_bboxes):
                     if i == j:
                         continue
-                    if getattr(ax_j, '_is_legend_cell', False):
+                    if getattr(ax_j, "_is_legend_cell", False):
                         continue
                     if (
                         abs(bb_i.x0 - bb_j.x0) < 1.0
@@ -144,15 +149,17 @@ def _check_cross_panel_spillover(fig, renderer, tol_px=5.0):
                     area = _overlap_area(child_bb, bb_j)
                     if area > 50:
                         txt = getattr(child, "_text", "")[:30]
-                        issues.append({
-                            "type": "cross_panel_spillover",
-                            "severity": "warning",
-                            "detail": (
-                                f"Text '{txt}' from axes {i} "
-                                f"spills into axes {j} ({area:.0f} px\u00b2)"
-                            ),
-                            "elements": [f"ax{i}", f"ax{j}"],
-                        })
+                        issues.append(
+                            {
+                                "type": "cross_panel_spillover",
+                                "severity": "warning",
+                                "detail": (
+                                    f"Text '{txt}' from axes {i} "
+                                    f"spills into axes {j} ({area:.0f} px\u00b2)"
+                                ),
+                                "elements": [f"ax{i}", f"ax{j}"],
+                            }
+                        )
     return issues
 
 
@@ -179,15 +186,17 @@ def _check_panel_label_overlap(fig, renderer, infos, tol_px=2.0):
                     continue
                 area = _overlap_area(pbb, a.bbox)
                 if area > 20:
-                    issues.append({
-                        "type": "panel_label_overlap",
-                        "severity": "warning",
-                        "detail": (
-                            f"Panel label '{txt}' overlaps "
-                            f"content '{a.tag}' ({area:.0f} px\u00b2)"
-                        ),
-                        "elements": [txt, a.tag],
-                    })
+                    issues.append(
+                        {
+                            "type": "panel_label_overlap",
+                            "severity": "warning",
+                            "detail": (
+                                f"Panel label '{txt}' overlaps "
+                                f"content '{a.tag}' ({area:.0f} px\u00b2)"
+                            ),
+                            "elements": [txt, a.tag],
+                        }
+                    )
 
         # Check against all text (titles, ticks, labels, legend text, annotations)
         for a in infos:
@@ -196,15 +205,16 @@ def _check_panel_label_overlap(fig, renderer, infos, tol_px=2.0):
                     continue
                 area = _overlap_area(pbb, a.bbox)
                 if area > tol_px:
-                    issues.append({
-                        "type": "panel_label_text_overlap",
-                        "severity": "warning",
-                        "detail": (
-                            f"Panel label '{txt}' overlaps "
-                            f"text '{a.tag}' ({area:.0f} px\u00b2)"
-                        ),
-                        "elements": [txt, a.tag],
-                    })
+                    issues.append(
+                        {
+                            "type": "panel_label_text_overlap",
+                            "severity": "warning",
+                            "detail": (
+                                f"Panel label '{txt}' overlaps text '{a.tag}' ({area:.0f} px\u00b2)"
+                            ),
+                            "elements": [txt, a.tag],
+                        }
+                    )
 
         # Check against other panel labels
         for txt2, pbb2, panel_obj2 in panel_texts:
@@ -212,12 +222,14 @@ def _check_panel_label_overlap(fig, renderer, infos, tol_px=2.0):
                 continue
             area = _overlap_area(pbb, pbb2)
             if area > tol_px:
-                issues.append({
-                    "type": "panel_label_mutual_overlap",
-                    "severity": "warning",
-                    "detail": (
-                        f"Panel labels '{txt}' and '{txt2}' overlap ({area:.0f} px\u00b2)"
-                    ),
-                    "elements": [txt, txt2],
-                })
+                issues.append(
+                    {
+                        "type": "panel_label_mutual_overlap",
+                        "severity": "warning",
+                        "detail": (
+                            f"Panel labels '{txt}' and '{txt2}' overlap ({area:.0f} px\u00b2)"
+                        ),
+                        "elements": [txt, txt2],
+                    }
+                )
     return issues

@@ -7,7 +7,7 @@ loss     Training / validation loss curve visualisation
 layout   Centralised layout constants and adaptive sizing helpers
 """
 
-from .layout import (
+from .layout import (  # noqa: F401
     FIG_WIDTH_PER_METRIC,
     MAX_HEIGHT_TO_WIDTH,
     MAX_METHODS_PER_FIGURE,
@@ -19,5 +19,5 @@ from .layout import (
     clamp_xtick_fontsize,
     needs_method_split,
 )
-from .loss import plot_aggregated_loss, plot_training_curves
-from .rea import RigorousExperimentalAnalyzer, _apply_font, create_publication_figure
+from .loss import plot_aggregated_loss, plot_training_curves  # noqa: F401
+from .rea import RigorousExperimentalAnalyzer, _apply_font, create_publication_figure  # noqa: F401

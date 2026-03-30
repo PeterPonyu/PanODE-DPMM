@@ -5,7 +5,7 @@ from torch.distributions.utils import _standard_normal
 
 
 class HypersphericalUniform(torch.distributions.Distribution):
-    """ source: https://github.com/nicola-decao/s-vae-pytorch/blob/master/hyperspherical_vae/distributions/von_mises_fisher.py """
+    """source: https://github.com/nicola-decao/s-vae-pytorch/blob/master/hyperspherical_vae/distributions/von_mises_fisher.py"""
 
     support = torch.distributions.constraints.real
     has_rsample = False
@@ -15,7 +15,7 @@ class HypersphericalUniform(torch.distributions.Distribution):
     def dim(self):
         return self._dim
 
-    def __init__(self, dim, device='cpu', validate_args=None):
+    def __init__(self, dim, device="cpu", validate_args=None):
         super().__init__(torch.Size([dim]), validate_args=False)
         self._dim = dim
         self._device = device
@@ -31,14 +31,17 @@ class HypersphericalUniform(torch.distributions.Distribution):
         return output / output.norm(dim=-1, keepdim=True)
 
     def log_prob(self, x):
-        return - torch.ones(x.shape[:-1]).to(self._device) * self._log_normalizer()
+        return -torch.ones(x.shape[:-1]).to(self._device) * self._log_normalizer()
 
     def _log_normalizer(self):
         return self._log_surface_area().to(self._device)
 
     def _log_surface_area(self):
-        return math.log(2) + ((self._dim + 1) / 2) * math.log(math.pi) - torch.lgamma(
-            torch.Tensor([(self._dim + 1) / 2]))
+        return (
+            math.log(2)
+            + ((self._dim + 1) / 2) * math.log(math.pi)
+            - torch.lgamma(torch.Tensor([(self._dim + 1) / 2]))
+        )
 
     def entropy(self):
         return self._log_surface_area()

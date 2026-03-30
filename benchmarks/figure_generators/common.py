@@ -67,15 +67,15 @@ REPRESENTATIVE_DATASETS = ["setty", "endo", "dentate"]
 
 SWEEP_LABELS = {
     "warmup_ratio": "Warmup Ratio",
-    "kl_weight":    "KL Weight",
-    "latent_dim":   "Latent Dim",
+    "kl_weight": "KL Weight",
+    "latent_dim": "Latent Dim",
     "encoder_size": "Encoder Size",
     "dropout_rate": "Dropout Rate",
-    "lr":           "Learning Rate",
-    "epochs":       "Epochs",
-    "batch_size":   "Batch Size",
+    "lr": "Learning Rate",
+    "epochs": "Epochs",
+    "batch_size": "Batch Size",
     "weight_decay": "Weight Decay",
-    "hvg_top_genes":"HVG Top Genes",
+    "hvg_top_genes": "HVG Top Genes",
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -83,46 +83,47 @@ SWEEP_LABELS = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 ALL_BOXPLOT_METRICS_CORE = [
-    ("NMI",                   "NMI \u2191",            True),
-    ("ARI",                   "ARI \u2191",            True),
-    ("ASW",                   "ASW \u2191",            True),
-    ("DAV",                   "DAV \u2193",            False),
-    ("DRE_umap_overall_quality", "DRE UMAP \u2191",   True),
-    ("LSE_overall_quality",   "LSE Overall \u2191",    True),
+    ("NMI", "NMI \u2191", True),
+    ("ARI", "ARI \u2191", True),
+    ("ASW", "ASW \u2191", True),
+    ("DAV", "DAV \u2193", False),
+    ("DRE_umap_overall_quality", "DRE UMAP \u2191", True),
+    ("LSE_overall_quality", "LSE Overall \u2191", True),
 ]
 
 ALL_BOXPLOT_METRICS_EXT = [
     # ── Classical clustering ──
-    ("COR",                         "Corr \u2191",              True),
-    ("CAL",                         "Cal\u2013H \u2191",        True),
+    ("COR", "Corr \u2191", True),
+    ("CAL", "Cal\u2013H \u2191", True),
     # ── DRE UMAP projection quality ──
-    ("DRE_umap_distance_correlation","DRE UMAP DistCorr \u2191", True),
+    ("DRE_umap_distance_correlation", "DRE UMAP DistCorr \u2191", True),
     # ── DRE tSNE projection quality ──
-    ("DRE_tsne_distance_correlation","DRE tSNE DistCorr \u2191", True),
-    ("DRE_tsne_overall_quality",    "DRE tSNE Overall \u2191",   True),
+    ("DRE_tsne_distance_correlation", "DRE tSNE DistCorr \u2191", True),
+    ("DRE_tsne_overall_quality", "DRE tSNE Overall \u2191", True),
     # ── LSE latent-space structure ──
-    ("LSE_manifold_dimensionality", "LSE ManDim \u2191",         True),
-    ("LSE_spectral_decay_rate",     "LSE SpDecay \u2191",        True),
-    ("LSE_participation_ratio",     "LSE PartRat \u2191",        True),
-    ("LSE_anisotropy_score",        "LSE Aniso \u2193",          False),
-    ("LSE_trajectory_directionality","LSE TrajDir \u2191",       True),
-    ("LSE_noise_resilience",        "LSE NoiseR \u2191",         True),
-    ("LSE_core_quality",            "LSE Core \u2191",           True),
+    ("LSE_manifold_dimensionality", "LSE ManDim \u2191", True),
+    ("LSE_spectral_decay_rate", "LSE SpDecay \u2191", True),
+    ("LSE_participation_ratio", "LSE PartRat \u2191", True),
+    ("LSE_anisotropy_score", "LSE Aniso \u2193", False),
+    ("LSE_trajectory_directionality", "LSE TrajDir \u2191", True),
+    ("LSE_noise_resilience", "LSE NoiseR \u2191", True),
+    ("LSE_core_quality", "LSE Core \u2191", True),
     # ── DREX extended DR quality ──
-    ("DREX_trustworthiness",        "DREX Trust \u2191",         True),
-    ("DREX_continuity",             "DREX Cont \u2191",          True),
-    ("DREX_distance_spearman",      "DREX Spear \u2191",         True),
-    ("DREX_distance_pearson",       "DREX Pearson \u2191",       True),
-    ("DREX_local_scale_quality",    "DREX LocScale \u2191",      True),
-    ("DREX_neighborhood_symmetry",  "DREX NbrSym \u2191",        True),
-    ("DREX_overall_quality",        "DREX Overall \u2191",       True),
+    ("DREX_trustworthiness", "DREX Trust \u2191", True),
+    ("DREX_continuity", "DREX Cont \u2191", True),
+    ("DREX_distance_spearman", "DREX Spear \u2191", True),
+    ("DREX_distance_pearson", "DREX Pearson \u2191", True),
+    ("DREX_local_scale_quality", "DREX LocScale \u2191", True),
+    ("DREX_neighborhood_symmetry", "DREX NbrSym \u2191", True),
+    ("DREX_overall_quality", "DREX Overall \u2191", True),
     # ── LSEX extended latent structure ──
-    ("LSEX_two_hop_connectivity",   "LSEX 2Hop \u2191",         True),
-    ("LSEX_radial_concentration",   "LSEX RadConc \u2191",      True),
-    ("LSEX_local_curvature",        "LSEX LocCurv \u2191",      True),
-    ("LSEX_entropy_stability",      "LSEX Entropy \u2191",      True),
-    ("LSEX_overall_quality",        "LSEX Overall \u2191",      True),
+    ("LSEX_two_hop_connectivity", "LSEX 2Hop \u2191", True),
+    ("LSEX_radial_concentration", "LSEX RadConc \u2191", True),
+    ("LSEX_local_curvature", "LSEX LocCurv \u2191", True),
+    ("LSEX_entropy_stability", "LSEX Entropy \u2191", True),
+    ("LSEX_overall_quality", "LSEX Overall \u2191", True),
 ]
+
 
 def get_core_metrics(series: str):
     """Return the core metric list appropriate for *series*."""
@@ -133,9 +134,11 @@ def get_ext_metrics(series: str):
     """Return the extended metric list appropriate for *series*."""
     return ALL_BOXPLOT_METRICS_EXT
 
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Style helpers
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def apply_clean_style(font_size=None):
     """Apply publication style: Arial font, no bold titles.
@@ -150,26 +153,29 @@ def apply_clean_style(font_size=None):
         If given, override the base font size. Minimum 6 pt.
     """
     from .subplot_style import FONTSIZE_LABEL, FONTSIZE_LEGEND, FONTSIZE_TICK, FONTSIZE_TITLE
+
     apply_style()
     base = max(font_size or 8, 6.0)
-    mpl.rcParams.update({
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Arial", "DejaVu Sans", "Helvetica",
-                            "Liberation Sans"],
-        "axes.titleweight": "normal",
-        "figure.titleweight": "normal",
-        "font.size": base,
-        "axes.titlesize": max(FONTSIZE_TITLE, 6),
-        "axes.labelsize": max(FONTSIZE_LABEL, 6),
-        "xtick.labelsize": max(FONTSIZE_TICK, 6),
-        "ytick.labelsize": max(FONTSIZE_TICK, 6),
-        "legend.fontsize": max(FONTSIZE_LEGEND, 6),
-    })
+    mpl.rcParams.update(
+        {
+            "font.family": "sans-serif",
+            "font.sans-serif": ["Arial", "DejaVu Sans", "Helvetica", "Liberation Sans"],
+            "axes.titleweight": "normal",
+            "figure.titleweight": "normal",
+            "font.size": base,
+            "axes.titlesize": max(FONTSIZE_TITLE, 6),
+            "axes.labelsize": max(FONTSIZE_LABEL, 6),
+            "xtick.labelsize": max(FONTSIZE_TICK, 6),
+            "ytick.labelsize": max(FONTSIZE_TICK, 6),
+            "legend.fontsize": max(FONTSIZE_LEGEND, 6),
+        }
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Diagnostic helpers
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def clip_extreme_outliers(data_arrays, iqr_mult=6.0):
     """Clip extreme outliers across a list of 1-D arrays using Tukey fences.
@@ -202,6 +208,7 @@ def clip_extreme_outliers(data_arrays, iqr_mult=6.0):
     hi = q3 + iqr_mult * iqr
     return [np.clip(a, lo, hi) for a in data_arrays]
 
+
 def check_text_overlaps(fig, label="", verbose=True, overlap_tol_px=2):
     """Run the full 19-pass Visual Conflict Detector on *fig*.
 
@@ -226,25 +233,28 @@ def check_text_overlaps(fig, label="", verbose=True, overlap_tol_px=2):
         Each dict has ``type``, ``severity``, ``detail``, ``elements``.
     """
     from .visual_conflict_detector import detect_all_conflicts
+
     return detect_all_conflicts(
-        fig,
-        label=label,
-        verbose=verbose,
-        text_overlap_tol_px=float(overlap_tol_px))
+        fig, label=label, verbose=verbose, text_overlap_tol_px=float(overlap_tol_px)
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Generic drawing primitives (used by >=2 figure modules)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def compute_umap(latent, n_neighbors=15, min_dist=0.5):
     """Compute 2-D UMAP embedding from a latent matrix."""
     try:
         from umap import UMAP
-        return UMAP(n_neighbors=n_neighbors, min_dist=min_dist,
-                    random_state=42).fit_transform(latent.astype(np.float32))
+
+        return UMAP(n_neighbors=n_neighbors, min_dist=min_dist, random_state=42).fit_transform(
+            latent.astype(np.float32)
+        )
     except ImportError:
         import scanpy as sc
+
         adata_tmp = sc.AnnData(latent.astype(np.float32))
         sc.pp.neighbors(adata_tmp, use_rep="X", n_neighbors=n_neighbors)
         sc.tl.umap(adata_tmp, min_dist=min_dist)

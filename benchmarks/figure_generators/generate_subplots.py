@@ -57,18 +57,25 @@ GENERATORS = {
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Generate individual subplot PNGs for Python figure composition")
+        description="Generate individual subplot PNGs for Python figure composition"
+    )
     parser.add_argument("--series", required=True, choices=["dpmm"])
-    parser.add_argument("--figures", nargs="+", default=["all"],
-                        help="Which figures: 2 3 4 6 7, or 'all'")
+    parser.add_argument(
+        "--figures", nargs="+", default=["all"], help="Which figures: 2 3 4 6 7, or 'all'"
+    )
     parser.add_argument("--output-dir", default=None)
-    parser.add_argument("--per-seed", action="store_true",
-                        help="Figure 2: show per-seed data points (n≈60) "
-                             "instead of seed-averaged (n≈12)")
+    parser.add_argument(
+        "--per-seed",
+        action="store_true",
+        help="Figure 2: show per-seed data points (n≈60) instead of seed-averaged (n≈12)",
+    )
     args = parser.parse_args()
 
-    out_base = (Path(args.output_dir) if args.output_dir
-                else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots")
+    out_base = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots"
+    )
     out_base.mkdir(parents=True, exist_ok=True)
 
     figs = list(GENERATORS.keys()) if "all" in args.figures else args.figures
@@ -84,6 +91,7 @@ def main():
                 gen(args.series, out_base)
         except Exception as e:
             import traceback
+
             print(f"\n  ERROR generating Fig {fig_id} subplots: {e}")
             traceback.print_exc()
 

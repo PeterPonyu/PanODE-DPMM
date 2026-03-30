@@ -76,23 +76,23 @@ from benchmarks.model_registry import is_cuda_oom
 from utils.data import DataSplitter
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
-LATENT_DIM    = BASE_CONFIG.latent_dim
-LR            = BASE_CONFIG.lr
-BATCH_SIZE    = BASE_CONFIG.batch_size
-DEVICE        = BASE_CONFIG.device
-SEED          = BASE_CONFIG.seed
+LATENT_DIM = BASE_CONFIG.latent_dim
+LR = BASE_CONFIG.lr
+BATCH_SIZE = BASE_CONFIG.batch_size
+DEVICE = BASE_CONFIG.device
+SEED = BASE_CONFIG.seed
 VERBOSE_EVERY = BASE_CONFIG.verbose_every
-HVG_TOP       = BASE_CONFIG.hvg_top_genes
-MAX_CELLS     = BASE_CONFIG.max_cells
-DRE_K         = BASE_CONFIG.dre_k
+HVG_TOP = BASE_CONFIG.hvg_top_genes
+MAX_CELLS = BASE_CONFIG.max_cells
+DRE_K = BASE_CONFIG.dre_k
 
 # Output dirs
-EXT_DIR   = DEFAULT_OUTPUT_DIR / "external"
+EXT_DIR = DEFAULT_OUTPUT_DIR / "external"
 CACHE_DIR = DEFAULT_OUTPUT_DIR / "cache"
-OUT_DIRS  = {
-    "csv":     EXT_DIR / "csv",
-    "plots":   EXT_DIR / "plots",
-    "meta":    EXT_DIR / "meta",
+OUT_DIRS = {
+    "csv": EXT_DIR / "csv",
+    "plots": EXT_DIR / "plots",
+    "meta": EXT_DIR / "meta",
     "latents": EXT_DIR / "latents",
 }
 
@@ -110,8 +110,10 @@ def standardize_labels(adata, label_key):
 # Training wrapper for external models
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def train_external_model(model_name, model_cfg, splitter, device, data_type,
-                         verbose_every=50, dre_k=15):
+
+def train_external_model(
+    model_name, model_cfg, splitter, device, data_type, verbose_every=50, dre_k=15
+):
     """Train a single external model, compute metrics, return result dict.
 
     Mirrors the internal ``train_and_evaluate`` but works with the
@@ -123,17 +125,17 @@ def train_external_model(model_name, model_cfg, splitter, device, data_type,
         torch.cuda.reset_peak_memory_stats(device)
 
     start = time.time()
-    print(f"\n{'='*60}\nTraining External: {model_name}\n{'='*60}")
+    print(f"\n{'=' * 60}\nTraining External: {model_name}\n{'=' * 60}")
 
     try:
         factory = model_cfg["factory"]
-        params  = dict(model_cfg["params"])
-        fp      = dict(model_cfg.get("fit_params", {}))
+        params = dict(model_cfg["params"])
+        fp = dict(model_cfg.get("fit_params", {}))
 
-        epochs       = fp.get("epochs", 1000)
-        lr           = fp.get("lr", LR)
-        patience     = fp.get("patience", 100)
-        vb_every     = fp.get("verbose_every", verbose_every)
+        epochs = fp.get("epochs", 1000)
+        lr = fp.get("lr", LR)
+        patience = fp.get("patience", 100)
+        vb_every = fp.get("verbose_every", verbose_every)
 
         # Create model
         model = factory(input_dim=splitter.n_var, **params)
@@ -148,7 +150,8 @@ def train_external_model(model_name, model_cfg, splitter, device, data_type,
             device=str(device),
             patience=patience,
             verbose=1,
-            verbose_every=vb_every)
+            verbose_every=vb_every,
+        )
 
         epochs_trained = len(history.get("train_loss", [])) or epochs
         elapsed = time.time() - start
@@ -156,20 +159,17 @@ def train_external_model(model_name, model_cfg, splitter, device, data_type,
 
         peak_gpu_mb = 0.0
         if device.type == "cuda":
-            peak_gpu_mb = torch.cuda.max_memory_allocated(device) / (1024 ** 2)
+            peak_gpu_mb = torch.cuda.max_memory_allocated(device) / (1024**2)
 
         # Convergence diagnostics
         conv_diag = convergence_diagnostics(history, window=50)
 
         # Extract latent
-        latent_dict = model.extract_latent(
-            splitter.test_loader, device=str(device))
+        latent_dict = model.extract_latent(splitter.test_loader, device=str(device))
         latent = latent_dict["latent"]
 
         # Compute metrics
-        metrics = compute_metrics(
-            latent, splitter.labels_test,
-            data_type=data_type, dre_k=dre_k)
+        metrics = compute_metrics(latent, splitter.labels_test, data_type=data_type, dre_k=dre_k)
         diagnostics = compute_latent_diagnostics(latent)
         n_params = sum(p.numel() for p in model.parameters())
 
@@ -204,9 +204,14 @@ def train_external_model(model_name, model_cfg, splitter, device, data_type,
             torch.cuda.empty_cache()
             gc.collect()
             return train_external_model(
-                model_name, model_cfg, splitter,
-                torch.device("cpu"), data_type,
-                verbose_every, dre_k)
+                model_name,
+                model_cfg,
+                splitter,
+                torch.device("cpu"),
+                data_type,
+                verbose_every,
+                dre_k,
+            )
         elapsed = time.time() - start
         print(f"  ERROR ({model_name}): {str(exc)[:200]}")
         traceback.print_exc()
@@ -216,7 +221,9 @@ def train_external_model(model_name, model_cfg, splitter, device, data_type,
             "Time_s": elapsed,
             "Error": str(exc)[:300],
             "latent": None,
-            "NMI": np.nan, "ARI": np.nan, "ASW": np.nan,
+            "NMI": np.nan,
+            "ARI": np.nan,
+            "ASW": np.nan,
             "Epochs": model_cfg.get("fit_params", {}).get("epochs", 0),
             "EpochsTrained": 0,
         }
@@ -226,44 +233,56 @@ def train_external_model(model_name, model_cfg, splitter, device, data_type,
 # Per-dataset runner
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def run_dataset(ds_key, ds_info, selected_models, device, seed, no_plots):
     """Run external models on one dataset."""
-    print(f"\n{'#'*70}")
+    print(f"\n{'#' * 70}")
     print(f"# DATASET: {ds_key} — {ds_info['desc']}")
     print(f"# Path: {ds_info['path']}")
     print(f"# Data type: {ds_info['data_type']}")
-    print(f"{'#'*70}")
+    print(f"{'#' * 70}")
 
     adata = load_or_preprocess_adata(
-        ds_info["path"], max_cells=MAX_CELLS, hvg_top_genes=HVG_TOP,
-        seed=seed, cache_dir=str(CACHE_DIR), use_cache=True)
+        ds_info["path"],
+        max_cells=MAX_CELLS,
+        hvg_top_genes=HVG_TOP,
+        seed=seed,
+        cache_dir=str(CACHE_DIR),
+        use_cache=True,
+    )
     adata = standardize_labels(adata, ds_info["label_key"])
 
     splitter = DataSplitter(
-        adata=adata, layer="counts",
-        train_size=0.7, val_size=0.15, test_size=0.15,
-        batch_size=BATCH_SIZE, latent_dim=LATENT_DIM,
-        random_seed=seed, verbose=True)
+        adata=adata,
+        layer="counts",
+        train_size=0.7,
+        val_size=0.15,
+        test_size=0.15,
+        batch_size=BATCH_SIZE,
+        latent_dim=LATENT_DIM,
+        random_seed=seed,
+        verbose=True,
+    )
 
-    n_cells  = int(adata.n_obs)
-    n_genes  = int(adata.n_vars)
+    n_cells = int(adata.n_obs)
+    n_genes = int(adata.n_vars)
     n_labels = len(np.unique(splitter.labels)) if splitter.labels is not None else 0
     print(f"  Shape: {n_cells} cells × {n_genes} genes, {n_labels} labels")
 
     results, latents = [], {}
     for mname, mcfg in selected_models.items():
         r = train_external_model(
-            mname, mcfg, splitter, device,
-            ds_info["data_type"], VERBOSE_EVERY, DRE_K)
+            mname, mcfg, splitter, device, ds_info["data_type"], VERBOSE_EVERY, DRE_K
+        )
         if r.get("latent") is not None:
             latents[mname] = r.pop("latent")
         else:
             r.pop("latent", None)
-        r["Dataset"]  = ds_key
+        r["Dataset"] = ds_key
         r["DataType"] = ds_info["data_type"]
-        r["Cells"]    = n_cells
-        r["Genes"]    = n_genes
-        r["Labels"]   = n_labels
+        r["Cells"] = n_cells
+        r["Genes"] = n_genes
+        r["Labels"] = n_labels
         results.append(r)
         gc.collect()
         torch.cuda.empty_cache()
@@ -301,10 +320,14 @@ def run_dataset(ds_key, ds_info, selected_models, device, seed, no_plots):
         "data_path": ds_info["path"],
         "data_type": ds_info["data_type"],
         "label_key": ds_info["label_key"],
-        "n_cells": n_cells, "n_genes": n_genes, "n_labels": n_labels,
-        "lr": LR, "batch_size": BATCH_SIZE,
+        "n_cells": n_cells,
+        "n_genes": n_genes,
+        "n_labels": n_labels,
+        "lr": LR,
+        "batch_size": BATCH_SIZE,
         "latent_dim": LATENT_DIM,
-        "hvg": HVG_TOP, "max_cells": MAX_CELLS,
+        "hvg": HVG_TOP,
+        "max_cells": MAX_CELLS,
         "seed": seed,
         "models": df["Model"].tolist(),
     }
@@ -318,6 +341,7 @@ def run_dataset(ds_key, ds_info, selected_models, device, seed, no_plots):
 # ═══════════════════════════════════════════════════════════════════════════════
 # Comparison with internal best
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def load_internal_best():
     """Load best internal model results per dataset.
@@ -339,8 +363,7 @@ def load_internal_best():
             if any("DPMM" in m for m in models) or "dpmm" in series_vals:
                 if dpmm_file is None:
                     dpmm_file = f
-            if any("Pure-AE" in m for m in models) \
-               or "pure-ae" in series_vals:
+            if any("Pure-AE" in m for m in models) or "pure-ae" in series_vals:
                 if pure_file is None:
                     pure_file = f
         except Exception:
@@ -403,17 +426,21 @@ def print_comparison(external_df, internal_best_df):
 
         # Internal best
         for _, row in int_ds.iterrows():
-            print(f"  {row['Model']:<22} {row['Series']:<10} "
-                  f"{row.get('NMI', 0):>7.4f} {row.get('ARI', 0):>7.4f} "
-                  f"{row.get('ASW', 0):>7.4f}  ★")
+            print(
+                f"  {row['Model']:<22} {row['Series']:<10} "
+                f"{row.get('NMI', 0):>7.4f} {row.get('ARI', 0):>7.4f} "
+                f"{row.get('ASW', 0):>7.4f}  ★"
+            )
 
         # External models (sorted by NMI descending)
         ext_sorted = ext_ds.sort_values("NMI", ascending=False)
         for _, row in ext_sorted.iterrows():
             err_mark = " ✗" if pd.notna(row.get("Error")) else ""
-            print(f"  {row['Model']:<22} {'external':<10} "
-                  f"{row.get('NMI', 0):>7.4f} {row.get('ARI', 0):>7.4f} "
-                  f"{row.get('ASW', 0):>7.4f}{err_mark}")
+            print(
+                f"  {row['Model']:<22} {'external':<10} "
+                f"{row.get('NMI', 0):>7.4f} {row.get('ARI', 0):>7.4f} "
+                f"{row.get('ASW', 0):>7.4f}{err_mark}"
+            )
 
     # Aggregate ranking
     print("\n── Aggregate: Mean Metrics Across Datasets ──")
@@ -423,10 +450,12 @@ def print_comparison(external_df, internal_best_df):
     # Add internal bests
     all_rows = []
     for _, row in internal_best_df.iterrows():
-        all_rows.append({
-            "Model": f"{row['Model']} (best-{row['Series']})",
-            **{c: row.get(c, np.nan) for c in avail},
-        })
+        all_rows.append(
+            {
+                "Model": f"{row['Model']} (best-{row['Series']})",
+                **{c: row.get(c, np.nan) for c in avail},
+            }
+        )
     for mname, mrow in ext_mean.iterrows():
         all_rows.append({"Model": mname, **{c: mrow[c] for c in avail}})
 
@@ -437,8 +466,7 @@ def print_comparison(external_df, internal_best_df):
         print(f"  {'Model':<35} " + " ".join(f"{c:>7}" for c in avail) + f" {'Score':>7}")
         print("  " + "-" * (35 + 8 * (len(avail) + 1)))
         for _, row in agg.iterrows():
-            vals = " ".join(f"{row[c]:>7.4f}" if pd.notna(row[c]) else f"{'N/A':>7}"
-                           for c in avail)
+            vals = " ".join(f"{row[c]:>7.4f}" if pd.notna(row[c]) else f"{'N/A':>7}" for c in avail)
             score = f"{row['Score']:>7.4f}" if pd.notna(row.get("Score")) else f"{'N/A':>7}"
             print(f"  {row['Model']:<35} {vals} {score}")
 
@@ -447,21 +475,28 @@ def print_comparison(external_df, internal_best_df):
 # CLI
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def main():
     ap = argparse.ArgumentParser(
         description="External model benchmark (cross-dataset)",
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--datasets", nargs="+", default=None,
-                    choices=list(DATASET_REGISTRY.keys()),
-                    help="Which datasets to run (default: all).")
-    ap.add_argument("--models", nargs="+", default=None,
-                    help="External models to run (default: all).")
-    ap.add_argument("--skip", nargs="+", default=None,
-                    help="External models to skip.")
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    ap.add_argument(
+        "--datasets",
+        nargs="+",
+        default=None,
+        choices=list(DATASET_REGISTRY.keys()),
+        help="Which datasets to run (default: all).",
+    )
+    ap.add_argument(
+        "--models", nargs="+", default=None, help="External models to run (default: all)."
+    )
+    ap.add_argument("--skip", nargs="+", default=None, help="External models to skip.")
     ap.add_argument("--seed", type=int, default=SEED)
     ap.add_argument("--no-plots", action="store_true")
-    ap.add_argument("--compare", action="store_true",
-                    help="Compare with best internal DPMM variants.")
+    ap.add_argument(
+        "--compare", action="store_true", help="Compare with best internal DPMM variants."
+    )
     args = ap.parse_args()
 
     set_global_seed(args.seed)
@@ -472,8 +507,7 @@ def main():
 
     # Select models
     if args.models:
-        selected_models = {k: v for k, v in EXTERNAL_MODELS.items()
-                          if k in args.models}
+        selected_models = {k: v for k, v in EXTERNAL_MODELS.items() if k in args.models}
     else:
         selected_models = dict(EXTERNAL_MODELS)
 
@@ -503,8 +537,7 @@ def main():
     all_dfs = []
     for ds_key in ds_keys:
         ds_info = DATASET_REGISTRY[ds_key]
-        df = run_dataset(ds_key, ds_info, selected_models, device,
-                        args.seed, args.no_plots)
+        df = run_dataset(ds_key, ds_info, selected_models, device, args.seed, args.no_plots)
         all_dfs.append(df)
 
     # Combined results
@@ -529,17 +562,21 @@ def main():
             continue
         dt = DATASET_REGISTRY[ds_key]["data_type"]
         print(f"\n── {ds_key} ({dt}) ──")
-        print(f"  {'Model':<18} {'NMI':>7} {'ARI':>7} {'ASW':>7} {'DAV':>7} "
-              f"{'s/ep':>6} {'GPU':>6} {'Params':>10} {'Error'}")
+        print(
+            f"  {'Model':<18} {'NMI':>7} {'ARI':>7} {'ASW':>7} {'DAV':>7} "
+            f"{'s/ep':>6} {'GPU':>6} {'Params':>10} {'Error'}"
+        )
         print("  " + "-" * 95)
         for _, r in sdf.iterrows():
             err = str(r.get("Error", ""))[:30] if pd.notna(r.get("Error")) else ""
-            print(f"  {r.get('Model','?'):<18} "
-                  f"{r.get('NMI',0):>7.4f} {r.get('ARI',0):>7.4f} "
-                  f"{r.get('ASW',0):>7.4f} {r.get('DAV',0):>7.4f} "
-                  f"{r.get('SecPerEpoch',0):>6.2f} "
-                  f"{r.get('PeakGPU_MB',0):>6.0f} "
-                  f"{r.get('NumParams',0):>10,} {err}")
+            print(
+                f"  {r.get('Model', '?'):<18} "
+                f"{r.get('NMI', 0):>7.4f} {r.get('ARI', 0):>7.4f} "
+                f"{r.get('ASW', 0):>7.4f} {r.get('DAV', 0):>7.4f} "
+                f"{r.get('SecPerEpoch', 0):>6.2f} "
+                f"{r.get('PeakGPU_MB', 0):>6.0f} "
+                f"{r.get('NumParams', 0):>10,} {err}"
+            )
 
     # Cross-dataset ranking
     if len(ds_keys) > 1 and "Dataset" in combined.columns:
@@ -549,7 +586,7 @@ def main():
             sdf = combined[combined["Dataset"] == ds_key].copy()
             for mc in metric_cols:
                 if mc in sdf.columns:
-                    asc = (mc == "DAV")
+                    asc = mc == "DAV"
                     sdf[f"{mc}_rank"] = sdf[mc].rank(ascending=asc)
             rank_parts.append(sdf)
         rank_df = pd.concat(rank_parts)
@@ -558,7 +595,9 @@ def main():
             avg_ranks = rank_df.groupby("Model")[rank_cols].mean()
             avg_ranks["AvgRank"] = avg_ranks.mean(axis=1)
             avg_ranks = avg_ranks.sort_values("AvgRank")
-            print(f"  {'Model':<18} " + " ".join(f"{c:>10}" for c in rank_cols) + f" {'AvgRank':>10}")
+            print(
+                f"  {'Model':<18} " + " ".join(f"{c:>10}" for c in rank_cols) + f" {'AvgRank':>10}"
+            )
             print("  " + "-" * (18 + 11 * (len(rank_cols) + 1)))
             for mname, row in avg_ranks.iterrows():
                 vals = " ".join(f"{row[c]:>10.2f}" for c in rank_cols)

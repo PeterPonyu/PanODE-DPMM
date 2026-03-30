@@ -32,7 +32,9 @@ BIO_RESULTS = BIO_RESULTS_DIR
 
 REPRESENTATIVE_DATASETS = ["setty", "endo", "dentate"]
 ALL_MODELS = [
-    "DPMM-Base", "DPMM-Contrastive", "DPMM-Transformer",
+    "DPMM-Base",
+    "DPMM-Contrastive",
+    "DPMM-Transformer",
 ]
 
 
@@ -42,8 +44,7 @@ def compute_all(datasets=None, models=None, force=False):
     try:
         from benchmarks.biological_validation import load_data_with_genes
     except ImportError:
-        print("  Cannot import load_data_with_genes. "
-              "Run from the repository root.")
+        print("  Cannot import load_data_with_genes. Run from the repository root.")
         return
 
     try:
@@ -71,14 +72,12 @@ def compute_all(datasets=None, models=None, force=False):
             # Check required inputs — check root AND model subdir
             latent_path = BIO_RESULTS / f"{tag}_latent_data.npz"
             if not latent_path.exists():
-                latent_path = (BIO_RESULTS / model.replace("/", "_")
-                               / f"{tag}_latent_data.npz")
+                latent_path = BIO_RESULTS / model.replace("/", "_") / f"{tag}_latent_data.npz"
             if not latent_path.exists():
                 continue
             corr_path = BIO_RESULTS / f"{tag}_correlation.npz"
             if not corr_path.exists():
-                corr_path = (BIO_RESULTS / model.replace("/", "_")
-                             / f"{tag}_correlation.npz")
+                corr_path = BIO_RESULTS / model.replace("/", "_") / f"{tag}_correlation.npz"
             if not corr_path.exists():
                 continue
 
@@ -86,26 +85,27 @@ def compute_all(datasets=None, models=None, force=False):
             if splitter is None:
                 try:
                     splitter, gene_names = load_data_with_genes(
-                        dataset, seed=42, max_cells=3000, hvg=3000)
+                        dataset, seed=42, max_cells=3000, hvg=3000
+                    )
                     X_test = splitter.X_test_norm  # [N, G]
-                    print(f"\n  Dataset {dataset}: {X_test.shape[0]} cells, "
-                          f"{X_test.shape[1]} genes")
+                    print(
+                        f"\n  Dataset {dataset}: {X_test.shape[0]} cells, {X_test.shape[1]} genes"
+                    )
                 except Exception as e:
                     print(f"  Could not load dataset {dataset}: {e}")
                     break
 
             ld = np.load(latent_path, allow_pickle=True)
-            latent = ld["latent"]       # [N, K]
-            labels = ld.get("labels")   # [N]
+            latent = ld["latent"]  # [N, K]
+            labels = ld.get("labels")  # [N]
 
             cd = np.load(corr_path, allow_pickle=True)
-            corr = cd["correlation"]    # [K, G]
+            corr = cd["correlation"]  # [K, G]
             corr_genes = cd.get("gene_names")
 
             # Verify dimensions
             if latent.shape[0] != X_test.shape[0]:
-                print(f"    {tag}: latent {latent.shape[0]} != X_test "
-                      f"{X_test.shape[0]} — skipping")
+                print(f"    {tag}: latent {latent.shape[0]} != X_test {X_test.shape[0]} — skipping")
                 continue
 
             K = corr.shape[0]
@@ -140,33 +140,33 @@ def compute_all(datasets=None, models=None, force=False):
             )
             # Per-cell expression of top genes
             top_gene_expr = X_test[:, top_gene_idx].copy()  # [N, K]
-            if hasattr(top_gene_expr, 'toarray'):
+            if hasattr(top_gene_expr, "toarray"):
                 top_gene_expr = top_gene_expr.toarray()
             top_gene_expr = np.asarray(top_gene_expr, dtype=np.float32)
 
             # Compute UMAP from latent
-            reducer = UMAP(n_components=2, n_neighbors=15,
-                           min_dist=0.3, random_state=42)
+            reducer = UMAP(n_components=2, n_neighbors=15, min_dist=0.3, random_state=42)
             umap_emb = reducer.fit_transform(latent).astype(np.float32)
 
-            np.savez(out_path,
-                     umap_emb=umap_emb,
-                     latent=latent,
-                     top_gene_expr=top_gene_expr,
-                     top_gene_names=top_gene_names,
-                     labels=labels)
-            print(f"    {tag}: saved  umap={umap_emb.shape}  "
-                  f"genes={top_gene_names.tolist()}")
+            np.savez(
+                out_path,
+                umap_emb=umap_emb,
+                latent=latent,
+                top_gene_expr=top_gene_expr,
+                top_gene_names=top_gene_names,
+                labels=labels,
+            )
+            print(f"    {tag}: saved  umap={umap_emb.shape}  genes={top_gene_names.tolist()}")
 
     print("\n  Done.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Pre-compute UMAP + gene expression data for Figure 6")
+        description="Pre-compute UMAP + gene expression data for Figure 6"
+    )
     parser.add_argument("--datasets", nargs="*", default=None)
     parser.add_argument("--models", nargs="*", default=None)
-    parser.add_argument("--force", action="store_true",
-                        help="Re-compute even if output exists")
+    parser.add_argument("--force", action="store_true", help="Re-compute even if output exists")
     args = parser.parse_args()
     compute_all(args.datasets, args.models, args.force)

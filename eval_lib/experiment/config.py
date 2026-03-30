@@ -58,9 +58,9 @@ class ExperimentConfig:
     latent_dim: int = 10
     batch_size: int = 128
     seed: int = 42
-    patience: int = 9999          # effectively disabled for fixed-epoch runs
+    patience: int = 9999  # effectively disabled for fixed-epoch runs
     verbose_every: int = 25
-    dre_k: int = 15               # k for DRE k-nearest-neighbour quality
+    dre_k: int = 15  # k for DRE k-nearest-neighbour quality
     output_root: Path = Path("experiments/results")
     description: str = ""
 

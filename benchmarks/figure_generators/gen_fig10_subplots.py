@@ -76,64 +76,86 @@ from src.visualization import bind_figure_region, save_with_vcd, style_axes
 
 # DPMM series: warm red / orange / earth tones
 EXTERNAL_MODEL_COLORS_DPMM = {
-    "CellBLAST":     "#B2182B",   # dark red
-    "GMVAE":         "#D6604D",   # salmon red
-    "SCALEX":        "#F4A582",   # peach
-    "scDiffusion":   "#FDDBC7",   # light peach
-    "siVAE":         "#FEE08B",   # light gold
-    "CLEAR":         "#E08214",   # amber
-    "scDAC":         "#D73027",   # bright red
-    "scDeepCluster": "#A50026",   # deep red
-    "scDHMap":       "#8C510A",   # brown
-    "scGNN":         "#BF812D",   # tan
-    "scSMD":         "#DFC27D",   # sand
+    "CellBLAST": "#B2182B",  # dark red
+    "GMVAE": "#D6604D",  # salmon red
+    "SCALEX": "#F4A582",  # peach
+    "scDiffusion": "#FDDBC7",  # light peach
+    "siVAE": "#FEE08B",  # light gold
+    "CLEAR": "#E08214",  # amber
+    "scDAC": "#D73027",  # bright red
+    "scDeepCluster": "#A50026",  # deep red
+    "scDHMap": "#8C510A",  # brown
+    "scGNN": "#BF812D",  # tan
+    "scSMD": "#DFC27D",  # sand
 }
 
 # Reference model colors (internal best)
 REFERENCE_COLORS = {
-    "Best-DPMM":  "#E6550D",     # warm orange (DPMM family)
+    "Best-DPMM": "#E6550D",  # warm orange (DPMM family)
 }
 
 # Internal-only comparison: all 6 models (3 prior + 3 pure)
 INTERNAL_MODEL_ORDER_DPMM = [
-    "DPMM-Base", "DPMM-Transformer", "DPMM-Contrastive",
-    "Pure-AE", "Pure-Transformer-AE", "Pure-Contrastive-AE",
+    "DPMM-Base",
+    "DPMM-Transformer",
+    "DPMM-Contrastive",
+    "Pure-AE",
+    "Pure-Transformer-AE",
+    "Pure-Contrastive-AE",
 ]
 INTERNAL_SHORT_NAMES = {
-    "DPMM-Base": "D-B", "DPMM-Transformer": "D-T", "DPMM-Contrastive": "D-C",
-    "Pure-AE": "P-AE", "Pure-Transformer-AE": "P-TAE", "Pure-Contrastive-AE": "P-CAE",
+    "DPMM-Base": "D-B",
+    "DPMM-Transformer": "D-T",
+    "DPMM-Contrastive": "D-C",
+    "Pure-AE": "P-AE",
+    "Pure-Transformer-AE": "P-TAE",
+    "Pure-Contrastive-AE": "P-CAE",
 }
 INTERNAL_COLORS = {
-    "DPMM-Base": "#E6550D", "DPMM-Transformer": "#E6550D", "DPMM-Contrastive": "#E6550D",
-    "Pure-AE": "#9ECAE1", "Pure-Transformer-AE": "#9ECAE1", "Pure-Contrastive-AE": "#9ECAE1",
+    "DPMM-Base": "#E6550D",
+    "DPMM-Transformer": "#E6550D",
+    "DPMM-Contrastive": "#E6550D",
+    "Pure-AE": "#9ECAE1",
+    "Pure-Transformer-AE": "#9ECAE1",
+    "Pure-Contrastive-AE": "#9ECAE1",
 }
 
 # Active palette holder — set by generate() based on --series
 _active_ext_colors = EXTERNAL_MODEL_COLORS_DPMM  # default
 
 EXTERNAL_MODEL_ORDER = [
-    "scDHMap", "CLEAR", "scDAC", "scDeepCluster", "scGNN",
-    "siVAE", "scSMD", "scDiffusion", "CellBLAST", "SCALEX", "GMVAE",
+    "scDHMap",
+    "CLEAR",
+    "scDAC",
+    "scDeepCluster",
+    "scGNN",
+    "siVAE",
+    "scSMD",
+    "scDiffusion",
+    "CellBLAST",
+    "SCALEX",
+    "GMVAE",
 ]
 
 EXTERNAL_SHORT_NAMES = {
-    "CellBLAST":     "CB",
-    "GMVAE":         "GM",
-    "SCALEX":        "SX",
-    "scDiffusion":   "sD",
-    "siVAE":         "si",
-    "CLEAR":         "CL",
-    "scDAC":         "DC",
+    "CellBLAST": "CB",
+    "GMVAE": "GM",
+    "SCALEX": "SX",
+    "scDiffusion": "sD",
+    "siVAE": "si",
+    "CLEAR": "CL",
+    "scDAC": "DC",
     "scDeepCluster": "DP",
-    "scDHMap":       "DH",
-    "scGNN":         "GN",
-    "scSMD":         "SM",
-    "Best-DPMM":     "B-D",
+    "scDHMap": "DH",
+    "scGNN": "GN",
+    "scSMD": "SM",
+    "Best-DPMM": "B-D",
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Data loading
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def _load_external_results():
     """Load the combined external model benchmark CSV.
@@ -142,12 +164,12 @@ def _load_external_results():
     than blindly selecting the latest file by timestamp.
     """
     csv_dir = _RESULTS_DIR / "external" / "csv"
-    cand = sorted(csv_dir.glob("results_combined_*.csv"),
-                  key=lambda p: p.name, reverse=True)
+    cand = sorted(csv_dir.glob("results_combined_*.csv"), key=lambda p: p.name, reverse=True)
     if not cand:
         raise FileNotFoundError(
             f"No external benchmark CSV in {csv_dir}. "
-            f"Run benchmarks/runners/benchmark_external.py first.")
+            f"Run benchmarks/runners/benchmark_external.py first."
+        )
     # Prefer the CSV that has the 11 expected external models
     expected = set(EXTERNAL_MODEL_ORDER)
     for c in cand:
@@ -301,6 +323,7 @@ def _build_combined_matrix(ext_df, int_df, metric_col, ref_model="Best-DPMM"):
 # Subplot generators
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _get_color(model_name):
     """Get color for a model name (external or reference)."""
     global _active_ext_colors
@@ -309,8 +332,7 @@ def _get_color(model_name):
     return _active_ext_colors.get(model_name, "#999999")
 
 
-def gen_ext_boxplot(ext_df, int_df, metric_col, metric_label, out_path,
-                    ref_model="Best-DPMM"):
+def gen_ext_boxplot(ext_df, int_df, metric_col, metric_label, out_path, ref_model="Best-DPMM"):
     """Generate one grouped boxplot: external models + best DPMM.
 
     Internal reference model now shows seed-level variance (up to 60
@@ -318,7 +340,8 @@ def gen_ext_boxplot(ext_df, int_df, metric_col, metric_label, out_path,
     available.
     """
     data_per_model, all_models, datasets = _build_combined_matrix(
-        ext_df, int_df, metric_col, ref_model=ref_model)
+        ext_df, int_df, metric_col, ref_model=ref_model
+    )
     # Clip extreme outliers (e.g. CAL artefacts) to prevent y-axis distortion
     data_per_model = clip_extreme_outliers(data_per_model)
     n_models = len(all_models)
@@ -334,9 +357,14 @@ def gen_ext_boxplot(ext_df, int_df, metric_col, metric_label, out_path,
     ax = layout.add_axes(fig)
     style_axes(ax)
 
-    bp = ax.boxplot(data_per_model, vert=True, patch_artist=True,
-                    widths=0.50, showfliers=False,
-                    medianprops=dict(color="black", lw=LINE_WIDTH_MEDIAN))
+    bp = ax.boxplot(
+        data_per_model,
+        vert=True,
+        patch_artist=True,
+        widths=0.50,
+        showfliers=False,
+        medianprops={"color": "black", "lw": LINE_WIDTH_MEDIAN},
+    )
 
     for j, patch in enumerate(bp["boxes"]):
         c = _get_color(all_models[j])
@@ -351,15 +379,21 @@ def gen_ext_boxplot(ext_df, int_df, metric_col, metric_label, out_path,
         if len(vals) == 0:
             continue
         jitter = rng.uniform(-0.12, 0.12, size=len(vals))
-        ax.scatter(j + 1 + jitter, vals, s=SCATTER_SIZE_BOXPLOT * 0.8,
-                   c=[_get_color(all_models[j])],
-                   edgecolors="black", linewidths=0.15, zorder=5, alpha=0.80)
+        ax.scatter(
+            j + 1 + jitter,
+            vals,
+            s=SCATTER_SIZE_BOXPLOT * 0.8,
+            c=[_get_color(all_models[j])],
+            edgecolors="black",
+            linewidths=0.15,
+            zorder=5,
+            alpha=0.80,
+        )
 
     # Highlight best-performing model with red border
     medians = [np.nanmedian(d) if len(d) else np.nan for d in data_per_model]
     if any(pd.notna(m) for m in medians):
-        best_idx = int(np.nanargmax(medians) if higher_better
-                       else np.nanargmin(medians))
+        best_idx = int(np.nanargmax(medians) if higher_better else np.nanargmin(medians))
         bp["boxes"][best_idx].set_edgecolor("red")
         bp["boxes"][best_idx].set_linewidth(1.3)
 
@@ -367,18 +401,18 @@ def gen_ext_boxplot(ext_df, int_df, metric_col, metric_label, out_path,
     ax.axvline(x=1.5, color="#CCCCCC", ls="--", lw=0.6, zorder=0)
 
     ax.set_xticks(range(1, n_models + 1))
-    tick_fs = FONTSIZE_TICK                    # compact tick labels
+    tick_fs = FONTSIZE_TICK  # compact tick labels
     ax.set_xticklabels(short, fontsize=tick_fs, rotation=90, ha="center")
-    ax.set_title(metric_label, fontsize=FONTSIZE_TITLE, pad=3,
-                 loc="left", fontweight="normal")
+    ax.set_title(metric_label, fontsize=FONTSIZE_TITLE, pad=3, loc="left", fontweight="normal")
     ax.tick_params(labelsize=tick_fs)
     ax.grid(axis="y", alpha=0.2, lw=0.4)
-    fig.subplots_adjust(bottom=0.40)          # room for rotated labels
+    fig.subplots_adjust(bottom=0.40)  # room for rotated labels
 
     # Significance stars (external models vs internal reference)
     series = "dpmm"
-    draw_external_significance_stars(ax, all_models, metric_col, series,
-                                     data_per_model=data_per_model)
+    draw_external_significance_stars(
+        ax, all_models, metric_col, series, data_per_model=data_per_model
+    )
 
     # y-axis padding + prune upper tick to prevent VCD truncation warnings
     ymin, ymax = ax.get_ylim()
@@ -389,7 +423,8 @@ def gen_ext_boxplot(ext_df, int_df, metric_col, metric_label, out_path,
     else:
         ax.set_ylim(ymin - pad_y, ymax + pad_y * 0.3)
     from matplotlib.ticker import MaxNLocator
-    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', prune='both'))
+
+    ax.yaxis.set_major_locator(MaxNLocator(nbins="auto", prune="both"))
 
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
@@ -413,9 +448,14 @@ def gen_internal_boxplot(int_df, metric_col, metric_label, out_path, series="dpm
     ax = layout.add_axes(fig)
     style_axes(ax)
 
-    bp = ax.boxplot(data_per_model, vert=True, patch_artist=True,
-                    widths=0.55, showfliers=False,
-                    medianprops=dict(color="black", lw=LINE_WIDTH_MEDIAN))
+    bp = ax.boxplot(
+        data_per_model,
+        vert=True,
+        patch_artist=True,
+        widths=0.55,
+        showfliers=False,
+        medianprops={"color": "black", "lw": LINE_WIDTH_MEDIAN},
+    )
     for j, patch in enumerate(bp["boxes"]):
         c = INTERNAL_COLORS.get(all_models[j], "#999999")
         patch.set_facecolor(c)
@@ -429,9 +469,16 @@ def gen_internal_boxplot(int_df, metric_col, metric_label, out_path, series="dpm
         if len(vals) == 0:
             continue
         jitter = rng.uniform(-0.10, 0.10, size=len(vals))
-        ax.scatter(j + 1 + jitter, vals, s=SCATTER_SIZE_BOXPLOT * 0.8,
-                   c=[INTERNAL_COLORS.get(all_models[j], "#999999")],
-                   edgecolors="black", linewidths=0.15, zorder=5, alpha=0.80)
+        ax.scatter(
+            j + 1 + jitter,
+            vals,
+            s=SCATTER_SIZE_BOXPLOT * 0.8,
+            c=[INTERNAL_COLORS.get(all_models[j], "#999999")],
+            edgecolors="black",
+            linewidths=0.15,
+            zorder=5,
+            alpha=0.80,
+        )
 
     medians = [np.nanmedian(d) if len(d) else np.nan for d in data_per_model]
     if any(pd.notna(m) for m in medians):
@@ -454,7 +501,8 @@ def gen_internal_boxplot(int_df, metric_col, metric_label, out_path, series="dpm
     else:
         ax.set_ylim(ymin - pad_y, ymax + pad_y * 0.3)
     from matplotlib.ticker import MaxNLocator
-    ax.yaxis.set_major_locator(MaxNLocator(nbins='auto', prune='both'))
+
+    ax.yaxis.set_major_locator(MaxNLocator(nbins="auto", prune="both"))
 
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
@@ -468,7 +516,7 @@ def gen_ranking_bar(ext_df, int_df, out_path, ref_model="Best-DPMM"):
     """
     # 4-metric composite: NMI, ARI, ASW, DAV (min-max normalised)
     RANKING_METRICS = [
-        ("NMI", True),   # higher-is-better
+        ("NMI", True),  # higher-is-better
         ("ARI", True),
         ("ASW", True),
         ("DAV", False),  # Davies-Bouldin: lower-is-better → inverted
@@ -499,8 +547,7 @@ def gen_ranking_bar(ext_df, int_df, out_path, ref_model="Best-DPMM"):
 
     scores = []
     for m in all_models_order:
-        scores.append(normed.loc[m, "_composite"] if m in normed.index
-                      else np.nan)
+        scores.append(normed.loc[m, "_composite"] if m in normed.index else np.nan)
 
     short = [EXTERNAL_SHORT_NAMES.get(m, m) for m in all_models_order]
     colors = [_get_color(m) for m in all_models_order]
@@ -514,9 +561,9 @@ def gen_ranking_bar(ext_df, int_df, out_path, ref_model="Best-DPMM"):
 
     n_bars = len(sorted_short)
     fig_w = CONTAINER_CSS_PX * DPR / SUBPLOT_DPI
-    fig_h = max(0.30 * n_bars, 2.5)          # taller bars for readability
+    fig_h = max(0.30 * n_bars, 2.5)  # taller bars for readability
 
-    _TICK_SM = max(FONTSIZE_TICK, 7.5)        # slightly larger ticks
+    _TICK_SM = max(FONTSIZE_TICK, 7.5)  # slightly larger ticks
     _LABEL_SM = max(FONTSIZE_LABEL, 8.0)
     _TITLE_SM = max(FONTSIZE_TITLE, 8.5)
 
@@ -528,31 +575,47 @@ def gen_ranking_bar(ext_df, int_df, out_path, ref_model="Best-DPMM"):
 
     style_axes(ax)
 
-    bars = ax.barh(range(n_bars), sorted_scores,
-                   color=sorted_colors, edgecolor="gray", linewidth=0.4,
-                   alpha=0.80, height=0.55)
+    bars = ax.barh(
+        range(n_bars),
+        sorted_scores,
+        color=sorted_colors,
+        edgecolor="gray",
+        linewidth=0.4,
+        alpha=0.80,
+        height=0.55,
+    )
 
     # Highlight internal references
     for i, m in enumerate(sorted_models):
         if m in REFERENCE_COLORS:
             bars[i].set_edgecolor("#333333")
             bars[i].set_linewidth(1.0)
-            ax.text(sorted_scores[i] + 0.005, i, "\u2605",
-                    va="center", ha="left", fontsize=_TICK_SM,
-                    color="#333333")
+            ax.text(
+                sorted_scores[i] + 0.005,
+                i,
+                "\u2605",
+                va="center",
+                ha="left",
+                fontsize=_TICK_SM,
+                color="#333333",
+            )
 
     ax.set_yticks(range(n_bars))
     ax.set_yticklabels(sorted_short, fontsize=_TICK_SM)
     metric_label = "NMI+ARI+ASW+\u0394DAV"
-    ax.set_xlabel(f"Composite Score ({metric_label})",
-                  fontsize=_LABEL_SM)
-    ax.set_title("Aggregate Ranking (4 metrics, norm.)",
-                 fontsize=_TITLE_SM, pad=2,
-                 loc="left", fontweight="normal")
+    ax.set_xlabel(f"Composite Score ({metric_label})", fontsize=_LABEL_SM)
+    ax.set_title(
+        "Aggregate Ranking (4 metrics, norm.)",
+        fontsize=_TITLE_SM,
+        pad=2,
+        loc="left",
+        fontweight="normal",
+    )
     ax.invert_yaxis()
     ax.set_xlim(0, 1.02)
     import matplotlib.ticker as mtk
-    ax.xaxis.set_major_locator(mtk.MaxNLocator(nbins='auto', prune='both'))
+
+    ax.xaxis.set_major_locator(mtk.MaxNLocator(nbins="auto", prune="both"))
     ax.tick_params(axis="x", labelsize=_TICK_SM)
     ax.grid(axis="x", alpha=0.2, lw=0.4)
     fig.subplots_adjust(left=0.16, bottom=0.14)
@@ -590,8 +653,18 @@ def gen_legend_strip(out_path, ref_model="Best-DPMM"):
     labels_list.append("Internal:")
     for name, c in ref_items:
         handles.append(
-            plt.Line2D([0], [0], marker="s", ls="", color=c, markersize=7,
-                       markeredgecolor="gray", markeredgewidth=0.3, alpha=0.80))
+            plt.Line2D(
+                [0],
+                [0],
+                marker="s",
+                ls="",
+                color=c,
+                markersize=7,
+                markeredgecolor="gray",
+                markeredgewidth=0.3,
+                alpha=0.80,
+            )
+        )
         labels_list.append(name)
 
     # Group label: External baselines
@@ -599,15 +672,32 @@ def gen_legend_strip(out_path, ref_model="Best-DPMM"):
     labels_list.append("External:")
     for name, c in ext_items:
         handles.append(
-            plt.Line2D([0], [0], marker="s", ls="", color=c, markersize=7,
-                       markeredgecolor="gray", markeredgewidth=0.3, alpha=0.80))
+            plt.Line2D(
+                [0],
+                [0],
+                marker="s",
+                ls="",
+                color=c,
+                markersize=7,
+                markeredgecolor="gray",
+                markeredgewidth=0.3,
+                alpha=0.80,
+            )
+        )
         labels_list.append(name)
 
     _leg_fs = max(FONTSIZE_LEGEND, 12)
-    ax.legend(handles, labels_list, loc="center",
-              ncol=min(len(handles), 7),
-              fontsize=_leg_fs, frameon=False,
-              handletextpad=0.2, columnspacing=0.4, markerscale=1.0)
+    ax.legend(
+        handles,
+        labels_list,
+        loc="center",
+        ncol=min(len(handles), 7),
+        fontsize=_leg_fs,
+        frameon=False,
+        handletextpad=0.2,
+        columnspacing=0.4,
+        markerscale=1.0,
+    )
 
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
@@ -616,26 +706,17 @@ def gen_legend_strip(out_path, ref_model="Best-DPMM"):
 # Workflow steps for Figure 10
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _workflow_steps(series):
     """Return series-specific workflow steps for Panel A."""
     ref_label = "Best-DPMM"
-    ref_desc  = "DPMM series"
+    ref_desc = "DPMM series"
     return [
-        {"label": "11 External Models",
-         "sub": "CellBLAST · GMVAE · …",
-         "icon": "train"},
-        {"label": "12 scRNA-seq",
-         "sub": "datasets",
-         "icon": "cells"},
-        {"label": "Unified Eval",
-         "sub": "NMI · ARI · ASW · DAV",
-         "icon": "metrics"},
-        {"label": f"vs {ref_label}",
-         "sub": ref_desc,
-         "icon": "compare"},
-        {"label": "Benchmark Report",
-         "sub": "ranking · boxplots",
-         "icon": "evaluate"},
+        {"label": "11 External Models", "sub": "CellBLAST · GMVAE · …", "icon": "train"},
+        {"label": "12 scRNA-seq", "sub": "datasets", "icon": "cells"},
+        {"label": "Unified Eval", "sub": "NMI · ARI · ASW · DAV", "icon": "metrics"},
+        {"label": f"vs {ref_label}", "sub": ref_desc, "icon": "compare"},
+        {"label": "Benchmark Report", "sub": "ranking · boxplots", "icon": "evaluate"},
     ]
 
 
@@ -660,8 +741,9 @@ EFFICIENCY_METRICS_FIG10 = [
 ]
 
 
-def gen_ext_boxplot_compact(ext_df, int_df, metric_col, metric_label,
-                            out_path, higher_better=True, ref_model="Best-DPMM"):
+def gen_ext_boxplot_compact(
+    ext_df, int_df, metric_col, metric_label, out_path, higher_better=True, ref_model="Best-DPMM"
+):
     """Generate a compact boxplot for extended metrics (8-col grid style).
 
     Similar to gen_ext_boxplot but uses a smaller figsize matching the
@@ -669,16 +751,24 @@ def gen_ext_boxplot_compact(ext_df, int_df, metric_col, metric_label,
     internal reference model matching the active series.
     """
     data_per_model, all_models, datasets = _build_combined_matrix(
-        ext_df, int_df, metric_col, ref_model=ref_model)
+        ext_df, int_df, metric_col, ref_model=ref_model
+    )
     # Clip extreme outliers to prevent y-axis distortion
     data_per_model = clip_extreme_outliers(data_per_model)
     n_models = len(all_models)
     # Even shorter names for the compact 8-col grid
     _COMPACT_NAMES = {
-        "CellBLAST": "CB", "GMVAE": "GM", "SCALEX": "SX",
-        "scDiffusion": "sD", "siVAE": "si", "CLEAR": "CL",
-        "scDAC": "DC", "scDeepCluster": "DP", "scDHMap": "DH",
-        "scGNN": "GN", "scSMD": "SM",
+        "CellBLAST": "CB",
+        "GMVAE": "GM",
+        "SCALEX": "SX",
+        "scDiffusion": "sD",
+        "siVAE": "si",
+        "CLEAR": "CL",
+        "scDAC": "DC",
+        "scDeepCluster": "DP",
+        "scDHMap": "DH",
+        "scGNN": "GN",
+        "scSMD": "SM",
         "Best-DPMM": "B-D",
     }
     short = [_COMPACT_NAMES.get(m, m[:4]) for m in all_models]
@@ -690,9 +780,14 @@ def gen_ext_boxplot_compact(ext_df, int_df, metric_col, metric_label,
     ax = layout.add_axes(fig)
     style_axes(ax)
 
-    bp = ax.boxplot(data_per_model, vert=True, patch_artist=True,
-                    widths=0.50, showfliers=False,
-                    medianprops=dict(color="black", lw=LINE_WIDTH_MEDIAN))
+    bp = ax.boxplot(
+        data_per_model,
+        vert=True,
+        patch_artist=True,
+        widths=0.50,
+        showfliers=False,
+        medianprops={"color": "black", "lw": LINE_WIDTH_MEDIAN},
+    )
 
     for j, patch in enumerate(bp["boxes"]):
         c = _get_color(all_models[j])
@@ -707,15 +802,21 @@ def gen_ext_boxplot_compact(ext_df, int_df, metric_col, metric_label,
         if len(vals) == 0:
             continue
         jitter = rng.uniform(-0.10, 0.10, size=len(vals))
-        ax.scatter(j + 1 + jitter, vals, s=SCATTER_SIZE_BOXPLOT * 0.5,
-                   c=[_get_color(all_models[j])],
-                   edgecolors="black", linewidths=0.10, zorder=5, alpha=0.75)
+        ax.scatter(
+            j + 1 + jitter,
+            vals,
+            s=SCATTER_SIZE_BOXPLOT * 0.5,
+            c=[_get_color(all_models[j])],
+            edgecolors="black",
+            linewidths=0.10,
+            zorder=5,
+            alpha=0.75,
+        )
 
     # Highlight best
     medians = [np.nanmedian(d) if len(d) else np.nan for d in data_per_model]
     if any(pd.notna(m) for m in medians):
-        best_idx = int(np.nanargmax(medians) if higher_better
-                       else np.nanargmin(medians))
+        best_idx = int(np.nanargmax(medians) if higher_better else np.nanargmin(medians))
         bp["boxes"][best_idx].set_edgecolor("red")
         bp["boxes"][best_idx].set_linewidth(1.2)
 
@@ -725,13 +826,13 @@ def gen_ext_boxplot_compact(ext_df, int_df, metric_col, metric_label,
     ax.set_xticks(range(1, n_models + 1))
     tick_fs = FONTSIZE_TICK
     ax.set_xticklabels(short, fontsize=tick_fs, rotation=90, ha="center")
-    ax.set_title(metric_label, fontsize=FONTSIZE_TITLE, pad=2,
-                 loc="left", fontweight="normal")
+    ax.set_title(metric_label, fontsize=FONTSIZE_TITLE, pad=2, loc="left", fontweight="normal")
     # Use scientific notation for y-axis to save space
     import matplotlib.ticker as mticker
-    ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.2g'))
-    ax.tick_params(axis='y', labelsize=tick_fs)
-    ax.tick_params(axis='x', labelsize=tick_fs)
+
+    ax.yaxis.set_major_formatter(mticker.FormatStrFormatter("%.2g"))
+    ax.tick_params(axis="y", labelsize=tick_fs)
+    ax.tick_params(axis="x", labelsize=tick_fs)
     ax.grid(axis="y", alpha=0.2, lw=0.3)
     fig.subplots_adjust(bottom=0.30)
 
@@ -743,7 +844,7 @@ def gen_ext_boxplot_compact(ext_df, int_df, metric_col, metric_label,
         ax.set_ylim(ymin - pad_y * 0.3, ymax + pad_y)
     else:
         ax.set_ylim(ymin - pad_y, ymax + pad_y * 0.3)
-    ax.yaxis.set_major_locator(mticker.MaxNLocator(nbins='auto', prune='both'))
+    ax.yaxis.set_major_locator(mticker.MaxNLocator(nbins="auto", prune="both"))
 
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
 
@@ -774,72 +875,84 @@ def generate(series, out_dir):
     # Panel A — series-specific workflow
     gen_workflow_png(_workflow_steps(series), sub_dir, filename="workflow.png")
 
-    core_metrics_b = [(c, l, hb) for c, l, hb in get_core_metrics(series)]
-    ext_metrics_b = [(c, l, hb) for c, l, hb in get_ext_metrics(series)]
+    core_metrics_b = [(c, lbl, hb) for c, lbl, hb in get_core_metrics(series)]
+    ext_metrics_b = [(c, lbl, hb) for c, lbl, hb in get_ext_metrics(series)]
 
     # --- Internal-only panels (6 models): clear, non-overcrowded ---
     for col, label, _ in core_metrics_b:
         if col in int_all_df.columns:
             safe = col.replace("/", "_")
-            gen_internal_boxplot(int_all_df, col, label,
-                                sub_dir / f"internal_core_{safe}.png", series=series)
+            gen_internal_boxplot(
+                int_all_df, col, label, sub_dir / f"internal_core_{safe}.png", series=series
+            )
     for col, label in EFFICIENCY_METRICS_FIG10:
         if col in int_all_df.columns:
             safe = col.replace("/", "_")
-            gen_internal_boxplot(int_all_df, col, label,
-                                sub_dir / f"internal_eff_{safe}.png", series=series)
+            gen_internal_boxplot(
+                int_all_df, col, label, sub_dir / f"internal_eff_{safe}.png", series=series
+            )
 
     # --- External comparison panels (1 best internal + 11 external) ---
-    for col, label, hb in core_metrics_b:
+    for col, label, hb in core_metrics_b:  # noqa: B007
         if col in ext_df.columns or col in int_df.columns:
             safe = col.replace("/", "_")
-            gen_ext_boxplot(ext_df, int_df, col, label,
-                            sub_dir / f"core_{safe}.png",
-                            ref_model=ref_model)
+            gen_ext_boxplot(
+                ext_df, int_df, col, label, sub_dir / f"core_{safe}.png", ref_model=ref_model
+            )
     for col, label, hb in ext_metrics_b:
         if col in ext_df.columns or col in int_df.columns:
             safe = col.replace("/", "_")
-            gen_ext_boxplot_compact(ext_df, int_df, col, label,
-                                   sub_dir / f"ext_{safe}.png",
-                                   higher_better=hb, ref_model=ref_model)
+            gen_ext_boxplot_compact(
+                ext_df,
+                int_df,
+                col,
+                label,
+                sub_dir / f"ext_{safe}.png",
+                higher_better=hb,
+                ref_model=ref_model,
+            )
 
     for col, label in EFFICIENCY_METRICS_FIG10:
         if col in ext_df.columns or col in int_df.columns:
             safe = col.replace("/", "_")
-            gen_ext_boxplot(ext_df, int_df, col, label,
-                            sub_dir / f"eff_{safe}.png",
-                            ref_model=ref_model)
+            gen_ext_boxplot(
+                ext_df, int_df, col, label, sub_dir / f"eff_{safe}.png", ref_model=ref_model
+            )
 
     # Panel E — aggregate ranking (external comparison only)
-    gen_ranking_bar(ext_df, int_df, sub_dir / "ranking.png",
-                    ref_model=ref_model)
+    gen_ranking_bar(ext_df, int_df, sub_dir / "ranking.png", ref_model=ref_model)
 
     # Legend strip
     gen_legend_strip(sub_dir / "legend.png", ref_model=ref_model)
 
     # Write manifest (internal vs external clearly separated)
-    manifest = build_manifest(sub_dir, {
-        "panelA": "workflow.png",
-        "panelB_internal": sorted([f.name for f in sub_dir.glob("internal_core_*.png")]),
-        "panelB_external": sorted([f.name for f in sub_dir.glob("core_*.png")]),
-        "panelC": sorted([f.name for f in sub_dir.glob("ext_*.png")]),
-        "panelD_internal": sorted([f.name for f in sub_dir.glob("internal_eff_*.png")]),
-        "panelD_external": sorted([f.name for f in sub_dir.glob("eff_*.png")]),
-        "panelE": "ranking.png",
-        "legend": "legend.png",
-        "series": series,
-        "ref_model": ref_model,
-    })
+    manifest = build_manifest(
+        sub_dir,
+        {
+            "panelA": "workflow.png",
+            "panelB_internal": sorted([f.name for f in sub_dir.glob("internal_core_*.png")]),
+            "panelB_external": sorted([f.name for f in sub_dir.glob("core_*.png")]),
+            "panelC": sorted([f.name for f in sub_dir.glob("ext_*.png")]),
+            "panelD_internal": sorted([f.name for f in sub_dir.glob("internal_eff_*.png")]),
+            "panelD_external": sorted([f.name for f in sub_dir.glob("eff_*.png")]),
+            "panelE": "ranking.png",
+            "legend": "legend.png",
+            "series": series,
+            "ref_model": ref_model,
+        },
+    )
     return manifest
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Figure 10 subplots")
-    parser.add_argument("--series", default="dpmm",
-                        choices=["dpmm"])
+    parser.add_argument("--series", default="dpmm", choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots")
+    out = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots"
+    )
     out.mkdir(parents=True, exist_ok=True)
     generate(args.series, out)

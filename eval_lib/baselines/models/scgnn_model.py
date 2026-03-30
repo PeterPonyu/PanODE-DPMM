@@ -2,6 +2,7 @@
 scGNN: Graph VAE for single-cell data with kNN graph construction
 Reconstructs cell-cell adjacency via inner product decoder
 """
+
 import warnings
 from typing import Any
 
@@ -39,6 +40,7 @@ def normalize_adj(adj: torch.Tensor) -> torch.Tensor:
 
 class GraphConvolution(nn.Module):
     """Single graph convolution layer"""
+
     def __init__(self, in_features, out_features, dropout=0.0, act=F.relu):
         super().__init__()
         self.weight = nn.Parameter(torch.empty(in_features, out_features))
@@ -55,12 +57,14 @@ class GraphConvolution(nn.Module):
 
 class InnerProductDecoder(nn.Module):
     """Decode adjacency via z @ z.T"""
+
     def forward(self, z):
         return torch.sigmoid(z @ z.t())
 
 
 class GCNVAE(nn.Module):
     """GCN-based VAE core"""
+
     def __init__(self, input_dim, hidden_dim, latent_dim, dropout):
         super().__init__()
         self.gc1 = GraphConvolution(input_dim, hidden_dim, dropout, act=F.relu)
@@ -106,7 +110,8 @@ class scGNNModel(BaseModel):
         hidden_dim: int = 32,
         dropout: float = 0.1,
         k_neighbors: int = 10,
-        model_name: str = "scGNN"):
+        model_name: str = "scGNN",
+    ):
         """
         Args:
             input_dim: Gene dimension
@@ -119,14 +124,13 @@ class scGNNModel(BaseModel):
             input_dim=input_dim,
             latent_dim=latent_dim,
             hidden_dims=[hidden_dim],
-            model_name=model_name)
+            model_name=model_name,
+        )
 
         self.k_neighbors = k_neighbors
         self.vae = GCNVAE(
-            input_dim=input_dim,
-            hidden_dim=hidden_dim,
-            latent_dim=latent_dim,
-            dropout=dropout)
+            input_dim=input_dim, hidden_dim=hidden_dim, latent_dim=latent_dim, dropout=dropout
+        )
 
     def _prepare_batch(self, batch_data: Any, device: str):
         x_norm, _ = batch_data
@@ -155,10 +159,8 @@ class scGNNModel(BaseModel):
         }
 
     def compute_loss(
-        self,
-        x: torch.Tensor,
-        outputs: dict[str, torch.Tensor],
-        **_) -> dict[str, torch.Tensor]:
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **_
+    ) -> dict[str, torch.Tensor]:
         """Compute loss: adjacency BCE + KL divergence"""
 
         adj_true = outputs["adj_true"]
@@ -169,8 +171,10 @@ class scGNNModel(BaseModel):
 
         recon_loss = F.binary_cross_entropy(adj_pred, adj_true, reduction="mean")
 
-        kl_loss = -0.5 / n * torch.mean(
-            torch.sum(1 + 2 * logvar - mu.pow(2) - torch.exp(logvar).pow(2), dim=1)
+        kl_loss = (
+            -0.5
+            / n
+            * torch.mean(torch.sum(1 + 2 * logvar - mu.pow(2) - torch.exp(logvar).pow(2), dim=1))
         )
 
         total = recon_loss + kl_loss
@@ -181,10 +185,14 @@ class scGNNModel(BaseModel):
         }
 
     @torch.no_grad()
-    def extract_latent(self, data_loader, device: str = "cuda", return_reconstructions: bool = False):
+    def extract_latent(
+        self, data_loader, device: str = "cuda", return_reconstructions: bool = False
+    ):
         """Extract latent representations"""
         if return_reconstructions:
-            warnings.warn("scGNN decode() returns adjacency, not gene reconstruction; ignoring return_reconstructions.")
+            warnings.warn(
+                "scGNN decode() returns adjacency, not gene reconstruction; ignoring return_reconstructions."
+            )
 
         self.eval()
         self.to(device)

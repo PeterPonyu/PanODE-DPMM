@@ -8,8 +8,8 @@ from .layers import VanillaDecoderLayer, VanillaEncoderLayer
 from .prior import get_prior
 
 __all__ = [
-    'Distribution',
-    'VanillaEncoderLayer',
-    'VanillaDecoderLayer',
-    'get_prior',
+    "Distribution",
+    "VanillaEncoderLayer",
+    "VanillaDecoderLayer",
+    "get_prior",
 ]

@@ -1,4 +1,3 @@
-
 import os
 import shutil
 import sys
@@ -20,6 +19,7 @@ from src.visualization import apply_style as _apply_geometry_style
 from src.visualization import bind_figure_region, save_with_vcd
 
 _STYLE_APPLIED = False
+
 
 def _apply_rea_style():
     """Apply REA plotting defaults via the geometry-based style system."""
@@ -60,9 +60,8 @@ def clamp_xtick_fontsize(fs: float, *, per_group: bool = False) -> float:
 
 
 def needs_method_split(
-    method_names: list[str],
-    max_methods_per_panel: int = 10,
-    max_avg_label_len: int = 18) -> bool:
+    method_names: list[str], max_methods_per_panel: int = 10, max_avg_label_len: int = 18
+) -> bool:
     """Decide whether *method_names* should be split across multiple figures.
 
     The heuristic fires when **any** of the following conditions hold:
@@ -87,12 +86,12 @@ def needs_method_split(
 # ============================================================================
 SERIES_PALETTES = {
     # Experiment 1: Model ablation (5 variants)
-    'ablation': ['#8dd3c7', '#fb8072', '#80b1d3', '#bebada', '#e41a1c'],
+    "ablation": ["#8dd3c7", "#fb8072", "#80b1d3", "#bebada", "#e41a1c"],
     # Experiment 2: GM-VAE geometric distributions benchmark (6 variants)
-    'gmvae_benchmark': ['#fdb462', '#b3de69', '#fccde5', '#bc80bd', '#80b1d3', '#e41a1c'],
+    "gmvae_benchmark": ["#fdb462", "#b3de69", "#fccde5", "#bc80bd", "#80b1d3", "#e41a1c"],
     # Experiment 3: Disentanglement regularization (6 variants)
-    'disentanglement': ['#d9d9d9', '#ccebc5', '#ffed6f', '#377eb8', '#984ea3', '#e41a1c'],
-    'benchmark': 'husl',  # default for external benchmarks
+    "disentanglement": ["#d9d9d9", "#ccebc5", "#ffed6f", "#377eb8", "#984ea3", "#e41a1c"],
+    "benchmark": "husl",  # default for external benchmarks
 }
 
 
@@ -100,27 +99,27 @@ def _resolve_font_family(requested):
     """Resolve a font family name to one that matplotlib can actually render.
     Falls back through: requested → Liberation Sans → DejaVu Sans."""
     import matplotlib.font_manager as fm
-    _FONTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                              '..', 'fonts')
+
+    _FONTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "fonts")
     if os.path.isdir(_FONTS_DIR):
         for f in os.listdir(_FONTS_DIR):
-            if f.lower().endswith(('.ttf', '.otf')):
+            if f.lower().endswith((".ttf", ".otf")):
                 fp = os.path.join(_FONTS_DIR, f)
                 try:
                     fm.fontManager.addfont(fp)
                 except Exception:
                     pass
     available = {f.name for f in fm.fontManager.ttflist}
-    for candidate in [requested, 'Liberation Sans', 'DejaVu Sans']:
+    for candidate in [requested, "Liberation Sans", "DejaVu Sans"]:
         if candidate and candidate in available:
             return candidate
-    return 'sans-serif'
+    return "sans-serif"
 
 
 def _apply_font(font_family):
     """Apply resolved font to matplotlib rcParams."""
     resolved = _resolve_font_family(font_family)
-    plt.rcParams['font.family'] = resolved
+    plt.rcParams["font.family"] = resolved
     return resolved
 
 
@@ -188,17 +187,21 @@ def prepare_merged_data_folder(merge_config, output_folder):
     try:
         base_csv_files = [p.name for p in base_folder.glob("*.csv")]
     except FileNotFoundError:
-        raise FileNotFoundError(f"The base source directory does not exist: {base_folder}")
+        raise FileNotFoundError(
+            f"The base source directory does not exist: {base_folder}"
+        ) from None
 
     if not base_csv_files:
         print(f"⚠️ No CSV files found in the base directory: {base_folder}")
         return str(output_path), []
 
-    print(f"📁 Found {len(base_csv_files)} datasets in the base folder '{base_folder.name}'. Verifying and merging...")
+    print(
+        f"📁 Found {len(base_csv_files)} datasets in the base folder '{base_folder.name}'. Verifying and merging..."
+    )
 
     final_method_names = []
     for folder_config in merge_config.values():
-        final_method_names.extend(folder_config['selected_methods'])
+        final_method_names.extend(folder_config["selected_methods"])
 
     for csv_file_name in base_csv_files:
         merged_rows = []
@@ -216,8 +219,8 @@ def prepare_merged_data_folder(merge_config, output_folder):
         for source_folder, folder_config in merge_config.items():
             file_path = Path(source_folder) / csv_file_name
 
-            all_methods_in_folder = folder_config['all_methods']
-            methods_to_select = folder_config['selected_methods']
+            all_methods_in_folder = folder_config["all_methods"]
+            methods_to_select = folder_config["selected_methods"]
 
             # 读取CSV时不指定索引列
             df = pd.read_csv(file_path, header=0)
@@ -226,10 +229,10 @@ def prepare_merged_data_folder(merge_config, output_folder):
             df_data_only = df.iloc[:, 1:]
 
             if len(df_data_only) != len(all_methods_in_folder):
-                 raise ValueError(
-                     f"Row count mismatch in file '{file_path}'. "
-                     f"The CSV has {len(df_data_only)} rows, but 'all_methods' config has {len(all_methods_in_folder)} entries."
-                 )
+                raise ValueError(
+                    f"Row count mismatch in file '{file_path}'. "
+                    f"The CSV has {len(df_data_only)} rows, but 'all_methods' config has {len(all_methods_in_folder)} entries."
+                )
 
             df_data_only.index = all_methods_in_folder
 
@@ -260,8 +263,9 @@ class RigorousExperimentalAnalyzer:
     - 完整结果记录和可视化
     """
 
-    def __init__(self, data_folder_path, method_names, selected_methods=None,
-                 method_order=None, verbose=True):
+    def __init__(
+        self, data_folder_path, method_names, selected_methods=None, method_order=None, verbose=True
+    ):
         """
         初始化分析器
 
@@ -309,11 +313,13 @@ class RigorousExperimentalAnalyzer:
         if method_order is not None:
             # 验证排序列表
             if set(method_order) != set(self.method_names):
-                raise ValueError("method_order must contain exactly the same methods as selected methods")
+                raise ValueError(
+                    "method_order must contain exactly the same methods as selected methods"
+                )
             self.method_names = method_order
 
         # 创建方法索引映射（从原始DataFrame索引到方法名）
-        method_index_map = {name:i for i, name in enumerate(self.all_method_names)}
+        method_index_map = {name: i for i, name in enumerate(self.all_method_names)}
         self.selected_indices = [method_index_map[name] for name in self.method_names]
 
         # 数据存储
@@ -358,15 +364,17 @@ class RigorousExperimentalAnalyzer:
 
                 # 验证数据结构
                 if len(df) != len(self.all_method_names):
-                    raise ValueError(f"File {file_path} has {len(df)} rows, expected {len(self.all_method_names)}")
+                    raise ValueError(
+                        f"File {file_path} has {len(df)} rows, expected {len(self.all_method_names)}"
+                    )
 
                 # 只保留选择的方法行
                 selected_df = df.iloc[self.selected_indices].copy()
 
                 # 重新索引使用选择的方法名
                 selected_df.index = self.method_names
-                selected_df['dataset_id'] = i + 1
-                selected_df['dataset_name'] = file_path.stem
+                selected_df["dataset_id"] = i + 1
+                selected_df["dataset_name"] = file_path.stem
                 all_data.append(selected_df)
 
             except Exception as e:
@@ -381,7 +389,7 @@ class RigorousExperimentalAnalyzer:
         self.n_datasets = len(csv_files)
 
         # 获取数值列作为指标
-        exclude_cols = ['dataset_id', 'dataset_name', 'data_type_intrin', 'interpretation_intrin']
+        exclude_cols = ["dataset_id", "dataset_name", "data_type_intrin", "interpretation_intrin"]
         numeric_cols = self.raw_data.select_dtypes(include=[np.number]).columns
         self.metrics = [col for col in numeric_cols if col not in exclude_cols]
 
@@ -403,15 +411,15 @@ class RigorousExperimentalAnalyzer:
         # 检查每个数据集是否包含所有方法的数据
         complete_datasets = 0
         for dataset_id in range(1, self.n_datasets + 1):
-            dataset_data = self.raw_data[self.raw_data['dataset_id'] == dataset_id]
+            dataset_data = self.raw_data[self.raw_data["dataset_id"] == dataset_id]
             if len(dataset_data) == len(self.method_names):
                 complete_datasets += 1
 
         # 如果大部分数据集都包含所有方法，则为配对设计
         if complete_datasets >= self.n_datasets * 0.8:
-            self.design_type = 'paired'
+            self.design_type = "paired"
         else:
-            self.design_type = 'independent'
+            self.design_type = "independent"
 
     def preprocess_data(self):
         """
@@ -431,13 +439,15 @@ class RigorousExperimentalAnalyzer:
         for _, row in self.raw_data.iterrows():
             for metric in self.metrics:
                 if pd.notna(row[metric]):
-                    processed_data.append({
-                        'method': row.name,  # 使用索引作为方法名
-                        'metric': metric,
-                        'value': row[metric],
-                        'dataset_id': row['dataset_id'],
-                        'dataset_name': row['dataset_name']
-                    })
+                    processed_data.append(
+                        {
+                            "method": row.name,  # 使用索引作为方法名
+                            "metric": metric,
+                            "value": row[metric],
+                            "dataset_id": row["dataset_id"],
+                            "dataset_name": row["dataset_name"],
+                        }
+                    )
 
         self.processed_data = pd.DataFrame(processed_data)
 
@@ -540,7 +550,7 @@ class RigorousExperimentalAnalyzer:
 
                 # 计算标准误
                 if len(data1) > 0 and len(data2) > 0:
-                    se = np.sqrt(mse * (1/len(data1) + 1/len(data2)))
+                    se = np.sqrt(mse * (1 / len(data1) + 1 / len(data2)))
 
                     if se > 1e-10:
                         t_stat = mean_diff / se
@@ -555,16 +565,18 @@ class RigorousExperimentalAnalyzer:
                     p_value = 1.0
                     p_corrected = 1.0
 
-                results.append({
-                    'group1_idx': i,
-                    'group2_idx': j,
-                    'mean_diff': mean_diff,
-                    'se': se if 'se' in locals() else 0,
-                    't_stat': t_stat,
-                    'p_raw': p_value,
-                    'p_corrected': p_corrected,
-                    'significant': p_corrected < alpha
-                })
+                results.append(
+                    {
+                        "group1_idx": i,
+                        "group2_idx": j,
+                        "mean_diff": mean_diff,
+                        "se": se if "se" in locals() else 0,
+                        "t_stat": t_stat,
+                        "p_raw": p_value,
+                        "p_corrected": p_corrected,
+                        "significant": p_corrected < alpha,
+                    }
+                )
 
         return results
 
@@ -591,28 +603,28 @@ class RigorousExperimentalAnalyzer:
         valid_methods = [method for method, data in metric_data.items() if len(data) > 0]
 
         if len(valid_methods) < 2:
-            return {'error': 'Insufficient valid data for analysis', 'metric': metric_name}
+            return {"error": "Insufficient valid data for analysis", "metric": metric_name}
 
         results = {
-            'metric': metric_name,
-            'methods': valid_methods,
-            'n_methods': len(valid_methods),
-            'data_sizes': data_sizes,
-            'design_type': self.design_type,
-            'descriptive_stats': {}
+            "metric": metric_name,
+            "methods": valid_methods,
+            "n_methods": len(valid_methods),
+            "data_sizes": data_sizes,
+            "design_type": self.design_type,
+            "descriptive_stats": {},
         }
 
         # 描述性统计
         for method in valid_methods:
             data = metric_data[method]
             if len(data) > 0:
-                results['descriptive_stats'][method] = {
-                    'mean': np.mean(data),
-                    'std': np.std(data, ddof=1) if len(data) > 1 else 0,
-                    'median': np.median(data),
-                    'min': np.min(data),
-                    'max': np.max(data),
-                    'n': len(data)
+                results["descriptive_stats"][method] = {
+                    "mean": np.mean(data),
+                    "std": np.std(data, ddof=1) if len(data) > 1 else 0,
+                    "median": np.median(data),
+                    "min": np.min(data),
+                    "max": np.max(data),
+                    "n": len(data),
                 }
 
         # 根据方法数量和设计类型选择分析
@@ -630,7 +642,7 @@ class RigorousExperimentalAnalyzer:
         method1, method2 = valid_methods[0], valid_methods[1]
         data1, data2 = metric_data[method1], metric_data[method2]
 
-        results = {'analysis_type': 'two_groups'}
+        results = {"analysis_type": "two_groups"}
 
         # 正态性检验
         normality_results = {}
@@ -642,19 +654,19 @@ class RigorousExperimentalAnalyzer:
                 normality_results[method] = 0.0
 
         both_normal = all(p > 0.05 for p in normality_results.values())
-        results['normality_tests'] = {**normality_results, 'both_normal': both_normal}
+        results["normality_tests"] = {**normality_results, "both_normal": both_normal}
 
         # 根据设计类型和数据分布选择统计检验
-        if self.design_type == 'paired':
+        if self.design_type == "paired":
             if len(data1) != len(data2):
-                results['error'] = 'Paired design requires equal sample sizes'
+                results["error"] = "Paired design requires equal sample sizes"
                 return results
 
             if both_normal:
                 stat, p_value = stats.ttest_rel(data2, data1)
                 test_name = "Paired t-test"
             else:
-                stat, p_value = stats.wilcoxon(data2, data1, alternative='two-sided')
+                stat, p_value = stats.wilcoxon(data2, data1, alternative="two-sided")
                 test_name = "Wilcoxon signed-rank test"
 
             # 配对效应量
@@ -674,31 +686,28 @@ class RigorousExperimentalAnalyzer:
                 stat, p_value = stats.ttest_ind(data2, data1, equal_var=equal_var)
                 test_name = f"Independent t-test ({'equal' if equal_var else 'unequal'} variance)"
 
-                results['variance_test'] = {'p_value': p_var, 'equal_var': equal_var}
+                results["variance_test"] = {"p_value": p_var, "equal_var": equal_var}
             else:
-                stat, p_value = stats.mannwhitneyu(data2, data1, alternative='two-sided')
+                stat, p_value = stats.mannwhitneyu(data2, data1, alternative="two-sided")
                 test_name = "Mann-Whitney U test"
 
             # 独立样本效应量
-            pooled_std = np.sqrt(((len(data1)-1)*np.var(data1, ddof=1) +
-                                 (len(data2)-1)*np.var(data2, ddof=1)) /
-                                 (len(data1)+len(data2)-2))
+            pooled_std = np.sqrt(
+                (
+                    (len(data1) - 1) * np.var(data1, ddof=1)
+                    + (len(data2) - 1) * np.var(data2, ddof=1)
+                )
+                / (len(data1) + len(data2) - 2)
+            )
             if pooled_std > 1e-10:
                 effect_size = (np.mean(data2) - np.mean(data1)) / pooled_std
             else:
                 effect_size = 0.0
             effect_type = "Cohen's d (independent)"
 
-        results['main_test'] = {
-            'test_name': test_name,
-            'statistic': stat,
-            'p_value': p_value
-        }
+        results["main_test"] = {"test_name": test_name, "statistic": stat, "p_value": p_value}
 
-        results['effect_size'] = {
-            'value': effect_size,
-            'type': effect_type
-        }
+        results["effect_size"] = {"value": effect_size, "type": effect_type}
 
         # 改进分析
         if np.abs(np.mean(data1)) > 1e-10:
@@ -706,9 +715,9 @@ class RigorousExperimentalAnalyzer:
         else:
             improvement_pct = 0.0
 
-        results['improvement'] = {
-            'percentage': improvement_pct,
-            'absolute': np.mean(data2) - np.mean(data1)
+        results["improvement"] = {
+            "percentage": improvement_pct,
+            "absolute": np.mean(data2) - np.mean(data1),
         }
 
         return results
@@ -717,7 +726,7 @@ class RigorousExperimentalAnalyzer:
         """
         多组比较的统计分析
         """
-        results = {'analysis_type': 'multiple_groups'}
+        results = {"analysis_type": "multiple_groups"}
 
         # 准备数据
         data_arrays = [metric_data[method] for method in valid_methods]
@@ -740,11 +749,11 @@ class RigorousExperimentalAnalyzer:
                 normality_results[method] = 0.0
                 all_normal = False
 
-        results['normality_tests'] = {**normality_results, 'all_normal': all_normal}
-        results['balanced_design'] = is_balanced
+        results["normality_tests"] = {**normality_results, "all_normal": all_normal}
+        results["balanced_design"] = is_balanced
 
         # 选择主要统计检验
-        if self.design_type == 'paired' and is_balanced:
+        if self.design_type == "paired" and is_balanced:
             if all_normal:
                 # 重复测量ANOVA
                 data_matrix = np.column_stack(data_arrays)
@@ -764,14 +773,10 @@ class RigorousExperimentalAnalyzer:
                 stat, p_value = stats.kruskal(*data_arrays)
                 test_name = "Kruskal-Wallis test"
 
-        results['main_test'] = {
-            'test_name': test_name,
-            'statistic': stat,
-            'p_value': p_value
-        }
+        results["main_test"] = {"test_name": test_name, "statistic": stat, "p_value": p_value}
 
         # 效应量计算
-        if 'ANOVA' in test_name:
+        if "ANOVA" in test_name:
             # Eta squared for ANOVA
             all_data = np.concatenate(data_arrays)
             grand_mean = np.mean(all_data)
@@ -780,23 +785,20 @@ class RigorousExperimentalAnalyzer:
             ss_between = sum(len(arr) * (np.mean(arr) - grand_mean) ** 2 for arr in data_arrays)
 
             eta_squared = ss_between / ss_total if ss_total > 1e-10 else 0
-            results['effect_size'] = {
-                'value': eta_squared,
-                'type': 'eta squared'
-            }
+            results["effect_size"] = {"value": eta_squared, "type": "eta squared"}
         else:
             # Epsilon squared for non-parametric tests
             n_total = sum(len(arr) for arr in data_arrays)
             k = len(data_arrays)
             epsilon_squared = (stat - k + 1) / (n_total - k) if (n_total - k) > 0 else 0
-            results['effect_size'] = {
-                'value': max(0, epsilon_squared),
-                'type': 'epsilon squared (approximate)'
+            results["effect_size"] = {
+                "value": max(0, epsilon_squared),
+                "type": "epsilon squared (approximate)",
             }
 
         # 事后检验（如果主检验显著）
         if p_value < 0.05:
-            results['post_hoc'] = self._perform_rigorous_post_hoc(
+            results["post_hoc"] = self._perform_rigorous_post_hoc(
                 data_arrays, valid_methods, test_name, all_normal
             )
 
@@ -808,32 +810,34 @@ class RigorousExperimentalAnalyzer:
         """
         k = len(data_arrays)
         n_comparisons = k * (k - 1) // 2
-        results = {'method': 'Unknown', 'comparisons': []}
+        results = {"method": "Unknown", "comparisons": []}
 
         # 根据主检验选择合适的事后检验
-        if 'ANOVA' in main_test_name and all_normal:
+        if "ANOVA" in main_test_name and all_normal:
             # Tukey HSD for ANOVA
             tukey_results = self._tukey_hsd_post_hoc(data_arrays)
-            results['method'] = 'Tukey HSD'
+            results["method"] = "Tukey HSD"
 
-            for i, comp in enumerate(tukey_results):
-                method1 = valid_methods[comp['group1_idx']]
-                method2 = valid_methods[comp['group2_idx']]
+            for i, comp in enumerate(tukey_results):  # noqa: B007
+                method1 = valid_methods[comp["group1_idx"]]
+                method2 = valid_methods[comp["group2_idx"]]
 
-                results['comparisons'].append({
-                    'method1': method1,
-                    'method2': method2,
-                    'test_used': 'Tukey HSD',
-                    'mean_diff': comp['mean_diff'],
-                    'p_corrected': comp['p_corrected'],
-                    'significant': comp['significant'],
-                    'effect_size': comp['mean_diff'] / comp['se'] if comp['se'] > 1e-10 else 0
-                })
+                results["comparisons"].append(
+                    {
+                        "method1": method1,
+                        "method2": method2,
+                        "test_used": "Tukey HSD",
+                        "mean_diff": comp["mean_diff"],
+                        "p_corrected": comp["p_corrected"],
+                        "significant": comp["significant"],
+                        "effect_size": comp["mean_diff"] / comp["se"] if comp["se"] > 1e-10 else 0,
+                    }
+                )
 
         else:
             # Bonferroni校正的配对检验
             alpha_corrected = 0.05 / n_comparisons
-            results['method'] = f'Bonferroni correction (α = {alpha_corrected:.4f})'
+            results["method"] = f"Bonferroni correction (α = {alpha_corrected:.4f})"
 
             for i in range(k):
                 for j in range(i + 1, k):
@@ -841,135 +845,143 @@ class RigorousExperimentalAnalyzer:
                     method1, method2 = valid_methods[i], valid_methods[j]
 
                     # 选择合适的检验
-                    if self.design_type == 'paired' and len(data1) == len(data2):
+                    if self.design_type == "paired" and len(data1) == len(data2):
                         if all_normal:
                             stat, p_raw = stats.ttest_rel(data2, data1)
                             test_used = "Paired t-test"
                         else:
-                            stat, p_raw = stats.wilcoxon(data2, data1, alternative='two-sided')
+                            stat, p_raw = stats.wilcoxon(data2, data1, alternative="two-sided")
                             test_used = "Wilcoxon signed-rank test"
 
                         # 配对效应量
                         differences = data2 - data1
-                        effect_size = (np.mean(differences) / np.std(differences, ddof=1)
-                                     if np.std(differences, ddof=1) > 1e-10 else 0)
+                        effect_size = (
+                            np.mean(differences) / np.std(differences, ddof=1)
+                            if np.std(differences, ddof=1) > 1e-10
+                            else 0
+                        )
                     else:
                         if all_normal:
                             stat, p_raw = stats.ttest_ind(data2, data1)
                             test_used = "Independent t-test"
                         else:
-                            stat, p_raw = stats.mannwhitneyu(data2, data1, alternative='two-sided')
+                            stat, p_raw = stats.mannwhitneyu(data2, data1, alternative="two-sided")
                             test_used = "Mann-Whitney U test"
 
                         # 独立样本效应量
-                        pooled_std = np.sqrt(((len(data1)-1)*np.var(data1, ddof=1) +
-                                             (len(data2)-1)*np.var(data2, ddof=1)) /
-                                             (len(data1)+len(data2)-2))
-                        effect_size = ((np.mean(data2) - np.mean(data1)) / pooled_std
-                                     if pooled_std > 1e-10 else 0)
+                        pooled_std = np.sqrt(
+                            (
+                                (len(data1) - 1) * np.var(data1, ddof=1)
+                                + (len(data2) - 1) * np.var(data2, ddof=1)
+                            )
+                            / (len(data1) + len(data2) - 2)
+                        )
+                        effect_size = (
+                            (np.mean(data2) - np.mean(data1)) / pooled_std
+                            if pooled_std > 1e-10
+                            else 0
+                        )
 
                     p_corrected = min(p_raw * n_comparisons, 1.0)
 
-                    results['comparisons'].append({
-                        'method1': method1,
-                        'method2': method2,
-                        'test_used': test_used,
-                        'statistic': stat,
-                        'p_raw': p_raw,
-                        'p_corrected': p_corrected,
-                        'significant': p_corrected < 0.05,
-                        'effect_size': effect_size,
-                        'mean_diff': np.mean(data2) - np.mean(data1)
-                    })
+                    results["comparisons"].append(
+                        {
+                            "method1": method1,
+                            "method2": method2,
+                            "test_used": test_used,
+                            "statistic": stat,
+                            "p_raw": p_raw,
+                            "p_corrected": p_corrected,
+                            "significant": p_corrected < 0.05,
+                            "effect_size": effect_size,
+                            "mean_diff": np.mean(data2) - np.mean(data1),
+                        }
+                    )
 
-        results['n_comparisons'] = n_comparisons
+        results["n_comparisons"] = n_comparisons
         return results
 
-
     # ==================== 完全可定制的可视化功能 ====================
-    def create_metric_comparison_plot(self, metric_name, plot_type='boxplot',
-                                show_significance_pairs=None,
-                                max_significance_pairs=5,
-                                datasets_to_show=20,
-                                display_name=None,
-                                stat_test_display='short',
-                                # 图形创建控制
-                                ax=None,
-                                figsize=(5, 5),
-                                dpi=150,
-
-                                # 字体大小控制
-                                title_fontsize=12,
-                                title_fontweight='normal',
-                                axis_label_fontsize=12,
-                                tick_label_fontsize=12,
-                                significance_fontsize=14,
-                                ns_fontsize=10,
-                                legend_fontsize=8,
-                                show_legend=True,
-
-                                # 颜色控制
-                                palette='Set2',
-                                box_color=None,
-                                strip_color='black',
-                                strip_alpha=0.6,
-                                line_color='black',
-                                mean_line_color='red',
-                                # 新增：柱状图颜色控制
-                                bar_color=None,
-                                bar_edge_color='black',
-                                bar_edge_width=1,
-                                bar_alpha=0.7,
-
-                                # 显著性标注控制
-                                significance_marker_map={'***': '***', '**': '**', '*': '*', 'ns': 'ns'},
-                                significance_y_offset=0.05,
-                                significance_marker_offset=0.02,
-                                ns_offset=0.01,
-                                significance_line_width=3,
-
-                                # 图形元素控制
-                                box_width=0.7,
-                                jitter_width=0.35,
-                                strip_size=4,
-                                flier_size=0,
-                                flier_marker='o',
-                                flier_alpha=0.7,
-                                mean_line_width=3,
-                                mean_marker_size=8,
-                                # 新增：柱状图控制参数
-                                bar_width=0.6,
-                                show_error_bars=True,
-                                error_bar_type='std',  # 'std', 'sem', 'ci95', 'ci99', 'none'
-                                error_bar_capsize=5,
-                                error_bar_capthick=2,
-                                error_bar_color='black',
-                                error_bar_alpha=0.8,
-                                error_bar_width=2,
-                                # 新增：柱状图上的散点控制
-                                show_bar_points=True,
-                                bar_strip_size=3,
-                                bar_strip_alpha=0.6,
-                                bar_strip_color='black',
-                                bar_strip_jitter_width=0.4,
-
-                                # 边框和背景控制
-                                title_bbox_props=None,
-                                legend_bbox_props={'boxstyle': 'round', 'facecolor': 'lightblue', 'alpha': 0.6},
-                                annotation_bbox_props={'boxstyle': 'round', 'facecolor': 'wheat', 'alpha': 0.6},
-
-                                # 可视化样式控制
-                                grid=True,
-                                grid_alpha=0.3,
-                                rotate_xlabels=None,
-                                xlabel_rotation=45,
-                                xlabel_ha='right',
-                                font_family='Arial',
-                                spines_visible=None,
-
-                                # 布局控制
-                                tight_layout=True,
-                                subplot_adjust_params=None):
+    def create_metric_comparison_plot(
+        self,
+        metric_name,
+        plot_type="boxplot",
+        show_significance_pairs=None,
+        max_significance_pairs=5,
+        datasets_to_show=20,
+        display_name=None,
+        stat_test_display="short",
+        # 图形创建控制
+        ax=None,
+        figsize=(5, 5),
+        dpi=150,
+        # 字体大小控制
+        title_fontsize=12,
+        title_fontweight="normal",
+        axis_label_fontsize=12,
+        tick_label_fontsize=12,
+        significance_fontsize=14,
+        ns_fontsize=10,
+        legend_fontsize=8,
+        show_legend=True,
+        # 颜色控制
+        palette="Set2",
+        box_color=None,
+        strip_color="black",
+        strip_alpha=0.6,
+        line_color="black",
+        mean_line_color="red",
+        # 新增：柱状图颜色控制
+        bar_color=None,
+        bar_edge_color="black",
+        bar_edge_width=1,
+        bar_alpha=0.7,
+        # 显著性标注控制
+        significance_marker_map={"***": "***", "**": "**", "*": "*", "ns": "ns"},  # noqa: B006
+        significance_y_offset=0.05,
+        significance_marker_offset=0.02,
+        ns_offset=0.01,
+        significance_line_width=3,
+        # 图形元素控制
+        box_width=0.7,
+        jitter_width=0.35,
+        strip_size=4,
+        flier_size=0,
+        flier_marker="o",
+        flier_alpha=0.7,
+        mean_line_width=3,
+        mean_marker_size=8,
+        # 新增：柱状图控制参数
+        bar_width=0.6,
+        show_error_bars=True,
+        error_bar_type="std",  # 'std', 'sem', 'ci95', 'ci99', 'none'
+        error_bar_capsize=5,
+        error_bar_capthick=2,
+        error_bar_color="black",
+        error_bar_alpha=0.8,
+        error_bar_width=2,
+        # 新增：柱状图上的散点控制
+        show_bar_points=True,
+        bar_strip_size=3,
+        bar_strip_alpha=0.6,
+        bar_strip_color="black",
+        bar_strip_jitter_width=0.4,
+        # 边框和背景控制
+        title_bbox_props=None,
+        legend_bbox_props={"boxstyle": "round", "facecolor": "lightblue", "alpha": 0.6},  # noqa: B006
+        annotation_bbox_props={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.6},  # noqa: B006
+        # 可视化样式控制
+        grid=True,
+        grid_alpha=0.3,
+        rotate_xlabels=None,
+        xlabel_rotation=45,
+        xlabel_ha="right",
+        font_family="Arial",
+        spines_visible=None,
+        # 布局控制
+        tight_layout=True,
+        subplot_adjust_params=None,
+    ):
         """
         Create highly customizable metric comparison visualization with statistical annotations.
 
@@ -1235,14 +1247,14 @@ class RigorousExperimentalAnalyzer:
 
         # 设置默认的边框可见性
         if spines_visible is None:
-            spines_visible = {'top': False, 'right': False, 'left': True, 'bottom': True}
+            spines_visible = {"top": False, "right": False, "left": True, "bottom": True}
 
         # 设置字体
         if font_family:
             _apply_font(font_family)
 
         # 决定是否需要创建新图形
-        create_new_figure = (ax is None)
+        create_new_figure = ax is None
 
         if create_new_figure:
             # 创建新图形
@@ -1255,7 +1267,9 @@ class RigorousExperimentalAnalyzer:
 
         # 调用核心绘图逻辑
         self._plot_metric_on_axis(
-            ax, metric_name, plot_type=plot_type,
+            ax,
+            metric_name,
+            plot_type=plot_type,
             show_significance_pairs=show_significance_pairs,
             max_significance_pairs=max_significance_pairs,
             datasets_to_show=datasets_to_show,
@@ -1314,7 +1328,7 @@ class RigorousExperimentalAnalyzer:
             rotate_xlabels=rotate_xlabels,
             xlabel_rotation=xlabel_rotation,
             xlabel_ha=xlabel_ha,
-            spines_visible=spines_visible
+            spines_visible=spines_visible,
         )
 
         # 只在创建新图形时应用布局调整
@@ -1324,7 +1338,6 @@ class RigorousExperimentalAnalyzer:
                 fig.subplots_adjust(**subplot_adjust_params)
 
         return fig, ax
-
 
     def _plot_metric_on_axis(self, ax, metric_name, **kwargs):
         """
@@ -1337,34 +1350,40 @@ class RigorousExperimentalAnalyzer:
         else:
             analysis_results = self.statistical_results[metric_name]
 
-        if 'error' in analysis_results:
-            ax.text(0.5, 0.5, f"Error: {analysis_results['error']}",
-                    transform=ax.transAxes, ha='center', va='center', color='red')
+        if "error" in analysis_results:
+            ax.text(
+                0.5,
+                0.5,
+                f"Error: {analysis_results['error']}",
+                transform=ax.transAxes,
+                ha="center",
+                va="center",
+                color="red",
+            )
             return
 
         # 准备绘图数据
-        plot_data = self.processed_data[self.processed_data['metric'] == metric_name].copy()
+        plot_data = self.processed_data[self.processed_data["metric"] == metric_name].copy()
 
         if plot_data.empty:
-            ax.text(0.5, 0.5, "No data available",
-                    transform=ax.transAxes, ha='center', va='center')
+            ax.text(0.5, 0.5, "No data available", transform=ax.transAxes, ha="center", va="center")
             return
 
-        plot_type = kwargs.get('plot_type', 'boxplot')
-        palette = kwargs.get('palette', 'Set2')
-        box_color = kwargs.get('box_color')
-        box_width = kwargs.get('box_width', 0.6)
-        jitter_width = kwargs.get('jitter_width', True)
-        strip_color = kwargs.get('strip_color', 'black')
-        strip_alpha = kwargs.get('strip_alpha', 0.6)
-        strip_size = kwargs.get('strip_size', 4)
-        flier_size = kwargs.get('flier_size', 4)
-        flier_marker = kwargs.get('flier_marker', 'o')
-        flier_alpha = kwargs.get('flier_alpha', 0.7)
-        show_legend = kwargs.get('show_legend', True)
+        plot_type = kwargs.get("plot_type", "boxplot")
+        palette = kwargs.get("palette", "Set2")
+        box_color = kwargs.get("box_color")
+        box_width = kwargs.get("box_width", 0.6)
+        jitter_width = kwargs.get("jitter_width", True)
+        strip_color = kwargs.get("strip_color", "black")
+        strip_alpha = kwargs.get("strip_alpha", 0.6)
+        strip_size = kwargs.get("strip_size", 4)
+        flier_size = kwargs.get("flier_size", 4)
+        flier_marker = kwargs.get("flier_marker", "o")
+        flier_alpha = kwargs.get("flier_alpha", 0.7)
+        show_legend = kwargs.get("show_legend", True)
 
         # 根据图表类型绘制
-        if plot_type == 'boxplot':
+        if plot_type == "boxplot":
             # 处理颜色
             if box_color is not None:
                 box_palette = [box_color] * len(self.method_names)
@@ -1372,85 +1391,129 @@ class RigorousExperimentalAnalyzer:
                 box_palette = palette
 
             # 绘制箱线图（不显示异常值）
-            sns.boxplot(data=plot_data, x='method', y='value', ax=ax,
-                        palette=box_palette, width=box_width, order=self.method_names,
-                        fliersize=flier_size, flierprops={'marker': flier_marker, 'alpha': flier_alpha})
-
-            # 添加散点图
-            sns.stripplot(data=plot_data, x='method', y='value', ax=ax,
-                            color=strip_color, alpha=strip_alpha, size=strip_size,
-                            jitter=jitter_width, order=self.method_names)
-
-        elif plot_type == 'violin':
-            sns.violinplot(data=plot_data, x='method', y='value', ax=ax,
-                            palette=palette, inner='box', order=self.method_names)
-            sns.stripplot(data=plot_data, x='method', y='value', ax=ax,
-                            color=strip_color, alpha=strip_alpha*0.8, size=strip_size*0.75,
-                            jitter=jitter_width, order=self.method_names)
-
-        elif plot_type == 'strip':
-            sns.stripplot(data=plot_data, x='method', y='value', ax=ax,
-                            palette=palette, size=strip_size*1.5, jitter=jitter_width,
-                            alpha=strip_alpha*1.2, order=self.method_names)
-
-        # 新增：柱状图支持
-        elif plot_type == 'barplot':
-            self._create_customizable_bar_plot(
-                ax, plot_data,
-                bar_color=kwargs.get('bar_color'),
-                bar_edge_color=kwargs.get('bar_edge_color', 'black'),
-                bar_edge_width=kwargs.get('bar_edge_width', 1),
-                bar_alpha=kwargs.get('bar_alpha', 0.7),
-                bar_width=kwargs.get('bar_width', 0.6),
-                palette=palette,
-                show_error_bars=kwargs.get('show_error_bars', True),
-                error_bar_type=kwargs.get('error_bar_type', 'std'),
-                error_bar_capsize=kwargs.get('error_bar_capsize', 5),
-                error_bar_capthick=kwargs.get('error_bar_capthick', 2),
-                error_bar_color=kwargs.get('error_bar_color', 'black'),
-                error_bar_alpha=kwargs.get('error_bar_alpha', 0.8),
-                error_bar_width=kwargs.get('error_bar_width', 2),
-                show_bar_points=kwargs.get('show_bar_points', True),
-                bar_strip_size=kwargs.get('bar_strip_size', 3),
-                bar_strip_alpha=kwargs.get('bar_strip_alpha', 0.6),
-                bar_strip_color=kwargs.get('bar_strip_color', 'black'),
-                bar_strip_jitter_width=kwargs.get('bar_strip_jitter_width', 0.4)
+            sns.boxplot(
+                data=plot_data,
+                x="method",
+                y="value",
+                ax=ax,
+                palette=box_palette,
+                width=box_width,
+                order=self.method_names,
+                fliersize=flier_size,
+                flierprops={"marker": flier_marker, "alpha": flier_alpha},
             )
 
-        elif plot_type == 'paired_lines':
+            # 添加散点图
+            sns.stripplot(
+                data=plot_data,
+                x="method",
+                y="value",
+                ax=ax,
+                color=strip_color,
+                alpha=strip_alpha,
+                size=strip_size,
+                jitter=jitter_width,
+                order=self.method_names,
+            )
+
+        elif plot_type == "violin":
+            sns.violinplot(
+                data=plot_data,
+                x="method",
+                y="value",
+                ax=ax,
+                palette=palette,
+                inner="box",
+                order=self.method_names,
+            )
+            sns.stripplot(
+                data=plot_data,
+                x="method",
+                y="value",
+                ax=ax,
+                color=strip_color,
+                alpha=strip_alpha * 0.8,
+                size=strip_size * 0.75,
+                jitter=jitter_width,
+                order=self.method_names,
+            )
+
+        elif plot_type == "strip":
+            sns.stripplot(
+                data=plot_data,
+                x="method",
+                y="value",
+                ax=ax,
+                palette=palette,
+                size=strip_size * 1.5,
+                jitter=jitter_width,
+                alpha=strip_alpha * 1.2,
+                order=self.method_names,
+            )
+
+        # 新增：柱状图支持
+        elif plot_type == "barplot":
+            self._create_customizable_bar_plot(
+                ax,
+                plot_data,
+                bar_color=kwargs.get("bar_color"),
+                bar_edge_color=kwargs.get("bar_edge_color", "black"),
+                bar_edge_width=kwargs.get("bar_edge_width", 1),
+                bar_alpha=kwargs.get("bar_alpha", 0.7),
+                bar_width=kwargs.get("bar_width", 0.6),
+                palette=palette,
+                show_error_bars=kwargs.get("show_error_bars", True),
+                error_bar_type=kwargs.get("error_bar_type", "std"),
+                error_bar_capsize=kwargs.get("error_bar_capsize", 5),
+                error_bar_capthick=kwargs.get("error_bar_capthick", 2),
+                error_bar_color=kwargs.get("error_bar_color", "black"),
+                error_bar_alpha=kwargs.get("error_bar_alpha", 0.8),
+                error_bar_width=kwargs.get("error_bar_width", 2),
+                show_bar_points=kwargs.get("show_bar_points", True),
+                bar_strip_size=kwargs.get("bar_strip_size", 3),
+                bar_strip_alpha=kwargs.get("bar_strip_alpha", 0.6),
+                bar_strip_color=kwargs.get("bar_strip_color", "black"),
+                bar_strip_jitter_width=kwargs.get("bar_strip_jitter_width", 0.4),
+            )
+
+        elif plot_type == "paired_lines":
             self._create_customizable_paired_lines_plot(
-                ax, plot_data,
-                datasets_to_show=kwargs.get('datasets_to_show', 20),
-                line_color=kwargs.get('line_color', 'gray'),
-                mean_line_color=kwargs.get('mean_line_color', 'red'),
-                mean_line_width=kwargs.get('mean_line_width', 3),
-                mean_marker_size=kwargs.get('mean_marker_size', 8),
-                annotation_bbox_props=kwargs.get('annotation_bbox_props'),
-                annotation_fontsize=kwargs.get('legend_fontsize', 9),
-                show_legend=show_legend
+                ax,
+                plot_data,
+                datasets_to_show=kwargs.get("datasets_to_show", 20),
+                line_color=kwargs.get("line_color", "gray"),
+                mean_line_color=kwargs.get("mean_line_color", "red"),
+                mean_line_width=kwargs.get("mean_line_width", 3),
+                mean_marker_size=kwargs.get("mean_marker_size", 8),
+                annotation_bbox_props=kwargs.get("annotation_bbox_props"),
+                annotation_fontsize=kwargs.get("legend_fontsize", 9),
+                show_legend=show_legend,
             )
 
         # 添加统计显著性标注
         self._add_customizable_significance_annotations(
-            ax, analysis_results, plot_data,
-            show_significance_pairs=kwargs.get('show_significance_pairs'),
-            max_significance_pairs=kwargs.get('max_significance_pairs', 5),
-            significance_marker_map=kwargs.get('significance_marker_map'),
-            significance_y_offset=kwargs.get('significance_y_offset', 0.05),
-            significance_marker_offset=kwargs.get('significance_marker_offset', 0.02),
-            ns_offset=kwargs.get('ns_offset', 0.01),
-            significance_line_width=kwargs.get('significance_line_width', 1),
-            significance_fontsize=kwargs.get('significance_fontsize', 12),
-            ns_fontsize=kwargs.get('ns_fontsize', 10),
-            line_color=kwargs.get('line_color', 'black'),
-            legend_bbox_props=kwargs.get('legend_bbox_props'),
-            legend_fontsize=kwargs.get('legend_fontsize', 9),
-            show_legend=show_legend)
+            ax,
+            analysis_results,
+            plot_data,
+            show_significance_pairs=kwargs.get("show_significance_pairs"),
+            max_significance_pairs=kwargs.get("max_significance_pairs", 5),
+            significance_marker_map=kwargs.get("significance_marker_map"),
+            significance_y_offset=kwargs.get("significance_y_offset", 0.05),
+            significance_marker_offset=kwargs.get("significance_marker_offset", 0.02),
+            ns_offset=kwargs.get("ns_offset", 0.01),
+            significance_line_width=kwargs.get("significance_line_width", 1),
+            significance_fontsize=kwargs.get("significance_fontsize", 12),
+            ns_fontsize=kwargs.get("ns_fontsize", 10),
+            line_color=kwargs.get("line_color", "black"),
+            legend_bbox_props=kwargs.get("legend_bbox_props"),
+            legend_fontsize=kwargs.get("legend_fontsize", 9),
+            show_legend=show_legend,
+        )
 
         # 设置图形属性
-        test_info = analysis_results.get('main_test', {})
-        test_name = test_info.get('test_name', 'Unknown test')
-        p_value = test_info.get('p_value', 1.0)
+        test_info = analysis_results.get("main_test", {})
+        test_name = test_info.get("test_name", "Unknown test")
+        p_value = test_info.get("p_value", 1.0)
 
         if p_value < 0.001:
             sig_desc = "p < 0.001"
@@ -1462,79 +1525,90 @@ class RigorousExperimentalAnalyzer:
             sig_desc = f"p = {p_value:.3f}"
 
         # 设置标题 - 修正：使用正确的参数名
-        display_name_param = kwargs.get('display_name') or kwargs.get('display_metric_name')
+        display_name_param = kwargs.get("display_name") or kwargs.get("display_metric_name")
         if display_name_param:
             display_name = display_name_param
         else:
             display_name = metric_name
 
-        stat_display_mode = kwargs.get('stat_test_display', 'full')
+        stat_display_mode = kwargs.get("stat_test_display", "full")
 
-        if stat_display_mode == 'none':
+        if stat_display_mode == "none":
             title_text = display_name
-        elif stat_display_mode == 'short':
+        elif stat_display_mode == "short":
             short_test_names = {
-                'Repeated measures ANOVA': 'ANOVA', 'One-way ANOVA': 'ANOVA',
-                'Welch ANOVA': 'Welch-ANOVA', 'Kruskal-Wallis': 'K-W',
-                'Paired t-test': 'Paired t', 'Independent t-test': 't-test',
-                'Wilcoxon signed-rank test': 'Wilcoxon', 'Mann-Whitney U': 'Mann-Whitney',
-                'Friedman test': 'Friedman'
+                "Repeated measures ANOVA": "ANOVA",
+                "One-way ANOVA": "ANOVA",
+                "Welch ANOVA": "Welch-ANOVA",
+                "Kruskal-Wallis": "K-W",
+                "Paired t-test": "Paired t",
+                "Independent t-test": "t-test",
+                "Wilcoxon signed-rank test": "Wilcoxon",
+                "Mann-Whitney U": "Mann-Whitney",
+                "Friedman test": "Friedman",
             }
             short_name = short_test_names.get(test_name, test_name)
-            title_text = f'{display_name}\n({short_name}, {sig_desc})'
+            title_text = f"{display_name}\n({short_name}, {sig_desc})"
         else:
-            title_text = f'{display_name}\n({test_name}, {sig_desc})'
+            title_text = f"{display_name}\n({test_name}, {sig_desc})"
 
-        title_bbox_props = kwargs.get('title_bbox_props')
-        title_fontsize = kwargs.get('title_fontsize', 12)
-        title_fontweight = kwargs.get('title_fontweight', 'normal')
+        title_bbox_props = kwargs.get("title_bbox_props")
+        title_fontsize = kwargs.get("title_fontsize", 12)
+        title_fontweight = kwargs.get("title_fontweight", "normal")
 
-        title_pad = kwargs.get('title_pad', 8)
+        title_pad = kwargs.get("title_pad", 8)
         if title_bbox_props is not None:
-            ax.set_title(title_text, fontsize=title_fontsize, fontweight=title_fontweight,
-                        pad=title_pad, bbox=title_bbox_props)
+            ax.set_title(
+                title_text,
+                fontsize=title_fontsize,
+                fontweight=title_fontweight,
+                pad=title_pad,
+                bbox=title_bbox_props,
+            )
         else:
-            ax.set_title(title_text, fontsize=title_fontsize, fontweight=title_fontweight, pad=title_pad)
+            ax.set_title(
+                title_text, fontsize=title_fontsize, fontweight=title_fontweight, pad=title_pad
+            )
 
         # 设置轴标签
-        axis_label_fontsize = kwargs.get('axis_label_fontsize', 12)
-        show_xlabel = kwargs.get('show_xlabel', False)
+        axis_label_fontsize = kwargs.get("axis_label_fontsize", 12)
+        show_xlabel = kwargs.get("show_xlabel", False)
         if show_xlabel:
-            ax.set_xlabel('Method', fontsize=axis_label_fontsize)
+            ax.set_xlabel("Method", fontsize=axis_label_fontsize)
         else:
-            ax.set_xlabel('', fontsize=axis_label_fontsize)
-        ax.set_ylabel(f'{metric_name}', fontsize=axis_label_fontsize)
+            ax.set_xlabel("", fontsize=axis_label_fontsize)
+        ax.set_ylabel(f"{metric_name}", fontsize=axis_label_fontsize)
 
         # 设置刻度标签字体大小
-        tick_label_fontsize = kwargs.get('tick_label_fontsize', 12)
-        ax.tick_params(axis='both', which='major', labelsize=tick_label_fontsize)
+        tick_label_fontsize = kwargs.get("tick_label_fontsize", 12)
+        ax.tick_params(axis="both", which="major", labelsize=tick_label_fontsize)
 
         # Auto scientific notation for large y-axis values (e.g., CAL metric)
         y_min, y_max = ax.get_ylim()
         if abs(y_max) > 1000 or abs(y_min) > 1000:
-            ax.ticklabel_format(style='sci', axis='y', scilimits=(0, 3))
-            if hasattr(ax, 'yaxis') and ax.yaxis.get_offset_text():
+            ax.ticklabel_format(style="sci", axis="y", scilimits=(0, 3))
+            if hasattr(ax, "yaxis") and ax.yaxis.get_offset_text():
                 ax.yaxis.get_offset_text().set_fontsize(tick_label_fontsize - 1)
 
         # 设置边框可见性
-        spines_visible = kwargs.get('spines_visible', {'top': False, 'right': False})
+        spines_visible = kwargs.get("spines_visible", {"top": False, "right": False})
         for spine, visible in spines_visible.items():
             if spine in ax.spines:
                 ax.spines[spine].set_visible(visible)
 
         # 网格设置
-        if kwargs.get('grid', True):
-            ax.grid(True, alpha=kwargs.get('grid_alpha', 0.3))
+        if kwargs.get("grid", True):
+            ax.grid(True, alpha=kwargs.get("grid_alpha", 0.3))
 
         # X轴标签旋转 — adaptive rotation based on method count
-        rotate_xlabels = kwargs.get('rotate_xlabels')
+        rotate_xlabels = kwargs.get("rotate_xlabels")
         n_methods = len(self.method_names)
         if rotate_xlabels is None:
             rotate_xlabels = n_methods > 3
 
         if rotate_xlabels:
             # Adaptive rotation: fewer methods → gentler angle
-            user_rotation = kwargs.get('xlabel_rotation')
+            user_rotation = kwargs.get("xlabel_rotation")
             if user_rotation is not None:
                 xlabel_rotation = user_rotation
             elif n_methods <= 5:
@@ -1543,32 +1617,35 @@ class RigorousExperimentalAnalyzer:
                 xlabel_rotation = 40
             else:
                 xlabel_rotation = 50
-            xlabel_ha = kwargs.get('xlabel_ha', 'right')
+            xlabel_ha = kwargs.get("xlabel_ha", "right")
             plt.setp(ax.xaxis.get_majorticklabels(), rotation=xlabel_rotation, ha=xlabel_ha)
             # Slight rightward shift for rotated labels so they don't crowd left
-            ax.tick_params(axis='x', pad=3)
-
+            ax.tick_params(axis="x", pad=3)
 
     # 新增：柱状图创建函数
-    def _create_customizable_bar_plot(self, ax, plot_data,
-                                     bar_color=None,
-                                     bar_edge_color='black',
-                                     bar_edge_width=1,
-                                     bar_alpha=0.7,
-                                     bar_width=0.6,
-                                     palette='Set2',
-                                     show_error_bars=True,
-                                     error_bar_type='std',
-                                     error_bar_capsize=5,
-                                     error_bar_capthick=2,
-                                     error_bar_color='black',
-                                     error_bar_alpha=0.8,
-                                     error_bar_width=2,
-                                     show_bar_points=True,
-                                     bar_strip_size=3,
-                                     bar_strip_alpha=0.6,
-                                     bar_strip_color='black',
-                                     bar_strip_jitter_width=0.4):
+    def _create_customizable_bar_plot(
+        self,
+        ax,
+        plot_data,
+        bar_color=None,
+        bar_edge_color="black",
+        bar_edge_width=1,
+        bar_alpha=0.7,
+        bar_width=0.6,
+        palette="Set2",
+        show_error_bars=True,
+        error_bar_type="std",
+        error_bar_capsize=5,
+        error_bar_capthick=2,
+        error_bar_color="black",
+        error_bar_alpha=0.8,
+        error_bar_width=2,
+        show_bar_points=True,
+        bar_strip_size=3,
+        bar_strip_alpha=0.6,
+        bar_strip_color="black",
+        bar_strip_jitter_width=0.4,
+    ):
         """
         创建可定制的柱状图
 
@@ -1599,7 +1676,7 @@ class RigorousExperimentalAnalyzer:
                 colors_to_use = palette
 
         for i, method in enumerate(self.method_names):
-            method_data = plot_data[plot_data['method'] == method]['value']
+            method_data = plot_data[plot_data["method"] == method]["value"]
 
             if len(method_data) == 0:
                 continue
@@ -1609,12 +1686,12 @@ class RigorousExperimentalAnalyzer:
             heights.append(mean_val)
 
             # 计算误差棒
-            if show_error_bars and error_bar_type != 'none':
-                if error_bar_type == 'std':
+            if show_error_bars and error_bar_type != "none":
+                if error_bar_type == "std":
                     error_val = method_data.std()
-                elif error_bar_type == 'sem':
+                elif error_bar_type == "sem":
                     error_val = method_data.std() / np.sqrt(len(method_data))
-                elif error_bar_type == 'ci95':
+                elif error_bar_type == "ci95":
                     confidence_level = 0.95
                     degrees_freedom = len(method_data) - 1
                     if degrees_freedom > 0:
@@ -1623,7 +1700,7 @@ class RigorousExperimentalAnalyzer:
                         error_val = margin_of_error
                     else:
                         error_val = 0
-                elif error_bar_type == 'ci99':
+                elif error_bar_type == "ci99":
                     confidence_level = 0.99
                     degrees_freedom = len(method_data) - 1
                     if degrees_freedom > 0:
@@ -1641,21 +1718,35 @@ class RigorousExperimentalAnalyzer:
             bar_colors.append(colors_to_use[i % len(colors_to_use)])
 
         # 绘制柱状图
-        bars = ax.bar(x_positions, heights, width=bar_width,
-                      color=bar_colors, alpha=bar_alpha,
-                      edgecolor=bar_edge_color, linewidth=bar_edge_width)
+        bars = ax.bar(  # noqa: F841
+            x_positions,
+            heights,
+            width=bar_width,
+            color=bar_colors,
+            alpha=bar_alpha,
+            edgecolor=bar_edge_color,
+            linewidth=bar_edge_width,
+        )
 
         # 添加误差棒
-        if show_error_bars and error_bar_type != 'none':
-            ax.errorbar(x_positions, heights, yerr=error_values,
-                       fmt='none', ecolor=error_bar_color, alpha=error_bar_alpha,
-                       capsize=error_bar_capsize, capthick=error_bar_capthick,
-                       elinewidth=error_bar_width, zorder=10)
+        if show_error_bars and error_bar_type != "none":
+            ax.errorbar(
+                x_positions,
+                heights,
+                yerr=error_values,
+                fmt="none",
+                ecolor=error_bar_color,
+                alpha=error_bar_alpha,
+                capsize=error_bar_capsize,
+                capthick=error_bar_capthick,
+                elinewidth=error_bar_width,
+                zorder=10,
+            )
 
         # 添加散点（抖动）
         if show_bar_points:
             for i, method in enumerate(self.method_names):
-                method_data = plot_data[plot_data['method'] == method]['value']
+                method_data = plot_data[plot_data["method"] == method]["value"]
 
                 if len(method_data) == 0:
                     continue
@@ -1663,67 +1754,82 @@ class RigorousExperimentalAnalyzer:
                 # 生成抖动的x坐标
                 x_center = i
                 jitter_range = bar_strip_jitter_width * bar_width
-                x_jittered = np.random.normal(x_center, jitter_range/3, len(method_data))
+                x_jittered = np.random.normal(x_center, jitter_range / 3, len(method_data))
                 # 限制抖动范围
-                x_jittered = np.clip(x_jittered,
-                                   x_center - jitter_range/2,
-                                   x_center + jitter_range/2)
+                x_jittered = np.clip(
+                    x_jittered, x_center - jitter_range / 2, x_center + jitter_range / 2
+                )
 
-                ax.scatter(x_jittered, method_data.values,
-                          color=bar_strip_color, alpha=bar_strip_alpha,
-                          s=bar_strip_size**2, zorder=15)
+                ax.scatter(
+                    x_jittered,
+                    method_data.values,
+                    color=bar_strip_color,
+                    alpha=bar_strip_alpha,
+                    s=bar_strip_size**2,
+                    zorder=15,
+                )
 
         # 设置x轴刻度
         ax.set_xticks(range(len(self.method_names)))
         ax.set_xticklabels(self.method_names)
 
-
-    def _create_customizable_paired_lines_plot(self, ax, plot_data,
-                                                datasets_to_show=20,
-                                                line_color='gray',
-                                                mean_line_color='red',
-                                                mean_line_width=3,
-                                                mean_marker_size=8,
-                                                annotation_bbox_props=None,
-                                                annotation_fontsize=9,
-                                                show_legend=True):
+    def _create_customizable_paired_lines_plot(
+        self,
+        ax,
+        plot_data,
+        datasets_to_show=20,
+        line_color="gray",
+        mean_line_color="red",
+        mean_line_width=3,
+        mean_marker_size=8,
+        annotation_bbox_props=None,
+        annotation_fontsize=9,
+        show_legend=True,
+    ):
         """
         创建可定制的配对线图
         """
-        if self.design_type != 'paired':
+        if self.design_type != "paired":
             self._log("Warning: paired_lines plot is most suitable for paired design")
 
         # 为每个数据集绘制连接线
         datasets_plotted = 0
         max_datasets_to_show = min(datasets_to_show, self.n_datasets)
 
-        for dataset_id in plot_data['dataset_id'].unique():
+        for dataset_id in plot_data["dataset_id"].unique():
             if datasets_plotted >= max_datasets_to_show:
                 break
 
-            dataset_data = plot_data[plot_data['dataset_id'] == dataset_id]
+            dataset_data = plot_data[plot_data["dataset_id"] == dataset_id]
 
             if len(dataset_data) == len(self.method_names):
                 x_positions = []
                 y_values = []
 
                 for i, method in enumerate(self.method_names):
-                    method_data = dataset_data[dataset_data['method'] == method]
+                    method_data = dataset_data[dataset_data["method"] == method]
                     if not method_data.empty:
                         x_positions.append(i)
-                        y_values.append(method_data['value'].iloc[0])
+                        y_values.append(method_data["value"].iloc[0])
 
                 if len(x_positions) == len(self.method_names):
                     alpha = max(0.2, min(0.8, 1.0 - datasets_plotted * 0.02))
-                    ax.plot(x_positions, y_values, 'o-', alpha=alpha,
-                            linewidth=1, markersize=3, color=line_color)
+                    ax.plot(
+                        x_positions,
+                        y_values,
+                        "o-",
+                        alpha=alpha,
+                        linewidth=1,
+                        markersize=3,
+                        color=line_color,
+                    )
                     datasets_plotted += 1
 
         # 添加均值线
         means = []
         stds = []
         for method in self.method_names:
-            method_data = plot_data[plot_data['method'] == method]['value']
+            method_data = plot_data[plot_data["method"] == method]["value"]
             if len(method_data) > 0:
                 means.append(method_data.mean())
                 stds.append(method_data.std())
@@ -1736,13 +1842,28 @@ class RigorousExperimentalAnalyzer:
             valid_means = [means[i] for i in valid_indices]
             valid_stds = [stds[i] for i in valid_indices]
 
-            ax.plot(valid_indices, valid_means, 'o-', color=mean_line_color,
-                    linewidth=mean_line_width, markersize=mean_marker_size,
-                    label='Mean', alpha=0.9, zorder=10)
+            ax.plot(
+                valid_indices,
+                valid_means,
+                "o-",
+                color=mean_line_color,
+                linewidth=mean_line_width,
+                markersize=mean_marker_size,
+                label="Mean",
+                alpha=0.9,
+                zorder=10,
+            )
 
-            ax.errorbar(valid_indices, valid_means, yerr=valid_stds,
-                        fmt='none', ecolor=mean_line_color, alpha=0.6,
-                        capsize=5, zorder=9)
+            ax.errorbar(
+                valid_indices,
+                valid_means,
+                yerr=valid_stds,
+                fmt="none",
+                ecolor=mean_line_color,
+                alpha=0.6,
+                capsize=5,
+                zorder=9,
+            )
 
         ax.set_xticks(range(len(self.method_names)))
         ax.set_xticklabels(self.method_names)
@@ -1751,78 +1872,126 @@ class RigorousExperimentalAnalyzer:
             ax.legend()
 
         if datasets_plotted < self.n_datasets:
-            bbox_props = annotation_bbox_props if annotation_bbox_props else \
-                        {'boxstyle': 'round', 'facecolor': 'wheat', 'alpha': 0.7}
+            bbox_props = (
+                annotation_bbox_props
+                if annotation_bbox_props
+                else {"boxstyle": "round", "facecolor": "wheat", "alpha": 0.7}
+            )
 
-            ax.text(0.02, 0.98, f'Showing {datasets_plotted}/{self.n_datasets} datasets',
-                    transform=ax.transAxes, fontsize=annotation_fontsize, va='top',
-                    bbox=bbox_props)
+            ax.text(
+                0.02,
+                0.98,
+                f"Showing {datasets_plotted}/{self.n_datasets} datasets",
+                transform=ax.transAxes,
+                fontsize=annotation_fontsize,
+                va="top",
+                bbox=bbox_props,
+            )
 
-
-    def _add_customizable_significance_annotations(self, ax, analysis_results, plot_data,
-                                                    show_significance_pairs=None,
-                                                    max_significance_pairs=5,
-                                                    significance_marker_map=None,
-                                                    significance_y_offset=0.05,
-                                                    significance_marker_offset=0.02,
-                                                    ns_offset=0.01,
-                                                    significance_line_width=1,
-                                                    significance_fontsize=12,
-                                                    ns_fontsize=10,
-                                                    line_color='black',
-                                                    legend_bbox_props=None,
-                                                    legend_fontsize=9,
-                                                    show_legend=True):
+    def _add_customizable_significance_annotations(
+        self,
+        ax,
+        analysis_results,
+        plot_data,
+        show_significance_pairs=None,
+        max_significance_pairs=5,
+        significance_marker_map=None,
+        significance_y_offset=0.05,
+        significance_marker_offset=0.02,
+        ns_offset=0.01,
+        significance_line_width=1,
+        significance_fontsize=12,
+        ns_fontsize=10,
+        line_color="black",
+        legend_bbox_props=None,
+        legend_fontsize=9,
+        show_legend=True,
+    ):
         """
         添加可定制的统计显著性标注
         """
         if significance_marker_map is None:
-            significance_marker_map = {'***': '***', '**': '**', '*': '*', 'ns': 'ns'}
+            significance_marker_map = {"***": "***", "**": "**", "*": "*", "ns": "ns"}
 
-        if analysis_results['analysis_type'] == 'two_groups':
-            p_value = analysis_results['main_test']['p_value']
-            y_max = plot_data['value'].max()
-            y_range = plot_data['value'].max() - plot_data['value'].min()
+        if analysis_results["analysis_type"] == "two_groups":
+            p_value = analysis_results["main_test"]["p_value"]
+            y_max = plot_data["value"].max()
+            y_range = plot_data["value"].max() - plot_data["value"].min()
             y_line = y_max + significance_y_offset * y_range
 
             ax.plot([0, 1], [y_line, y_line], color=line_color, linewidth=significance_line_width)
-            ax.plot([0, 0], [y_line-0.01*y_range, y_line+0.01*y_range], color=line_color, linewidth=significance_line_width)
-            ax.plot([1, 1], [y_line-0.01*y_range, y_line+0.01*y_range], color=line_color, linewidth=significance_line_width)
+            ax.plot(
+                [0, 0],
+                [y_line - 0.01 * y_range, y_line + 0.01 * y_range],
+                color=line_color,
+                linewidth=significance_line_width,
+            )
+            ax.plot(
+                [1, 1],
+                [y_line - 0.01 * y_range, y_line + 0.01 * y_range],
+                color=line_color,
+                linewidth=significance_line_width,
+            )
 
-            if p_value < 0.001: sig_text = significance_marker_map.get('***', '***')
-            elif p_value < 0.01: sig_text = significance_marker_map.get('**', '**')
-            elif p_value < 0.05: sig_text = significance_marker_map.get('*', '*')
-            else: sig_text = significance_marker_map.get('ns', 'ns')
-
-            if sig_text == 'ns':
-                ax.text(0.5, y_line+ns_offset*y_range, sig_text, ha='center', va='bottom', fontsize=ns_fontsize)
+            if p_value < 0.001:
+                sig_text = significance_marker_map.get("***", "***")
+            elif p_value < 0.01:
+                sig_text = significance_marker_map.get("**", "**")
+            elif p_value < 0.05:
+                sig_text = significance_marker_map.get("*", "*")
             else:
-                ax.text(0.5, y_line+significance_marker_offset*y_range, sig_text, ha='center', va='bottom', fontsize=significance_fontsize, fontweight='bold')
+                sig_text = significance_marker_map.get("ns", "ns")
 
-        elif (analysis_results['analysis_type'] == 'multiple_groups' and 'post_hoc' in analysis_results):
-            post_hoc = analysis_results['post_hoc']
-            significant_comparisons = [comp for comp in post_hoc['comparisons']]
+            if sig_text == "ns":
+                ax.text(
+                    0.5,
+                    y_line + ns_offset * y_range,
+                    sig_text,
+                    ha="center",
+                    va="bottom",
+                    fontsize=ns_fontsize,
+                )
+            else:
+                ax.text(
+                    0.5,
+                    y_line + significance_marker_offset * y_range,
+                    sig_text,
+                    ha="center",
+                    va="bottom",
+                    fontsize=significance_fontsize,
+                    fontweight="bold",
+                )
+
+        elif (
+            analysis_results["analysis_type"] == "multiple_groups"
+            and "post_hoc" in analysis_results
+        ):
+            post_hoc = analysis_results["post_hoc"]
+            significant_comparisons = list(post_hoc["comparisons"])
 
             if not significant_comparisons:
                 return
 
             if show_significance_pairs is not None:
-                pairs_to_show = [comp for comp in significant_comparisons
-                               for m1, m2 in show_significance_pairs
-                               if (comp['method1'] == m1 and comp['method2'] == m2) or
-                                  (comp['method1'] == m2 and comp['method2'] == m1)]
+                pairs_to_show = [
+                    comp
+                    for comp in significant_comparisons
+                    for m1, m2 in show_significance_pairs
+                    if (comp["method1"] == m1 and comp["method2"] == m2)
+                    or (comp["method1"] == m2 and comp["method2"] == m1)
+                ]
                 # Sort by significance and respect the max cap even for user-specified pairs
-                pairs_to_show.sort(key=lambda x: x.get('p_corrected', x.get('p_raw', 1)))
+                pairs_to_show.sort(key=lambda x: x.get("p_corrected", x.get("p_raw", 1)))
                 pairs_to_show = pairs_to_show[:max_significance_pairs]
             else:
-                significant_comparisons.sort(key=lambda x: x.get('p_corrected', x.get('p_raw', 1)))
+                significant_comparisons.sort(key=lambda x: x.get("p_corrected", x.get("p_raw", 1)))
                 pairs_to_show = significant_comparisons[:max_significance_pairs]
 
             if not pairs_to_show:
                 return
 
-            y_max = plot_data['value'].max()
-            y_min = plot_data['value'].min()
+            y_max = plot_data["value"].max()
+            y_min = plot_data["value"].min()
             y_range = y_max - y_min
 
             # Adaptive per-bracket increment: more brackets → tighter stacking
@@ -1836,7 +2005,7 @@ class RigorousExperimentalAnalyzer:
 
             for i, comp in enumerate(pairs_to_show):
                 try:
-                    method1, method2 = comp['method1'], comp['method2']
+                    method1, method2 = comp["method1"], comp["method2"]
                     idx1, idx2 = self.method_names.index(method1), self.method_names.index(method2)
                     if idx1 > idx2:
                         idx1, idx2 = idx2, idx1
@@ -1844,39 +2013,88 @@ class RigorousExperimentalAnalyzer:
                     y_offset = significance_y_offset + bracket_step * i
                     y_line = y_max + y_offset * y_range
 
-                    ax.plot([idx1, idx2], [y_line, y_line], color=line_color, linewidth=significance_line_width)
-                    ax.plot([idx1, idx1], [y_line-0.01*y_range, y_line+0.01*y_range], color=line_color, linewidth=significance_line_width)
-                    ax.plot([idx2, idx2], [y_line-0.01*y_range, y_line+0.01*y_range], color=line_color, linewidth=significance_line_width)
+                    ax.plot(
+                        [idx1, idx2],
+                        [y_line, y_line],
+                        color=line_color,
+                        linewidth=significance_line_width,
+                    )
+                    ax.plot(
+                        [idx1, idx1],
+                        [y_line - 0.01 * y_range, y_line + 0.01 * y_range],
+                        color=line_color,
+                        linewidth=significance_line_width,
+                    )
+                    ax.plot(
+                        [idx2, idx2],
+                        [y_line - 0.01 * y_range, y_line + 0.01 * y_range],
+                        color=line_color,
+                        linewidth=significance_line_width,
+                    )
 
-                    p_val = comp.get('p_corrected', comp.get('p_raw', 1))
+                    p_val = comp.get("p_corrected", comp.get("p_raw", 1))
                     if p_val < 0.001:
-                        sig_marker = significance_marker_map.get('***', '***')
+                        sig_marker = significance_marker_map.get("***", "***")
                     elif p_val < 0.01:
-                        sig_marker = significance_marker_map.get('**', '**')
+                        sig_marker = significance_marker_map.get("**", "**")
                     elif p_val < 0.05:
-                        sig_marker = significance_marker_map.get('*', '*')
+                        sig_marker = significance_marker_map.get("*", "*")
                     else:
-                        sig_marker = 'ns'
+                        sig_marker = "ns"
 
-                    if sig_marker == 'ns':
-                        ax.text((idx1+idx2)/2, y_line+ns_offset*y_range, sig_marker, ha='center', va='bottom', fontsize=ns_fontsize)
+                    if sig_marker == "ns":
+                        ax.text(
+                            (idx1 + idx2) / 2,
+                            y_line + ns_offset * y_range,
+                            sig_marker,
+                            ha="center",
+                            va="bottom",
+                            fontsize=ns_fontsize,
+                        )
                     else:
-                        ax.text((idx1+idx2)/2, y_line+significance_marker_offset*y_range, sig_marker, ha='center', va='bottom', fontsize=significance_fontsize, fontweight='bold')
+                        ax.text(
+                            (idx1 + idx2) / 2,
+                            y_line + significance_marker_offset * y_range,
+                            sig_marker,
+                            ha="center",
+                            va="bottom",
+                            fontsize=significance_fontsize,
+                            fontweight="bold",
+                        )
 
                 except (ValueError, IndexError) as e:
-                    self._log(f"Warning: Could not annotate pair {comp['method1']} vs {comp['method2']}: {e}")
+                    self._log(
+                        f"Warning: Could not annotate pair {comp['method1']} vs {comp['method2']}: {e}"
+                    )
                     continue
 
             # 根据参数决定是否显示图例说明
             if show_legend and len(pairs_to_show) > 0:
-                legend_text = f"Significant pairs shown: {len(pairs_to_show)}/{len(significant_comparisons)}"
-                if len(significant_comparisons) > max_significance_pairs and show_significance_pairs is None:
+                legend_text = (
+                    f"Significant pairs shown: {len(pairs_to_show)}/{len(significant_comparisons)}"
+                )
+                if (
+                    len(significant_comparisons) > max_significance_pairs
+                    and show_significance_pairs is None
+                ):
                     legend_text += f" (top {max_significance_pairs} by p-value)"
 
-                bbox_props = legend_bbox_props if legend_bbox_props else {'boxstyle': 'round', 'facecolor': 'lightblue', 'alpha': 0.7}
+                bbox_props = (
+                    legend_bbox_props
+                    if legend_bbox_props
+                    else {"boxstyle": "round", "facecolor": "lightblue", "alpha": 0.7}
+                )
 
-                ax.text(0.98, 0.02, legend_text, transform=ax.transAxes, fontsize=legend_fontsize, ha='right', va='bottom', bbox=bbox_props)
-
+                ax.text(
+                    0.98,
+                    0.02,
+                    legend_text,
+                    transform=ax.transAxes,
+                    fontsize=legend_fontsize,
+                    ha="right",
+                    va="bottom",
+                    bbox=bbox_props,
+                )
 
     # ==================== 4. 综合结果分析和展示 ====================
 
@@ -1895,66 +2113,67 @@ class RigorousExperimentalAnalyzer:
             try:
                 analysis = self.perform_metric_analysis(metric)
 
-                if 'error' in analysis:
+                if "error" in analysis:
                     self._log(f"❌ Error analyzing {metric}: {analysis['error']}")
                     continue
 
                 self.statistical_results[metric] = analysis
 
                 # 构建结果行
-                result_row = {'Metric': metric}
+                result_row = {"Metric": metric}
 
                 # 描述性统计
                 for method in self.method_names:
-                    if method in analysis['descriptive_stats']:
-                        stats_data = analysis['descriptive_stats'][method]
-                        result_row[f'{method}_Mean'] = stats_data['mean']
-                        result_row[f'{method}_Std'] = stats_data['std']
-                        result_row[f'{method}_N'] = stats_data['n']
+                    if method in analysis["descriptive_stats"]:
+                        stats_data = analysis["descriptive_stats"][method]
+                        result_row[f"{method}_Mean"] = stats_data["mean"]
+                        result_row[f"{method}_Std"] = stats_data["std"]
+                        result_row[f"{method}_N"] = stats_data["n"]
                     else:
-                        result_row[f'{method}_Mean'] = np.nan
-                        result_row[f'{method}_Std'] = np.nan
-                        result_row[f'{method}_N'] = 0
+                        result_row[f"{method}_Mean"] = np.nan
+                        result_row[f"{method}_Std"] = np.nan
+                        result_row[f"{method}_N"] = 0
 
                 # 主要统计测试
-                main_test = analysis.get('main_test', {})
-                result_row['Test_Used'] = main_test.get('test_name', 'Unknown')
-                result_row['P_Value'] = main_test.get('p_value', np.nan)
-                result_row['Test_Statistic'] = main_test.get('statistic', np.nan)
+                main_test = analysis.get("main_test", {})
+                result_row["Test_Used"] = main_test.get("test_name", "Unknown")
+                result_row["P_Value"] = main_test.get("p_value", np.nan)
+                result_row["Test_Statistic"] = main_test.get("statistic", np.nan)
 
                 # 效应量
-                effect_size = analysis.get('effect_size', {})
-                result_row['Effect_Size'] = effect_size.get('value', np.nan)
-                result_row['Effect_Type'] = effect_size.get('type', 'Unknown')
+                effect_size = analysis.get("effect_size", {})
+                result_row["Effect_Size"] = effect_size.get("value", np.nan)
+                result_row["Effect_Type"] = effect_size.get("type", "Unknown")
 
                 # 两组比较的改进信息
-                if analysis['analysis_type'] == 'two_groups':
-                    improvement = analysis.get('improvement', {})
-                    result_row['Improvement_Pct'] = improvement.get('percentage', np.nan)
-                    result_row['Improvement_Abs'] = improvement.get('absolute', np.nan)
+                if analysis["analysis_type"] == "two_groups":
+                    improvement = analysis.get("improvement", {})
+                    result_row["Improvement_Pct"] = improvement.get("percentage", np.nan)
+                    result_row["Improvement_Abs"] = improvement.get("absolute", np.nan)
 
                 # 显著性标记
-                p_val = result_row['P_Value']
+                p_val = result_row["P_Value"]
                 if pd.isna(p_val):
-                    result_row['Significance'] = 'Unknown'
+                    result_row["Significance"] = "Unknown"
                 elif p_val < 0.001:
-                    result_row['Significance'] = '***'
+                    result_row["Significance"] = "***"
                 elif p_val < 0.01:
-                    result_row['Significance'] = '**'
+                    result_row["Significance"] = "**"
                 elif p_val < 0.05:
-                    result_row['Significance'] = '*'
+                    result_row["Significance"] = "*"
                 else:
-                    result_row['Significance'] = 'ns'
+                    result_row["Significance"] = "ns"
 
                 # 事后检验信息
-                if 'post_hoc' in analysis:
-                    significant_pairs = sum(1 for comp in analysis['post_hoc']['comparisons']
-                                          if comp['significant'])
-                    result_row['Significant_Pairs'] = significant_pairs
-                    result_row['Total_Pairs'] = len(analysis['post_hoc']['comparisons'])
+                if "post_hoc" in analysis:
+                    significant_pairs = sum(
+                        1 for comp in analysis["post_hoc"]["comparisons"] if comp["significant"]
+                    )
+                    result_row["Significant_Pairs"] = significant_pairs
+                    result_row["Total_Pairs"] = len(analysis["post_hoc"]["comparisons"])
                 else:
-                    result_row['Significant_Pairs'] = np.nan
-                    result_row['Total_Pairs'] = np.nan
+                    result_row["Significant_Pairs"] = np.nan
+                    result_row["Total_Pairs"] = np.nan
 
                 all_results.append(result_row)
 
@@ -1971,9 +2190,9 @@ class RigorousExperimentalAnalyzer:
         """
         打印全面的分析摘要，包含所有统计结果
         """
-        print("="*120)
+        print("=" * 120)
         print("                           📊 RIGOROUS EXPERIMENTAL ANALYSIS REPORT")
-        print("="*120)
+        print("=" * 120)
 
         # 实验设计摘要
         print("\n📋 Experimental Design Summary:")
@@ -1996,49 +2215,65 @@ class RigorousExperimentalAnalyzer:
             # 两组比较摘要
             method1, method2 = self.method_names[0], self.method_names[1]
 
-            if 'Improvement_Pct' in summary_df.columns:
-                significant_improvements = len(summary_df[
-                    (summary_df['P_Value'] < 0.05) & (summary_df['Improvement_Pct'] > 0)
-                ])
-                significant_degradations = len(summary_df[
-                    (summary_df['P_Value'] < 0.05) & (summary_df['Improvement_Pct'] < 0)
-                ])
+            if "Improvement_Pct" in summary_df.columns:
+                significant_improvements = len(
+                    summary_df[(summary_df["P_Value"] < 0.05) & (summary_df["Improvement_Pct"] > 0)]
+                )
+                significant_degradations = len(
+                    summary_df[(summary_df["P_Value"] < 0.05) & (summary_df["Improvement_Pct"] < 0)]
+                )
 
-                print(f"   • Significant improvements ({method2} > {method1}): {significant_improvements}/{len(summary_df)}")
-                print(f"   • Significant degradations ({method2} < {method1}): {significant_degradations}/{len(summary_df)}")
+                print(
+                    f"   • Significant improvements ({method2} > {method1}): {significant_improvements}/{len(summary_df)}"
+                )
+                print(
+                    f"   • Significant degradations ({method2} < {method1}): {significant_degradations}/{len(summary_df)}"
+                )
 
                 # 最大改进
-                top_improvements = summary_df.nlargest(5, 'Improvement_Pct')
+                top_improvements = summary_df.nlargest(5, "Improvement_Pct")
                 print(f"\n🏆 Top 5 Performance Improvements ({method2} vs {method1}):")
                 for _, row in top_improvements.iterrows():
-                    print(f"   • {row['Metric']}: {row['Improvement_Pct']:+.1f}% ({row['Significance']})")
+                    print(
+                        f"   • {row['Metric']}: {row['Improvement_Pct']:+.1f}% ({row['Significance']})"
+                    )
         else:
             # 多组比较摘要
-            significant_overall = len(summary_df[summary_df['P_Value'] < 0.05])
-            print(f"   • Significant overall differences: {significant_overall}/{len(summary_df)} metrics")
+            significant_overall = len(summary_df[summary_df["P_Value"] < 0.05])
+            print(
+                f"   • Significant overall differences: {significant_overall}/{len(summary_df)} metrics"
+            )
 
-            if 'Significant_Pairs' in summary_df.columns:
-                total_significant_pairs = summary_df['Significant_Pairs'].sum()
-                total_possible_pairs = summary_df['Total_Pairs'].sum()
-                print(f"   • Significant pairwise differences: {total_significant_pairs:.0f}/{total_possible_pairs:.0f} pairs")
+            if "Significant_Pairs" in summary_df.columns:
+                total_significant_pairs = summary_df["Significant_Pairs"].sum()
+                total_possible_pairs = summary_df["Total_Pairs"].sum()
+                print(
+                    f"   • Significant pairwise differences: {total_significant_pairs:.0f}/{total_possible_pairs:.0f} pairs"
+                )
 
         # 统计测试摘要
         print("\n🔬 Statistical Test Distribution:")
-        test_counts = summary_df['Test_Used'].value_counts()
+        test_counts = summary_df["Test_Used"].value_counts()
         for test_name, count in test_counts.items():
             print(f"   • {test_name}: {count} metrics")
 
         # 效应量分布
-        if 'Effect_Size' in summary_df.columns:
-            effect_sizes = summary_df['Effect_Size'].dropna()
+        if "Effect_Size" in summary_df.columns:
+            effect_sizes = summary_df["Effect_Size"].dropna()
             if len(effect_sizes) > 0:
                 print("\n📏 Effect Size Distribution:")
-                print(f"   • Mean effect size: {effect_sizes.mean():.3f} (±{effect_sizes.std():.3f})")
+                print(
+                    f"   • Mean effect size: {effect_sizes.mean():.3f} (±{effect_sizes.std():.3f})"
+                )
 
                 # 效应量分类
                 large_effects = len(effect_sizes[abs(effect_sizes) > 0.8])
-                medium_effects = len(effect_sizes[(abs(effect_sizes) > 0.5) & (abs(effect_sizes) <= 0.8)])
-                small_effects = len(effect_sizes[(abs(effect_sizes) > 0.2) & (abs(effect_sizes) <= 0.5)])
+                medium_effects = len(
+                    effect_sizes[(abs(effect_sizes) > 0.5) & (abs(effect_sizes) <= 0.8)]
+                )
+                small_effects = len(
+                    effect_sizes[(abs(effect_sizes) > 0.2) & (abs(effect_sizes) <= 0.5)]
+                )
                 negligible_effects = len(effect_sizes[abs(effect_sizes) <= 0.2])
 
                 print(f"   • Large effects (|ES| > 0.8): {large_effects}")
@@ -2048,23 +2283,23 @@ class RigorousExperimentalAnalyzer:
 
         # 详细结果表格
         print("\n📊 Detailed Statistical Results:")
-        print("="*120)
+        print("=" * 120)
 
         # 选择要显示的列
-        display_cols = ['Metric']
+        display_cols = ["Metric"]
         for method in self.method_names:
-            if f'{method}_Mean' in summary_df.columns:
-                display_cols.append(f'{method}_Mean')
-        display_cols.extend(['Test_Used', 'P_Value', 'Effect_Size', 'Significance'])
+            if f"{method}_Mean" in summary_df.columns:
+                display_cols.append(f"{method}_Mean")
+        display_cols.extend(["Test_Used", "P_Value", "Effect_Size", "Significance"])
 
-        if 'Improvement_Pct' in summary_df.columns:
-            display_cols.append('Improvement_Pct')
+        if "Improvement_Pct" in summary_df.columns:
+            display_cols.append("Improvement_Pct")
 
         display_df = summary_df[display_cols].copy()
 
         # 格式化数值
         for col in display_df.columns:
-            if col.endswith('_Mean') or col in ['P_Value', 'Effect_Size', 'Improvement_Pct']:
+            if col.endswith("_Mean") or col in ["P_Value", "Effect_Size", "Improvement_Pct"]:
                 display_df[col] = display_df[col].apply(
                     lambda x: f"{x:.4f}" if pd.notna(x) else "N/A"
                 )
@@ -2074,41 +2309,58 @@ class RigorousExperimentalAnalyzer:
         # 事后检验详细结果（对于多组比较）
         if len(self.method_names) > 2:
             print("\n🔍 Post-hoc Analysis Details:")
-            print("-"*100)
+            print("-" * 100)
 
             for metric, analysis in self.statistical_results.items():
-                if 'post_hoc' in analysis and analysis['main_test']['p_value'] < 0.05:
+                if "post_hoc" in analysis and analysis["main_test"]["p_value"] < 0.05:
                     print(f"\n{metric} ({analysis['post_hoc']['method']}):")
 
-                    for comp in analysis['post_hoc']['comparisons']:
-                        if comp['significant']:
-                            print(f"   • {comp['method1']} vs {comp['method2']}: "
-                                  f"p = {comp['p_corrected']:.4f} *** "
-                                  f"(effect size = {comp['effect_size']:.3f})")
+                    for comp in analysis["post_hoc"]["comparisons"]:
+                        if comp["significant"]:
+                            print(
+                                f"   • {comp['method1']} vs {comp['method2']}: "
+                                f"p = {comp['p_corrected']:.4f} *** "
+                                f"(effect size = {comp['effect_size']:.3f})"
+                            )
 
-        print("="*120)
+        print("=" * 120)
 
         return summary_df
 
 
 # ==================== 使用示例 ====================
 
-def create_publication_figure(analyzer, metrics, figsize=(16, 12), dpi=300,
-                            ncols=2, metric_display_names=None,
-                            shared_y_axis=False, suptitle=None,
-                            # 精确的子图布局控制
-                            subplot_adjust_params=None,
-                            # Slightly increased left margin to avoid y-label /
-                            # y-tick overlap with the data region. Right margin
-                            # is tightened a little to preserve total width.
-                            left=0.10, right=0.96, top=0.92, bottom=0.12,
-                            hspace=0.25, wspace=0.20,
-                            # 面板标签样式
-                            panel_labels=True, panel_label_start='A',
-                            custom_panel_labels=None, panel_label_offset=(0, 0),
-                            panel_label_fontsize=14, panel_label_fontweight='bold',
-                            panel_label_position=(-0.15, 1.05),
-                            **visual_params):
+
+def create_publication_figure(
+    analyzer,
+    metrics,
+    figsize=(16, 12),
+    dpi=300,
+    ncols=2,
+    metric_display_names=None,
+    shared_y_axis=False,
+    suptitle=None,
+    # 精确的子图布局控制
+    subplot_adjust_params=None,
+    # Slightly increased left margin to avoid y-label /
+    # y-tick overlap with the data region. Right margin
+    # is tightened a little to preserve total width.
+    left=0.10,
+    right=0.96,
+    top=0.92,
+    bottom=0.12,
+    hspace=0.25,
+    wspace=0.20,
+    # 面板标签样式
+    panel_labels=True,
+    panel_label_start="A",
+    custom_panel_labels=None,
+    panel_label_offset=(0, 0),
+    panel_label_fontsize=14,
+    panel_label_fontweight="bold",
+    panel_label_position=(-0.15, 1.05),
+    **visual_params,
+):
     """
     Create publication-ready multi-panel statistical comparison figure.
 
@@ -2333,7 +2585,7 @@ def create_publication_figure(analyzer, metrics, figsize=(16, 12), dpi=300,
 
     n_metrics = len(metrics)
     nrows = (n_metrics + ncols - 1) // ncols
-    font_family = visual_params.get('font_family')
+    font_family = visual_params.get("font_family")
     if font_family:
         _apply_font(font_family)
     # 创建图形
@@ -2341,23 +2593,23 @@ def create_publication_figure(analyzer, metrics, figsize=(16, 12), dpi=300,
 
     # 默认视觉参数
     default_visual_params = {
-        'plot_type': 'boxplot',
-        'box_width': 0.7,
-        'jitter_width': 0.35,
-        'strip_size': 3,
-        'flier_size': 0,
-        'title_fontsize': 12,
-        'axis_label_fontsize': 10,
-        'tick_label_fontsize': 10,
-        'significance_fontsize': 12,
-        'legend_fontsize': 10,
-        'max_significance_pairs': 3,
-        'stat_test_display': 'short',
-        'palette': 'husl',
-        'grid': True,
-        'grid_alpha': 0.25,
-        'rotate_xlabels': True,
-        'spines_visible': {'top': False, 'right': False}
+        "plot_type": "boxplot",
+        "box_width": 0.7,
+        "jitter_width": 0.35,
+        "strip_size": 3,
+        "flier_size": 0,
+        "title_fontsize": 12,
+        "axis_label_fontsize": 10,
+        "tick_label_fontsize": 10,
+        "significance_fontsize": 12,
+        "legend_fontsize": 10,
+        "max_significance_pairs": 3,
+        "stat_test_display": "short",
+        "palette": "husl",
+        "grid": True,
+        "grid_alpha": 0.25,
+        "rotate_xlabels": True,
+        "spines_visible": {"top": False, "right": False},
     }
 
     # 更新参数
@@ -2367,12 +2619,14 @@ def create_publication_figure(analyzer, metrics, figsize=(16, 12), dpi=300,
     if panel_labels:
         if custom_panel_labels is not None:
             if len(custom_panel_labels) < n_metrics:
-                raise ValueError(f"custom_panel_labels长度({len(custom_panel_labels)})必须≥指标数量({n_metrics})")
+                raise ValueError(
+                    f"custom_panel_labels长度({len(custom_panel_labels)})必须≥指标数量({n_metrics})"
+                )
             labels = custom_panel_labels[:n_metrics]
         else:
             # 从指定字母开始生成标签
-            start_index = ord(panel_label_start.upper()) - ord('A')
-            labels = [chr(ord('A') + start_index + i) for i in range(n_metrics)]
+            start_index = ord(panel_label_start.upper()) - ord("A")
+            labels = [chr(ord("A") + start_index + i) for i in range(n_metrics)]
     else:
         labels = [None] * n_metrics
 
@@ -2387,7 +2641,7 @@ def create_publication_figure(analyzer, metrics, figsize=(16, 12), dpi=300,
         else:
             display_name = None
         # 绘制时传递显示名称
-        default_visual_params['display_metric_name'] = display_name
+        default_visual_params["display_metric_name"] = display_name
         # 直接在轴上绘制（重用核心绘图逻辑）
         analyzer._plot_metric_on_axis(ax, metric, **default_visual_params)
 
@@ -2396,34 +2650,38 @@ def create_publication_figure(analyzer, metrics, figsize=(16, 12), dpi=300,
             label_x = panel_label_position[0] + panel_label_offset[0]
             label_y = panel_label_position[1] + panel_label_offset[1]
 
-            ax.text(label_x, label_y, labels[i],
-                    transform=ax.transAxes,
-                    fontsize=panel_label_fontsize,
-                    fontweight=panel_label_fontweight,
-                    va='top', ha='left')
+            ax.text(
+                label_x,
+                label_y,
+                labels[i],
+                transform=ax.transAxes,
+                fontsize=panel_label_fontsize,
+                fontweight=panel_label_fontweight,
+                va="top",
+                ha="left",
+            )
 
         # 共享Y轴设置
         if shared_y_axis and i > 0:
             axes[0].get_shared_y_axes().join(axes[0], ax)
             if i % ncols != 0:  # 不是第一列
-                ax.set_ylabel('')
-                ax.tick_params(axis='y', labelleft=False)
+                ax.set_ylabel("")
+                ax.tick_params(axis="y", labelleft=False)
 
     # 添加总标题
     if suptitle:
-        fig.suptitle(suptitle, fontsize=16, fontweight='bold')
+        fig.suptitle(suptitle, fontsize=16, fontweight="bold")
 
     # 精确的布局调整
     if subplot_adjust_params is not None:
         fig.subplots_adjust(**subplot_adjust_params)
     else:
         fig.subplots_adjust(
-            left=left, right=right, top=top, bottom=bottom,
-            hspace=hspace, wspace=wspace
+            left=left, right=right, top=top, bottom=bottom, hspace=hspace, wspace=wspace
         )
 
     # Save if path provided (with DPI clamping to avoid backend truncation)
-    save_path = visual_params.get('save_path')
+    save_path = visual_params.get("save_path")
     if save_path:
         _safe_save_figure(fig, save_path, dpi=dpi)
 

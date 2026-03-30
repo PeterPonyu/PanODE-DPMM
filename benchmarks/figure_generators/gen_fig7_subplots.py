@@ -36,6 +36,7 @@ from benchmarks.figure_generators.subplot_style import (
     FIGSIZE_HEATMAP,
     FONTSIZE_TICK,
     FONTSIZE_TITLE,
+    SUBPLOT_DPI,
     apply_subplot_style,
     build_manifest,
 )
@@ -45,8 +46,8 @@ from src.visualization import bind_figure_region, save_with_vcd, style_axes
 # Subplot generator
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def gen_correlation_heatmap(corr, gene_names, comp_prefix, ds_name, model,
-                            out_path, top_genes=30):
+
+def gen_correlation_heatmap(corr, gene_names, comp_prefix, ds_name, model, out_path, top_genes=30):
     """Generate a latent–gene Pearson correlation heatmap.
 
     Selects the top correlated genes per component (by absolute
@@ -63,8 +64,7 @@ def gen_correlation_heatmap(corr, gene_names, comp_prefix, ds_name, model,
     top_idx = set()
     for k in range(n_comp):
         top_idx.update(np.argsort(np.abs(corr_sub[k]))[::-1][:top_genes])
-    top_idx_ranked = sorted(top_idx,
-                            key=lambda i: -np.abs(corr_sub[:, i]).max())[:top_genes]
+    top_idx_ranked = sorted(top_idx, key=lambda i: -np.abs(corr_sub[:, i]).max())[:top_genes]
 
     def _sort_key_corr(i):
         abs_col = np.abs(corr_sub[:, i])
@@ -73,9 +73,11 @@ def gen_correlation_heatmap(corr, gene_names, comp_prefix, ds_name, model,
 
     top_idx = sorted(top_idx_ranked, key=_sort_key_corr)
     sub_corr = corr_sub[:, top_idx]
-    sub_genes = ([str(gene_names[i]) for i in top_idx]
-                 if gene_names is not None
-                 else [f"g{i}" for i in top_idx])
+    sub_genes = (
+        [str(gene_names[i]) for i in top_idx]
+        if gene_names is not None
+        else [f"g{i}" for i in top_idx]
+    )
 
     fig_w = FIGSIZE_HEATMAP[0] * 2.2
     fig_h = FIGSIZE_HEATMAP[1] * 1.3
@@ -84,23 +86,26 @@ def gen_correlation_heatmap(corr, gene_names, comp_prefix, ds_name, model,
     ax = layout.add_axes(fig)
     style_axes(ax)
     vlim = max(abs(sub_corr.min()), abs(sub_corr.max()), 0.2)
-    im = ax.imshow(sub_corr, aspect="auto", cmap="coolwarm",
-                   interpolation="nearest", vmin=-vlim, vmax=vlim)
+    im = ax.imshow(
+        sub_corr, aspect="auto", cmap="coolwarm", interpolation="nearest", vmin=-vlim, vmax=vlim
+    )
     ax.set_yticks(range(n_comp))
-    ax.set_yticklabels([f"{comp_prefix}{k+1}" for k in range(n_comp)],
-                       fontsize=FONTSIZE_TITLE)
+    ax.set_yticklabels([f"{comp_prefix}{k + 1}" for k in range(n_comp)], fontsize=FONTSIZE_TITLE)
     ax.set_xticks(range(len(sub_genes)))
     # Truncate long gene names to 8 chars to reduce overlap
     display_genes = [g[:8] for g in sub_genes]
-    ax.set_xticklabels(display_genes, rotation=90, ha="center",
-                       fontsize=max(FONTSIZE_TICK - 1, 12))
-    ax.set_title(f"{short} — {ds_name}  (latent–gene corr.)",
-                 fontsize=FONTSIZE_TITLE, loc="left",
-                 fontweight="normal")
+    ax.set_xticklabels(display_genes, rotation=90, ha="center", fontsize=max(FONTSIZE_TICK - 1, 12))
+    ax.set_title(
+        f"{short} — {ds_name}  (latent–gene corr.)",
+        fontsize=FONTSIZE_TITLE,
+        loc="left",
+        fontweight="normal",
+    )
     # Colorbar placed OUTSIDE the heatmap (below gene names) to avoid
     # overlapping data content.  Uses make_axes_locatable to carve out
     # a dedicated thin axes strip beneath the main axes.
     from mpl_toolkits.axes_grid1 import make_axes_locatable
+
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="3%", pad=0.12)
     cb = fig.colorbar(im, cax=cax, orientation="vertical")
@@ -115,6 +120,7 @@ def gen_correlation_heatmap(corr, gene_names, comp_prefix, ds_name, model,
 # ═══════════════════════════════════════════════════════════════════════════════
 # Main entry point
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def generate(series, out_dir):
     """Generate all subplot PNGs for Figure 7 (Latent–Gene Correlation)."""
@@ -149,16 +155,17 @@ def generate(series, out_dir):
             corr = cd["correlation"]
             gn = cd.get("gene_names")
             fname = f"corr_{ds_name}_{safe_m}.png"
-            gen_correlation_heatmap(
-                corr, gn, comp_prefix, ds_name, model, sub_dir / fname)
-            corr_files.setdefault(ds_name, []).append(
-                {"file": fname, "model": model})
+            gen_correlation_heatmap(corr, gn, comp_prefix, ds_name, model, sub_dir / fname)
+            corr_files.setdefault(ds_name, []).append({"file": fname, "model": model})
 
-    manifest = build_manifest(sub_dir, {
-        "panelA": corr_files,
-        "models": avail_models,
-        "datasets": list(corr_files.keys()),
-    })
+    manifest = build_manifest(
+        sub_dir,
+        {
+            "panelA": corr_files,
+            "models": avail_models,
+            "datasets": list(corr_files.keys()),
+        },
+    )
     return manifest
 
 
@@ -167,7 +174,10 @@ if __name__ == "__main__":
     parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots")
+    out = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots"
+    )
     out.mkdir(parents=True, exist_ok=True)
     generate(args.series, out)

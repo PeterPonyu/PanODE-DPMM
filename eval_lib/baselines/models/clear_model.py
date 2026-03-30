@@ -2,6 +2,7 @@
 CLEAR: Contrastive Learning for Enhanced scRNA-seq Representation
 MoCo-based contrastive learning for single-cell embeddings
 """
+
 import warnings
 from collections.abc import Callable
 from typing import Any
@@ -16,11 +17,13 @@ from .base_model import BaseModel
 
 class TwoViewAugmenter(nn.Module):
     """Generate two augmented views via feature masking, Gaussian noise, and scale jitter"""
+
     def __init__(
         self,
         feature_mask_prob: float = 0.2,
         gaussian_noise_std: float = 0.1,
-        scale_jitter: float = 0.0):
+        scale_jitter: float = 0.0,
+    ):
         super().__init__()
         self.feature_mask_prob = float(feature_mask_prob)
         self.gaussian_noise_std = float(gaussian_noise_std)
@@ -30,14 +33,14 @@ class TwoViewAugmenter(nn.Module):
         v = x
 
         if self.feature_mask_prob > 0:
-            mask = (torch.rand_like(v) < self.feature_mask_prob)
+            mask = torch.rand_like(v) < self.feature_mask_prob
             v = v.masked_fill(mask, 0.0)
 
         if self.gaussian_noise_std > 0:
             v = v + torch.randn_like(v) * self.gaussian_noise_std
 
         if self.scale_jitter > 0:
-            s = (1.0 + (torch.rand(v.size(0), 1, device=v.device) * 2 - 1.0) * self.scale_jitter)
+            s = 1.0 + (torch.rand(v.size(0), 1, device=v.device) * 2 - 1.0) * self.scale_jitter
             v = v * s
 
         return v
@@ -48,13 +51,17 @@ class TwoViewAugmenter(nn.Module):
 
 class CLEARMLPEncoder(nn.Module):
     """Simple MLP encoder: input -> hidden (ReLU) -> output"""
-    def __init__(self, input_dim: int, hidden_dim: int = 1024, output_dim: int = 128, dropout: float = 0.0):
+
+    def __init__(
+        self, input_dim: int, hidden_dim: int = 1024, output_dim: int = 128, dropout: float = 0.0
+    ):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_dim, output_dim))
+            nn.Linear(hidden_dim, output_dim),
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
@@ -66,6 +73,7 @@ class MoCoHead(nn.Module):
 
     Note: No reconstruction; learns embeddings via InfoNCE loss
     """
+
     def __init__(
         self,
         input_dim: int,
@@ -74,15 +82,20 @@ class MoCoHead(nn.Module):
         queue_size: int = 1024,
         momentum: float = 0.999,
         temperature: float = 0.2,
-        dropout: float = 0.0):
+        dropout: float = 0.0,
+    ):
         super().__init__()
         self.dim = dim
         self.queue_size = queue_size
         self.momentum = momentum
         self.temperature = temperature
 
-        self.encoder_q = CLEARMLPEncoder(input_dim, hidden_dim=hidden_dim, output_dim=dim, dropout=dropout)
-        self.encoder_k = CLEARMLPEncoder(input_dim, hidden_dim=hidden_dim, output_dim=dim, dropout=dropout)
+        self.encoder_q = CLEARMLPEncoder(
+            input_dim, hidden_dim=hidden_dim, output_dim=dim, dropout=dropout
+        )
+        self.encoder_k = CLEARMLPEncoder(
+            input_dim, hidden_dim=hidden_dim, output_dim=dim, dropout=dropout
+        )
 
         for p_q, p_k in zip(self.encoder_q.parameters(), self.encoder_k.parameters()):
             p_k.data.copy_(p_q.data)
@@ -104,11 +117,13 @@ class MoCoHead(nn.Module):
         if self.queue_size % batch_size != 0:
             return
 
-        self.queue[:, ptr:ptr + batch_size] = keys.T
+        self.queue[:, ptr : ptr + batch_size] = keys.T
         ptr = (ptr + batch_size) % self.queue_size
         self.queue_ptr[0] = ptr
 
-    def forward(self, view1: torch.Tensor, view2: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self, view1: torch.Tensor, view2: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """Returns (logits, labels) for InfoNCE loss"""
         q = F.normalize(self.encoder_q(view1), dim=1)
 
@@ -154,7 +169,8 @@ class CLEARModel(BaseModel):
         view_augmenter: Callable[[torch.Tensor], tuple[torch.Tensor, torch.Tensor]] | None = None,
         feature_mask_prob: float = 0.2,
         gaussian_noise_std: float = 0.1,
-        scale_jitter: float = 0.0):
+        scale_jitter: float = 0.0,
+    ):
         """
         Args:
             input_dim: Number of genes
@@ -169,7 +185,12 @@ class CLEARModel(BaseModel):
             gaussian_noise_std: Gaussian noise std
             scale_jitter: Scale jitter range
         """
-        super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=hidden_dims or [], model_name=model_name)
+        super().__init__(
+            input_dim=input_dim,
+            latent_dim=latent_dim,
+            hidden_dims=hidden_dims or [],
+            model_name=model_name,
+        )
 
         self.moco = MoCoHead(
             input_dim=input_dim,
@@ -178,14 +199,16 @@ class CLEARModel(BaseModel):
             queue_size=queue_size,
             momentum=momentum,
             temperature=temperature,
-            dropout=dropout)
+            dropout=dropout,
+        )
         self.criterion = nn.CrossEntropyLoss()
 
         if view_augmenter is None:
             self.view_augmenter = TwoViewAugmenter(
                 feature_mask_prob=feature_mask_prob,
                 gaussian_noise_std=gaussian_noise_std,
-                scale_jitter=scale_jitter)
+                scale_jitter=scale_jitter,
+            )
         else:
             self.view_augmenter = view_augmenter
 
@@ -221,13 +244,17 @@ class CLEARModel(BaseModel):
         logits, labels = self.moco(x, view2)
         return {"logits": logits, "labels": labels}
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
+    def compute_loss(
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         """Compute InfoNCE loss"""
         loss = self.criterion(outputs["logits"], outputs["labels"])
         return {"total_loss": loss, "recon_loss": loss}
 
     @torch.no_grad()
-    def extract_latent(self, data_loader, device: str = "cuda", return_reconstructions: bool = False):
+    def extract_latent(
+        self, data_loader, device: str = "cuda", return_reconstructions: bool = False
+    ):
         """Extract embeddings (ignores return_reconstructions)"""
         if return_reconstructions:
             warnings.warn("CLEARModel has no decoder; return_reconstructions ignored")

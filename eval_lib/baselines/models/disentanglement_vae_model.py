@@ -18,6 +18,7 @@ from .base_model import BaseModel
 
 class Encoder(nn.Module):
     """MLP encoder -> mu, logvar (same style as other VAEs)."""
+
     def __init__(self, input_dim: int, hidden_dims: list, latent_dim: int, dropout: float = 0.1):
         super().__init__()
         layers = []
@@ -41,6 +42,7 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
     """MLP decoder -> reconstruction (MSE)."""
+
     def __init__(self, latent_dim: int, hidden_dims: list, output_dim: int, dropout: float = 0.1):
         super().__init__()
         layers = []
@@ -60,7 +62,9 @@ class Decoder(nn.Module):
         return self.fc(z)
 
 
-def _dip_loss(z_mean: torch.Tensor, lambda_diag: float = 1.0, lambda_off: float = 1.0) -> torch.Tensor:
+def _dip_loss(
+    z_mean: torch.Tensor, lambda_diag: float = 1.0, lambda_off: float = 1.0
+) -> torch.Tensor:
     """DIP-VAE: regularize Cov(z_mean) toward identity. z_mean: [B, D]."""
     B = z_mean.size(0)
     if B < 2:
@@ -68,7 +72,7 @@ def _dip_loss(z_mean: torch.Tensor, lambda_diag: float = 1.0, lambda_off: float 
     z_centered = z_mean - z_mean.mean(dim=0)
     cov = (z_centered.t() @ z_centered) / (B - 1)
     diag_diff = cov.diag() - 1
-    loss_diag = (diag_diff ** 2).sum()
+    loss_diag = (diag_diff**2).sum()
     D = cov.size(0)
     mask = ~torch.eye(D, dtype=torch.bool, device=cov.device)
     loss_off = (cov[mask] ** 2).sum()
@@ -94,10 +98,12 @@ def _mmd_prior(z: torch.Tensor, sigma: float = 1.0) -> torch.Tensor:
         return z.new_zeros(1)
     # Sample from prior
     p = torch.randn_like(z, device=z.device)
+
     # K(z,z) - 2*K(z,p) + K(p,p); kernel k(a,b) = exp(-||a-b||^2 / (2*sigma^2))
     def k(x, y):
         xy = (x.unsqueeze(1) - y.unsqueeze(0)).pow(2).sum(2)
-        return (-xy / (2 * sigma ** 2)).exp()
+        return (-xy / (2 * sigma**2)).exp()
+
     kzz = k(z, z).mean()
     kzp = k(z, p).mean()
     kpp = k(p, p).mean()
@@ -109,6 +115,7 @@ class DisentanglementVAEModel(BaseModel):
     VAE with optional DIP and/or TC regularization. Default architecture matches
     other baseline VAEs (hidden_dims, latent_dim, MSE recon).
     """
+
     def __init__(
         self,
         input_dim: int,
@@ -119,12 +126,14 @@ class DisentanglementVAEModel(BaseModel):
         tc_weight: float = 0.0,
         infovae_mmd_weight: float = 0.0,
         beta: float = 1.0,
-        **kwargs):
+        **kwargs,
+    ):
         super().__init__(
             input_dim=input_dim,
             latent_dim=latent_dim,
             hidden_dims=hidden_dims or [256, 128],
-            model_name="disentanglement_vae")
+            model_name="disentanglement_vae",
+        )
         self.dip_weight = dip_weight
         self.tc_weight = tc_weight
         self.infovae_mmd_weight = infovae_mmd_weight
@@ -143,11 +152,7 @@ class DisentanglementVAEModel(BaseModel):
         eps = torch.randn_like(std)
         return mu + eps * std
 
-    def forward(
-        self,
-        x: torch.Tensor,
-        n_samples: int = 1,
-        **kwargs) -> dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, n_samples: int = 1, **kwargs) -> dict[str, torch.Tensor]:
         mu, logvar = self.encode(x)
         z = self.reparameterize(mu, logvar)
         recon = self.decode(z)
@@ -159,10 +164,8 @@ class DisentanglementVAEModel(BaseModel):
         }
 
     def compute_loss(
-        self,
-        x: torch.Tensor,
-        outputs: dict[str, torch.Tensor],
-        **kwargs) -> dict[str, torch.Tensor]:
+        self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs
+    ) -> dict[str, torch.Tensor]:
         recon = outputs["reconstruction"]
         mu, logvar = outputs["mu"], outputs["logvar"]
         z = outputs["latent"]
@@ -194,7 +197,8 @@ def create_disentanglement_vae_model(
     tc_weight: float = 0.0,
     infovae_mmd_weight: float = 0.0,
     beta: float = 1.0,
-    **kwargs) -> DisentanglementVAEModel:
+    **kwargs,
+) -> DisentanglementVAEModel:
     """Factory: VAE with optional DIP/TC/Info-VAE (MMD)/beta for disentanglement group."""
     return DisentanglementVAEModel(
         input_dim=input_dim,
@@ -204,4 +208,5 @@ def create_disentanglement_vae_model(
         dip_weight=dip_weight,
         tc_weight=tc_weight,
         infovae_mmd_weight=infovae_mmd_weight,
-        beta=beta)
+        beta=beta,
+    )

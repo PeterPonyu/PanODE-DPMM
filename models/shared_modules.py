@@ -23,6 +23,7 @@ from torch.utils.data import Dataset
 # Weight Initialization
 # =============================================================================
 
+
 def weight_init(m):
     """Xavier normal initialization for linear layers."""
     if isinstance(m, nn.Linear):
@@ -37,13 +38,15 @@ def weight_init(m):
 # Common MLP and Bottleneck
 # =============================================================================
 
+
 class MLP(nn.Module):
     """Simple MLP with LayerNorm and GELU activation."""
+
     def __init__(self, features: list, dropout: float = 0.1, use_layer_norm: bool = True):
         super().__init__()
         layers = []
         for i in range(1, len(features)):
-            layers.append(nn.Linear(features[i-1], features[i]))
+            layers.append(nn.Linear(features[i - 1], features[i]))
             if i < len(features) - 1:
                 if use_layer_norm:
                     layers.append(nn.LayerNorm(features[i]))
@@ -58,6 +61,7 @@ class MLP(nn.Module):
 
 class ResidualMLP(nn.Module):
     """MLP with residual connections (iAODE-style)."""
+
     def __init__(
         self,
         input_dim: int,
@@ -65,7 +69,8 @@ class ResidualMLP(nn.Module):
         output_dim: int,
         num_layers: int = 2,
         dropout: float = 0.1,
-        use_batch_norm: bool = True):
+        use_batch_norm: bool = True,
+    ):
         super().__init__()
         self.input_proj = nn.Linear(input_dim, hidden_dim)
 
@@ -99,6 +104,7 @@ class ResidualMLP(nn.Module):
 
 class InformationBottleneck(nn.Module):
     """Compress and reconstruct latent space."""
+
     def __init__(self, latent_dim: int, bottleneck_dim: int, dropout: float = 0.1):
         super().__init__()
         hidden_dim = max(latent_dim // 2, bottleneck_dim)
@@ -115,14 +121,11 @@ class InformationBottleneck(nn.Module):
 # Decoders
 # =============================================================================
 
+
 class MLPDecoder(nn.Module):
     """Standard MLP decoder for reconstruction."""
-    def __init__(
-        self,
-        latent_dim: int,
-        hidden_dim: int,
-        output_dim: int,
-        dropout: float = 0.1):
+
+    def __init__(self, latent_dim: int, hidden_dim: int, output_dim: int, dropout: float = 0.1):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(latent_dim, hidden_dim),
@@ -133,7 +136,8 @@ class MLPDecoder(nn.Module):
             nn.LayerNorm(hidden_dim),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_dim, output_dim))
+            nn.Linear(hidden_dim, output_dim),
+        )
         self.apply(weight_init)
 
     def forward(self, z: torch.Tensor) -> torch.Tensor:
@@ -143,6 +147,7 @@ class MLPDecoder(nn.Module):
 # =============================================================================
 # Graph Utilities (CCVGAE-style)
 # =============================================================================
+
 
 class SubgraphDataset(Dataset):
     """
@@ -154,13 +159,15 @@ class SubgraphDataset(Dataset):
 
     Much faster than computing k-NN graph per batch!
     """
+
     def __init__(
         self,
         node_features: np.ndarray,
         edge_index: np.ndarray,
         edge_weight: np.ndarray,
         device: torch.device,
-        subgraph_size: int = 512):
+        subgraph_size: int = 512,
+    ):
         self.node_features = node_features
         self.edge_index = edge_index
         self.edge_weight = edge_weight
@@ -196,15 +203,20 @@ class SubgraphDataset(Dataset):
         node_map = {old_idx: new_idx for new_idx, old_idx in enumerate(selected_nodes)}
 
         # Filter edges within subgraph
-        edge_mask = np.isin(self.edge_index[0], selected_nodes) & np.isin(self.edge_index[1], selected_nodes)
+        edge_mask = np.isin(self.edge_index[0], selected_nodes) & np.isin(
+            self.edge_index[1], selected_nodes
+        )
         subgraph_edges = self.edge_index[:, edge_mask]
         subgraph_weights = self.edge_weight[edge_mask]
 
         # Remap edge indices
-        new_edge_index = np.array([
-            [node_map[i] for i in subgraph_edges[0]],
-            [node_map[i] for i in subgraph_edges[1]]
-        ]) if subgraph_edges.size > 0 else np.array([[], []], dtype=np.int64)
+        new_edge_index = (
+            np.array(
+                [[node_map[i] for i in subgraph_edges[0]], [node_map[i] for i in subgraph_edges[1]]]
+            )
+            if subgraph_edges.size > 0
+            else np.array([[], []], dtype=np.int64)
+        )
 
         # Build adjacency matrix
         n_sub = len(selected_nodes)
@@ -215,17 +227,17 @@ class SubgraphDataset(Dataset):
         adj = np.maximum(adj, adj.T)
 
         return {
-            'x': torch.tensor(self.node_features[selected_nodes], dtype=torch.float, device=self.device),
-            'adj': torch.tensor(adj, dtype=torch.float, device=self.device),
-            'original_idx': torch.tensor(selected_nodes, dtype=torch.long, device=self.device),
+            "x": torch.tensor(
+                self.node_features[selected_nodes], dtype=torch.float, device=self.device
+            ),
+            "adj": torch.tensor(adj, dtype=torch.float, device=self.device),
+            "original_idx": torch.tensor(selected_nodes, dtype=torch.long, device=self.device),
         }
 
 
 def precompute_knn_graph(
-    x_full: np.ndarray,
-    k: int = 10,
-    metric: str = 'euclidean',
-    pca_dim: int | None = None) -> tuple[np.ndarray, np.ndarray]:
+    x_full: np.ndarray, k: int = 10, metric: str = "euclidean", pca_dim: int | None = None
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Precompute k-NN graph for entire dataset ONCE.
 
@@ -260,7 +272,7 @@ def precompute_knn_graph(
     # Build edge_index and edge_weight
     rows, cols, weights = [], [], []
     for i in range(n_samples):
-        for j_idx, j in enumerate(indices[i]):
+        for j_idx, j in enumerate(indices[i]):  # noqa: B007
             if i != j:
                 rows.append(i)
                 cols.append(j)
@@ -275,6 +287,7 @@ def precompute_knn_graph(
 # =============================================================================
 # Reparameterization Utilities
 # =============================================================================
+
 
 def reparameterize(mu: torch.Tensor, var: torch.Tensor) -> torch.Tensor:
     """Reparameterization trick for VAE."""

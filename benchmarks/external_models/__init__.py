@@ -78,6 +78,7 @@ for _name in getattr(_CANONICAL_MODULE, "__all__", []):
         globals()[_name] = getattr(_CANONICAL_MODULE, _name)
 
 __all__ = [
-    _name for _name in getattr(_CANONICAL_MODULE, "__all__", [])
+    _name
+    for _name in getattr(_CANONICAL_MODULE, "__all__", [])
     if hasattr(_CANONICAL_MODULE, _name)
 ]

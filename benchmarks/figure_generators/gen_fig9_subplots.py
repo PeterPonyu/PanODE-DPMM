@@ -40,20 +40,30 @@ from benchmarks.figure_generators.subplot_style import (
     FONTSIZE_LABEL,
     FONTSIZE_TICK,
     FONTSIZE_TITLE,
+    SUBPLOT_DPI,
     apply_subplot_style,
     build_manifest,
 )
 from src.visualization import bind_figure_region, save_with_vcd, style_axes
 
 _COMP_PALETTE = [
-    "#4E79A7", "#76B7B2", "#59A14F", "#EDC948", "#B07AA1",
-    "#9C755F", "#BAB0AC", "#86BCB6", "#A0CBE8", "#CFCFCF",
+    "#4E79A7",
+    "#76B7B2",
+    "#59A14F",
+    "#EDC948",
+    "#B07AA1",
+    "#9C755F",
+    "#BAB0AC",
+    "#86BCB6",
+    "#A0CBE8",
+    "#CFCFCF",
 ]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Bio data loading (shared with Fig 6)
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def _resolve_bio_paths(model, dataset, results_dir):
     tag = f"{model}_{dataset}"
@@ -73,8 +83,7 @@ def _resolve_bio_paths(model, dataset, results_dir):
 def _load_dataset_bio(models, dataset, results_dir):
     model_data = {}
     for model in models:
-        latent_path, importance_path, bio_dir = _resolve_bio_paths(
-            model, dataset, results_dir)
+        latent_path, importance_path, bio_dir = _resolve_bio_paths(model, dataset, results_dir)
         tag = f"{model}_{dataset}"
         if latent_path is None:
             continue
@@ -83,8 +92,7 @@ def _load_dataset_bio(models, dataset, results_dir):
             imp = np.load(importance_path, allow_pickle=True)
             importance = imp["importance"]
             components = ld.get("components")
-            K_total = (components.shape[1] if components is not None
-                       else importance.shape[0])
+            K_total = components.shape[1] if components is not None else importance.shape[0]
             enrichments = {}
             for k in range(K_total):
                 csv_path = bio_dir / f"{tag}_enrichment_comp{k}.csv"
@@ -110,10 +118,10 @@ def _discover_bio_datasets(models, results_dir):
     return found
 
 
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # Enrichment dotplot generator (improved spacing & consistent fonts)
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def _wrap_term(text, max_chars=28):
     """Wrap a long GO term description into two lines at a word boundary.
@@ -138,11 +146,10 @@ def _wrap_term(text, max_chars=28):
         split = left
     else:
         split = left if (mid - left) <= (right - mid) else right
-    return text[:split] + "\n" + text[split + 1:]
+    return text[:split] + "\n" + text[split + 1 :]
 
 
-def gen_enrichment_dotplot(md, comp_prefix, ds_name, model, out_path,
-                           top_n=10):
+def gen_enrichment_dotplot(md, comp_prefix, ds_name, model, out_path, top_n=10):
     """Generate one GO enrichment dot plot subplot PNG.
 
     Layout:
@@ -172,30 +179,38 @@ def gen_enrichment_dotplot(md, comp_prefix, ds_name, model, out_path,
                 gene_count = int(overlap_str.split("/")[0])
             except (ValueError, IndexError):
                 gene_count = 1
-            all_terms.append({
-                "term": term_short, "comp": k,
-                "nlp": -np.log10(max(pval, 1e-30)),
-                "pval": pval, "gene_count": gene_count,
-            })
+            all_terms.append(
+                {
+                    "term": term_short,
+                    "comp": k,
+                    "nlp": -np.log10(max(pval, 1e-30)),
+                    "pval": pval,
+                    "gene_count": gene_count,
+                }
+            )
 
     # Wider + taller figure to prevent xlabel/xtick truncation at bottom
     # Height scaled proportionally to term count
     fig_w = FIGSIZE_ENRICHMENT[0] * 2.0
     y_spacing = 1.4  # increased from 1.0 to prevent label overlap
-    fig_h = max(FIGSIZE_ENRICHMENT[1] * 1.3 * (top_n / 10),
-                y_spacing * top_n * 0.22 + 1.0)
+    fig_h = max(FIGSIZE_ENRICHMENT[1] * 1.3 * (top_n / 10), y_spacing * top_n * 0.22 + 1.0)
     fig = plt.figure(figsize=(fig_w, fig_h))
     layout = bind_figure_region(fig, (0.08, 0.10, 0.95, 0.92))
     ax = layout.add_axes(fig)
     style_axes(ax)
 
     if not all_terms:
-        ax.text(0.5, 0.5, "No significant terms",
-                transform=ax.transAxes, ha="center",
-                fontsize=FONTSIZE_TITLE)
-        ax.set_title(f"{short} — {ds_name}",
-                     fontsize=FONTSIZE_TITLE, loc="left",
-                     fontweight="normal")
+        ax.text(
+            0.5,
+            0.5,
+            "No significant terms",
+            transform=ax.transAxes,
+            ha="center",
+            fontsize=FONTSIZE_TITLE,
+        )
+        ax.set_title(
+            f"{short} — {ds_name}", fontsize=FONTSIZE_TITLE, loc="left", fontweight="normal"
+        )
         save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
         return
 
@@ -214,13 +229,20 @@ def gen_enrichment_dotplot(md, comp_prefix, ds_name, model, out_path,
     labels = [_wrap_term(t["term"], max_chars=32) for t in term_list]
 
     mn, mx = max(min(gcs), 1), max(gcs)
-    sizes = ([15 + 100 * (g - mn) / (mx - mn) for g in gcs]
-             if mx > mn else [50] * len(gcs))
+    sizes = [15 + 100 * (g - mn) / (mx - mn) for g in gcs] if mx > mn else [50] * len(gcs)
 
     # ── Scatter (never clipped) ─────────────────────────────────────────
-    ax.scatter(nlps, y_pos, s=sizes, c=comp_colors,
-               edgecolors="white", linewidth=0.4, alpha=0.88,
-               zorder=3, clip_on=False)
+    ax.scatter(
+        nlps,
+        y_pos,
+        s=sizes,
+        c=comp_colors,
+        edgecolors="white",
+        linewidth=0.4,
+        alpha=0.88,
+        zorder=3,
+        clip_on=False,
+    )
 
     # ── Place term labels right beside each dot as text annotations ─────
     term_fs = FONTSIZE_TICK
@@ -228,33 +250,41 @@ def gen_enrichment_dotplot(md, comp_prefix, ds_name, model, out_path,
     x_max_val = max(nlps) if nlps else 1.0
     x_offset = max(x_max_val * 0.03, 0.15)
     for i, lbl in enumerate(labels):
-        ax.annotate(lbl, (nlps[i] + x_offset, y_pos[i]),
-                    fontsize=term_fs, color="#333333",
-                    va="center", ha="left", linespacing=0.90,
-                    annotation_clip=False)
+        ax.annotate(
+            lbl,
+            (nlps[i] + x_offset, y_pos[i]),
+            fontsize=term_fs,
+            color="#333333",
+            va="center",
+            ha="left",
+            linespacing=0.90,
+            annotation_clip=False,
+        )
 
     # Hide y-axis ticks/labels — terms are now inline annotations
     ax.set_yticks([])
     ax.set_yticklabels([])
-    ax.tick_params(axis='y', length=0, pad=0)
+    ax.tick_params(axis="y", length=0, pad=0)
     ax.spines["left"].set_visible(False)
     ax.invert_yaxis()
 
     # ── X-axis ──────────────────────────────────────────────────────────
     x_fs = FONTSIZE_LABEL
     ax.set_xlabel("$-\\log_{10}$(adj. p)", fontsize=x_fs)
-    ax.set_title(f"{short} — {ds_name}", fontsize=FONTSIZE_TITLE,
-                 loc="left", fontweight="normal", pad=4)
-    ax.tick_params(axis='x', labelsize=x_fs, rotation=0)
+    ax.set_title(
+        f"{short} — {ds_name}", fontsize=FONTSIZE_TITLE, loc="left", fontweight="normal", pad=4
+    )
+    ax.tick_params(axis="x", labelsize=x_fs, rotation=0)
     ax.axvline(-np.log10(0.05), color="gray", ls="--", lw=0.6, alpha=0.6)
     ax.grid(axis="x", alpha=0.2, linewidth=0.4)
 
     # Prune the uppermost x-tick so no label sits at the axes right edge
     from matplotlib.ticker import MaxNLocator
-    ax.xaxis.set_major_locator(MaxNLocator(nbins=5, prune='upper'))
+
+    ax.xaxis.set_major_locator(MaxNLocator(nbins=5, prune="upper"))
 
     # y-axis padding
-    n_terms = len(term_list)
+    n_terms = len(term_list)  # noqa: F841
     ax.set_ylim(y_pos[-1] + 0.8, y_pos[0] - 0.8)
 
     # x-axis padding — generous right margin for inline term annotations
@@ -274,6 +304,7 @@ def gen_enrichment_dotplot(md, comp_prefix, ds_name, model, out_path,
 # Main entry point
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def generate(series, out_dir):
     """Generate all subplot PNGs for Figure 9 (GO Enrichment)."""
     print(f"\n  Figure 9 subplots ({series})")
@@ -290,8 +321,7 @@ def generate(series, out_dir):
         print("    No bio data found.")
         return build_manifest(sub_dir, {})
 
-    avail_models = [m for m in models
-                    if any(m in bio_datasets.get(ds, {}) for ds in bio_datasets)]
+    avail_models = [m for m in models if any(m in bio_datasets.get(ds, {}) for ds in bio_datasets)]
 
     # Panel B — enrichment dot plots (perturbation-based)
     perturb_top_n = 10
@@ -304,17 +334,20 @@ def generate(series, out_dir):
                 continue
             safe_m = model.replace("/", "_")
             fname = f"enrich_{ds_name}_{safe_m}.png"
-            gen_enrichment_dotplot(md, comp_prefix, ds_name, model,
-                                  sub_dir / fname,
-                                  top_n=perturb_top_n)
+            gen_enrichment_dotplot(
+                md, comp_prefix, ds_name, model, sub_dir / fname, top_n=perturb_top_n
+            )
             ds_enrich.append({"file": fname, "model": model})
         enrich_files[ds_name] = ds_enrich
 
-    manifest = build_manifest(sub_dir, {
-        "panelA": enrich_files,
-        "models": avail_models,
-        "datasets": list(bio_datasets.keys()),
-    })
+    manifest = build_manifest(
+        sub_dir,
+        {
+            "panelA": enrich_files,
+            "models": avail_models,
+            "datasets": list(bio_datasets.keys()),
+        },
+    )
     return manifest
 
 
@@ -323,7 +356,10 @@ if __name__ == "__main__":
     parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots")
+    out = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots"
+    )
     out.mkdir(parents=True, exist_ok=True)
     generate(args.series, out)

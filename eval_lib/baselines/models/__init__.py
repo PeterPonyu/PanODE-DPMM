@@ -5,6 +5,7 @@
 - 每个模型提供统一接口（BaseModel 子类）
 - 每个模型提供 create_* 工厂函数
 """
+
 from .base_model import BaseModel
 from .cellblast_model import CellBLASTModel, create_cellblast_model
 from .clear_model import CLEARModel, create_clear_model
@@ -22,6 +23,7 @@ from .sivae_model import create_sivae_model, siVAEModel
 # GM-VAE (requires geoopt)
 try:
     from .gmvae_model import GMVAEModel, create_gmvae_model
+
     _GEOOPT_AVAILABLE = True
 except ImportError:
     _GEOOPT_AVAILABLE = False
@@ -36,6 +38,7 @@ try:
         create_poissonvi_model,
         create_scvi_model,
     )
+
     _SCVI_AVAILABLE = True
 except ImportError:
     _SCVI_AVAILABLE = False
@@ -76,6 +79,10 @@ if _GEOOPT_AVAILABLE:
 
 if _SCVI_AVAILABLE:
     __all__ += [
-        "SCVIModel", "PeakVIModel", "PoissonVIModel",
-        "create_scvi_model", "create_peakvi_model", "create_poissonvi_model",
+        "SCVIModel",
+        "PeakVIModel",
+        "PoissonVIModel",
+        "create_scvi_model",
+        "create_peakvi_model",
+        "create_poissonvi_model",
     ]

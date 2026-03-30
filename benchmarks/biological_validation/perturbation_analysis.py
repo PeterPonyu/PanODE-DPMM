@@ -42,8 +42,8 @@ from utils.paper_style import add_style_args, apply_cli_overrides, apply_style
 # Perturbation analysis
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def compute_perturbation_importance(model, data_loader, device,
-                                     delta=0.5, n_samples=500):
+
+def compute_perturbation_importance(model, data_loader, device, delta=0.5, n_samples=500):
     """Perturb each latent dim and measure reconstruction change.
 
     Returns:
@@ -120,8 +120,8 @@ def get_top_genes_per_component(importance, gene_names, top_n=50):
 # Gene set enrichment via gseapy
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def run_enrichment(gene_list, gene_sets="GO_Biological_Process_2021",
-                   organism="human", top_n=10):
+
+def run_enrichment(gene_list, gene_sets="GO_Biological_Process_2021", organism="human", top_n=10):
     """Run Enrichr enrichment analysis via gseapy.
 
     Args:
@@ -135,13 +135,15 @@ def run_enrichment(gene_list, gene_sets="GO_Biological_Process_2021",
     """
     try:
         import gseapy as gp
+
         enr = gp.enrichr(
             gene_list=gene_list,
             gene_sets=gene_sets,
             organism=organism,
             outdir=None,  # Don't save to disk by default
             no_plot=True,
-            verbose=False)
+            verbose=False,
+        )
         if enr.results is not None and len(enr.results) > 0:
             df = enr.results.sort_values("Adjusted P-value").head(top_n).copy()
             return df
@@ -154,9 +156,16 @@ def run_enrichment(gene_list, gene_sets="GO_Biological_Process_2021",
 # Plotting
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def plot_importance_heatmap(importance, gene_names, save_path,
-                            title="Gene Importance per Component",
-                            top_genes=30, no_title=False, figformat="png"):
+
+def plot_importance_heatmap(
+    importance,
+    gene_names,
+    save_path,
+    title="Gene Importance per Component",
+    top_genes=30,
+    no_title=False,
+    figformat="png",
+):
     """Heatmap: rows = components, columns = top genes (union of top per component)."""
     apply_style()
 
@@ -170,13 +179,12 @@ def plot_importance_heatmap(importance, gene_names, save_path,
     sub = importance[:, top_idx]
     sub_genes = [gene_names[i] for i in top_idx]
 
-    fig, ax = plt.subplots(figsize=(max(12, len(sub_genes) * 0.45),
-                                    max(4, K * 0.6)))
+    fig, ax = plt.subplots(figsize=(max(12, len(sub_genes) * 0.45), max(4, K * 0.6)))
     im = ax.imshow(sub, aspect="auto", cmap="YlOrRd", interpolation="nearest")
 
     ax.set_xticks(range(len(sub_genes)))
     ax.set_xticklabels(sub_genes, rotation=60, ha="right", fontsize=9)
-    ylabels = [f"Dim {k+1}" for k in range(K)]
+    ylabels = [f"Dim {k + 1}" for k in range(K)]
     ax.set_yticks(range(K))
     ax.set_yticklabels(ylabels, fontsize=11)
 
@@ -191,8 +199,9 @@ def plot_importance_heatmap(importance, gene_names, save_path,
     print(f"  Saved: {out}")
 
 
-def plot_enrichment_dotplot(enr_results, component_label, save_path,
-                             no_title=False, figformat="png"):
+def plot_enrichment_dotplot(
+    enr_results, component_label, save_path, no_title=False, figformat="png"
+):
     """Dot plot for enrichment results of one component."""
     apply_style()
 
@@ -206,10 +215,15 @@ def plot_enrichment_dotplot(enr_results, component_label, save_path,
 
     fig, ax = plt.subplots(figsize=(10, max(4, len(df) * 0.45)))
     scatter = ax.scatter(
-        df["neg_log10_p"], range(len(df)),
+        df["neg_log10_p"],
+        range(len(df)),
         s=df["neg_log10_p"] * 20,
-        c=df["neg_log10_p"], cmap="viridis",
-        edgecolors="black", linewidths=0.5, alpha=0.85)
+        c=df["neg_log10_p"],
+        cmap="viridis",
+        edgecolors="black",
+        linewidths=0.5,
+        alpha=0.85,
+    )
     ax.set_yticks(range(len(df)))
     ax.set_yticklabels(df["Term_short"], fontsize=10)
     ax.set_xlabel("-log10(Adjusted P-value)", fontsize=13)
@@ -226,8 +240,9 @@ def plot_enrichment_dotplot(enr_results, component_label, save_path,
     print(f"  Saved: {out}")
 
 
-def plot_enrichment_summary(all_enr, save_path, title="Top Enriched Terms per Component",
-                             no_title=False, figformat="png"):
+def plot_enrichment_summary(
+    all_enr, save_path, title="Top Enriched Terms per Component", no_title=False, figformat="png"
+):
     """Combined dot plot: all components side by side."""
     apply_style()
 
@@ -238,12 +253,14 @@ def plot_enrichment_summary(all_enr, save_path, title="Top Enriched Terms per Co
             continue
         top3 = enr_df.head(3)
         for _, row in top3.iterrows():
-            label = f"Dim {k+1}"
-            rows.append({
-                "Component": label,
-                "Term": row["Term"][:50],
-                "neg_log10_p": -np.log10(max(row["Adjusted P-value"], 1e-50)),
-            })
+            label = f"Dim {k + 1}"
+            rows.append(
+                {
+                    "Component": label,
+                    "Term": row["Term"][:50],
+                    "neg_log10_p": -np.log10(max(row["Adjusted P-value"], 1e-50)),
+                }
+            )
 
     if not rows:
         print("  No enrichment results to summarize.")
@@ -255,9 +272,13 @@ def plot_enrichment_summary(all_enr, save_path, title="Top Enriched Terms per Co
     y_labels = [f"{r['Component']}: {r['Term']}" for _, r in df.iterrows()]
     colors = df["neg_log10_p"].values
 
-    scatter = ax.barh(range(len(df)), df["neg_log10_p"],
-                      color=mpl.colormaps["viridis"](colors / max(colors.max(), 1)),
-                      edgecolor="white", linewidth=0.5)
+    scatter = ax.barh(  # noqa: F841
+        range(len(df)),
+        df["neg_log10_p"],
+        color=mpl.colormaps["viridis"](colors / max(colors.max(), 1)),
+        edgecolor="white",
+        linewidth=0.5,
+    )
     ax.set_yticks(range(len(df)))
     ax.set_yticklabels(y_labels, fontsize=9)
     ax.set_xlabel("-log10(Adjusted P-value)", fontsize=13)
@@ -277,34 +298,44 @@ def plot_enrichment_summary(all_enr, save_path, title="Top Enriched Terms per Co
 # Main
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def main():
     parser = argparse.ArgumentParser(description="Latent component perturbation + enrichment")
-    parser.add_argument("--model-path", required=True,
-                        help="Path to saved model .pt")
+    parser.add_argument("--model-path", required=True, help="Path to saved model .pt")
     parser.add_argument("--dataset", required=True, choices=["setty", "lung", "endo", "dentate"])
     parser.add_argument("--series", required=True, choices=["dpmm"])
-    parser.add_argument("--delta", type=float, default=0.5,
-                        help="Perturbation magnitude")
-    parser.add_argument("--top-genes", type=int, default=50,
-                        help="Number of top genes per component for enrichment")
-    parser.add_argument("--gene-sets", type=str, default="GO_Biological_Process_2021",
-                        help="Enrichr gene set library")
-    parser.add_argument("--organism", type=str, default="human",
-                        choices=["human", "mouse"])
-    parser.add_argument("--n-samples", type=int, default=500,
-                        help="Number of cells to use for perturbation")
+    parser.add_argument("--delta", type=float, default=0.5, help="Perturbation magnitude")
+    parser.add_argument(
+        "--top-genes", type=int, default=50, help="Number of top genes per component for enrichment"
+    )
+    parser.add_argument(
+        "--gene-sets",
+        type=str,
+        default="GO_Biological_Process_2021",
+        help="Enrichr gene set library",
+    )
+    parser.add_argument("--organism", type=str, default="human", choices=["human", "mouse"])
+    parser.add_argument(
+        "--n-samples", type=int, default=500, help="Number of cells to use for perturbation"
+    )
     parser.add_argument("--output-dir", type=str, default=None)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--skip-enrichment", action="store_true",
-                        help="Skip gseapy enrichment (just compute gene importance)")
+    parser.add_argument(
+        "--skip-enrichment",
+        action="store_true",
+        help="Skip gseapy enrichment (just compute gene importance)",
+    )
     add_style_args(parser)
     args = parser.parse_args()
 
     apply_style()
     apply_cli_overrides(args)
 
-    out_root = Path(args.output_dir) if args.output_dir else \
-        ROOT / "benchmarks" / "biological_validation" / "results"
+    out_root = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "benchmarks" / "biological_validation" / "results"
+    )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(args.seed)
@@ -326,34 +357,37 @@ def main():
     # Perturbation analysis
     print("Running perturbation analysis...")
     importance, mean_latent = compute_perturbation_importance(
-        model, splitter.test_loader, device,
-        delta=args.delta, n_samples=args.n_samples)
+        model, splitter.test_loader, device, delta=args.delta, n_samples=args.n_samples
+    )
     K = importance.shape[0]
     print(f"  {K} components × {importance.shape[1]} genes")
 
     tag = f"{model_name}_{args.dataset}"
 
     # Save raw importance matrix
-    np.savez(out_dir / f"{tag}_importance.npz",
-             importance=importance,
-             mean_latent=mean_latent,
-             gene_names=np.array(gene_names))
+    np.savez(
+        out_dir / f"{tag}_importance.npz",
+        importance=importance,
+        mean_latent=mean_latent,
+        gene_names=np.array(gene_names),
+    )
 
     # Plot importance heatmap
     plot_importance_heatmap(
-        importance, gene_names,
+        importance,
+        gene_names,
         out_dir / f"{tag}_importance_heatmap",
         title=f"Gene Importance per Component — {model_name}",
         top_genes=30,
-        no_title=getattr(args, 'no_title', False),
-        figformat=args.fig_format)
+        no_title=getattr(args, "no_title", False),
+        figformat=args.fig_format,
+    )
 
     # Top genes per component
     top_genes = get_top_genes_per_component(importance, gene_names, top_n=args.top_genes)
 
     # Save top genes as JSON
-    top_genes_json = {str(k): [(g, float(s)) for g, s in v]
-                      for k, v in top_genes.items()}
+    top_genes_json = {str(k): [(g, float(s)) for g, s in v] for k, v in top_genes.items()}
     with open(out_dir / f"{tag}_top_genes.json", "w") as f:
         json.dump(top_genes_json, f, indent=2)
     print(f"  Top genes saved: {out_dir / f'{tag}_top_genes.json'}")
@@ -362,36 +396,43 @@ def main():
     if not args.skip_enrichment:
         print(f"\nRunning enrichment ({args.gene_sets})...")
         all_enr = {}
-        comp_label_fn = lambda k: f"Dim {k+1}"
+
+        def comp_label_fn(k):
+            return f"Dim {k + 1}"
 
         for k in range(K):
             gene_list = [g for g, _ in top_genes[k]]
             label = comp_label_fn(k)
-            print(f"  Component {k+1}/{K}: {label} ({len(gene_list)} genes)")
+            print(f"  Component {k + 1}/{K}: {label} ({len(gene_list)} genes)")
 
             enr_df = run_enrichment(
-                gene_list, gene_sets=args.gene_sets,
-                organism=args.organism, top_n=10)
+                gene_list, gene_sets=args.gene_sets, organism=args.organism, top_n=10
+            )
             all_enr[k] = enr_df
 
             if enr_df is not None and not enr_df.empty:
-                print(f"    Top term: {enr_df.iloc[0]['Term'][:60]} "
-                      f"(p={enr_df.iloc[0]['Adjusted P-value']:.2e})")
+                print(
+                    f"    Top term: {enr_df.iloc[0]['Term'][:60]} "
+                    f"(p={enr_df.iloc[0]['Adjusted P-value']:.2e})"
+                )
 
                 # Per-component dot plot
                 plot_enrichment_dotplot(
-                    enr_df, label,
+                    enr_df,
+                    label,
                     out_dir / f"{tag}_enrichment_{k}",
-                    no_title=getattr(args, 'no_title', False),
-                    figformat=args.fig_format)
+                    no_title=getattr(args, "no_title", False),
+                    figformat=args.fig_format,
+                )
 
         # Summary enrichment across all components
         plot_enrichment_summary(
             all_enr,
             out_dir / f"{tag}_enrichment_summary",
             title=f"Enrichment Summary — {model_name}",
-            no_title=getattr(args, 'no_title', False),
-            figformat=args.fig_format)
+            no_title=getattr(args, "no_title", False),
+            figformat=args.fig_format,
+        )
 
         # Save enrichment tables
         for k, enr_df in all_enr.items():

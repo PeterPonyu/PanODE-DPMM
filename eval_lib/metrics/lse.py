@@ -35,11 +35,11 @@ class SingleCellLatentSpaceEvaluator:
 
         # Adjust preferences according to data type
         if data_type == "trajectory":
-            self.isotropy_preference = "low"       # trajectories prefer low isotropy
+            self.isotropy_preference = "low"  # trajectories prefer low isotropy
             self.participation_preference = "low"  # trajectories prefer low participation ratio
         else:  # steady_state
-            self.isotropy_preference = "high"      # steady state prefers high isotropy
-            self.participation_preference = "high" # steady state prefers high participation ratio
+            self.isotropy_preference = "high"  # steady state prefers high isotropy
+            self.participation_preference = "high"  # steady state prefers high participation ratio
 
     def _log(self, message):
         if self.verbose:
@@ -47,9 +47,9 @@ class SingleCellLatentSpaceEvaluator:
 
     # ==================== 1. Refined manifold dimensionality consistency ====================
 
-    def manifold_dimensionality_score_v2(self, latent_space,
-                                         variance_thresholds=[0.8, 0.9, 0.95],
-                                         use_multiple_methods=True):
+    def manifold_dimensionality_score_v2(
+        self, latent_space, variance_thresholds=None, use_multiple_methods=True
+    ):
         """
         Refined manifold dimensionality consistency metric.
         Fixes the issue in the original version where all methods yielded the same score.
@@ -62,6 +62,8 @@ class SingleCellLatentSpaceEvaluator:
         Returns:
             float: dimensional efficiency score (0–1)
         """
+        if variance_thresholds is None:
+            variance_thresholds = [0.8, 0.9, 0.95]
         try:
             if latent_space.shape[1] == 1:
                 return 1.0
@@ -200,7 +202,6 @@ class SingleCellLatentSpaceEvaluator:
             warnings.warn(f"Error computing participation ratio: {e}")
             return 0.5
 
-
     def isotropy_anisotropy_score(self, latent_space):
         """
         Isotropy/anisotropy score (enhanced version).
@@ -257,7 +258,7 @@ class SingleCellLatentSpaceEvaluator:
             dominance_anisotropy = np.tanh(np.log(primary_dominance + 1) / 2.0)
 
             # Method 6: inverse effective dimensionality
-            participation_ratio = (np.sum(eigenvalues)**2) / np.sum(eigenvalues**2)
+            participation_ratio = (np.sum(eigenvalues) ** 2) / np.sum(eigenvalues**2)
             effective_dim_anisotropy = 1.0 - (participation_ratio / len(eigenvalues))
 
             # Weighted combination
@@ -286,7 +287,6 @@ class SingleCellLatentSpaceEvaluator:
             warnings.warn(f"Error in isotropy/anisotropy analysis: {e}")
             return 0.5
 
-
     # ==================== 3. Single-cell–specific metrics ====================
 
     def trajectory_directionality_score(self, latent_space):
@@ -300,7 +300,7 @@ class SingleCellLatentSpaceEvaluator:
             explained_var = pca.explained_variance_ratio_
 
             if len(explained_var) >= 2:
-                main_dominance = explained_var[0]
+                main_dominance = explained_var[0]  # noqa: F841
 
                 other_variance = np.sum(explained_var[1:])
                 if other_variance > 1e-10:
@@ -329,7 +329,9 @@ class SingleCellLatentSpaceEvaluator:
 
             if len(explained_variance) > 1:
                 signal_variance = np.sum(explained_variance[:2])  # first two PCs
-                noise_variance = np.sum(explained_variance[2:]) if len(explained_variance) > 2 else 0
+                noise_variance = (
+                    np.sum(explained_variance[2:]) if len(explained_variance) > 2 else 0
+                )
 
                 if noise_variance > 1e-10:
                     snr = signal_variance / noise_variance
@@ -364,52 +366,52 @@ class SingleCellLatentSpaceEvaluator:
 
         # 1. Core manifold metrics
         self._log("Computing manifold dimensionality metrics...")
-        results['manifold_dimensionality'] = self.manifold_dimensionality_score_v2(latent_space)
+        results["manifold_dimensionality"] = self.manifold_dimensionality_score_v2(latent_space)
 
         # 2. Spectral metrics
         self._log("Computing spectral metrics...")
-        results['spectral_decay_rate'] = self.spectral_decay_rate(latent_space)
-        results['participation_ratio'] = self.participation_ratio_score(latent_space)
-        results['anisotropy_score'] = self.isotropy_anisotropy_score(latent_space)
+        results["spectral_decay_rate"] = self.spectral_decay_rate(latent_space)
+        results["participation_ratio"] = self.participation_ratio_score(latent_space)
+        results["anisotropy_score"] = self.isotropy_anisotropy_score(latent_space)
 
         # 3. Single-cell–specific metrics
         self._log("Computing single-cell–specific metrics...")
-        results['trajectory_directionality'] = self.trajectory_directionality_score(latent_space)
+        results["trajectory_directionality"] = self.trajectory_directionality_score(latent_space)
 
         # 4. Technical quality metrics
         self._log("Computing technical quality metrics...")
-        results['noise_resilience'] = self.noise_resilience_score(latent_space)
+        results["noise_resilience"] = self.noise_resilience_score(latent_space)
 
         # 5. Aggregate scores
         self._log("Computing aggregate scores...")
 
         core_metrics = [
-            results['manifold_dimensionality'],
-            results['spectral_decay_rate'],
-            results['participation_ratio'],
-            results['anisotropy_score'],
+            results["manifold_dimensionality"],
+            results["spectral_decay_rate"],
+            results["participation_ratio"],
+            results["anisotropy_score"],
         ]
-        results['core_quality'] = np.mean(core_metrics)
+        results["core_quality"] = np.mean(core_metrics)
 
         if self.data_type == "trajectory":
             # Trajectories: emphasize directionality
             final_components = [
-                results['core_quality'] * 0.5,
-                results['trajectory_directionality'] * 0.3,
-                results['noise_resilience'] * 0.2,
+                results["core_quality"] * 0.5,
+                results["trajectory_directionality"] * 0.3,
+                results["noise_resilience"] * 0.2,
             ]
         else:
             # Steady state: emphasize core manifold quality
             final_components = [
-                results['core_quality'] * 0.7,
-                results['noise_resilience'] * 0.3,
+                results["core_quality"] * 0.7,
+                results["noise_resilience"] * 0.3,
             ]
 
-        results['overall_quality'] = np.sum(final_components)
+        results["overall_quality"] = np.sum(final_components)
 
         # Add interpretation
-        results['data_type'] = self.data_type
-        results['interpretation'] = self._generate_interpretation(results)
+        results["data_type"] = self.data_type
+        results["interpretation"] = self._generate_interpretation(results)
 
         if self.verbose:
             self._print_comprehensive_results(results)
@@ -420,68 +422,72 @@ class SingleCellLatentSpaceEvaluator:
         """Generate a qualitative interpretation of the results."""
 
         interpretation = {
-            'quality_level': '',
-            'strengths': [],
-            'weaknesses': [],
-            'recommendations': [],
+            "quality_level": "",
+            "strengths": [],
+            "weaknesses": [],
+            "recommendations": [],
         }
 
-        overall = results['overall_quality']
+        overall = results["overall_quality"]
 
         # Quality level
         if overall >= 0.8:
-            interpretation['quality_level'] = "Excellent"
+            interpretation["quality_level"] = "Excellent"
         elif overall >= 0.6:
-            interpretation['quality_level'] = "Good"
+            interpretation["quality_level"] = "Good"
         elif overall >= 0.4:
-            interpretation['quality_level'] = "Fair"
+            interpretation["quality_level"] = "Fair"
         else:
-            interpretation['quality_level'] = "Needs improvement"
+            interpretation["quality_level"] = "Needs improvement"
 
-        thresholds = {'high': 0.7, 'medium': 0.5, 'low': 0.3}
+        thresholds = {"high": 0.7, "medium": 0.5, "low": 0.3}
 
         # Strengths
-        if results['manifold_dimensionality'] > thresholds['high']:
-            interpretation['strengths'].append("High dimensional compression efficiency")
+        if results["manifold_dimensionality"] > thresholds["high"]:
+            interpretation["strengths"].append("High dimensional compression efficiency")
 
-        if results['spectral_decay_rate'] > thresholds['high']:
-            interpretation['strengths'].append("Strong eigenvalue decay")
+        if results["spectral_decay_rate"] > thresholds["high"]:
+            interpretation["strengths"].append("Strong eigenvalue decay")
 
-        if results['anisotropy_score'] > thresholds['high']:
+        if results["anisotropy_score"] > thresholds["high"]:
             if self.data_type == "trajectory":
-                interpretation['strengths'].append("Strong trajectory directionality")
+                interpretation["strengths"].append("Strong trajectory directionality")
             else:
-                interpretation['strengths'].append("Uniform spatial distribution")
+                interpretation["strengths"].append("Uniform spatial distribution")
 
-        if results['participation_ratio'] > thresholds['high']:
+        if results["participation_ratio"] > thresholds["high"]:
             if self.data_type == "trajectory":
-                interpretation['strengths'].append("High information concentration")
+                interpretation["strengths"].append("High information concentration")
             else:
-                interpretation['strengths'].append("Balanced use of dimensions")
+                interpretation["strengths"].append("Balanced use of dimensions")
 
-        if results['trajectory_directionality'] > thresholds['high']:
-            interpretation['strengths'].append("Clear dominant developmental axis")
+        if results["trajectory_directionality"] > thresholds["high"]:
+            interpretation["strengths"].append("Clear dominant developmental axis")
 
         # Weaknesses
-        if results['noise_resilience'] < thresholds['medium']:
-            interpretation['weaknesses'].append("Insufficient noise filtering")
+        if results["noise_resilience"] < thresholds["medium"]:
+            interpretation["weaknesses"].append("Insufficient noise filtering")
 
-        if results['trajectory_directionality'] < thresholds['medium']:
-            interpretation['weaknesses'].append("Dominant developmental axis is weak")
+        if results["trajectory_directionality"] < thresholds["medium"]:
+            interpretation["weaknesses"].append("Dominant developmental axis is weak")
 
-        if results['core_quality'] < thresholds['medium']:
-            interpretation['weaknesses'].append("Low core manifold quality")
+        if results["core_quality"] < thresholds["medium"]:
+            interpretation["weaknesses"].append("Low core manifold quality")
 
         # Recommendations
         if overall < 0.6:
-            interpretation['recommendations'].append("Consider adjusting dimensionality reduction parameters")
-            interpretation['recommendations'].append("Add or refine preprocessing steps")
+            interpretation["recommendations"].append(
+                "Consider adjusting dimensionality reduction parameters"
+            )
+            interpretation["recommendations"].append("Add or refine preprocessing steps")
 
-        if results['noise_resilience'] < 0.4:
-            interpretation['recommendations'].append("Strengthen noise filtering")
+        if results["noise_resilience"] < 0.4:
+            interpretation["recommendations"].append("Strengthen noise filtering")
 
-        if self.data_type == "trajectory" and results['trajectory_directionality'] < 0.5:
-            interpretation['recommendations'].append("Optimize preservation of trajectory directionality")
+        if self.data_type == "trajectory" and results["trajectory_directionality"] < 0.5:
+            interpretation["recommendations"].append(
+                "Optimize preservation of trajectory directionality"
+            )
 
         return interpretation
 
@@ -507,7 +513,9 @@ class SingleCellLatentSpaceEvaluator:
 
         # Single-cell–specific
         print("\n[Single-cell Specific Metrics]")
-        print(f"  Trajectory directionality: {results['trajectory_directionality']:.4f} (higher is better)")
+        print(
+            f"  Trajectory directionality: {results['trajectory_directionality']:.4f} (higher is better)"
+        )
 
         # Technical quality
         print("\n[Technical Quality Metrics]")
@@ -519,17 +527,17 @@ class SingleCellLatentSpaceEvaluator:
         print(f"  Overall quality score: {results['overall_quality']:.4f} ★★★")
 
         # Interpretation
-        interp = results['interpretation']
+        interp = results["interpretation"]
         print("\n[Interpretation]")
         print(f"  Quality level: {interp['quality_level']}")
 
-        if interp['strengths']:
+        if interp["strengths"]:
             print(f"  Strengths: {', '.join(interp['strengths'])}")
 
-        if interp['weaknesses']:
+        if interp["weaknesses"]:
             print(f"  Weaknesses: {', '.join(interp['weaknesses'])}")
 
-        if interp['recommendations']:
+        if interp["recommendations"]:
             print(f"  Recommendations: {', '.join(interp['recommendations'])}")
 
         print("=" * 80)
@@ -559,22 +567,24 @@ class SingleCellLatentSpaceEvaluator:
             # Restore verbosity setting
             self.verbose = original_verbose
 
-            comparison_results.append({
-                'Method': method_name,
-                'Overall_Quality': results['overall_quality'],
-                'Manifold_Dimensionality': results['manifold_dimensionality'],
-                'Spectral_Decay': results['spectral_decay_rate'],
-                'Participation_Ratio': results['participation_ratio'],
-                'Anisotropy_Score': results['anisotropy_score'],
-                'Trajectory_Directionality': results['trajectory_directionality'],
-                'Noise_Resilience': results['noise_resilience'],
-                'Quality_Level': results['interpretation']['quality_level'],
-            })
+            comparison_results.append(
+                {
+                    "Method": method_name,
+                    "Overall_Quality": results["overall_quality"],
+                    "Manifold_Dimensionality": results["manifold_dimensionality"],
+                    "Spectral_Decay": results["spectral_decay_rate"],
+                    "Participation_Ratio": results["participation_ratio"],
+                    "Anisotropy_Score": results["anisotropy_score"],
+                    "Trajectory_Directionality": results["trajectory_directionality"],
+                    "Noise_Resilience": results["noise_resilience"],
+                    "Quality_Level": results["interpretation"]["quality_level"],
+                }
+            )
 
         df = pd.DataFrame(comparison_results)
 
         # Sort by overall quality
-        df = df.sort_values('Overall_Quality', ascending=False)
+        df = df.sort_values("Overall_Quality", ascending=False)
 
         if self.verbose:
             self._print_comparison_table(df)
@@ -585,21 +595,26 @@ class SingleCellLatentSpaceEvaluator:
         """Print a formatted comparison table."""
 
         print(f"\n{'=' * 100}")
-        print(f"                 Dimensionality Reduction Method Comparison ({self.data_type.upper()} data)")
-        print('=' * 100)
+        print(
+            f"                 Dimensionality Reduction Method Comparison ({self.data_type.upper()} data)"
+        )
+        print("=" * 100)
 
-        pd.set_option('display.float_format', '{:.4f}'.format)
-        pd.set_option('display.max_columns', None)
-        pd.set_option('display.width', None)
+        pd.set_option("display.float_format", "{:.4f}".format)
+        pd.set_option("display.max_columns", None)
+        pd.set_option("display.width", None)
 
         print(df.to_string(index=False))
 
-        print(f"\nBest method: {df.iloc[0]['Method']} (Overall score: {df.iloc[0]['Overall_Quality']:.4f})")
+        print(
+            f"\nBest method: {df.iloc[0]['Method']} (Overall score: {df.iloc[0]['Overall_Quality']:.4f})"
+        )
 
-        print('=' * 100)
+        print("=" * 100)
 
 
 # ==================== Convenience functions ====================
+
 
 def evaluate_single_cell_latent_space(latent_space, data_type="trajectory", verbose=True):
     """

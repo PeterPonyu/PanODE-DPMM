@@ -76,6 +76,7 @@ _DELTA_METRICS = [
 
 # ── Helpers ───────────────────────────────────────────────────────────────
 
+
 def _darken(hex_col: str, factor: float = 0.55) -> str:
     r = int(hex_col[1:3], 16)
     g = int(hex_col[3:5], 16)
@@ -91,6 +92,7 @@ def _lighten(hex_col: str, factor: float = 0.45) -> str:
 
 
 # ── Data loading ──────────────────────────────────────────────────────────
+
 
 def _load_metric_tables() -> dict[str, pd.DataFrame]:
     tables = load_table_directory(preferred_ablation_table_dir())
@@ -112,7 +114,7 @@ def _collect_per_dataset_values(
 ) -> list[float]:
     """Collect one value per dataset for a given model+metric."""
     vals = []
-    for ds_name, df in metric_tables.items():
+    for ds_name, df in metric_tables.items():  # noqa: B007
         sub = df[df["method"] == model_name]
         if metric_col in sub.columns:
             v = pd.to_numeric(sub[metric_col], errors="coerce").dropna()
@@ -143,19 +145,20 @@ def _collect_signed_delta(
 
 # ── Panel (a): Architecture-grouped UMAP gallery ─────────────────────────
 
+
 def _draw_single_umap(ax, model_name: str, dataset: str) -> None:
     latent = load_cross_latent(model_name, dataset)
     if latent is None or len(latent) == 0:
         ax.axis("off")
-        ax.text(0.5, 0.5, "N/A", ha="center", va="center",
-                fontsize=9, color="black")
+        ax.text(0.5, 0.5, "N/A", ha="center", va="center", fontsize=9, color="black")
         return
     if len(latent) > 1500:
         idx = np.random.RandomState(0).choice(len(latent), 1500, replace=False)
         latent = latent[idx]
     emb = compute_umap(latent)
-    ax.scatter(emb[:, 0], emb[:, 1], s=5.5, alpha=0.52,
-               color=method_color(model_name), rasterized=True)
+    ax.scatter(
+        emb[:, 0], emb[:, 1], s=5.5, alpha=0.52, color=method_color(model_name), rasterized=True
+    )
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_aspect("equal", adjustable="datalim")
@@ -175,18 +178,29 @@ def _draw_umap_panel(fig, region, datasets):
             style_axes(ax, kind="umap")
             _draw_single_umap(ax, model_name, dataset)
             if ci == 0:
-                ax.set_ylabel(_DISPLAY_LABELS.get(model_name, method_short_name(model_name)), fontsize=11, labelpad=4, color="black")
+                ax.set_ylabel(
+                    _DISPLAY_LABELS.get(model_name, method_short_name(model_name)),
+                    fontsize=11,
+                    labelpad=4,
+                    color="black",
+                )
             if ri == 0:
-                ax.set_title(dataset, fontsize=11,
-                             pad=3, fontweight="normal",
-                             color="black")
+                ax.set_title(dataset, fontsize=11, pad=3, fontweight="normal", color="black")
 
-    fig.text(region.left - 0.015, region.bottom + region.height + 0.008,
-             "(a)", fontsize=14, fontweight="bold",
-             ha="left", va="bottom", transform=fig.transFigure)
+    fig.text(
+        region.left - 0.015,
+        region.bottom + region.height + 0.008,
+        "(a)",
+        fontsize=14,
+        fontweight="bold",
+        ha="left",
+        va="bottom",
+        transform=fig.transFigure,
+    )
 
 
 # ── Panel (b): Direct metric boxplot grid ─────────────────────────────────
+
 
 def _draw_boxplot_panel(fig, region, metric_tables):
     filtered_metrics = list(_SELECTED_METRICS)
@@ -196,7 +210,7 @@ def _draw_boxplot_panel(fig, region, metric_tables):
 
     grid = region.grid(n_rows_grid, n_cols_grid, wgap=0.055, hgap=0.038)
 
-    for mi, (col_name, display_name, hib) in enumerate(filtered_metrics):
+    for mi, (col_name, display_name, hib) in enumerate(filtered_metrics):  # noqa: B007
         ri, ci = divmod(mi, n_cols_grid)
         ax = grid[ri][ci].add_axes(fig)
         style_axes(ax, kind="boxplot")
@@ -214,11 +228,14 @@ def _draw_boxplot_panel(fig, region, metric_tables):
             tick_labels.append(_DISPLAY_LABELS.get(model_name, method_short_name(model_name)))
 
         bp = ax.boxplot(
-            box_data, positions=positions, widths=0.55,
-            patch_artist=True, showfliers=False,
-            medianprops=dict(color="black", linewidth=1.0),
-            whiskerprops=dict(linewidth=0.7),
-            capprops=dict(linewidth=0.7),
+            box_data,
+            positions=positions,
+            widths=0.55,
+            patch_artist=True,
+            showfliers=False,
+            medianprops={"color": "black", "linewidth": 1.0},
+            whiskerprops={"linewidth": 0.7},
+            capprops={"linewidth": 0.7},
         )
         for patch, color in zip(bp["boxes"], box_colors):
             patch.set_facecolor(color)
@@ -231,9 +248,15 @@ def _draw_boxplot_panel(fig, region, metric_tables):
         for pos_i, vals, color in zip(positions, box_data, box_colors):
             jitter = rng.uniform(-0.18, 0.18, size=len(vals))
             ax.scatter(
-                pos_i + jitter, vals, s=10, alpha=0.38,
-                color=color, edgecolors="#333333", linewidths=0.15,
-                zorder=5, rasterized=True,
+                pos_i + jitter,
+                vals,
+                s=10,
+                alpha=0.38,
+                color=color,
+                edgecolors="#333333",
+                linewidths=0.15,
+                zorder=5,
+                rasterized=True,
             )
 
         # Stepwise ablation labels on x-axis
@@ -243,7 +266,7 @@ def _draw_boxplot_panel(fig, region, metric_tables):
         ax.tick_params(axis="x", length=0)
 
         # Sci-style y-axis format to avoid overly long tick values
-        ax.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
         fmt = ScalarFormatter(useMathText=True)
         fmt.set_powerlimits((-2, 3))
         ax.yaxis.set_major_formatter(fmt)
@@ -258,12 +281,20 @@ def _draw_boxplot_panel(fig, region, metric_tables):
         ax = grid[ri][ci].add_axes(fig)
         ax.axis("off")
 
-    fig.text(region.left - 0.030, region.bottom + region.height + 0.018,
-             "(b)", fontsize=14, fontweight="bold",
-             ha="left", va="bottom", transform=fig.transFigure)
+    fig.text(
+        region.left - 0.030,
+        region.bottom + region.height + 0.018,
+        "(b)",
+        fontsize=14,
+        fontweight="bold",
+        ha="left",
+        va="bottom",
+        transform=fig.transFigure,
+    )
 
 
 # ── Panel (c): Signed delta audit ────────────────────────────────────────
+
 
 def _draw_delta_panel(fig, region, metric_tables):
     grid = region.grid(2, 2, wgap=0.12, hgap=0.16)
@@ -287,9 +318,9 @@ def _draw_delta_panel(fig, region, metric_tables):
             widths=0.60,
             patch_artist=True,
             showfliers=False,
-            medianprops=dict(color="black", linewidth=1.0),
-            whiskerprops=dict(linewidth=0.7),
-            capprops=dict(linewidth=0.7),
+            medianprops={"color": "black", "linewidth": 1.0},
+            whiskerprops={"linewidth": 0.7},
+            capprops={"linewidth": 0.7},
         )
         for patch, color in zip(bp["boxes"], colors):
             patch.set_facecolor(color)
@@ -313,24 +344,34 @@ def _draw_delta_panel(fig, region, metric_tables):
             )
 
         ax.axhline(0.0, color="#78909C", linewidth=0.8, linestyle="--", alpha=0.8)
-        ax.set_title(f"{display_name} {'↑' if higher_is_better else '↓'}", fontsize=12, pad=4, loc="left")
+        ax.set_title(
+            f"{display_name} {'↑' if higher_is_better else '↓'}", fontsize=12, pad=4, loc="left"
+        )
         ax.set_xticks(range(1, len(_TRANSITIONS) + 1))
         ax.set_xticklabels(labels, fontsize=9.5, rotation=30, ha="right")
         ax.tick_params(axis="y", labelsize=10)
         ax.tick_params(axis="x", length=0)
-        ax.yaxis.set_major_locator(MaxNLocator(nbins=4, prune='both'))
+        ax.yaxis.set_major_locator(MaxNLocator(nbins=4, prune="both"))
         fmt = ScalarFormatter(useMathText=True)
         fmt.set_powerlimits((-2, 3))
         ax.yaxis.set_major_formatter(fmt)
         ax.yaxis.grid(True, alpha=0.16, linewidth=0.4)
         ax.set_axisbelow(True)
 
-    fig.text(region.left - 0.03, region.bottom + region.height + 0.02,
-             "(c)", fontsize=14, fontweight="bold",
-             ha="left", va="bottom", transform=fig.transFigure)
+    fig.text(
+        region.left - 0.03,
+        region.bottom + region.height + 0.02,
+        "(c)",
+        fontsize=14,
+        fontweight="bold",
+        ha="left",
+        va="bottom",
+        transform=fig.transFigure,
+    )
 
 
 # ── Main generation ───────────────────────────────────────────────────────
+
 
 def generate(series, out_dir):
     """Generate refined Figure 2."""

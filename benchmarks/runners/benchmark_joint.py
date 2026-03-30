@@ -75,22 +75,25 @@ from benchmarks.train_utils import train_and_evaluate
 # Constants / defaults
 # ──────────────────────────────────────────────────────────────────────────────
 JOINT_MODELS = [
-    "DPMM-Base", "DPMM-Transformer", "DPMM-Contrastive",
+    "DPMM-Base",
+    "DPMM-Transformer",
+    "DPMM-Contrastive",
 ]
-HVG_PER_DS   = 3000   # HVGs to select per dataset before intersection
-MIN_SHARED   = 300    # minimum acceptable shared genes (fallback if < this)
-MAX_CELLS    = 2000   # cells per dataset (downsampled for tractability)
-EPOCHS       = 300    # training epochs for joint model
-LR           = BASE_CONFIG.lr
-BATCH_SIZE   = BASE_CONFIG.batch_size
-DEVICE       = BASE_CONFIG.device
-SEED         = BASE_CONFIG.seed
+HVG_PER_DS = 3000  # HVGs to select per dataset before intersection
+MIN_SHARED = 300  # minimum acceptable shared genes (fallback if < this)
+MAX_CELLS = 2000  # cells per dataset (downsampled for tractability)
+EPOCHS = 300  # training epochs for joint model
+LR = BASE_CONFIG.lr
+BATCH_SIZE = BASE_CONFIG.batch_size
+DEVICE = BASE_CONFIG.device
+SEED = BASE_CONFIG.seed
 
-RESULTS_DIR  = result_subdir("joint")
+RESULTS_DIR = result_subdir("joint")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Gene-intersection helpers
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def find_shared_genes(adatas, n_hvg=HVG_PER_DS, min_shared=MIN_SHARED):
     """Find a shared gene set across datasets using a common-then-variable strategy.
@@ -150,8 +153,8 @@ def find_shared_genes(adatas, n_hvg=HVG_PER_DS, min_shared=MIN_SHARED):
     print(f"  Using {len(common_list)} common genes for HVG scoring …")
 
     # Step 2: Per-dataset HVG ranking on common genes
-    freq = Counter()           # how many datasets rank this gene as HVG
-    disp_accum = {}            # sum of normalized_dispersion per gene
+    freq = Counter()  # how many datasets rank this gene as HVG
+    disp_accum = {}  # sum of normalized_dispersion per gene
 
     for i, ad in enumerate(adatas):
         ad_sub = ad[:, common_list].copy()
@@ -172,14 +175,13 @@ def find_shared_genes(adatas, n_hvg=HVG_PER_DS, min_shared=MIN_SHARED):
                     ad_sub.var.loc[g, "dispersions_norm"] if g in ad_sub.var_names else 0.0
                 )
 
-        print(f"    Dataset {i+1}: {len(hvgs_i)} HVGs from {ad_sub.n_vars} common genes")
+        print(f"    Dataset {i + 1}: {len(hvgs_i)} HVGs from {ad_sub.n_vars} common genes")
 
     # Step 3: rank genes by (frequency, mean dispersion) and pick top N
     target_n = min(n_hvg, len(common_list))  # aim for n_hvg shared genes
     ranked = sorted(
-        common_list,
-        key=lambda g: (freq.get(g, 0), disp_accum.get(g, 0.0)),
-        reverse=True)
+        common_list, key=lambda g: (freq.get(g, 0), disp_accum.get(g, 0.0)), reverse=True
+    )
     selected = ranked[:target_n]
     print(f"\n  Selected {len(selected)} shared genes")
     print(f"    Top-frequency gene count: {freq[ranked[0]]} / {n_ds} datasets")
@@ -196,6 +198,7 @@ def find_shared_genes(adatas, n_hvg=HVG_PER_DS, min_shared=MIN_SHARED):
 # ──────────────────────────────────────────────────────────────────────────────
 # Joint dataset builder
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def build_joint_adata(shared_genes, adatas, ds_keys, max_cells=MAX_CELLS, seed=SEED):
     """Concatenate all datasets (subsampled) onto the shared gene set.
@@ -247,6 +250,7 @@ def build_joint_adata(shared_genes, adatas, ds_keys, max_cells=MAX_CELLS, seed=S
 # DataSplitter wrapper for joint data
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def _make_joint_splitter(joint_adata, latent_dim, batch_size=BATCH_SIZE, seed=SEED):
     """Build a DataSplitter-equivalent from the joint AnnData.
 
@@ -266,13 +270,15 @@ def _make_joint_splitter(joint_adata, latent_dim, batch_size=BATCH_SIZE, seed=SE
         latent_dim=latent_dim,
         batch_size=batch_size,
         random_seed=seed,
-        verbose=True)
+        verbose=True,
+    )
     return splitter
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Training loop
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def train_joint_model(model_name, joint_adata, device, epochs, seed):
     """Train one model on the joint AnnData and return full latent + results."""
@@ -296,17 +302,16 @@ def train_joint_model(model_name, joint_adata, device, epochs, seed):
         device=device,
         lr=LR,
         verbose_every=50,
-        data_type="cluster",           # mixed types → use cluster eval
+        data_type="cluster",  # mixed types → use cluster eval
         extra_fields={"Series": model_info.get("series", ""), "Dataset": "joint"},
-        epochs=epochs)
+        epochs=epochs,
+    )
 
     # Re-extract latent from ALL cells (train+val+test) for the UMAP
     model_obj = result.get("model_obj")
     if model_obj is not None:
         all_loader = splitter.get_all_loader()
-        full_latent_dict = model_obj.extract_latent(
-            all_loader, device=str(device)
-        )
+        full_latent_dict = model_obj.extract_latent(all_loader, device=str(device))
         full_latent = full_latent_dict.get("latent")
     else:
         full_latent = result.get("latent")
@@ -318,6 +323,7 @@ def train_joint_model(model_name, joint_adata, device, epochs, seed):
 # ──────────────────────────────────────────────────────────────────────────────
 # Main entry
 # ──────────────────────────────────────────────────────────────────────────────
+
 
 def main(args):
     set_global_seed(args.seed)
@@ -331,21 +337,19 @@ def main(args):
         d.mkdir(parents=True, exist_ok=True)
 
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("  Joint Multi-Dataset Training Benchmark")
     print(f"  Device: {device} | Epochs: {args.epochs} | MaxCells/DS: {args.max_cells}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     # ── Step 1: Load and preprocess all datasets ──────────────────────────
     # Filter by species (or 'all' with gene-name harmonization)
     species = args.species
     if species == "all":
         # Include human + mouse (gene-symbol) datasets; harmonize names
-        ds_keys = [k for k, v in DATASET_REGISTRY.items()
-                   if v.get("species") in ("human", "mouse")]
+        ds_keys = [k for k, v in DATASET_REGISTRY.items() if v.get("species") in ("human", "mouse")]
     else:
-        ds_keys = [k for k, v in DATASET_REGISTRY.items()
-                   if v.get("species") == species]
+        ds_keys = [k for k, v in DATASET_REGISTRY.items() if v.get("species") == species]
     if not ds_keys:
         raise RuntimeError(f"No datasets found for species='{species}'")
     print(f"\n  Species filter: '{species}' → {len(ds_keys)} datasets")
@@ -366,10 +370,11 @@ def main(args):
         try:
             ad = load_or_preprocess_adata(
                 str(p),
-                max_cells=args.max_cells * 3,   # load more cells; subsample later
-                hvg_top_genes=None,              # keep ALL genes; shared-gene logic selects later
+                max_cells=args.max_cells * 3,  # load more cells; subsample later
+                hvg_top_genes=None,  # keep ALL genes; shared-gene logic selects later
                 seed=args.seed,
-                cache_dir=str(cache_dir))
+                cache_dir=str(cache_dir),
+            )
             # Harmonize mouse gene names to uppercase (Sox17 → SOX17)
             if species == "all" and info.get("species") == "mouse":
                 ad.var_names = pd.Index([g.upper() for g in ad.var_names])
@@ -393,8 +398,8 @@ def main(args):
     # ── Step 3: Build joint AnnData ───────────────────────────────────────
     print("\n  Building joint dataset …")
     joint_adata, cell_counts = build_joint_adata(
-        shared_genes, adatas, valid_keys,
-        max_cells=args.max_cells, seed=args.seed)
+        shared_genes, adatas, valid_keys, max_cells=args.max_cells, seed=args.seed
+    )
 
     # Free per-dataset adatas to save memory
     del adatas, adatas_raw
@@ -415,7 +420,9 @@ def main(args):
             )
         except Exception as e:
             print(f"  ✗ {model_name} training failed: {e}")
-            import traceback; traceback.print_exc()
+            import traceback
+
+            traceback.print_exc()
             continue
 
         if full_latent is None:
@@ -425,16 +432,17 @@ def main(args):
         # Save latent NPZ with dataset labels -- FULL dataset (all cells)
         ds_labels = np.array(joint_adata.obs["dataset"].values, dtype=str)
         fname = f"{model_name.replace('/', '_')}_joint_{timestamp}.npz"
-        np.savez(lat_dir / fname,
-                 latent=full_latent,
-                 dataset_labels=ds_labels,
-                 shared_genes=np.array(shared_genes))
+        np.savez(
+            lat_dir / fname,
+            latent=full_latent,
+            dataset_labels=ds_labels,
+            shared_genes=np.array(shared_genes),
+        )
         print(f"  → Saved latent: {fname} ({full_latent.shape})")
         print(f"    {len(ds_labels)} cells, {len(set(ds_labels))} datasets")
 
         if result:
-            row = {k: v for k, v in result.items()
-                   if k not in ("latent")}
+            row = {k: v for k, v in result.items() if k not in ("latent")}
             row["Model"] = model_name
             row["Dataset"] = "joint"
             result_rows.append(row)
@@ -464,29 +472,44 @@ def main(args):
         json.dump(meta, f, indent=2)
     print(f"  Meta JSON:   {meta_path}")
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"  Joint training complete. Trained on {len(valid_keys)} datasets,")
     print(f"  {len(shared_genes)} shared genes.")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Train models jointly on all 12 datasets and save latents"
     )
-    parser.add_argument("--models", nargs="+", default=None,
-                        help="Model names to train (default: all 6 core models)")
-    parser.add_argument("--epochs", type=int, default=EPOCHS,
-                        help=f"Training epochs (default: {EPOCHS})")
-    parser.add_argument("--max-cells", type=int, default=MAX_CELLS,
-                        help=f"Max cells per dataset (default: {MAX_CELLS})")
-    parser.add_argument("--min-genes", type=int, default=MIN_SHARED,
-                        help=f"Min shared genes (default: {MIN_SHARED})")
-    parser.add_argument("--species", default="all",
-                        choices=["human", "mouse", "mouse_ensembl", "all"],
-                        help="Species filter: human, mouse, all (default: all = human+mouse with name harmonization)")
-    parser.add_argument("--device", default=DEVICE,
-                        help=f"PyTorch device (default: {DEVICE})")
+    parser.add_argument(
+        "--models",
+        nargs="+",
+        default=None,
+        help="Model names to train (default: all 6 core models)",
+    )
+    parser.add_argument(
+        "--epochs", type=int, default=EPOCHS, help=f"Training epochs (default: {EPOCHS})"
+    )
+    parser.add_argument(
+        "--max-cells",
+        type=int,
+        default=MAX_CELLS,
+        help=f"Max cells per dataset (default: {MAX_CELLS})",
+    )
+    parser.add_argument(
+        "--min-genes",
+        type=int,
+        default=MIN_SHARED,
+        help=f"Min shared genes (default: {MIN_SHARED})",
+    )
+    parser.add_argument(
+        "--species",
+        default="all",
+        choices=["human", "mouse", "mouse_ensembl", "all"],
+        help="Species filter: human, mouse, all (default: all = human+mouse with name harmonization)",
+    )
+    parser.add_argument("--device", default=DEVICE, help=f"PyTorch device (default: {DEVICE})")
     parser.add_argument("--seed", type=int, default=SEED)
     args = parser.parse_args()
     main(args)

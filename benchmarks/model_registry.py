@@ -30,118 +30,117 @@ from models.pure_ae import PureAEContrastiveModel, PureAEModel, PureAETransforme
 
 MODELS = {
     # ── Pure-AE baselines (independent, no prior, no KL) ───────────────────
-    'Pure-AE': {
-        'class': PureAEModel,
-        'params': {
-            'latent_dim': 10,
-            'encoder_dims': [256, 128],
-            'decoder_dims': [128, 256],
-            'dropout_rate': 0.2,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 0,
-            'fit_epochs': 1000,
+    "Pure-AE": {
+        "class": PureAEModel,
+        "params": {
+            "latent_dim": 10,
+            "encoder_dims": [256, 128],
+            "decoder_dims": [128, 256],
+            "dropout_rate": 0.2,
+            "fit_lr": 1e-3,
+            "fit_weight_decay": 0,
+            "fit_epochs": 1000,
         },
-        'series': 'pure-ae',
+        "series": "pure-ae",
     },
-    'Pure-Transformer-AE': {
-        'class': PureAETransformerModel,
-        'params': {
-            'latent_dim': 10,
-            'd_model': 128,
-            'decoder_dims': [128, 256],
-            'dropout_rate': 0.2,
-            'nhead': 4,
-            'num_encoder_layers': 2,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 0,
-            'fit_epochs': 1000,
+    "Pure-Transformer-AE": {
+        "class": PureAETransformerModel,
+        "params": {
+            "latent_dim": 10,
+            "d_model": 128,
+            "decoder_dims": [128, 256],
+            "dropout_rate": 0.2,
+            "nhead": 4,
+            "num_encoder_layers": 2,
+            "fit_lr": 1e-3,
+            "fit_weight_decay": 0,
+            "fit_epochs": 1000,
         },
-        'series': 'pure-ae',
+        "series": "pure-ae",
     },
-    'Pure-Contrastive-AE': {
-        'class': PureAEContrastiveModel,
-        'params': {
-            'latent_dim': 10,
-            'encoder_dims': [256, 128],
-            'decoder_dims': [128, 256],
-            'dropout_rate': 0.2,
-            'moco_weight': 1.0,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 0,
-            'fit_epochs': 1000,
+    "Pure-Contrastive-AE": {
+        "class": PureAEContrastiveModel,
+        "params": {
+            "latent_dim": 10,
+            "encoder_dims": [256, 128],
+            "decoder_dims": [128, 256],
+            "dropout_rate": 0.2,
+            "moco_weight": 1.0,
+            "fit_lr": 1e-3,
+            "fit_weight_decay": 0,
+            "fit_epochs": 1000,
         },
-        'series': 'pure-ae',
+        "series": "pure-ae",
     },
-
     # ── DPMM series (AE backbone + DPMM clustering prior) ────────────────
-    'DPMM-Base': {
-        'class': DPMMODEModel,
-        'params': {
-            'latent_dim': 10,
-            'encoder_dims': [256, 128],
-            'decoder_dims': [128, 256],
-            'dpmm_warmup_ratio': 0.9,
-            'dropout_rate': 0.2,               # from sensitivity: dropout=0.2 best
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 0,             # from sensitivity: wd=0 best for DPMM
-            'fit_epochs': 1000,                # unified to 1000 epochs
+    "DPMM-Base": {
+        "class": DPMMODEModel,
+        "params": {
+            "latent_dim": 10,
+            "encoder_dims": [256, 128],
+            "decoder_dims": [128, 256],
+            "dpmm_warmup_ratio": 0.9,
+            "dropout_rate": 0.2,  # from sensitivity: dropout=0.2 best
+            "fit_lr": 1e-3,
+            "fit_weight_decay": 0,  # from sensitivity: wd=0 best for DPMM
+            "fit_epochs": 1000,  # unified to 1000 epochs
         },
-        'series': 'dpmm',
+        "series": "dpmm",
     },
-    'DPMM-Transformer': {
-        'class': DPMMODETransformerModel,
-        'params': {
-            'latent_dim': 10,
-            'd_model': 128,
-            'decoder_dims': [128, 256],
-            'dpmm_warmup_ratio': 0.9,
-            'dropout_rate': 0.2,
-            'nhead': 4,
-            'num_encoder_layers': 2,
-            'dpmm_loss_weight': 0.1,
-            'dpmm_anneal_epochs': 100,
-            'var_reg_weight': 100.0,
-            'var_reg_min': 0.1,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 0,
-            'fit_epochs': 1000,
+    "DPMM-Transformer": {
+        "class": DPMMODETransformerModel,
+        "params": {
+            "latent_dim": 10,
+            "d_model": 128,
+            "decoder_dims": [128, 256],
+            "dpmm_warmup_ratio": 0.9,
+            "dropout_rate": 0.2,
+            "nhead": 4,
+            "num_encoder_layers": 2,
+            "dpmm_loss_weight": 0.1,
+            "dpmm_anneal_epochs": 100,
+            "var_reg_weight": 100.0,
+            "var_reg_min": 0.1,
+            "fit_lr": 1e-3,
+            "fit_weight_decay": 0,
+            "fit_epochs": 1000,
         },
-        'series': 'dpmm',
+        "series": "dpmm",
     },
-    'DPMM-Contrastive': {
-        'class': DPMMODEContrastiveModel,
-        'params': {
-            'latent_dim': 10,
-            'encoder_dims': [256, 128],
-            'decoder_dims': [128, 256],
-            'dpmm_warmup_ratio': 0.9,
-            'dropout_rate': 0.2,
-            'moco_weight': 1.0,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 0,
-            'fit_epochs': 1000,
+    "DPMM-Contrastive": {
+        "class": DPMMODEContrastiveModel,
+        "params": {
+            "latent_dim": 10,
+            "encoder_dims": [256, 128],
+            "decoder_dims": [128, 256],
+            "dpmm_warmup_ratio": 0.9,
+            "dropout_rate": 0.2,
+            "moco_weight": 1.0,
+            "fit_lr": 1e-3,
+            "fit_weight_decay": 0,
+            "fit_epochs": 1000,
         },
-        'series': 'dpmm',
+        "series": "dpmm",
     },
-    'DPMM-FM': {
-        'class': DPMMFlowMatchingModel,
-        'params': {
-            'latent_dim': 10,
-            'encoder_dims': [256, 128],
-            'decoder_dims': [128, 256],
-            'dpmm_warmup_ratio': 0.8,
-            'dropout_rate': 0.2,
-            'flow_weight': 0.10,
-            'flow_noise_scale': 0.5,
-            'flow_after_dpmm': True,
-            'flow_hidden_dims': [128, 128],
-            'flow_t0': 0.8,
-            'flow_smoothing': True,
-            'fit_lr': 1e-3,
-            'fit_weight_decay': 0,
-            'fit_epochs': 1000,
+    "DPMM-FM": {
+        "class": DPMMFlowMatchingModel,
+        "params": {
+            "latent_dim": 10,
+            "encoder_dims": [256, 128],
+            "decoder_dims": [128, 256],
+            "dpmm_warmup_ratio": 0.8,
+            "dropout_rate": 0.2,
+            "flow_weight": 0.10,
+            "flow_noise_scale": 0.5,
+            "flow_after_dpmm": True,
+            "flow_hidden_dims": [128, 128],
+            "flow_t0": 0.8,
+            "flow_smoothing": True,
+            "fit_lr": 1e-3,
+            "fit_weight_decay": 0,
+            "fit_epochs": 1000,
         },
-        'series': 'dpmm',
+        "series": "dpmm",
     },
 }
 
@@ -149,6 +148,7 @@ MODELS = {
 # ═══════════════════════════════════════════════════════════════════════════════
 # CUDA OOM detection
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def is_cuda_oom(exception) -> bool:
     """Return True if *exception* is a CUDA out-of-memory error."""
@@ -161,16 +161,16 @@ def is_cuda_oom(exception) -> bool:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 ABLATION_STEPS = {
-    'dpmm': [
-        ('DPMM-Base',           'Base AE+DPMM'),
-        ('DPMM-Transformer',    '+Transformer'),
-        ('DPMM-Contrastive',    '+Contrastive'),
-        ('DPMM-FM',             '+Flow Matching'),
+    "dpmm": [
+        ("DPMM-Base", "Base AE+DPMM"),
+        ("DPMM-Transformer", "+Transformer"),
+        ("DPMM-Contrastive", "+Contrastive"),
+        ("DPMM-FM", "+Flow Matching"),
     ],
-    'pure-ae': [
-        ('Pure-AE',             'Base AE'),
-        ('Pure-Transformer-AE', '+Transformer'),
-        ('Pure-Contrastive-AE', '+Contrastive'),
+    "pure-ae": [
+        ("Pure-AE", "Base AE"),
+        ("Pure-Transformer-AE", "+Transformer"),
+        ("Pure-Contrastive-AE", "+Contrastive"),
     ],
 }
 
@@ -180,9 +180,9 @@ ABLATION_STEPS = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 SERIES_GROUPS = {
-    'dpmm':     {k for k, v in MODELS.items() if v['series'] == 'dpmm'},
-    'pure':     {k for k in MODELS if k.startswith('Pure-')},
-    'pure-ae':  {k for k, v in MODELS.items() if v['series'] == 'pure-ae'},
+    "dpmm": {k for k, v in MODELS.items() if v["series"] == "dpmm"},
+    "pure": {k for k in MODELS if k.startswith("Pure-")},
+    "pure-ae": {k for k, v in MODELS.items() if v["series"] == "pure-ae"},
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -191,8 +191,8 @@ SERIES_GROUPS = {
 # ═══════════════════════════════════════════════════════════════════════════════
 
 SERIES_TO_PAPER = {
-    'dpmm':     'dpmm',
-    'pure-ae':  'dpmm',
+    "dpmm": "dpmm",
+    "pure-ae": "dpmm",
 }
 
 
@@ -202,5 +202,5 @@ def paper_group(series_or_model: str) -> str:
         return SERIES_TO_PAPER[series_or_model]
     # Lookup by model name
     if series_or_model in MODELS:
-        return SERIES_TO_PAPER.get(MODELS[series_or_model]['series'], 'dpmm')
-    return 'dpmm'
+        return SERIES_TO_PAPER.get(MODELS[series_or_model]["series"], "dpmm")
+    return "dpmm"

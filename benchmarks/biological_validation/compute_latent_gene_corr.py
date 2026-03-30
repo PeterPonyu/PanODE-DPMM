@@ -33,7 +33,9 @@ BIO_RESULTS = BIO_RESULTS_DIR
 REPRESENTATIVE_DATASETS = ["setty", "endo", "dentate"]
 # Models to process
 ALL_MODELS = [
-    "DPMM-Base", "DPMM-Contrastive", "DPMM-Transformer",
+    "DPMM-Base",
+    "DPMM-Contrastive",
+    "DPMM-Transformer",
 ]
 
 
@@ -68,23 +70,20 @@ def compute_all(datasets=None, models=None):
     for dataset in datasets:
         # Load dataset once per dataset
         try:
-            splitter, gene_names = load_data_with_genes(
-                dataset, seed=42, max_cells=3000, hvg=3000)
+            splitter, gene_names = load_data_with_genes(dataset, seed=42, max_cells=3000, hvg=3000)
         except Exception as e:
             print(f"  Could not load dataset {dataset}: {e}")
             continue
         X_test = splitter.X_test_norm  # [N_test, G]
         N_test = X_test.shape[0]
-        print(f"\n  Dataset {dataset}: {N_test} test cells, "
-              f"{X_test.shape[1]} genes")
+        print(f"\n  Dataset {dataset}: {N_test} test cells, {X_test.shape[1]} genes")
 
         for model in models:
             tag = f"{model}_{dataset}"
             latent_path = BIO_RESULTS / f"{tag}_latent_data.npz"
             # Also check model subdirectory
             if not latent_path.exists():
-                latent_path = (BIO_RESULTS / model.replace("/", "_")
-                               / f"{tag}_latent_data.npz")
+                latent_path = BIO_RESULTS / model.replace("/", "_") / f"{tag}_latent_data.npz"
             if not latent_path.exists():
                 continue
 
@@ -93,18 +92,14 @@ def compute_all(datasets=None, models=None):
 
             # Verify cell count match
             if latent.shape[0] != N_test:
-                print(f"    {tag}: latent {latent.shape[0]} != test "
-                      f"{N_test} cells — skipping")
+                print(f"    {tag}: latent {latent.shape[0]} != test {N_test} cells — skipping")
                 continue
 
             corr = _pearson_cols(X_test, latent)  # [K, G]
 
             out_path = BIO_RESULTS / f"{tag}_correlation.npz"
-            np.savez(out_path,
-                     correlation=corr,
-                     gene_names=np.array(gene_names))
-            print(f"    {tag}: corr {corr.shape}  "
-                  f"range [{corr.min():.3f}, {corr.max():.3f}]")
+            np.savez(out_path, correlation=corr, gene_names=np.array(gene_names))
+            print(f"    {tag}: corr {corr.shape}  range [{corr.min():.3f}, {corr.max():.3f}]")
 
     print("\n  Done.")
 

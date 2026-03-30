@@ -11,11 +11,7 @@ def expmap_polar(c, x, u, r, dim: int = -1):
     m = geoopt.manifolds.PoincareBall(1.0)
     sqrt_c = c.sqrt()
     u_norm = u.norm(dim=dim, p=2, keepdim=True).clamp_min(MIN_NORM)
-    second_term = (
-        (sqrt_c / 2 * r).tanh()
-        * u
-        / (sqrt_c * u_norm)
-    )
+    second_term = (sqrt_c / 2 * r).tanh() * u / (sqrt_c * u_norm)
 
     gamma_1 = m.mobius_add(x, second_term)
     return gamma_1
@@ -34,7 +30,11 @@ class Distribution:
     def log_prob(self, z):
         mean = self.mean[None].expand(z.shape)
         radius_sq = self.manifold.dist(mean, z, keepdim=True).pow(2)
-        log_prob_z = - radius_sq / 2 / self.sigma.pow(2)[None] - self.direction._log_normalizer() - self.radius.log_normalizer.view([*self.mean.shape[:-1], -1])
+        log_prob_z = (
+            -radius_sq / 2 / self.sigma.pow(2)[None]
+            - self.direction._log_normalizer()
+            - self.radius.log_normalizer.view([*self.mean.shape[:-1], -1])
+        )
         log_prob_z = log_prob_z.sum(dim=-1)
 
         return log_prob_z

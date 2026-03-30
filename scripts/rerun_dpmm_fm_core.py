@@ -87,7 +87,9 @@ def _make_splitter(ds_info: dict, seed: int) -> tuple[DataSplitter, int]:
     return splitter, int(adata.n_vars)
 
 
-def _save_checkpoint(model_name: str, dataset: str, input_dim: int, result: dict, timestamp: str) -> tuple[Path | None, Path | None]:
+def _save_checkpoint(
+    model_name: str, dataset: str, input_dim: int, result: dict, timestamp: str
+) -> tuple[Path | None, Path | None]:
     model_obj = result.get("model_obj")
     history = result.get("history")
     if model_obj is None:
@@ -115,7 +117,13 @@ def _save_checkpoint(model_name: str, dataset: str, input_dim: int, result: dict
     return ckpt_path, hist_path
 
 
-def _save_cross_latent(model_name: str, dataset: str, latent: np.ndarray | None, labels: np.ndarray | None, timestamp: str) -> Path | None:
+def _save_cross_latent(
+    model_name: str,
+    dataset: str,
+    latent: np.ndarray | None,
+    labels: np.ndarray | None,
+    timestamp: str,
+) -> Path | None:
     if latent is None:
         return None
     ds_dir = LATENT_DIR / dataset
@@ -216,7 +224,9 @@ def run_dataset(ds_key: str, seed: int, verbose_every: int) -> tuple[list[dict],
 
 def main():
     parser = argparse.ArgumentParser(description="Re-run the core DPMM-FM ablation")
-    parser.add_argument("--datasets", nargs="+", default=CORE_DATASETS, choices=sorted(ALL_DATASET_REGISTRY.keys()))
+    parser.add_argument(
+        "--datasets", nargs="+", default=CORE_DATASETS, choices=sorted(ALL_DATASET_REGISTRY.keys())
+    )
     parser.add_argument("--seed", type=int, default=BASE_CONFIG.seed)
     parser.add_argument("--verbose-every", type=int, default=200)
     args = parser.parse_args()

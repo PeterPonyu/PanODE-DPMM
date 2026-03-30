@@ -71,6 +71,7 @@ COMPOSED_FIG_TARGET_RATIO: float = COMPOSED_FIG_WIDTH_CM / COMPOSED_FIG_MAX_HEIG
 # Helpers
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def clamp_xtick_fontsize(fs: float, *, per_group: bool = False) -> float:
     """Return *fs* clamped to the appropriate minimum x-tick size."""
     floor = MIN_XTICK_FONTSIZE_PER_GROUP if per_group else MIN_XTICK_FONTSIZE
@@ -80,7 +81,8 @@ def clamp_xtick_fontsize(fs: float, *, per_group: bool = False) -> float:
 def needs_method_split(
     method_names: list[str],
     max_methods_per_panel: int = MAX_METHODS_PER_FIGURE,
-    max_avg_label_len: int = 18) -> bool:
+    max_avg_label_len: int = 18,
+) -> bool:
     """Return ``True`` when *method_names* should be split across figures."""
     n = len(method_names)
     if n > max_methods_per_panel:
@@ -171,7 +173,8 @@ def assert_no_label_overlap(
     xtick_fontsize: float,
     rotation_deg: float,
     *,
-    strict: bool = False) -> None:
+    strict: bool = False,
+) -> None:
     """Warn (or raise) if rotated x-tick labels are likely to overlap.
 
     The check estimates the projected horizontal footprint of every label
@@ -188,8 +191,9 @@ def assert_no_label_overlap(
     max_label_len = max(len(m) for m in method_names)
 
     # Horizontal footprint of longest label after rotation
-    h_footprint = (math.cos(theta) * max_label_len * char_w_in
-                   + math.sin(theta) * (xtick_fontsize / 72.0))
+    h_footprint = math.cos(theta) * max_label_len * char_w_in + math.sin(theta) * (
+        xtick_fontsize / 72.0
+    )
 
     if h_footprint > slot_per_method * 1.05:
         msg = (
@@ -209,7 +213,8 @@ def compute_hspace(
     rotation_deg: float,
     xtick_fontsize: float,
     title_fontsize: float,
-    per_row_h: float) -> float:
+    per_row_h: float,
+) -> float:
     """Dynamic vertical spacing between subplot rows."""
     n_methods = len(method_names)
     max_label_len = max((len(m) for m in method_names), default=5)
@@ -217,8 +222,7 @@ def compute_hspace(
     char_w_in = 0.55 * xtick_fontsize / 72.0
     char_h_in = xtick_fontsize / 72.0
 
-    label_drop = (math.sin(theta) * max_label_len * char_w_in
-                  + math.cos(theta) * char_h_in)
+    label_drop = math.sin(theta) * max_label_len * char_w_in + math.cos(theta) * char_h_in
     title_h = title_fontsize * 1.4 / 72.0
     padding = 0.08
 

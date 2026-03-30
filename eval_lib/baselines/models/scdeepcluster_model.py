@@ -2,6 +2,7 @@
 scDeepCluster: Autoencoder with ZINB reconstruction and DEC-style clustering
 Multi-stage training: AE pretrain → KMeans init → joint clustering refinement
 """
+
 from typing import Any
 
 import numpy as np
@@ -15,6 +16,7 @@ from .base_model import BaseModel
 
 class ZINBLoss(nn.Module):
     """Zero-Inflated Negative Binomial loss"""
+
     def forward(self, x, mean, disp, pi, scale_factor=None):
         eps = 1e-8
         if scale_factor is not None:
@@ -27,7 +29,9 @@ class ZINBLoss(nn.Module):
         pi = pi.clamp(min=eps, max=1 - eps)
 
         t1 = torch.lgamma(disp + eps) + torch.lgamma(x + 1.0) - torch.lgamma(x + disp + eps)
-        t2 = (disp + x) * torch.log1p(mean / (disp + eps)) + x * (torch.log(disp + eps) - torch.log(mean + eps))
+        t2 = (disp + x) * torch.log1p(mean / (disp + eps)) + x * (
+            torch.log(disp + eps) - torch.log(mean + eps)
+        )
         nb = t1 + t2
 
         zero_nb = torch.pow(disp / (disp + mean + eps), disp)
@@ -40,28 +44,46 @@ class ZINBLoss(nn.Module):
 
 class scDeepClusterAE(nn.Module):
     """Autoencoder with ZINB decoder (pi, disp, mean)"""
+
     def __init__(self, input_dim: int, latent_dim: int, hidden_dims: list | None = None):
         super().__init__()
         hidden_dims = hidden_dims or [256, 64]
         dims = [input_dim] + hidden_dims + [latent_dim]
 
         self.encoder = nn.Sequential(
-            nn.Linear(dims[0], dims[1]), nn.ReLU(), nn.Dropout(0.1),
-            nn.Linear(dims[1], dims[2]), nn.ReLU(), nn.Dropout(0.1),
-            nn.Linear(dims[2], dims[3]))
+            nn.Linear(dims[0], dims[1]),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(dims[1], dims[2]),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(dims[2], dims[3]),
+        )
 
         self.pi = nn.Sequential(
-            nn.Linear(latent_dim, dims[2]), nn.ReLU(),
-            nn.Linear(dims[2], dims[1]), nn.ReLU(),
-            nn.Linear(dims[1], dims[0]), nn.Sigmoid())
+            nn.Linear(latent_dim, dims[2]),
+            nn.ReLU(),
+            nn.Linear(dims[2], dims[1]),
+            nn.ReLU(),
+            nn.Linear(dims[1], dims[0]),
+            nn.Sigmoid(),
+        )
         self.disp = nn.Sequential(
-            nn.Linear(latent_dim, dims[2]), nn.ReLU(),
-            nn.Linear(dims[2], dims[1]), nn.ReLU(),
-            nn.Linear(dims[1], dims[0]), nn.Softplus())
+            nn.Linear(latent_dim, dims[2]),
+            nn.ReLU(),
+            nn.Linear(dims[2], dims[1]),
+            nn.ReLU(),
+            nn.Linear(dims[1], dims[0]),
+            nn.Softplus(),
+        )
         self.mean = nn.Sequential(
-            nn.Linear(latent_dim, dims[2]), nn.ReLU(),
-            nn.Linear(dims[2], dims[1]), nn.ReLU(),
-            nn.Linear(dims[1], dims[0]), nn.Softplus())
+            nn.Linear(latent_dim, dims[2]),
+            nn.ReLU(),
+            nn.Linear(dims[2], dims[1]),
+            nn.ReLU(),
+            nn.Linear(dims[1], dims[0]),
+            nn.Softplus(),
+        )
 
     def forward(self, x):
         z = self.encoder(x)
@@ -70,6 +92,7 @@ class scDeepClusterAE(nn.Module):
 
 class ClusteringLayer(nn.Module):
     """DEC-style clustering layer with Student's t-distribution"""
+
     def __init__(self, n_clusters: int, n_features: int, alpha: float = 1.0):
         super().__init__()
         self.n_clusters = n_clusters
@@ -103,7 +126,8 @@ class scDeepClusterModel(BaseModel):
         n_clusters: int = 10,
         hidden_dims: list | None = None,
         alpha: float = 1.0,
-        model_name: str = "scDeepCluster"):
+        model_name: str = "scDeepCluster",
+    ):
         """
         Args:
             input_dim: Input dimension
@@ -112,11 +136,18 @@ class scDeepClusterModel(BaseModel):
             hidden_dims: Encoder/decoder hidden dimensions
             alpha: Student's t-distribution parameter
         """
-        super().__init__(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=hidden_dims or [], model_name=model_name)
+        super().__init__(
+            input_dim=input_dim,
+            latent_dim=latent_dim,
+            hidden_dims=hidden_dims or [],
+            model_name=model_name,
+        )
         self.n_clusters = n_clusters
         self.alpha = alpha
 
-        self.ae = scDeepClusterAE(input_dim=input_dim, latent_dim=latent_dim, hidden_dims=hidden_dims)
+        self.ae = scDeepClusterAE(
+            input_dim=input_dim, latent_dim=latent_dim, hidden_dims=hidden_dims
+        )
         self.cluster = ClusteringLayer(n_clusters=n_clusters, n_features=latent_dim, alpha=alpha)
         self.zinb = ZINBLoss()
         self.is_trained = False
@@ -126,7 +157,10 @@ class scDeepClusterModel(BaseModel):
         if isinstance(batch_data, (list, tuple)):
             if len(batch_data) == 3:
                 x, raw, sf = batch_data
-                return x.to(device).float(), {"raw": raw.to(device).float(), "sf": sf.to(device).float()}
+                return x.to(device).float(), {
+                    "raw": raw.to(device).float(),
+                    "sf": sf.to(device).float(),
+                }
 
             if len(batch_data) == 2:
                 x0, x1 = batch_data
@@ -160,7 +194,15 @@ class scDeepClusterModel(BaseModel):
         q = self.cluster(z)
         return {"latent": z, "pi": pi, "disp": disp, "mean": mean, "q": q}
 
-    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], raw=None, sf=None, p_target=None, **kwargs):
+    def compute_loss(
+        self,
+        x: torch.Tensor,
+        outputs: dict[str, torch.Tensor],
+        raw=None,
+        sf=None,
+        p_target=None,
+        **kwargs,
+    ):
         """Compute loss: ZINB reconstruction + clustering KL (if p_target provided)"""
         raw = x if raw is None else raw
         zinb_loss = self.zinb(raw, outputs["mean"], outputs["disp"], outputs["pi"], sf)
@@ -175,7 +217,7 @@ class scDeepClusterModel(BaseModel):
     @staticmethod
     def _target_distribution(q: torch.Tensor) -> torch.Tensor:
         """Compute target distribution p from soft assignments q"""
-        weight = q ** 2 / q.sum(0).clamp_min(1e-12)
+        weight = q**2 / q.sum(0).clamp_min(1e-12)
         return (weight.t() / weight.sum(1).clamp_min(1e-12)).t()
 
     def fit(
@@ -190,7 +232,8 @@ class scDeepClusterModel(BaseModel):
         verbose: int = 1,
         pretrain_epochs: int = 200,
         tol: float = 1e-3,
-        **kwargs):
+        **kwargs,
+    ):
         """
         Three-stage training:
         1. Pretrain AE with ZINB loss
@@ -216,7 +259,7 @@ class scDeepClusterModel(BaseModel):
                 tot += float(loss.item())
                 n += 1
             if verbose >= 1 and (ep + 1) % 50 == 0:
-                print(f"Pretrain {ep+1:3d}/{pretrain_epochs} | Loss: {tot/max(n,1):.4f}")
+                print(f"Pretrain {ep + 1:3d}/{pretrain_epochs} | Loss: {tot / max(n, 1):.4f}")
 
         # Stage 2: Initialize clusters with KMeans
         self.eval()
@@ -227,7 +270,9 @@ class scDeepClusterModel(BaseModel):
                 z_all.append(self.encode(x).cpu().numpy())
         z_all = np.concatenate(z_all, axis=0)
         km = KMeans(n_clusters=self.n_clusters, n_init=20, random_state=42).fit(z_all)
-        self.cluster.clusters.data = torch.tensor(km.cluster_centers_, dtype=torch.float32, device=device)
+        self.cluster.clusters.data = torch.tensor(
+            km.cluster_centers_, dtype=torch.float32, device=device
+        )
 
         # Stage 3: Finetune with clustering
         opt = torch.optim.Adam(list(self.ae.parameters()) + list(self.cluster.parameters()), lr=lr)
@@ -251,7 +296,7 @@ class scDeepClusterModel(BaseModel):
             for batch in train_loader:
                 x, bk = self._prepare_batch(batch, device)
                 bsz = x.size(0)
-                p_batch = p_full[offset:offset + bsz]
+                p_batch = p_full[offset : offset + bsz]
                 offset += bsz
 
                 out = self.forward(x, **bk)
@@ -277,7 +322,9 @@ class scDeepClusterModel(BaseModel):
                 delta = float(np.mean(y_pred != y_last))
                 y_last = y_pred
                 if verbose >= 1:
-                    print(f"Finetune {ep+1:3d}/{finetune_epochs} | Loss: {tot/max(n,1):.4f} | Delta: {delta:.4f}")
+                    print(
+                        f"Finetune {ep + 1:3d}/{finetune_epochs} | Loss: {tot / max(n, 1):.4f} | Delta: {delta:.4f}"
+                    )
                 if delta < tol:
                     break
 
@@ -285,11 +332,15 @@ class scDeepClusterModel(BaseModel):
         return {"train_loss": []}
 
 
-def create_scdeepcluster_model(input_dim: int, latent_dim: int = 32, n_clusters: int = 10, **kwargs) -> scDeepClusterModel:
+def create_scdeepcluster_model(
+    input_dim: int, latent_dim: int = 32, n_clusters: int = 10, **kwargs
+) -> scDeepClusterModel:
     """
     Create scDeepCluster model
 
     Example:
         >>> model = create_scdeepcluster_model(2000, latent_dim=32, n_clusters=10)
     """
-    return scDeepClusterModel(input_dim=input_dim, latent_dim=latent_dim, n_clusters=n_clusters, **kwargs)
+    return scDeepClusterModel(
+        input_dim=input_dim, latent_dim=latent_dim, n_clusters=n_clusters, **kwargs
+    )

@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 # Action dataclass
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @dataclass
 class Action:
     """A suggested configuration adjustment to resolve a VCD issue.
@@ -53,6 +54,7 @@ class Action:
 # Action generator helpers (one per issue family)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def _actions_text_overlap(issue: dict) -> list[Action]:
     """Generate actions for ``text_overlap`` issues."""
     elements = issue.get("elements", [])
@@ -60,138 +62,146 @@ def _actions_text_overlap(issue: dict) -> list[Action]:
     actions: list[Action] = []
 
     if "xtick" in joined:
-        actions.append(Action(
-            action_type="reduce_tick_labels",
-            target="xticks",
-            params={"strategy": "maxn", "max_labels": 6},
-            priority=1,
-            description=(
-                "Reduce the number of x-axis tick labels to avoid overlap. "
-                "Consider using MaxNLocator or manually selecting key ticks."
-            ),
-        ))
-        actions.append(Action(
-            action_type="rotate_labels",
-            target="xticks",
-            params={"rotation": 45, "ha": "right"},
-            priority=2,
-            description=(
-                "Rotate x-axis tick labels to reduce horizontal footprint."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="reduce_tick_labels",
+                target="xticks",
+                params={"strategy": "maxn", "max_labels": 6},
+                priority=1,
+                description=(
+                    "Reduce the number of x-axis tick labels to avoid overlap. "
+                    "Consider using MaxNLocator or manually selecting key ticks."
+                ),
+            )
+        )
+        actions.append(
+            Action(
+                action_type="rotate_labels",
+                target="xticks",
+                params={"rotation": 45, "ha": "right"},
+                priority=2,
+                description=("Rotate x-axis tick labels to reduce horizontal footprint."),
+            )
+        )
     elif "annotation" in joined:
-        actions.append(Action(
-            action_type="reduce_annotations",
-            target="annotations",
-            params={
-                "strategy": "tiered",
-                # Drop order: remove redundant/duplicate labels first, then
-                # secondary labels, only remove primary labels as last resort.
-                "drop_order": ["redundant", "secondary", "primary"],
-                # Semantic integrity: keep at least this many chars per label
-                # and never remove labels containing protected prefixes (↑/↓).
-                "min_label_chars": 12,
-                "preserve_sign_prefix": True,
-            },
-            priority=1,
-            description=(
-                "Reduce annotation density to prevent overlapping text. "
-                "Remove redundant duplicates first, then secondary labels; "
-                "preserve at least 12 chars and leading sign/arrow prefixes."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="reduce_annotations",
+                target="annotations",
+                params={
+                    "strategy": "tiered",
+                    # Drop order: remove redundant/duplicate labels first, then
+                    # secondary labels, only remove primary labels as last resort.
+                    "drop_order": ["redundant", "secondary", "primary"],
+                    # Semantic integrity: keep at least this many chars per label
+                    # and never remove labels containing protected prefixes (↑/↓).
+                    "min_label_chars": 12,
+                    "preserve_sign_prefix": True,
+                },
+                priority=1,
+                description=(
+                    "Reduce annotation density to prevent overlapping text. "
+                    "Remove redundant duplicates first, then secondary labels; "
+                    "preserve at least 12 chars and leading sign/arrow prefixes."
+                ),
+            )
+        )
     elif "title" in joined or "suptitle" in joined:
-        actions.append(Action(
-            action_type="increase_hspace",
-            target="figure",
-            params={"delta": 0.05},
-            priority=1,
-            description=(
-                "Increase vertical spacing (hspace) between subplots so "
-                "titles do not collide with neighbouring panel content."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="increase_hspace",
+                target="figure",
+                params={"delta": 0.05},
+                priority=1,
+                description=(
+                    "Increase vertical spacing (hspace) between subplots so "
+                    "titles do not collide with neighbouring panel content."
+                ),
+            )
+        )
     else:
-        actions.append(Action(
-            action_type="increase_figsize",
-            target="figure",
-            params={"delta_width": 1.0, "delta_height": 1.0},
-            priority=2,
-            description=(
-                "Enlarge the overall figure to give text elements more room."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="increase_figsize",
+                target="figure",
+                params={"delta_width": 1.0, "delta_height": 1.0},
+                priority=2,
+                description=("Enlarge the overall figure to give text elements more room."),
+            )
+        )
 
     return actions
 
 
 def _actions_text_truncation(issue: dict) -> list[Action]:
-    """Generate actions for ``text_truncation`` issues.
-    """
+    """Generate actions for ``text_truncation`` issues."""
     detail = issue.get("detail", "").lower()
     actions: list[Action] = []
 
     if "bottom" in detail:
-        actions.append(Action(
-            action_type="increase_bottom_margin",
-            target="figure",
-            params={"subplots_adjust": {"bottom": 0.15}},
-            priority=1,
-            description=(
-                "Increase bottom margin so that x-axis labels and tick "
-                "labels are not clipped at the figure edge."
-            ),
-        ))
-        actions.append(Action(
-            action_type="increase_figsize_height",
-            target="figure",
-            params={"delta_height": 0.5},
-            priority=2,
-            description=(
-                "Increase figure height to accommodate bottom-edge text."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="increase_bottom_margin",
+                target="figure",
+                params={"subplots_adjust": {"bottom": 0.15}},
+                priority=1,
+                description=(
+                    "Increase bottom margin so that x-axis labels and tick "
+                    "labels are not clipped at the figure edge."
+                ),
+            )
+        )
+        actions.append(
+            Action(
+                action_type="increase_figsize_height",
+                target="figure",
+                params={"delta_height": 0.5},
+                priority=2,
+                description=("Increase figure height to accommodate bottom-edge text."),
+            )
+        )
     elif "right" in detail:
-        actions.append(Action(
-            action_type="increase_right_margin",
-            target="figure",
-            params={"subplots_adjust": {"right": 0.90}},
-            priority=1,
-            description=(
-                "Increase right margin so right-side labels are not truncated."
-            ),
-        ))
-        actions.append(Action(
-            action_type="increase_figsize_width",
-            target="figure",
-            params={"delta_width": 0.5},
-            priority=2,
-            description=(
-                "Increase figure width to accommodate right-edge text."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="increase_right_margin",
+                target="figure",
+                params={"subplots_adjust": {"right": 0.90}},
+                priority=1,
+                description=("Increase right margin so right-side labels are not truncated."),
+            )
+        )
+        actions.append(
+            Action(
+                action_type="increase_figsize_width",
+                target="figure",
+                params={"delta_width": 0.5},
+                priority=2,
+                description=("Increase figure width to accommodate right-edge text."),
+            )
+        )
     elif "top" in detail:
-        actions.append(Action(
-            action_type="increase_top_margin",
-            target="figure",
-            params={"subplots_adjust": {"top": 0.92}},
-            priority=1,
-            description=(
-                "Increase top margin to prevent title or suptitle truncation."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="increase_top_margin",
+                target="figure",
+                params={"subplots_adjust": {"top": 0.92}},
+                priority=1,
+                description=("Increase top margin to prevent title or suptitle truncation."),
+            )
+        )
     else:
         # Fallback: could be left or ambiguous
-        actions.append(Action(
-            action_type="increase_margins",
-            target="figure",
-            params={"subplots_adjust": {"left": 0.12, "right": 0.90,
-                                         "top": 0.92, "bottom": 0.15}},
-            priority=2,
-            description=(
-                "Widen figure margins on all sides to prevent text truncation."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="increase_margins",
+                target="figure",
+                params={
+                    "subplots_adjust": {"left": 0.12, "right": 0.90, "top": 0.92, "bottom": 0.15}
+                },
+                priority=2,
+                description=("Widen figure margins on all sides to prevent text truncation."),
+            )
+        )
 
     return actions
 
@@ -207,16 +217,18 @@ def _actions_patch_truncation(issue: dict) -> list[Action]:
     if delta_w == 0.0 and delta_h == 0.0:
         delta_w, delta_h = 0.5, 0.5
 
-    actions.append(Action(
-        action_type="increase_figsize",
-        target="figure",
-        params={"delta_width": delta_w, "delta_height": delta_h},
-        priority=2,
-        description=(
-            "Increase figure size in the truncated direction so graphical "
-            "elements (bars, patches) are fully visible."
-        ),
-    ))
+    actions.append(
+        Action(
+            action_type="increase_figsize",
+            target="figure",
+            params={"delta_width": delta_w, "delta_height": delta_h},
+            priority=2,
+            description=(
+                "Increase figure size in the truncated direction so graphical "
+                "elements (bars, patches) are fully visible."
+            ),
+        )
+    )
     return actions
 
 
@@ -303,8 +315,7 @@ def _actions_legend_truncation(issue: dict) -> list[Action]:
             params={"delta_width": 0.5, "delta_height": 0.5},
             priority=2,
             description=(
-                "Increase figure size so the legend fits without being "
-                "truncated at the border."
+                "Increase figure size so the legend fits without being truncated at the border."
             ),
         ),
     ]
@@ -318,9 +329,7 @@ def _actions_legend_text_crowding(issue: dict) -> list[Action]:
             target="legend",
             params={"min_fontsize": 6},
             priority=1,
-            description=(
-                "Reduce legend font size so entries fit without crowding."
-            ),
+            description=("Reduce legend font size so entries fit without crowding."),
         ),
         Action(
             action_type="reduce_legend_entries",
@@ -369,9 +378,7 @@ def _actions_cross_panel_spillover(issue: dict) -> list[Action]:
             target="figure",
             params={"delta_width": 1.0},
             priority=2,
-            description=(
-                "Increase figure width to give panels more breathing room."
-            ),
+            description=("Increase figure width to give panels more breathing room."),
         ),
     ]
 
@@ -436,9 +443,7 @@ def _actions_artist_overlap(issue: dict) -> list[Action]:
             target="figure",
             params={"delta_width": 1.0, "delta_height": 0.5},
             priority=2,
-            description=(
-                "Enlarge the figure to reduce cross-panel artist overlap."
-            ),
+            description=("Enlarge the figure to reduce cross-panel artist overlap."),
         ),
     ]
 
@@ -468,8 +473,7 @@ def _actions_font_family_violation(issue: dict) -> list[Action]:
             params={"family": "Arial"},
             priority=1,
             description=(
-                "Set all text elements to Arial to comply with the journal "
-                "font-family policy."
+                "Set all text elements to Arial to comply with the journal font-family policy."
             ),
         ),
     ]
@@ -490,51 +494,54 @@ def _actions_label_density_excess(issue: dict) -> list[Action]:
     density = issue.get("density_ratio", 0.0)
 
     # Action 1: reduce tick label count
-    actions.append(Action(
-        action_type="reduce_tick_labels",
-        target=axes_title or "default",
-        params={"axis_name": axes_title, "axis_kind": axis_kind},
-        priority=2,
-        description=(
-            f"Reduce number of {axis_kind} labels in '{axes_title}' "
-            f"(density={density:.0%})."
-        ),
-    ))
+    actions.append(
+        Action(
+            action_type="reduce_tick_labels",
+            target=axes_title or "default",
+            params={"axis_name": axes_title, "axis_kind": axis_kind},
+            priority=2,
+            description=(
+                f"Reduce number of {axis_kind} labels in '{axes_title}' (density={density:.0%})."
+            ),
+        )
+    )
 
     # Action 2: rotate x-labels if they are long
     if axis_kind == "xtick" and max_len > 8:
-        actions.append(Action(
-            action_type="rotate_labels",
-            target=axes_title or "default",
-            params={"axis_name": axes_title},
-            priority=2,
-            description=(
-                f"Rotate x-tick labels in '{axes_title}' "
-                f"(max_len={max_len} chars)."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="rotate_labels",
+                target=axes_title or "default",
+                params={"axis_name": axes_title},
+                priority=2,
+                description=(f"Rotate x-tick labels in '{axes_title}' (max_len={max_len} chars)."),
+            )
+        )
 
     # Action 3: structural change — reduce subplots per row
     if density > 0.90:
-        actions.append(Action(
-            action_type="reduce_subplots_per_row",
-            target="figure",
-            params={
-                "preferred_max_cols": 2,
-                "axes_key": axes_title,
-                "axis_kind": axis_kind,
-            },
-            priority=1,
-            description=(
-                f"Reduce subplots per row to give {axis_kind} labels "
-                f"more width (density={density:.0%} > 90%)."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="reduce_subplots_per_row",
+                target="figure",
+                params={
+                    "preferred_max_cols": 2,
+                    "axes_key": axes_title,
+                    "axis_kind": axis_kind,
+                },
+                priority=1,
+                description=(
+                    f"Reduce subplots per row to give {axis_kind} labels "
+                    f"more width (density={density:.0%} > 90%)."
+                ),
+            )
+        )
 
     return actions
 
 
 # ── Perceptual pass actions (23-26) ──────────────────────────────────────
+
 
 def _actions_low_contrast_text(issue: dict) -> list[Action]:
     """Generate actions for ``low_contrast_text`` issues."""
@@ -610,6 +617,7 @@ def _actions_precision_excess(issue: dict) -> list[Action]:
 
 # ── Semantic pass actions (27-30) ────────────────────────────────────────
 
+
 def _actions_overplotted_scatter(issue: dict) -> list[Action]:
     """Generate actions for ``overplotted_scatter`` issues."""
     return [
@@ -628,9 +636,7 @@ def _actions_overplotted_scatter(issue: dict) -> list[Action]:
             target="scatter",
             params={"alpha": 0.3},
             priority=3,
-            description=(
-                "Reduce scatter point alpha to mitigate overplotting."
-            ),
+            description=("Reduce scatter point alpha to mitigate overplotting."),
         ),
     ]
 
@@ -716,58 +722,64 @@ def _actions_panel_complexity_excess(issue: dict) -> list[Action]:
     actions: list[Action] = []
 
     # Tier 1: drop secondary numeric value labels
-    actions.append(Action(
-        action_type="drop_secondary_bar_labels",
-        target="annotations",
-        params={
-            "strategy": "keep_top_bottom_n",
-            "n": 3,
-            "semantic_note": (
-                "Keep only the 3 highest and 3 lowest value labels for "
-                "reference; remove the rest to reduce visual density."
-            ),
-        },
-        priority=2,
-        description=(
-            "Remove per-bar/per-point numeric labels, keeping only the "
-            "top and bottom 3 for reference.  Reduces visual noise without "
-            "losing the comparative trend."
-        ),
-    ))
-
-    # Tier 2: trim legend if it is the main driver
-    if n_legend > 10:
-        actions.append(Action(
-            action_type="reduce_legend_entries",
-            target="legend",
+    actions.append(
+        Action(
+            action_type="drop_secondary_bar_labels",
+            target="annotations",
             params={
-                "strategy": "top_n",
-                "max_entries": 8,
+                "strategy": "keep_top_bottom_n",
+                "n": 3,
                 "semantic_note": (
-                    "Keep the 8 most important series; note in the caption "
-                    "that remaining series are omitted from the legend."
+                    "Keep only the 3 highest and 3 lowest value labels for "
+                    "reference; remove the rest to reduce visual density."
                 ),
             },
             priority=2,
             description=(
-                f"Trim legend from {n_legend} to ≤8 entries. "
-                "Move the full list to the figure caption."
+                "Remove per-bar/per-point numeric labels, keeping only the "
+                "top and bottom 3 for reference.  Reduces visual noise without "
+                "losing the comparative trend."
             ),
-        ))
+        )
+    )
+
+    # Tier 2: trim legend if it is the main driver
+    if n_legend > 10:
+        actions.append(
+            Action(
+                action_type="reduce_legend_entries",
+                target="legend",
+                params={
+                    "strategy": "top_n",
+                    "max_entries": 8,
+                    "semantic_note": (
+                        "Keep the 8 most important series; note in the caption "
+                        "that remaining series are omitted from the legend."
+                    ),
+                },
+                priority=2,
+                description=(
+                    f"Trim legend from {n_legend} to ≤8 entries. "
+                    "Move the full list to the figure caption."
+                ),
+            )
+        )
 
     # Tier 3: suggest splitting when score is very high
     if score >= 25.0:
-        actions.append(Action(
-            action_type="suggest_panel_split",
-            target="figure",
-            params={"complexity_score": score, "reasons": reasons},
-            priority=3,
-            description=(
-                f"Panel complexity score {score:.1f} is very high. "
-                "Consider moving secondary series or annotations to a "
-                "supplementary / extended-data figure."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="suggest_panel_split",
+                target="figure",
+                params={"complexity_score": score, "reasons": reasons},
+                priority=3,
+                description=(
+                    f"Panel complexity score {score:.1f} is very high. "
+                    "Consider moving secondary series or annotations to a "
+                    "supplementary / extended-data figure."
+                ),
+            )
+        )
 
     return actions
 
@@ -783,28 +795,32 @@ def _actions_whitespace_excess(issue: dict) -> list[Action]:
     actions: list[Action] = []
 
     if "hspace" in detail:
-        actions.append(Action(
-            action_type="reduce_hspace",
-            target="figure",
-            params={"delta": 0.05, "min_hspace": 0.20},
-            priority=2,
-            description=(
-                "Reduce vertical spacing between subplots (hspace) to "
-                "remove excess whitespace while keeping content readable."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="reduce_hspace",
+                target="figure",
+                params={"delta": 0.05, "min_hspace": 0.20},
+                priority=2,
+                description=(
+                    "Reduce vertical spacing between subplots (hspace) to "
+                    "remove excess whitespace while keeping content readable."
+                ),
+            )
+        )
 
     if "height" in detail or "ratio" in detail:
-        actions.append(Action(
-            action_type="reduce_figsize_height",
-            target="figure",
-            params={"delta_height": 0.3, "min_height": 4.0},
-            priority=2,
-            description=(
-                "Reduce figure height towards the target aspect ratio. "
-                "Only applied after all truncation issues are resolved."
-            ),
-        ))
+        actions.append(
+            Action(
+                action_type="reduce_figsize_height",
+                target="figure",
+                params={"delta_height": 0.3, "min_height": 4.0},
+                priority=2,
+                description=(
+                    "Reduce figure height towards the target aspect ratio. "
+                    "Only applied after all truncation issues are resolved."
+                ),
+            )
+        )
 
     return actions
 
@@ -844,10 +860,7 @@ def _actions_cross_axes_text_overlap(issue: dict) -> list[Action]:
             target="figure",
             params={"delta_width": 0.5, "delta_height": 0.5},
             priority=3,
-            description=(
-                "Enlarge the overall figure to give inter-panel text "
-                "elements more room."
-            ),
+            description=("Enlarge the overall figure to give inter-panel text elements more room."),
         ),
     ]
 
@@ -883,35 +896,35 @@ def _actions_panel_label_inside_axes(issue: dict) -> list[Action]:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 ISSUE_TO_ACTIONS: dict[str, Callable[[dict], list[Action]]] = {
-    "text_overlap":            _actions_text_overlap,
-    "text_truncation":         _actions_text_truncation,
-    "patch_truncation":        _actions_patch_truncation,
-    "legend_data_occlusion":   _actions_legend_data_occlusion,
-    "legend_spillover":        _actions_legend_spillover,
-    "legend_truncation":       _actions_legend_truncation,
-    "legend_text_crowding":    _actions_legend_text_crowding,
-    "fontsize_too_small":      _actions_fontsize_too_small,
-    "cross_panel_spillover":   _actions_cross_panel_spillover,
-    "cbar_tick_overlap":       _actions_cbar_tick_overlap,
-    "cbar_tick_truncation":    _actions_cbar_tick_truncation,
-    "artist_overlap":          _actions_artist_overlap,
-    "tick_spine_overlap":      _actions_tick_spine_overlap,
-    "font_family_violation":   _actions_font_family_violation,
-    "label_density_excess":    _actions_label_density_excess,
+    "text_overlap": _actions_text_overlap,
+    "text_truncation": _actions_text_truncation,
+    "patch_truncation": _actions_patch_truncation,
+    "legend_data_occlusion": _actions_legend_data_occlusion,
+    "legend_spillover": _actions_legend_spillover,
+    "legend_truncation": _actions_legend_truncation,
+    "legend_text_crowding": _actions_legend_text_crowding,
+    "fontsize_too_small": _actions_fontsize_too_small,
+    "cross_panel_spillover": _actions_cross_panel_spillover,
+    "cbar_tick_overlap": _actions_cbar_tick_overlap,
+    "cbar_tick_truncation": _actions_cbar_tick_truncation,
+    "artist_overlap": _actions_artist_overlap,
+    "tick_spine_overlap": _actions_tick_spine_overlap,
+    "font_family_violation": _actions_font_family_violation,
+    "label_density_excess": _actions_label_density_excess,
     # Perceptual (passes 23-26)
-    "low_contrast_text":       _actions_low_contrast_text,
-    "colorblind_confusable":   _actions_colorblind_confusable,
-    "errorbar_invisible":      _actions_errorbar_invisible,
-    "precision_excess":        _actions_precision_excess,
+    "low_contrast_text": _actions_low_contrast_text,
+    "colorblind_confusable": _actions_colorblind_confusable,
+    "errorbar_invisible": _actions_errorbar_invisible,
+    "precision_excess": _actions_precision_excess,
     # Semantic (passes 27-30)
-    "overplotted_scatter":     _actions_overplotted_scatter,
-    "log_scale_unlabelled":    _actions_log_scale_unlabelled,
-    "log_scale_nonpositive":   _actions_log_scale_nonpositive,
-    "scale_inconsistency":     _actions_scale_inconsistency,
-    "floating_significance":   _actions_floating_significance,
+    "overplotted_scatter": _actions_overplotted_scatter,
+    "log_scale_unlabelled": _actions_log_scale_unlabelled,
+    "log_scale_nonpositive": _actions_log_scale_nonpositive,
+    "scale_inconsistency": _actions_scale_inconsistency,
+    "floating_significance": _actions_floating_significance,
     # Complexity / whitespace (pass 31 + compaction)
     "panel_complexity_excess": _actions_panel_complexity_excess,
-    "whitespace_excess":       _actions_whitespace_excess,
+    "whitespace_excess": _actions_whitespace_excess,
     # Layout (passes 32-33)
     "cross_axes_text_overlap": _actions_cross_axes_text_overlap,
     "panel_label_inside_axes": _actions_panel_label_inside_axes,
@@ -921,6 +934,7 @@ ISSUE_TO_ACTIONS: dict[str, Callable[[dict], list[Action]]] = {
 # ═══════════════════════════════════════════════════════════════════════════════
 # Public API
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def diagnose(issues: list[dict]) -> list[Action]:
     """Translate VCD warning issues into a deduplicated, prioritised action list.
@@ -964,53 +978,53 @@ def diagnose(issues: list[dict]) -> list[Action]:
 
 _ACTION_CATEGORY: dict[str, str] = {
     # typography
-    "increase_fontsize":       "typography",
-    "fix_font_family":         "typography",
-    "rotate_labels":           "typography",
+    "increase_fontsize": "typography",
+    "fix_font_family": "typography",
+    "rotate_labels": "typography",
     # overlap
-    "reduce_tick_labels":      "overlap",
-    "reduce_annotations":      "overlap",
-    "reduce_cbar_ticks":       "overlap",
+    "reduce_tick_labels": "overlap",
+    "reduce_annotations": "overlap",
+    "reduce_cbar_ticks": "overlap",
     # truncation
-    "increase_bottom_margin":  "truncation",
-    "increase_right_margin":   "truncation",
-    "increase_top_margin":     "truncation",
-    "increase_margins":        "truncation",
-    "adjust_cbar_pad":         "truncation",
+    "increase_bottom_margin": "truncation",
+    "increase_right_margin": "truncation",
+    "increase_top_margin": "truncation",
+    "increase_margins": "truncation",
+    "adjust_cbar_pad": "truncation",
     # legend
-    "move_legend":             "legend",
-    "move_legend_inside":      "legend",
-    "shrink_legend_font":      "legend",
-    "reduce_legend_entries":   "legend",
+    "move_legend": "legend",
+    "move_legend_inside": "legend",
+    "shrink_legend_font": "legend",
+    "reduce_legend_entries": "legend",
     # density
-    "increase_figsize":        "density",
-    "increase_figsize_width":  "density",
+    "increase_figsize": "density",
+    "increase_figsize_width": "density",
     "increase_figsize_height": "density",
     # spacing
-    "increase_hspace":         "spacing",
-    "increase_wspace":         "spacing",
+    "increase_hspace": "spacing",
+    "increase_wspace": "spacing",
     # structural
     "reduce_subplots_per_row": "density",
     # perceptual
-    "increase_text_contrast":  "perceptual",
-    "fix_cvd_palette":         "perceptual",
+    "increase_text_contrast": "perceptual",
+    "fix_cvd_palette": "perceptual",
     "increase_errorbar_weight": "perceptual",
-    "reduce_label_precision":  "perceptual",
+    "reduce_label_precision": "perceptual",
     # semantic
-    "use_density_viz":         "semantic",
-    "reduce_alpha":            "semantic",
-    "add_log_label_hint":      "semantic",
-    "fix_log_data_range":      "semantic",
-    "unify_axis_range":        "semantic",
-    "remove_floating_marker":  "semantic",
+    "use_density_viz": "semantic",
+    "reduce_alpha": "semantic",
+    "add_log_label_hint": "semantic",
+    "fix_log_data_range": "semantic",
+    "unify_axis_range": "semantic",
+    "remove_floating_marker": "semantic",
     # complexity
     "drop_secondary_bar_labels": "complexity",
-    "suggest_panel_split":       "complexity",
+    "suggest_panel_split": "complexity",
     # compaction
-    "reduce_hspace":             "spacing",
-    "reduce_figsize_height":     "density",
+    "reduce_hspace": "spacing",
+    "reduce_figsize_height": "density",
     # panel label repositioning
-    "reposition_panel_labels":   "typography",
+    "reposition_panel_labels": "typography",
 }
 
 
@@ -1038,15 +1052,15 @@ def group_by_category(actions: list[Action]) -> dict[str, list[Action]]:
         to that category, preserving the input order.
     """
     grouped: dict[str, list[Action]] = {
-        "typography":  [],
-        "overlap":     [],
-        "truncation":  [],
-        "legend":      [],
-        "density":     [],
-        "spacing":     [],
-        "perceptual":  [],
-        "semantic":    [],
-        "complexity":  [],
+        "typography": [],
+        "overlap": [],
+        "truncation": [],
+        "legend": [],
+        "density": [],
+        "spacing": [],
+        "perceptual": [],
+        "semantic": [],
+        "complexity": [],
     }
 
     for action in actions:

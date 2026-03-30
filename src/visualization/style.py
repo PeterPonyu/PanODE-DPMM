@@ -77,16 +77,16 @@ VIS_STYLE: dict = {
 # ──────────────────────────────────────────────────────────────
 MODEL_COLORS = {
     # Pure baselines (cold)
-    "Pure-AE":              "#4E79A7",
-    "Pure-Transformer-AE":  "#76B7B2",
-    "Pure-Contrastive-AE":  "#59A14F",
-    "Pure-VAE":             "#8CD17D",
+    "Pure-AE": "#4E79A7",
+    "Pure-Transformer-AE": "#76B7B2",
+    "Pure-Contrastive-AE": "#59A14F",
+    "Pure-VAE": "#8CD17D",
     "Pure-Transformer-VAE": "#EDC948",
     "Pure-Contrastive-VAE": "#F28E2B",
     # DPMM variants (warm)
-    "DPMM-Base":            "#E15759",
-    "DPMM-Transformer":     "#FF9D9A",
-    "DPMM-Contrastive":     "#B07AA1",
+    "DPMM-Base": "#E15759",
+    "DPMM-Transformer": "#FF9D9A",
+    "DPMM-Contrastive": "#B07AA1",
 }
 
 # Short display names for tight layouts
@@ -123,21 +123,35 @@ COLORS = {
 
 # External benchmark color themes
 COLOR_THEMES = {
-    "proposed":  ["#4E79A7", "#76B7B2", "#B07AA1", "#9C755F"],
+    "proposed": ["#4E79A7", "#76B7B2", "#B07AA1", "#9C755F"],
     "classical": ["#59A14F", "#8CD17D", "#EDC948", "#F28E2B"],
-    "deep":      ["#E15759", "#FF9D9A", "#FF6B6B", "#C75146"],
+    "deep": ["#E15759", "#FF9D9A", "#FF6B6B", "#C75146"],
 }
 
 # Metric direction (True = higher is better)
 METRIC_DIRECTION = {
-    "NMI": True, "ARI": True, "ASW": True, "CAL": True,
-    "DAV": False, "COR": True,
-    "DRE": True, "DRE_kNN": True, "DRE_coranking": True,
-    "LSE": True, "LSE_spectral": True,
-    "DREX": True, "DREX_trust": True, "DREX_continuity": True,
-    "DREX_spearman": True, "DREX_pearson": True, "DREX_nbr_sym": True,
-    "LSEX": True, "LSEX_twohop": True, "LSEX_radial": True,
-    "LSEX_curvature": True, "LSEX_entropy": True,
+    "NMI": True,
+    "ARI": True,
+    "ASW": True,
+    "CAL": True,
+    "DAV": False,
+    "COR": True,
+    "DRE": True,
+    "DRE_kNN": True,
+    "DRE_coranking": True,
+    "LSE": True,
+    "LSE_spectral": True,
+    "DREX": True,
+    "DREX_trust": True,
+    "DREX_continuity": True,
+    "DREX_spearman": True,
+    "DREX_pearson": True,
+    "DREX_nbr_sym": True,
+    "LSEX": True,
+    "LSEX_twohop": True,
+    "LSEX_radial": True,
+    "LSEX_curvature": True,
+    "LSEX_entropy": True,
 }
 
 # ──────────────────────────────────────────────────────────────
@@ -179,10 +193,12 @@ def register_project_fonts(font_dir: Path | str | None = None) -> list[str]:
         candidates.append(Path(font_dir))
     else:
         root = Path(__file__).resolve().parents[2]
-        candidates.extend([
-            root / "fonts",
-            Path.home() / "Desktop" / "fonts",
-        ])
+        candidates.extend(
+            [
+                root / "fonts",
+                Path.home() / "Desktop" / "fonts",
+            ]
+        )
 
     registered: list[str] = []
     for base in candidates:
@@ -205,7 +221,8 @@ def style_axes(
     title: str | None = None,
     xlabel: str | None = None,
     ylabel: str | None = None,
-    hide_top_right: bool = True) -> plt.Axes:
+    hide_top_right: bool = True,
+) -> plt.Axes:
     """Apply consistent typography and spine styling to *ax*.
 
     Parameters
@@ -214,14 +231,14 @@ def style_axes(
         Adjusts font sizes and grid visibility to suit the subplot type.
     """
     style_map = {
-        "default":  {"title": 14, "label": 12, "tick": 11, "grid": True},
-        "bar":      {"title": 14, "label": 12, "tick": 11, "grid": True},
-        "heatmap":  {"title": 14, "label": 12, "tick": 10, "grid": False},
-        "scatter":  {"title": 14, "label": 12, "tick": 11, "grid": True},
-        "umap":     {"title": 14, "label": 12, "tick": 11, "grid": False},
-        "polar":    {"title": 14, "label": 12, "tick": 11, "grid": True},
-        "table":    {"title": 14, "label": 12, "tick": 11, "grid": False},
-        "boxplot":  {"title": 14, "label": 12, "tick": 11, "grid": True},
+        "default": {"title": 14, "label": 12, "tick": 11, "grid": True},
+        "bar": {"title": 14, "label": 12, "tick": 11, "grid": True},
+        "heatmap": {"title": 14, "label": 12, "tick": 10, "grid": False},
+        "scatter": {"title": 14, "label": 12, "tick": 11, "grid": True},
+        "umap": {"title": 14, "label": 12, "tick": 11, "grid": False},
+        "polar": {"title": 14, "label": 12, "tick": 11, "grid": True},
+        "table": {"title": 14, "label": 12, "tick": 11, "grid": False},
+        "boxplot": {"title": 14, "label": 12, "tick": 11, "grid": True},
     }
     s = style_map.get(kind, style_map["default"])
 
@@ -245,11 +262,7 @@ def style_axes(
     return ax
 
 
-def set_figure_suptitle(
-    fig: plt.Figure,
-    title: str,
-    fontsize: int = 11,
-    **kwargs) -> None:
+def set_figure_suptitle(fig: plt.Figure, title: str, fontsize: int = 11, **kwargs) -> None:
     """Set a figure suptitle at the canonical vertical position."""
     y = kwargs.pop("y", SUPTITLE_Y)
     fig.suptitle(title, fontsize=fontsize, y=y, **kwargs)
@@ -266,10 +279,13 @@ def add_panel_label(
     color: str = "black",
     stroke_linewidth: float = 3.0,
     stroke_foreground: str = "white",
-    **kwargs) -> None:
+    **kwargs,
+) -> None:
     """Add a panel label (a, b, c, etc.) outside the top-left corner."""
     ax.text(
-        x, y, f"({label})",
+        x,
+        y,
+        f"({label})",
         transform=ax.transAxes,
         fontsize=fontsize,
         fontweight=fontweight,
@@ -283,16 +299,16 @@ def add_panel_label(
             pe.withStroke(linewidth=stroke_linewidth, foreground=stroke_foreground),
             pe.Normal(),
         ],
-        **kwargs)
+        **kwargs,
+    )
 
 
 def add_panel_labels_to_axes(
-    axes: list[plt.Axes],
-    labels: list[str] | None = None,
-    **kwargs) -> None:
+    axes: list[plt.Axes], labels: list[str] | None = None, **kwargs
+) -> None:
     """Add sequential panel labels to a list of axes."""
     if labels is None:
-        labels = [chr(ord('a') + i) for i in range(len(axes))]
+        labels = [chr(ord("a") + i) for i in range(len(axes))]
     for ax, lbl in zip(axes, labels):
         add_panel_label(ax, lbl, **kwargs)
 
@@ -306,12 +322,13 @@ def add_colorbar_safe(
     pad: float = 0.08,
     orientation: str = "vertical",
     aspect: int = 20,
-    **kwargs):
+    **kwargs,
+):
     """Add a colorbar with sensible defaults."""
     fig = ax.get_figure()
     cbar = fig.colorbar(
-        mappable, ax=ax, shrink=shrink, pad=pad,
-        orientation=orientation, aspect=aspect, **kwargs)
+        mappable, ax=ax, shrink=shrink, pad=pad, orientation=orientation, aspect=aspect, **kwargs
+    )
     if getattr(cbar, "solids", None) is not None:
         try:
             cbar.solids.set_edgecolor("face")
@@ -470,9 +487,8 @@ def _collect_export_bboxes(fig: plt.Figure, renderer) -> list[Bbox]:
 
 
 def compute_fixed_export_bbox(
-    fig: plt.Figure,
-    *,
-    pad_inches: float = DEFAULT_EXPORT_PAD_INCHES) -> Bbox:
+    fig: plt.Figure, *, pad_inches: float = DEFAULT_EXPORT_PAD_INCHES
+) -> Bbox:
     """Compute one deterministic bbox to reuse across all export formats."""
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
@@ -480,10 +496,8 @@ def compute_fixed_export_bbox(
     union = Bbox.union(boxes)
     pad_px = float(pad_inches) * float(fig.dpi)
     union = Bbox.from_extents(
-        union.x0 - pad_px,
-        union.y0 - pad_px,
-        union.x1 + pad_px,
-        union.y1 + pad_px)
+        union.x0 - pad_px, union.y0 - pad_px, union.x1 + pad_px, union.y1 + pad_px
+    )
     return fig.dpi_scale_trans.inverted().transform_bbox(union)
 
 
@@ -492,16 +506,24 @@ def get_export_savefig_kwargs(
     dpi: int = 300,
     *,
     layout_rect: tuple[float, float, float, float] | None = None,
-    pad_inches: float | None = None) -> dict:
+    pad_inches: float | None = None,
+) -> dict:
     """Return deterministic savefig kwargs shared by all export formats."""
     if layout_rect is not None:
         apply_layout_rect(fig, layout_rect)
-    elif getattr(fig, "_panode_layout_rect", None) is not None and not getattr(fig, "_panode_layout_managed", False):
+    elif getattr(fig, "_panode_layout_rect", None) is not None and not getattr(
+        fig, "_panode_layout_managed", False
+    ):
         apply_layout_rect(fig, getattr(fig, "_panode_layout_rect", DEFAULT_LAYOUT_RECT))
 
     pad = get_export_pad_inches(
         fig,
-        fallback=float(pad_inches if pad_inches is not None else VIS_STYLE.get("savefig.pad_inches", DEFAULT_EXPORT_PAD_INCHES)))
+        fallback=float(
+            pad_inches
+            if pad_inches is not None
+            else VIS_STYLE.get("savefig.pad_inches", DEFAULT_EXPORT_PAD_INCHES)
+        ),
+    )
     bbox_inches = compute_fixed_export_bbox(fig, pad_inches=pad)
     return {
         "dpi": dpi,
@@ -517,7 +539,8 @@ def save_with_vcd(
     *,
     close: bool = False,
     run_vcd: bool = True,
-    layout_rect: tuple[float, float, float, float] | None = None) -> Path:
+    layout_rect: tuple[float, float, float, float] | None = None,
+) -> Path:
     """Canonical save: deterministic layout, shared export crop, PDF output.
 
     Single save path for all PanODE figures. Layout must be fixed before save
@@ -533,7 +556,7 @@ def save_with_vcd(
             continue
         if getattr(ax, "_panode_styled", False):
             continue
-        if hasattr(ax, '_colorbar_info') or getattr(ax, '_colorbar', None) is not None:
+        if hasattr(ax, "_colorbar_info") or getattr(ax, "_colorbar", None) is not None:
             continue
         if hasattr(ax, "name") and ax.name == "polar":
             style_axes(ax, kind="polar")
@@ -625,7 +648,9 @@ def _format_vcd_type_counts(issue_counts: Counter, max_items: int = 4) -> str:
     return head
 
 
-def _log_vcd_issues(logger, label: str, warnings_only: list[dict], info_only: list[dict], issue_counts: Counter) -> None:
+def _log_vcd_issues(
+    logger, label: str, warnings_only: list[dict], info_only: list[dict], issue_counts: Counter
+) -> None:
     status = "PASS" if not warnings_only else ("WARN" if len(warnings_only) < 3 else "FAIL")
     log_fn = logger.info if not warnings_only else logger.warning
     log_fn(
@@ -662,9 +687,10 @@ def set_dense_tick_labels(
     max_labels: int = 25,
     fontsize: int = 10,
     rotation: int = 45,
-    ha: str = "right") -> None:
+    ha: str = "right",
+) -> None:
     """Reduce tick label density to avoid overlap when many categories."""
-    for a in (["x", "y"] if axis == "both" else [axis]):
+    for a in ["x", "y"] if axis == "both" else [axis]:
         ticks = ax.get_xticklabels() if a == "x" else ax.get_yticklabels()
         n = len(ticks)
         if n > max_labels:
@@ -684,10 +710,8 @@ def set_dense_tick_labels(
 
 
 def set_scientific_tickformat(
-    ax: plt.Axes,
-    axis: str = "y",
-    *,
-    scilimits: tuple[int, int] = (-2, 3)) -> None:
+    ax: plt.Axes, axis: str = "y", *, scilimits: tuple[int, int] = (-2, 3)
+) -> None:
     """Apply scientific notation formatting for large/small magnitudes."""
     formatter = ScalarFormatter(useMathText=True)
     formatter.set_scientific(True)

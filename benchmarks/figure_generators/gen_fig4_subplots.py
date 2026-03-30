@@ -37,6 +37,7 @@ from benchmarks.figure_generators.subplot_style import (
     FONTSIZE_TITLE,
     LINE_WIDTH_SPINE,
     SCATTER_SIZE_UMAP,
+    SUBPLOT_DPI,
     apply_subplot_style,
     build_manifest,
 )
@@ -44,15 +45,16 @@ from src.visualization import bind_figure_region, save_with_vcd, style_axes
 
 # Series-specific sensitivity params (warmup_ratio = DPMM)
 _SENSITIVITY_PARAMS = {
-    "dpmm":  ["warmup_ratio", "latent_dim", "encoder_size", "dropout_rate"],
+    "dpmm": ["warmup_ratio", "latent_dim", "encoder_size", "dropout_rate"],
 }
+
 
 def _key_params_by_source(series):
     """Return sweep parameter dict keyed by source, series-aware for sensitivity."""
     return {
-        "sensitivity":    _SENSITIVITY_PARAMS.get(series, _SENSITIVITY_PARAMS["dpmm"]),
-        "training":       ["lr", "epochs", "batch_size", "weight_decay"],
-        "preprocessing":  ["hvg_top_genes"],
+        "sensitivity": _SENSITIVITY_PARAMS.get(series, _SENSITIVITY_PARAMS["dpmm"]),
+        "training": ["lr", "epochs", "batch_size", "weight_decay"],
+        "preprocessing": ["hvg_top_genes"],
     }
 
 
@@ -63,7 +65,8 @@ def _format_sweep_value(name):
          'DPMM-Base(epochs=200)' → 'epochs = 200'
     """
     import re
-    m = re.search(r'\(([^=]+)=([^\)]+)\)', str(name))
+
+    m = re.search(r"\(([^=]+)=([^\)]+)\)", str(name))
     if not m:
         return str(name)
     param, val_str = m.group(1), m.group(2)
@@ -72,7 +75,7 @@ def _format_sweep_value(name):
         # Use scientific notation for very small or very large numbers
         if val != 0 and (abs(val) < 0.01 or abs(val) >= 10000):
             exp = int(np.floor(np.log10(abs(val))))
-            coeff = val / (10 ** exp)
+            coeff = val / (10**exp)
             if abs(coeff - round(coeff)) < 1e-9:
                 coeff = int(round(coeff))
             if coeff == 1:
@@ -92,8 +95,7 @@ def gen_sweep_umap(name, latent, out_path):
     nn = min(15, max(5, n_pts // 6))
     emb = compute_umap(latent, n_neighbors=nn)
     n_cl = int(max(2, min(10, n_pts // 20)))
-    labels = KMeans(n_clusters=n_cl, random_state=42,
-                    n_init=10).fit_predict(latent)
+    labels = KMeans(n_clusters=n_cl, random_state=42, n_init=10).fit_predict(latent)
 
     fig = plt.figure(figsize=FIGSIZE_4COL)
 
@@ -102,14 +104,20 @@ def gen_sweep_umap(name, latent, out_path):
     ax = layout.add_axes(fig)
 
     style_axes(ax)
-    ax.scatter(emb[:, 0], emb[:, 1], c=labels, cmap="tab10",
-               s=SCATTER_SIZE_UMAP, alpha=0.75, rasterized=True)
+    ax.scatter(
+        emb[:, 0],
+        emb[:, 1],
+        c=labels,
+        cmap="tab10",
+        s=SCATTER_SIZE_UMAP,
+        alpha=0.75,
+        rasterized=True,
+    )
     ax.set_xticks([])
     ax.set_yticks([])
     # Show formatted hyperparameter value as title
     title = _format_sweep_value(name)
-    ax.set_title(title, fontsize=FONTSIZE_TITLE, pad=2,
-                 loc="left", fontweight="normal")
+    ax.set_title(title, fontsize=FONTSIZE_TITLE, pad=2, loc="left", fontweight="normal")
     for sp in ax.spines.values():
         sp.set_linewidth(LINE_WIDTH_SPINE)
     save_with_vcd(fig, out_path, dpi=SUBPLOT_DPI, close=True)
@@ -146,8 +154,9 @@ def generate(series, out_dir):
                 continue
             tmp = sub.copy()
             tmp["_sv"] = pd.to_numeric(tmp["SweepVal"], errors="coerce")
-            tmp = (tmp.sort_values("_sv") if tmp["_sv"].notna().any()
-                   else tmp.sort_values("SweepVal"))
+            tmp = (
+                tmp.sort_values("_sv") if tmp["_sv"].notna().any() else tmp.sort_values("SweepVal")
+            )
             model_names = list(dict.fromkeys(tmp["Model"].dropna().tolist()))
             if len(model_names) > 4:
                 idx = np.linspace(0, len(model_names) - 1, 4, dtype=int)
@@ -155,17 +164,17 @@ def generate(series, out_dir):
 
             ds_plots = {}
             for ds in rep_datasets:
-                latents = load_sweep_latents(source, series,
-                                             model_names=model_names,
-                                             n_select=4,
-                                             dataset_filter=ds)
+                latents = load_sweep_latents(
+                    source, series, model_names=model_names, n_select=4, dataset_filter=ds
+                )
                 if not latents:
                     continue
                 snap_files = []
                 for k, (name, latent) in enumerate(latents):
                     safe_p = param.replace("/", "_")
-                    safe_n = (name.replace("/", "_").replace("(", "")
-                              .replace(")", "").replace("=", "_"))
+                    safe_n = (
+                        name.replace("/", "_").replace("(", "").replace(")", "").replace("=", "_")
+                    )
                     fname = f"{safe_p}_{ds}_{k}_{safe_n}.png"
                     gen_sweep_umap(name, latent, sub_dir / fname)
                     snap_files.append({"file": fname, "label": name})
@@ -177,9 +186,12 @@ def generate(series, out_dir):
                     "datasets": ds_plots,
                 }
 
-    manifest = build_manifest(sub_dir, {
-        "params": param_manifest,
-    })
+    manifest = build_manifest(
+        sub_dir,
+        {
+            "params": param_manifest,
+        },
+    )
     return manifest
 
 
@@ -188,7 +200,10 @@ if __name__ == "__main__":
     parser.add_argument("--series", required=True, choices=["dpmm"])
     parser.add_argument("--output-dir", default=None)
     args = parser.parse_args()
-    out = (Path(args.output_dir) if args.output_dir
-           else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots")
+    out = (
+        Path(args.output_dir)
+        if args.output_dir
+        else ROOT / "benchmarks" / "paper_figures" / args.series / "subplots"
+    )
     out.mkdir(parents=True, exist_ok=True)
     generate(args.series, out)

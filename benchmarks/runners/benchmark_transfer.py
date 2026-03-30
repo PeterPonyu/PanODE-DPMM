@@ -52,10 +52,10 @@ def load_normalize_subset(path, max_cells, common_genes, seed):
     available = [g for g in common_genes if g in adata.var_names]
     adata = adata[:, available].copy()
     # Store raw counts in layer
-    if hasattr(adata.X, 'toarray'):
-        adata.layers['counts'] = adata.X.toarray().copy()
+    if hasattr(adata.X, "toarray"):
+        adata.layers["counts"] = adata.X.toarray().copy()
     else:
-        adata.layers['counts'] = adata.X.copy()
+        adata.layers["counts"] = adata.X.copy()
     # Normalize
     sc.pp.normalize_total(adata, target_sum=1e4)
     sc.pp.log1p(adata)
@@ -76,12 +76,11 @@ def load_normalize_subset(path, max_cells, common_genes, seed):
 
 def main():
     parser = argparse.ArgumentParser(description="Cross-dataset transfer benchmark")
-    parser.add_argument("--source", type=str, default="setty",
-                        choices=list(DATASET_REGISTRY.keys()))
-    parser.add_argument("--target", type=str, default="lung",
-                        choices=list(DATASET_REGISTRY.keys()))
-    parser.add_argument("--models", type=str, nargs="+",
-                        default=["DPMM-Base", "Pure-AE"])
+    parser.add_argument(
+        "--source", type=str, default="setty", choices=list(DATASET_REGISTRY.keys())
+    )
+    parser.add_argument("--target", type=str, default="lung", choices=list(DATASET_REGISTRY.keys()))
+    parser.add_argument("--models", type=str, nargs="+", default=["DPMM-Base", "Pure-AE"])
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -97,9 +96,9 @@ def main():
     source_info = DATASET_REGISTRY[args.source]
     target_info = DATASET_REGISTRY[args.target]
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Cross-Dataset Transfer: {args.source} -> {args.target}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     # Find common genes from raw data
     print("\nFinding common genes...")
@@ -141,11 +140,17 @@ def main():
 
     # Create DataSplitter for source (standard train/val/test)
     source_splitter = DataSplitter(
-        adata_source, train_size=0.8, val_size=0.1, test_size=0.1,
-        batch_size=BASE_CONFIG.batch_size, random_seed=args.seed)
+        adata_source,
+        train_size=0.8,
+        val_size=0.1,
+        test_size=0.1,
+        batch_size=BASE_CONFIG.batch_size,
+        random_seed=args.seed,
+    )
 
     # For target: create a simple loader with all data for evaluation
     from scipy.sparse import issparse
+
     X_target = adata_target.X
     if issparse(X_target):
         X_target = X_target.toarray()
@@ -155,6 +160,7 @@ def main():
 
     # Get target labels
     from sklearn.preprocessing import LabelEncoder
+
     if "cell_type" in adata_target.obs.columns:
         le = LabelEncoder()
         target_labels = le.fit_transform(adata_target.obs["cell_type"].values)
@@ -164,9 +170,9 @@ def main():
     input_dim = len(final_genes)
 
     for model_name in args.models:
-        print(f"\n{'_'*50}")
+        print(f"\n{'_' * 50}")
         print(f"Model: {model_name}")
-        print(f"{'_'*50}")
+        print(f"{'_' * 50}")
 
         gc.collect()
         torch.cuda.empty_cache()
@@ -192,7 +198,8 @@ def main():
                 weight_decay=fit_wd,
                 device=str(device),
                 verbose_every=100,
-                patience=9999)
+                patience=9999,
+            )
             train_time = time.time() - start
 
             print(f"  Encoding {args.target}...")
@@ -206,9 +213,7 @@ def main():
 
             latents = np.concatenate(latents, axis=0)
 
-            metrics = compute_metrics(
-                latents, target_labels,
-                data_type=target_info["data_type"])
+            metrics = compute_metrics(latents, target_labels, data_type=target_info["data_type"])
 
             res = {
                 "Source": args.source,
@@ -223,16 +228,23 @@ def main():
                 "Target_DAV": metrics.get("DAV"),
             }
             results.append(res)
-            print(f"  NMI={res['Target_NMI']:.4f}, ARI={res['Target_ARI']:.4f}, ASW={res['Target_ASW']:.4f}")
+            print(
+                f"  NMI={res['Target_NMI']:.4f}, ARI={res['Target_ARI']:.4f}, ASW={res['Target_ASW']:.4f}"
+            )
 
         except Exception as e:
             import traceback
+
             traceback.print_exc()
-            results.append({
-                "Source": args.source, "Target": args.target,
-                "Model": model_name, "Seed": args.seed,
-                "Error": str(e),
-            })
+            results.append(
+                {
+                    "Source": args.source,
+                    "Target": args.target,
+                    "Model": model_name,
+                    "Seed": args.seed,
+                    "Error": str(e),
+                }
+            )
 
     df = pd.DataFrame(results)
     csv_path = out_dirs["csv"] / f"transfer_{args.source}_to_{args.target}_seed{args.seed}.csv"

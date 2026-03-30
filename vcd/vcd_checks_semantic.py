@@ -6,6 +6,7 @@ Pass 29: Cross-panel scale inconsistency (same metric, different ranges).
 Pass 30: Floating significance markers (stars with no associated bar/line).
 Pass 31: Panel complexity excess (too many series, labels, or annotations).
 """
+
 from __future__ import annotations
 
 import re
@@ -22,9 +23,8 @@ from .vcd_core import _safe_bbox
 # Pass 27: Overplotted scatter detection
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _check_overplotting(fig, renderer,
-                         alpha_point_threshold=5000,
-                         opaque_point_threshold=500):
+
+def _check_overplotting(fig, renderer, alpha_point_threshold=5000, opaque_point_threshold=500):
     """Pass 27: Detect scatter plots that are likely overplotted.
 
     A scatter plot with many data points AND high alpha produces a
@@ -40,7 +40,7 @@ def _check_overplotting(fig, renderer,
     issues: list[dict] = []
 
     for ax in fig.get_axes():
-        if getattr(ax, 'name', None) == 'polar':
+        if getattr(ax, "name", None) == "polar":
             continue
         title = ax.get_title() or f"ax@{id(ax):#x}"
 
@@ -64,28 +64,32 @@ def _check_overplotting(fig, renderer,
 
             # Check for obvious overplotting
             if n_points >= alpha_point_threshold:
-                issues.append({
-                    "type": "overplotted_scatter",
-                    "severity": "info",
-                    "detail": (
-                        f"Scatter in '{title}' has {n_points:,} points "
-                        f"(α={eff_alpha:.2f}) — consider hexbin or KDE "
-                        f"for readability"
-                    ),
-                    "elements": [f"scatter:{title}"],
-                })
+                issues.append(
+                    {
+                        "type": "overplotted_scatter",
+                        "severity": "info",
+                        "detail": (
+                            f"Scatter in '{title}' has {n_points:,} points "
+                            f"(α={eff_alpha:.2f}) — consider hexbin or KDE "
+                            f"for readability"
+                        ),
+                        "elements": [f"scatter:{title}"],
+                    }
+                )
             elif n_points >= opaque_point_threshold and eff_alpha >= 0.5:
-                issues.append({
-                    "type": "overplotted_scatter",
-                    "severity": "info",
-                    "detail": (
-                        f"Scatter in '{title}' has {n_points:,} points "
-                        f"with high alpha ({eff_alpha:.2f}) — may be "
-                        f"overplotted; consider reducing alpha or using "
-                        f"density visualisation"
-                    ),
-                    "elements": [f"scatter:{title}"],
-                })
+                issues.append(
+                    {
+                        "type": "overplotted_scatter",
+                        "severity": "info",
+                        "detail": (
+                            f"Scatter in '{title}' has {n_points:,} points "
+                            f"with high alpha ({eff_alpha:.2f}) — may be "
+                            f"overplotted; consider reducing alpha or using "
+                            f"density visualisation"
+                        ),
+                        "elements": [f"scatter:{title}"],
+                    }
+                )
 
     return issues
 
@@ -93,6 +97,7 @@ def _check_overplotting(fig, renderer,
 # ═══════════════════════════════════════════════════════════════════════════════
 # Pass 28: Log-scale sanity
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def _check_log_scale_sanity(fig, renderer):
     """Pass 28: Detect log-scale axes without proper labelling or with problems.
@@ -106,7 +111,7 @@ def _check_log_scale_sanity(fig, renderer):
     issues: list[dict] = []
 
     for ax in fig.get_axes():
-        if getattr(ax, 'name', None) == 'polar':
+        if getattr(ax, "name", None) == "polar":
             continue
         title = ax.get_title() or f"ax@{id(ax):#x}"
 
@@ -125,28 +130,32 @@ def _check_log_scale_sanity(fig, renderer):
                 or "10^" in title_text
             )
             if not has_log_hint and label_text:
-                issues.append({
-                    "type": "log_scale_unlabelled",
-                    "severity": "info",
-                    "detail": (
-                        f"{axis_name.upper()}-axis in '{title}' uses log scale "
-                        f"but label '{label_text}' does not indicate this"
-                    ),
-                    "elements": [f"log_{axis_name}:{title}"],
-                })
+                issues.append(
+                    {
+                        "type": "log_scale_unlabelled",
+                        "severity": "info",
+                        "detail": (
+                            f"{axis_name.upper()}-axis in '{title}' uses log scale "
+                            f"but label '{label_text}' does not indicate this"
+                        ),
+                        "elements": [f"log_{axis_name}:{title}"],
+                    }
+                )
 
             # b) Check for zero/negative in data range
             lim = ax.get_xlim() if axis_name == "x" else ax.get_ylim()
             if lim[0] <= 0:
-                issues.append({
-                    "type": "log_scale_nonpositive",
-                    "severity": "warning",
-                    "detail": (
-                        f"{axis_name.upper()}-axis in '{title}' uses log scale "
-                        f"but range starts at {lim[0]:.4g} (≤0)"
-                    ),
-                    "elements": [f"log_{axis_name}:{title}"],
-                })
+                issues.append(
+                    {
+                        "type": "log_scale_nonpositive",
+                        "severity": "warning",
+                        "detail": (
+                            f"{axis_name.upper()}-axis in '{title}' uses log scale "
+                            f"but range starts at {lim[0]:.4g} (≤0)"
+                        ),
+                        "elements": [f"log_{axis_name}:{title}"],
+                    }
+                )
 
     return issues
 
@@ -154,6 +163,7 @@ def _check_log_scale_sanity(fig, renderer):
 # ═══════════════════════════════════════════════════════════════════════════════
 # Pass 29: Cross-panel scale inconsistency
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def _check_scale_consistency(fig, renderer):
     """Pass 29: Detect panels sharing the same axis label but different ranges.
@@ -171,7 +181,7 @@ def _check_scale_consistency(fig, renderer):
         label_groups: dict[str, list[tuple[str, float, float]]] = defaultdict(list)
 
         for ax in fig.get_axes():
-            if getattr(ax, 'name', None) == 'polar':
+            if getattr(ax, "name", None) == "polar":
                 continue
             title = ax.get_title() or f"ax@{id(ax):#x}"
 
@@ -192,23 +202,25 @@ def _check_scale_consistency(fig, renderer):
             # Check range spread
             all_lo = [e[1] for e in entries]
             all_hi = [e[2] for e in entries]
-            min_lo, max_lo = min(all_lo), max(all_lo)
-            min_hi, max_hi = min(all_hi), max(all_hi)
+            min_lo, max_lo = min(all_lo), max(all_lo)  # noqa: F841
+            min_hi, max_hi = min(all_hi), max(all_hi)  # noqa: F841
 
             # Significant mismatch: one range is >3× another
             ranges = [(hi - lo) for _, lo, hi in entries]
             if min(ranges) > 0 and max(ranges) / min(ranges) > 3.0:
                 panels = [e[0][:25] for e in entries]
-                issues.append({
-                    "type": "scale_inconsistency",
-                    "severity": "info",
-                    "detail": (
-                        f"{axis_kind.upper()}-axis label '{lbl}' shared by "
-                        f"{len(entries)} panels with {max(ranges)/min(ranges):.1f}× "
-                        f"range spread: {', '.join(panels[:3])}"
-                    ),
-                    "elements": [f"scale_{axis_kind}:{lbl}"],
-                })
+                issues.append(
+                    {
+                        "type": "scale_inconsistency",
+                        "severity": "info",
+                        "detail": (
+                            f"{axis_kind.upper()}-axis label '{lbl}' shared by "
+                            f"{len(entries)} panels with {max(ranges) / min(ranges):.1f}× "
+                            f"range spread: {', '.join(panels[:3])}"
+                        ),
+                        "elements": [f"scale_{axis_kind}:{lbl}"],
+                    }
+                )
 
     return issues
 
@@ -217,7 +229,7 @@ def _check_scale_consistency(fig, renderer):
 # Pass 30: Floating significance markers
 # ═══════════════════════════════════════════════════════════════════════════════
 
-_STAR_RE = re.compile(r'^(\*{1,3}|ns)$')
+_STAR_RE = re.compile(r"^(\*{1,3}|ns)$")
 
 
 def _check_floating_significance(fig, renderer, proximity_px=50):
@@ -231,7 +243,7 @@ def _check_floating_significance(fig, renderer, proximity_px=50):
     issues: list[dict] = []
 
     for ax in fig.get_axes():
-        if getattr(ax, 'name', None) == 'polar':
+        if getattr(ax, "name", None) == "polar":
             continue
         title = ax.get_title() or f"ax@{id(ax):#x}"
 
@@ -260,17 +272,17 @@ def _check_floating_significance(fig, renderer, proximity_px=50):
                 bb = _safe_bbox(child, renderer)
                 if bb:
                     data_bbs.append(bb)
-            elif hasattr(child, 'get_facecolor'):
+            elif hasattr(child, "get_facecolor"):
                 # Patches (bars)
-                label = getattr(child, '_label', '') or ''
-                if child is not ax.patch and not label.startswith('_'):
+                label = getattr(child, "_label", "") or ""
+                if child is not ax.patch and not label.startswith("_"):
                     bb = _safe_bbox(child, renderer)
                     if bb:
                         data_bbs.append(bb)
 
         for txt, cx, cy in star_texts:
             # Find minimum distance to any data artist bbox
-            min_dist = float('inf')
+            min_dist = float("inf")
             for dbb in data_bbs:
                 # Distance from point to bbox
                 dx = max(dbb.x0 - cx, 0, cx - dbb.x1)
@@ -279,16 +291,18 @@ def _check_floating_significance(fig, renderer, proximity_px=50):
                 min_dist = min(min_dist, dist)
 
             if min_dist > proximity_px:
-                issues.append({
-                    "type": "floating_significance",
-                    "severity": "warning",
-                    "detail": (
-                        f"Significance marker '{txt}' in '{title}' is "
-                        f"{min_dist:.0f}px from nearest data element "
-                        f"(>{proximity_px}px threshold)"
-                    ),
-                    "elements": [f"sig:{txt}:{title}"],
-                })
+                issues.append(
+                    {
+                        "type": "floating_significance",
+                        "severity": "warning",
+                        "detail": (
+                            f"Significance marker '{txt}' in '{title}' is "
+                            f"{min_dist:.0f}px from nearest data element "
+                            f"(>{proximity_px}px threshold)"
+                        ),
+                        "elements": [f"sig:{txt}:{title}"],
+                    }
+                )
 
     return issues
 
@@ -297,7 +311,7 @@ def _check_floating_significance(fig, renderer, proximity_px=50):
 # Pass 31: Panel complexity excess
 # ═══════════════════════════════════════════════════════════════════════════════
 
-_NUMERIC_RE = re.compile(r'^[+\-−]?\d[\d,\.%eE+\-]*$')
+_NUMERIC_RE = re.compile(r"^[+\-−]?\d[\d,\.%eE+\-]*$")
 
 
 def _check_panel_complexity(
@@ -326,7 +340,7 @@ def _check_panel_complexity(
     issues: list[dict] = []
 
     for ax in fig.get_axes():
-        if getattr(ax, 'name', None) == 'polar':
+        if getattr(ax, "name", None) == "polar":
             continue
         title = ax.get_title() or f"ax@{id(ax):#x}"
 
@@ -376,20 +390,22 @@ def _check_panel_complexity(
             reasons.append(f"{n_text} text elements (>{max_annotations})")
 
         if score >= score_threshold:
-            issues.append({
-                "type": "panel_complexity_excess",
-                "severity": "info",
-                "detail": (
-                    f"Panel '{title}' complexity score {score:.1f} "
-                    f"(threshold {score_threshold}): {'; '.join(reasons)}. "
-                    f"Consider simplifying or splitting."
-                ),
-                "elements": [f"panel:{title}"],
-                "score": score,
-                "reasons": reasons,
-                "n_legend": n_legend,
-                "n_numeric": n_numeric,
-                "n_text": n_text,
-            })
+            issues.append(
+                {
+                    "type": "panel_complexity_excess",
+                    "severity": "info",
+                    "detail": (
+                        f"Panel '{title}' complexity score {score:.1f} "
+                        f"(threshold {score_threshold}): {'; '.join(reasons)}. "
+                        f"Consider simplifying or splitting."
+                    ),
+                    "elements": [f"panel:{title}"],
+                    "score": score,
+                    "reasons": reasons,
+                    "n_legend": n_legend,
+                    "n_numeric": n_numeric,
+                    "n_text": n_text,
+                }
+            )
 
     return issues
