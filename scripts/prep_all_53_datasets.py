@@ -23,13 +23,16 @@ Usage:
     python scripts/prep_all_53_datasets.py --check-only
 """
 
-import argparse, os, sys, gc, warnings
+import argparse
+import gc
+import os
+import sys
+import warnings
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 warnings.filterwarnings("ignore")
 
-import numpy as np
 import scanpy as sc
 
 # ── Output directory ─────────────────────────────────────────────────────────

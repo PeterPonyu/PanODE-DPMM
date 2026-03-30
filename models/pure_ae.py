@@ -10,11 +10,11 @@ Three variants:
 - PureAETransformerModel: Multi-head projection transformer encoder
 - PureAEContrastiveModel: MLP encoder + MoCo contrastive learning
 """
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, Tuple, Any, Literal
 
 try:
     from .base_model import BaseModel
@@ -52,8 +52,8 @@ def _act(name: str) -> nn.Module:
 
 class _Layer1D(nn.Module):
     """Normalization + Activation + Dropout layer"""
-    def __init__(self, dim: int, norm: Optional[str] = None,
-                 act: Optional[str] = None, drop: float = 0.0):
+    def __init__(self, dim: int, norm: str | None = None,
+                 act: str | None = None, drop: float = 0.0):
         super().__init__()
         layers = []
         if norm == "bn":
@@ -76,9 +76,9 @@ class MLP(nn.Module):
         self,
         features: list,
         hid_act: str = "mish",
-        out_act: Optional[str] = None,
-        norm: Optional[str] = None,
-        hid_norm: Optional[str] = None,
+        out_act: str | None = None,
+        norm: str | None = None,
+        hid_norm: str | None = None,
         drop: float = 0.0,
         hid_drop: float = 0.0):
         super().__init__()
@@ -107,7 +107,7 @@ class DeterministicEncoder(nn.Module):
         self,
         input_dim: int,
         latent_dim: int = 10,
-        encoder_dims: Optional[list] = None,
+        encoder_dims: list | None = None,
         norm: str = "bn",
         drop: float = 0.2):
         super().__init__()
@@ -190,7 +190,7 @@ class DataAugmentation(nn.Module):
         noise_prob: float = 0.2,
         noise_std: float = 0.1,
         mask_prob: float = 0.1,
-        scale_range: Tuple[float, float] = (0.8, 1.2),
+        scale_range: tuple[float, float] = (0.8, 1.2),
         feature_dropout: float = 0.2):
         super().__init__()
         self.noise_prob = noise_prob
@@ -272,7 +272,7 @@ class MomentumContrast(nn.Module):
             self.queue[:, :batch_size - part1] = keys[part1:].T
         self.queue_ptr[0] = (ptr + batch_size) % self.queue_size
 
-    def forward(self, z_query: torch.Tensor, z_key: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, z_query: torch.Tensor, z_key: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         q = F.normalize(self.query_projector(z_query), dim=1)
         with torch.no_grad():
             self._momentum_update()
@@ -304,8 +304,8 @@ class PureAEModel(BaseModel):
         self,
         input_dim: int,
         latent_dim: int = 10,
-        encoder_dims: Optional[list] = None,
-        decoder_dims: Optional[list] = None,
+        encoder_dims: list | None = None,
+        decoder_dims: list | None = None,
         dropout_rate: float = 0.2,
         norm_type: str = "bn",
         model_name: str = "PureAE",
@@ -345,7 +345,7 @@ class PureAEModel(BaseModel):
     def decode(self, z: torch.Tensor, **kwargs) -> torch.Tensor:
         return self.decoder_net(z)
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         z = self.encoder_net(x)
         x_hat = self.decoder_net(z)
         return {
@@ -353,8 +353,8 @@ class PureAEModel(BaseModel):
             "latent": z,
         }
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
-                     **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
+                     **kwargs) -> dict[str, torch.Tensor]:
         recon = self.recon_loss_fn(outputs["reconstruction"], x)
         return {
             "total_loss": recon,
@@ -385,7 +385,7 @@ class PureAEModel(BaseModel):
         epochs: int = 1000,
         lr: float = 1e-3,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 50,
         verbose: int = 1,
         verbose_every: int = 1,
@@ -470,7 +470,7 @@ class PureAETransformerModel(BaseModel):
         nhead: int = 4,
         num_encoder_layers: int = 2,
         dim_feedforward: int = 256,
-        decoder_dims: Optional[list] = None,
+        decoder_dims: list | None = None,
         dropout_rate: float = 0.2,
         num_tokens: int = 8,
         model_name: str = "PureTransformerAE",
@@ -509,7 +509,7 @@ class PureAETransformerModel(BaseModel):
     def decode(self, z: torch.Tensor, **kwargs) -> torch.Tensor:
         return self.decoder_net(z)
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         z = self.encoder_net(x)
         x_hat = self.decoder_net(z)
         return {
@@ -517,8 +517,8 @@ class PureAETransformerModel(BaseModel):
             "latent": z,
         }
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
-                     **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
+                     **kwargs) -> dict[str, torch.Tensor]:
         recon = self.recon_loss_fn(outputs["reconstruction"], x)
         return {
             "total_loss": recon,
@@ -549,7 +549,7 @@ class PureAETransformerModel(BaseModel):
         epochs: int = 1000,
         lr: float = 1e-3,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 50,
         verbose: int = 1,
         verbose_every: int = 1,
@@ -630,8 +630,8 @@ class PureAEContrastiveModel(BaseModel):
         self,
         input_dim: int,
         latent_dim: int = 10,
-        encoder_dims: Optional[list] = None,
-        decoder_dims: Optional[list] = None,
+        encoder_dims: list | None = None,
+        decoder_dims: list | None = None,
         dropout_rate: float = 0.2,
         norm_type: str = "bn",
         moco_weight: float = 1.0,
@@ -708,7 +708,7 @@ class PureAEContrastiveModel(BaseModel):
         for p_q, p_k in zip(self.encoder_net.parameters(), self.momentum_encoder.parameters()):
             p_k.data = p_k.data * m + p_q.data * (1.0 - m)
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         z = self.encoder_net(x)
         x_hat = self.decoder_net(z)
         result = {
@@ -727,8 +727,8 @@ class PureAEContrastiveModel(BaseModel):
 
         return result
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
-                     **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
+                     **kwargs) -> dict[str, torch.Tensor]:
         recon = self.recon_loss_fn(outputs["reconstruction"], x)
         loss_dict = {"recon_loss": recon}
         total = recon
@@ -767,7 +767,7 @@ class PureAEContrastiveModel(BaseModel):
         epochs: int = 1000,
         lr: float = 1e-3,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 50,
         verbose: int = 1,
         verbose_every: int = 1,

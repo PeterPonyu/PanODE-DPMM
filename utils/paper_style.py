@@ -14,9 +14,8 @@ Usage:
     colors = [MODEL_COLORS[m] for m in order]
 """
 
+
 import matplotlib as mpl
-import matplotlib.pyplot as plt
-from typing import List, Optional, Dict
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # rcParams — Publication quality, large fonts
@@ -77,7 +76,7 @@ MODEL_ORDER_DPMM = [
 MODEL_ORDER_ALL = MODEL_ORDER_DPMM
 
 
-def get_model_order(series: str = "all") -> List[str]:
+def get_model_order(series: str = "all") -> list[str]:
     """Return canonical model ordering for the given series.
 
     Args:
@@ -96,7 +95,7 @@ def get_model_order(series: str = "all") -> List[str]:
 # Blue tones for Pure-AE family (cool, baseline)
 # Orange/red tones for DPMM family (warm, method)
 
-MODEL_COLORS: Dict[str, str] = {
+MODEL_COLORS: dict[str, str] = {
     # ─── AE family (blue gradient) ───
     "Pure-AE":              "#6BAED6",   # light blue
     "Pure-Transformer-AE":  "#3182BD",   # medium blue
@@ -108,7 +107,7 @@ MODEL_COLORS: Dict[str, str] = {
 }
 
 # Short display names for tight layouts
-MODEL_SHORT_NAMES: Dict[str, str] = {
+MODEL_SHORT_NAMES: dict[str, str] = {
     "Pure-AE":              "P-AE",
     "Pure-Transformer-AE":  "P-Tfm-AE",
     "Pure-Contrastive-AE":  "P-Ctr-AE",

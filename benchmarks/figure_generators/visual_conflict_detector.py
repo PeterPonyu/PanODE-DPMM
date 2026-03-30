@@ -60,15 +60,12 @@ figure generator.  It replaces and extends ``check_text_overlaps`` from
 from __future__ import annotations
 
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.text import Text
-from matplotlib.patches import Patch, FancyBboxPatch
-from matplotlib.collections import PathCollection, PolyCollection, LineCollection
-from matplotlib.lines import Line2D
+from matplotlib.collections import LineCollection, PathCollection, PolyCollection
 from matplotlib.image import AxesImage
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
+from matplotlib.text import Text
 from matplotlib.transforms import Bbox
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Internal helpers
@@ -1577,7 +1574,7 @@ def summarize_issues(all_issues: dict[str, list[dict]]) -> None:
             problem_figs.append(name)
 
     print(f"\n{'═' * 60}")
-    print(f"CONFLICT AUDIT SUMMARY")
+    print("CONFLICT AUDIT SUMMARY")
     print(f"{'═' * 60}")
     print(f"  Figures checked: {len(all_issues)}")
     print(f"  Total warnings:  {total_warn}")
@@ -1585,7 +1582,7 @@ def summarize_issues(all_issues: dict[str, list[dict]]) -> None:
     if problem_figs:
         print(f"  Figures with warnings: {', '.join(problem_figs)}")
     else:
-        print(f"  ✓ All figures clean — no warnings detected")
+        print("  ✓ All figures clean — no warnings detected")
     print(f"{'═' * 60}\n")
 
 

@@ -1,16 +1,15 @@
-import os
-import sys
-import time
-import torch
-import pandas as pd
-from pathlib import Path
 import argparse
+import time
 
-from benchmarks.config import BASE_CONFIG, ensure_dirs, set_global_seed, CACHE_DIR, result_subdir
-from benchmarks.dataset_registry import DATASET_REGISTRY
+import pandas as pd
+import torch
+
+from benchmarks.config import BASE_CONFIG, CACHE_DIR, ensure_dirs, result_subdir, set_global_seed
 from benchmarks.data_utils import load_or_preprocess_adata
-from utils.data import DataSplitter
+from benchmarks.dataset_registry import DATASET_REGISTRY
 from benchmarks.train_utils import train_and_evaluate
+from utils.data import DataSplitter
+
 
 def standardize_labels(adata, label_key):
     if label_key in adata.obs.columns:

@@ -18,11 +18,11 @@ directories are:
 
 import os
 import random
-import torch
-import numpy as np
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 
+import numpy as np
+import torch
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASETS_ROOT = Path(

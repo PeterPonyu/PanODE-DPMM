@@ -1,9 +1,9 @@
+import warnings
+
 import numpy as np
 import pandas as pd  # type: ignore
 from sklearn.decomposition import PCA  # type: ignore
 from sklearn.neighbors import NearestNeighbors  # type: ignore
-import warnings
-from typing import Dict
 
 
 class ExtendedLatentSpaceEvaluator:
@@ -246,7 +246,7 @@ class ExtendedLatentSpaceEvaluator:
         latent_space: np.ndarray,
         n_neighbors: int = 15,
         max_samples: int = 2000,
-        random_state: int = 42) -> Dict:
+        random_state: int = 42) -> dict:
         """
         Comprehensive evaluation of extended latent space quality metrics.
 
@@ -270,7 +270,7 @@ class ExtendedLatentSpaceEvaluator:
         # Subsample for tractability
         z = self._subsample(latent_space, max_samples, random_state)
 
-        results: Dict = {}
+        results: dict = {}
 
         # 1. Two-hop connectivity
         self._log("Computing two-hop connectivity...")
@@ -314,10 +314,10 @@ class ExtendedLatentSpaceEvaluator:
 
     # ==================== Interpretation ====================
 
-    def _generate_interpretation(self, results: Dict) -> Dict:
+    def _generate_interpretation(self, results: dict) -> dict:
         """Generate a qualitative interpretation of the results."""
 
-        interpretation: Dict = {
+        interpretation: dict = {
             'quality_level': '',
             'strengths': [],
             'weaknesses': [],
@@ -396,7 +396,7 @@ class ExtendedLatentSpaceEvaluator:
 
     # ==================== Printing ====================
 
-    def _print_comprehensive_results(self, results: Dict):
+    def _print_comprehensive_results(self, results: dict):
         """Print human-readable summary of the evaluation."""
 
         print("\n" + "=" * 70)
@@ -440,7 +440,7 @@ class ExtendedLatentSpaceEvaluator:
 
     def compare_methods(
         self,
-        method_results_dict: Dict[str, np.ndarray],
+        method_results_dict: dict[str, np.ndarray],
         n_neighbors: int = 15,
         max_samples: int = 2000) -> pd.DataFrame:
         """
@@ -514,7 +514,7 @@ def evaluate_extended_latent_space(
     n_neighbors: int = 15,
     max_samples: int = 2000,
     random_state: int = 42,
-    verbose: bool = True) -> Dict:
+    verbose: bool = True) -> dict:
     """
     Convenience function to evaluate extended latent space quality.
 
@@ -542,7 +542,7 @@ def evaluate_extended_latent_space(
 
 
 def compare_extended_latent_methods(
-    method_results_dict: Dict[str, np.ndarray],
+    method_results_dict: dict[str, np.ndarray],
     n_neighbors: int = 15,
     max_samples: int = 2000,
     verbose: bool = True) -> pd.DataFrame:

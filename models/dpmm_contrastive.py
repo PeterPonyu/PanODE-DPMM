@@ -11,13 +11,14 @@ Single-phase training:
 
 """
 import math
+from typing import Literal
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, Any, Literal, Tuple
 from sklearn.mixture import BayesianGaussianMixture
-from scipy.sparse import issparse
+
 try:
     from .base_model import BaseModel
 except ImportError:
@@ -43,7 +44,7 @@ def _act(name: str) -> nn.Module:
 
 class _Layer1D(nn.Module):
     """Normalization + Activation + Dropout layer"""
-    def __init__(self, dim: int, norm: Optional[str] = None, act: Optional[str] = None, drop: float = 0.0):
+    def __init__(self, dim: int, norm: str | None = None, act: str | None = None, drop: float = 0.0):
         super().__init__()
         layers = []
         if norm == "bn":
@@ -66,9 +67,9 @@ class MLP(nn.Module):
         self,
         features: list,
         hid_act: str = "mish",
-        out_act: Optional[str] = None,
-        norm: Optional[str] = None,
-        hid_norm: Optional[str] = None,
+        out_act: str | None = None,
+        norm: str | None = None,
+        hid_norm: str | None = None,
         drop: float = 0.0,
         hid_drop: float = 0.0):
         super().__init__()
@@ -101,7 +102,7 @@ class DataAugmentation(nn.Module):
         noise_prob: float = 0.2,
         noise_std: float = 0.1,
         mask_prob: float = 0.1,
-        scale_range: Tuple[float, float] = (0.8, 1.2),
+        scale_range: tuple[float, float] = (0.8, 1.2),
         feature_dropout: float = 0.2,  # From scSimGCL
         edge_dropout: float = 0.2,     # From scSimGCL
     ):
@@ -249,7 +250,7 @@ class MomentumContrast(nn.Module):
         ptr = (ptr + batch_size) % self.queue_size
         self.queue_ptr[0] = ptr
 
-    def forward(self, z_query: torch.Tensor, z_key: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, z_query: torch.Tensor, z_key: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Compute contrastive logits and labels
 
@@ -317,7 +318,7 @@ class MomentumContrast(nn.Module):
 
         return (l1.mean() + l2.mean()) / 2
 
-    def prototype_contrastive_loss(self, z: torch.Tensor, cluster_assignments: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def prototype_contrastive_loss(self, z: torch.Tensor, cluster_assignments: torch.Tensor | None = None) -> torch.Tensor:
         """scGPCL-style prototype contrastive loss"""
         if not self.use_prototype:
             return torch.tensor(0.0, device=z.device)
@@ -370,7 +371,7 @@ class DPMMContrastiveAutoEncoder(nn.Module):
         norm: str,
         drop: float,
         use_bottleneck: bool = False,
-        bottleneck_dim: Optional[int] = None,
+        bottleneck_dim: int | None = None,
         use_vae: bool = False,
         var_eps: float = 1e-4,
         # Contrastive learning params
@@ -501,8 +502,8 @@ class DPMMODEContrastiveModel(BaseModel):
         self,
         input_dim: int,
         latent_dim: int = 32,
-        encoder_dims: Optional[list] = None,
-        decoder_dims: Optional[list] = None,
+        encoder_dims: list | None = None,
+        decoder_dims: list | None = None,
         norm_type: str = "bn",
         dropout_rate: float = 0.1,
         # DPMM params
@@ -515,7 +516,7 @@ class DPMMODEContrastiveModel(BaseModel):
         mmd_bandwidth: float = 1.0,
         model_name: str = "DPMMODEContrastive",
         use_bottleneck: bool = False,
-        bottleneck_dim: Optional[int] = None,
+        bottleneck_dim: int | None = None,
         use_vae: bool = False,
         kl_weight: float = 0.1,
         # Contrastive learning parameters
@@ -620,7 +621,7 @@ class DPMMODEContrastiveModel(BaseModel):
         """Decode from latent space"""
         return self.ae.decoder(z)
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass (Phase 1: AE/VAE + MoCo training without ODE)"""
         if self.ae.use_bottleneck:
             x_hat, z, x_le_hat, z_ld, mu, var, moco_logits, moco_labels, z_aug_q, z_aug_k = self.ae(x)
@@ -641,7 +642,7 @@ class DPMMODEContrastiveModel(BaseModel):
             result["z_aug_k"] = z_aug_k
         return result
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
         """Compute loss: reconstruction + DPMM + contrastive (Phase 1)"""
         loss_dict = {}
 
@@ -894,7 +895,7 @@ class DPMMODEContrastiveModel(BaseModel):
         epochs: int = 500,
         lr: float = 1e-4,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 20,
         verbose: int = 1,
         verbose_every: int = 1,

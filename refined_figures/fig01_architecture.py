@@ -14,19 +14,20 @@ Usage:
 
 import argparse
 import sys
+
 import matplotlib
+
 matplotlib.use("Agg")
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Patch
-from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style, add_panel_label, save_with_vcd,
-    bind_figure_region, COLORS)
 from refined_figures.dpmm_shared import require_dpmm
+from src.visualization import apply_style, bind_figure_region, save_with_vcd
 
 apply_style()
 matplotlib.rcParams.update({

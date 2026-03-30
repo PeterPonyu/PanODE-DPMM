@@ -1,6 +1,8 @@
 import math
+
 import torch
 from torch.distributions.utils import _standard_normal
+
 
 class HypersphericalUniform(torch.distributions.Distribution):
     """ source: https://github.com/nicola-decao/s-vae-pytorch/blob/master/hyperspherical_vae/distributions/von_mises_fisher.py """
@@ -14,7 +16,7 @@ class HypersphericalUniform(torch.distributions.Distribution):
         return self._dim
 
     def __init__(self, dim, device='cpu', validate_args=None):
-        super(HypersphericalUniform, self).__init__(torch.Size([dim]), validate_args=False)
+        super().__init__(torch.Size([dim]), validate_args=False)
         self._dim = dim
         self._device = device
 

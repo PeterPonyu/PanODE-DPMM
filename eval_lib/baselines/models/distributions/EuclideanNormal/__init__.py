@@ -4,7 +4,7 @@ Standard Gaussian distribution in Euclidean space
 """
 
 from .distribution import Distribution
-from .layers import VanillaEncoderLayer, VanillaDecoderLayer
+from .layers import VanillaDecoderLayer, VanillaEncoderLayer
 from .prior import get_prior
 
 __all__ = [

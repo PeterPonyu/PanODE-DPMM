@@ -16,12 +16,13 @@ Usage:
   python benchmarks/benchmark_base.py --models Pure-AE DPMM-Base
 """
 
-import sys
-import os
 import argparse
-import json
 import gc
+import json
+import os
+import sys
 from pathlib import Path
+
 sys.stdout.reconfigure(line_buffering=True)
 
 # Ensure project root is on path
@@ -29,30 +30,31 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-import time
 import warnings
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 import torch
-from datetime import datetime
 
 warnings.filterwarnings('ignore')
 
 # ── Imports from extracted modules ────────────────────────────────────────────
-from benchmarks.config import (
-    BASE_CONFIG, DEFAULT_OUTPUT_DIR, ensure_dirs, set_global_seed)
-from benchmarks.dataset_registry import DATASET_REGISTRY
-from benchmarks.model_registry import (
-    MODELS, SERIES_GROUPS, ABLATION_STEPS, is_cuda_oom, paper_group)
-from benchmarks.metrics_utils import convergence_diagnostics
+from benchmarks.config import BASE_CONFIG, DEFAULT_OUTPUT_DIR, ensure_dirs, set_global_seed
 from benchmarks.data_utils import load_or_preprocess_adata
+from benchmarks.model_registry import (
+    ABLATION_STEPS,
+    MODELS,
+    paper_group,
+)
 from benchmarks.run_manifest import append_run
 from benchmarks.train_utils import (
-    train_and_evaluate, print_convergence,
-    select_models, apply_model_overrides)
-
+    apply_model_overrides,
+    select_models,
+    train_and_evaluate,
+)
 from utils.data import DataSplitter
-from utils.viz import plot_umap_grid, plot_all_metrics_barplot
+from utils.viz import plot_all_metrics_barplot, plot_umap_grid
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Module-level configuration (overridden by CLI via apply_cli_overrides)

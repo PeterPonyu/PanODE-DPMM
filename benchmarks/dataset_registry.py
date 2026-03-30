@@ -7,7 +7,6 @@ entry scripts do not duplicate the same large registry block.
 import os
 from pathlib import Path
 
-
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 DATASETS_ROOT = Path(
     os.environ.get("PANODE_DATASETS_ROOT", str(_REPO_ROOT / "data"))

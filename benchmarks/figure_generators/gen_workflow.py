@@ -15,12 +15,12 @@ Style is consistent with the rest of the subplot pipeline (``subplot_style``).
 
 from __future__ import annotations
 
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from pathlib import Path
 
-from .subplot_style import (
-    SUBPLOT_DPI, CONTAINER_CSS_PX, DPR, save_subplot)
+import matplotlib.patches as mpatches
+import matplotlib.pyplot as plt
+
+from .subplot_style import CONTAINER_CSS_PX, DPR, SUBPLOT_DPI, save_subplot
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Visual constants

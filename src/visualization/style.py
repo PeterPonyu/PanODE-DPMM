@@ -14,13 +14,12 @@ Ported from CLOP-DiT geometry system, adapted for PanODE-DPMM.
 
 from __future__ import annotations
 
-from dataclasses import asdict, is_dataclass
 import json
 import logging
 import os
 from collections import Counter
+from dataclasses import asdict, is_dataclass
 from pathlib import Path
-from typing import Optional
 
 import matplotlib
 import matplotlib.font_manager as fm
@@ -34,7 +33,8 @@ from .panel_geometry import (
     DEFAULT_EXPORT_PAD_INCHES,
     DEFAULT_LAYOUT_RECT,
     apply_layout_rect,
-    get_export_pad_inches)
+    get_export_pad_inches,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +172,7 @@ def apply_style() -> None:
     matplotlib.rcParams.update(VIS_STYLE)
 
 
-def register_project_fonts(font_dir: Optional[Path | str] = None) -> list[str]:
+def register_project_fonts(font_dir: Path | str | None = None) -> list[str]:
     """Register local font files so Arial can resolve on clean systems."""
     candidates = []
     if font_dir is not None:
@@ -202,9 +202,9 @@ def style_axes(
     ax: plt.Axes,
     kind: str = "default",
     *,
-    title: Optional[str] = None,
-    xlabel: Optional[str] = None,
-    ylabel: Optional[str] = None,
+    title: str | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
     hide_top_right: bool = True) -> plt.Axes:
     """Apply consistent typography and spine styling to *ax*.
 
@@ -288,7 +288,7 @@ def add_panel_label(
 
 def add_panel_labels_to_axes(
     axes: list[plt.Axes],
-    labels: Optional[list[str]] = None,
+    labels: list[str] | None = None,
     **kwargs) -> None:
     """Add sequential panel labels to a list of axes."""
     if labels is None:
@@ -301,7 +301,7 @@ def add_colorbar_safe(
     mappable,
     *,
     ax: plt.Axes,
-    label: Optional[str] = None,
+    label: str | None = None,
     shrink: float = 0.6,
     pad: float = 0.08,
     orientation: str = "vertical",

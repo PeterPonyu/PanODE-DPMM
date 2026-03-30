@@ -23,14 +23,15 @@ Usage:
     draw_significance_brackets(ax, model_order, metric_col, series)
 """
 
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
-from benchmarks.figure_generators.subplot_style import (
-    LINE_WIDTH_BRACKET, FONTSIZE_ANNOTATION)
 from benchmarks.figure_generators.data_loaders import (
-    load_pairwise_wilcoxon, load_pairwise_wilcoxon_external)
+    load_pairwise_wilcoxon,
+    load_pairwise_wilcoxon_external,
+)
+from benchmarks.figure_generators.subplot_style import FONTSIZE_ANNOTATION, LINE_WIDTH_BRACKET
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Model pairing logic

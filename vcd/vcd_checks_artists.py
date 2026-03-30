@@ -5,7 +5,12 @@ import numpy as np
 from matplotlib.collections import PathCollection
 from matplotlib.transforms import Bbox
 
-from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _fig_bbox, _overlap_area, _sides_outside, _artist_label
+from .vcd_core import (
+    _ArtistInfo,
+    _overlap_area,
+    _safe_bbox,
+    _sides_outside,
+)
 
 
 def _check_truncation(infos: list[_ArtistInfo], fig_bb: Bbox, tol_px: float = 3.0, fig=None, renderer=None, tight_bb=None):

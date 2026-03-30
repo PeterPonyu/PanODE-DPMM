@@ -70,7 +70,6 @@ from __future__ import annotations
 
 import argparse
 import gc
-import os
 import sys
 import time
 import traceback
@@ -89,29 +88,29 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 # eval_lib -- portable evaluation toolkit
+# Project infrastructure (data loading, splitting, seeding)
+from benchmarks.config import ensure_dirs, set_global_seed
+from benchmarks.data_utils import load_or_preprocess_adata
+from benchmarks.model_registry import is_cuda_oom
 from eval_lib.baselines.registry import (
     EXTERNAL_MODELS,
     MODEL_GROUPS,
     list_external_models,
-    list_model_groups)
+    list_model_groups,
+)
 from eval_lib.metrics.battery import (
     METRIC_COLUMNS,
-    compute_metrics,
     compute_latent_diagnostics,
-    convergence_diagnostics)
-
-# Project infrastructure (data loading, splitting, seeding)
-from benchmarks.config import set_global_seed, ensure_dirs
-from benchmarks.data_utils import load_or_preprocess_adata
-from benchmarks.model_registry import is_cuda_oom
-from utils.data import DataSplitter
+    compute_metrics,
+    convergence_diagnostics,
+)
 
 # Dataset catalogue (16 scRNA-seq datasets + full catalogue)
 from experiments.experiment_config import SCRNA_16_DATASETS, SCRNA_ALL_DATASETS
 
 # Label standardisation (shared with run_experiment.py)
 from experiments.run_experiment import standardize_labels
-
+from utils.data import DataSplitter
 
 # ==============================================================================
 # Defaults -- match internal experiments exactly for fair comparison
@@ -263,7 +262,7 @@ def train_external_model(
 
     except Exception as exc:
         if device.type == "cuda" and is_cuda_oom(exc):
-            print(f"  CUDA OOM -> retrying on CPU ...")
+            print("  CUDA OOM -> retrying on CPU ...")
             torch.cuda.empty_cache()
             gc.collect()
             return train_external_model(
@@ -370,7 +369,7 @@ def run_external_benchmark(
         print(f"{'='*70}")
 
         if not Path(ds_path).exists():
-            print(f"  WARNING: File not found -> skipping")
+            print("  WARNING: File not found -> skipping")
             continue
 
         # Load and preprocess (identical to run_experiment.py)

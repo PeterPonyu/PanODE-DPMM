@@ -16,16 +16,14 @@ Functions:
 
 import gc
 import time
+
 import numpy as np
 import torch
 
 from benchmarks.config import BASE_CONFIG, ensure_dirs
+from benchmarks.metrics_utils import compute_latent_diagnostics, compute_metrics
+from benchmarks.metrics_utils import convergence_diagnostics as _convergence_diagnostics
 from benchmarks.model_registry import is_cuda_oom
-from benchmarks.metrics_utils import (
-    compute_metrics,
-    compute_latent_diagnostics,
-    convergence_diagnostics as _convergence_diagnostics)
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Default model parameter factories (previously duplicated 3×)
@@ -251,7 +249,8 @@ def save_latents(latents, sdirs, tag, ds_keys=None, variants=None):
 
     *latents* is a dict mapping ``"ds_key::model_name"`` → np.ndarray.
     """
-    from benchmarks.model_registry import MODELS, paper_group as _pg
+    from benchmarks.model_registry import MODELS
+    from benchmarks.model_registry import paper_group as _pg
 
     for lat_key, lat_arr in latents.items():
         ds_key, model_key = lat_key.split("::", 1) if "::" in lat_key else ("", lat_key)

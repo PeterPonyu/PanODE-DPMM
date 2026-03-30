@@ -14,33 +14,40 @@ Usage:
 
 import argparse
 import sys
+
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style, style_axes, add_panel_label, save_with_vcd,
-    bind_figure_region, LayoutRegion)
-
-from benchmarks.figure_generators.subplot_style import (
-    apply_subplot_style, save_subplot, build_manifest,
-    FIGSIZE_UMAP, FIGSIZE_HEATMAP, FIGSIZE_ENRICHMENT,
-    SCATTER_SIZE_UMAP, LINE_WIDTH_SPINE,
-    FONTSIZE_TITLE, FONTSIZE_TICK, FONTSIZE_LABEL, FONTSIZE_LEGEND,
-    FONTSIZE_ANNOTATION, FONTSIZE_CAPTION)
 from benchmarks.figure_generators.common import (
-    compute_umap, MODEL_SHORT_NAMES,
+    BIO_RESULTS,
+    MODEL_SHORT_NAMES,
     PRIOR_MODELS_DPMM,
-    REPRESENTATIVE_DATASETS, BIO_RESULTS
+    REPRESENTATIVE_DATASETS,
+    compute_umap,
 )
-from benchmarks.figure_generators.data_loaders import (
-    load_crossdata_per_dataset, load_cross_latent)
+from benchmarks.figure_generators.data_loaders import load_cross_latent
+from benchmarks.figure_generators.subplot_style import (
+    FIGSIZE_ENRICHMENT,
+    FIGSIZE_HEATMAP,
+    FIGSIZE_UMAP,
+    FONTSIZE_ANNOTATION,
+    FONTSIZE_TICK,
+    FONTSIZE_TITLE,
+    LINE_WIDTH_SPINE,
+    SCATTER_SIZE_UMAP,
+    apply_subplot_style,
+    build_manifest,
+)
+from src.visualization import bind_figure_region, save_with_vcd, style_axes
 
 _COMP_PALETTE = [
     "#4E79A7", "#76B7B2", "#59A14F", "#EDC948", "#B07AA1",

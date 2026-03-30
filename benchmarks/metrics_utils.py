@@ -23,14 +23,15 @@ _PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from eval_lib.metrics.battery import (          # noqa: F401 — re-export
-    compute_metrics,
-    compute_latent_diagnostics,
-    convergence_diagnostics,
-    DataSplitter,
+from eval_lib.metrics.battery import (  # noqa: F401 — re-export
     METRIC_COLUMNS,
     METRIC_GROUPS,
-    PUBLICATION_METRIC_GROUPS)
+    PUBLICATION_METRIC_GROUPS,
+    DataSplitter,
+    compute_latent_diagnostics,
+    compute_metrics,
+    convergence_diagnostics,
+)
 
 # Backward-compat alias — old code references the underscore-prefixed name
 _convergence_diagnostics = convergence_diagnostics

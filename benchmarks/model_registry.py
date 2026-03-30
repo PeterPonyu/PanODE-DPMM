@@ -17,13 +17,12 @@ is_cuda_oom       : fn    — detect CUDA out-of-memory exceptions
 """
 
 from models.dpmm_base import DPMMODEModel
-from models.dpmm_flow_matching import DPMMFlowMatchingModel
 from models.dpmm_contrastive import DPMMODEContrastiveModel
+from models.dpmm_flow_matching import DPMMFlowMatchingModel
 from models.dpmm_transformer import DPMMODETransformerModel
 
 # Independent Pure-AE baselines (deterministic, no prior)
-from models.pure_ae import PureAEModel, PureAETransformerModel, PureAEContrastiveModel
-
+from models.pure_ae import PureAEContrastiveModel, PureAEModel, PureAETransformerModel
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 7 model configurations — tuned parameters from sensitivity analysis

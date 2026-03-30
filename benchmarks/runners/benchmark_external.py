@@ -42,15 +42,14 @@ Usage:
   python benchmarks/benchmark_external.py --compare
 """
 
-import sys
-import os
 import argparse
-import json
 import gc
+import json
+import os
+import sys
 import time
-import warnings
 import traceback
-from pathlib import Path
+import warnings
 from datetime import datetime
 
 sys.stdout.reconfigure(line_buffering=True)
@@ -66,14 +65,14 @@ import torch
 warnings.filterwarnings("ignore")
 
 from benchmarks.config import BASE_CONFIG, DEFAULT_OUTPUT_DIR, ensure_dirs, set_global_seed
-from benchmarks.dataset_registry import DATASET_REGISTRY
 from benchmarks.data_utils import load_or_preprocess_adata
+from benchmarks.dataset_registry import DATASET_REGISTRY
 from benchmarks.metrics_utils import (
-    compute_metrics,
     compute_latent_diagnostics,
-    convergence_diagnostics)
+    compute_metrics,
+    convergence_diagnostics,
+)
 from benchmarks.model_registry import is_cuda_oom
-
 from utils.data import DataSplitter
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
@@ -417,7 +416,7 @@ def print_comparison(external_df, internal_best_df):
                   f"{row.get('ASW', 0):>7.4f}{err_mark}")
 
     # Aggregate ranking
-    print(f"\n── Aggregate: Mean Metrics Across Datasets ──")
+    print("\n── Aggregate: Mean Metrics Across Datasets ──")
     avail = [c for c in metric_cols if c in external_df.columns]
     ext_mean = external_df.groupby("Model")[avail].mean()
 
@@ -544,7 +543,7 @@ def main():
 
     # Cross-dataset ranking
     if len(ds_keys) > 1 and "Dataset" in combined.columns:
-        print(f"\n── Avg Rank Across Datasets ──")
+        print("\n── Avg Rank Across Datasets ──")
         rank_parts = []
         for ds_key in ds_keys:
             sdf = combined[combined["Dataset"] == ds_key].copy()

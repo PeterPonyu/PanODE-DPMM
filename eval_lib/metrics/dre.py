@@ -1,9 +1,9 @@
+import warnings
+
 import numpy as np
 import pandas as pd  # type: ignore
-from sklearn.metrics import pairwise_distances  # type: ignore
 from scipy.stats import spearmanr  # type: ignore
-import warnings
-from typing import Dict, Tuple
+from sklearn.metrics import pairwise_distances  # type: ignore
 
 
 class DimensionalityReductionEvaluator:
@@ -186,7 +186,7 @@ class DimensionalityReductionEvaluator:
             warnings.warn(f"Error computing Q_NX series: {e}")
             return np.array([0.0])
 
-    def get_q_local_global(self, qnx_values: np.ndarray) -> Tuple[float, float, int]:
+    def get_q_local_global(self, qnx_values: np.ndarray) -> tuple[float, float, int]:
         """
         Compute scalar local and global quality metrics.
 
@@ -229,7 +229,7 @@ class DimensionalityReductionEvaluator:
 
     def comprehensive_evaluation(
         self, X_high: np.ndarray, X_low: np.ndarray, k: int = 10
-    ) -> Dict[str, float]:
+    ) -> dict[str, float]:
         """
         Comprehensive evaluation of dimensionality reduction quality.
 
@@ -245,7 +245,7 @@ class DimensionalityReductionEvaluator:
 
         self._log(f"Starting dimensionality reduction evaluation (n_samples={X_high.shape[0]}, k={k})...")
 
-        results: Dict[str, float] = {}
+        results: dict[str, float] = {}
 
         # 1. Distance correlation
         self._log("Computing distance correlation...")
@@ -284,7 +284,7 @@ class DimensionalityReductionEvaluator:
 
         return results
 
-    def _print_results(self, results: Dict[str, float]):
+    def _print_results(self, results: dict[str, float]):
         """Print a formatted summary of evaluation results."""
 
         print("\n" + "=" * 60)
@@ -322,7 +322,7 @@ class DimensionalityReductionEvaluator:
 
         print("=" * 60)
 
-    def compare_methods(self, method_results_dict: Dict[str, Tuple[np.ndarray, np.ndarray]], k: int = 10) -> pd.DataFrame:
+    def compare_methods(self, method_results_dict: dict[str, tuple[np.ndarray, np.ndarray]], k: int = 10) -> pd.DataFrame:
         """
         Compare multiple dimensionality reduction methods.
 
@@ -392,7 +392,7 @@ class DimensionalityReductionEvaluator:
 
 def evaluate_dimensionality_reduction(
     X_high: np.ndarray, X_low: np.ndarray, k: int = 10, verbose: bool = True
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Convenience function to evaluate the quality of a dimensionality reduction.
 
@@ -410,7 +410,7 @@ def evaluate_dimensionality_reduction(
 
 
 def compare_dimensionality_reduction_methods(
-    method_results_dict: Dict[str, Tuple[np.ndarray, np.ndarray]],
+    method_results_dict: dict[str, tuple[np.ndarray, np.ndarray]],
     k: int = 10,
     verbose: bool = True) -> pd.DataFrame:
     """

@@ -7,8 +7,6 @@ every generated panel must satisfy before it is considered publication-ready.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
-
 
 # ---------------------------------------------------------------------------
 # Policy dataclass
@@ -45,7 +43,7 @@ class FigurePolicy:
     rotation_threshold: int = 15  # start rotating labels above this count
 
     # -- Legend rules --------------------------------------------------------
-    preferred_locations: Dict[str, List[str]] = field(
+    preferred_locations: dict[str, list[str]] = field(
         default_factory=lambda: {
             "line": ["best", "upper left"],
             "bar": ["upper right", "upper left"],
@@ -59,8 +57,8 @@ class FigurePolicy:
 
     # -- Truncation / sizing rules ------------------------------------------
     border_tolerance_px: float = 3.0
-    max_figsize: Tuple[float, float] = (14.0, 10.0)
-    figsize_increment: Tuple[float, float] = (0.5, 0.5)
+    max_figsize: tuple[float, float] = (14.0, 10.0)
+    figsize_increment: tuple[float, float] = (0.5, 0.5)
 
     # -- Annotation rules ---------------------------------------------------
     max_annotations_per_axes: int = 5
@@ -101,12 +99,12 @@ DEFAULT_POLICY: FigurePolicy = FigurePolicy()
 # Helper utilities
 # ---------------------------------------------------------------------------
 
-def _resolve(policy: Optional[FigurePolicy]) -> FigurePolicy:
+def _resolve(policy: FigurePolicy | None) -> FigurePolicy:
     """Return *policy* if given, else the module-level default."""
     return policy if policy is not None else DEFAULT_POLICY
 
 
-def effective_pt(fontsize: float, policy: Optional[FigurePolicy] = None) -> float:
+def effective_pt(fontsize: float, policy: FigurePolicy | None = None) -> float:
     """Return the effective point size after composed-figure scaling.
 
     When a panel is composed into a multi-panel figure the on-screen size
@@ -120,7 +118,7 @@ def effective_pt(fontsize: float, policy: Optional[FigurePolicy] = None) -> floa
 def is_font_adequate(
     fontsize: float,
     is_dense: bool = False,
-    policy: Optional[FigurePolicy] = None,
+    policy: FigurePolicy | None = None,
 ) -> bool:
     """Check whether *fontsize* meets the minimum after composition scaling.
 
@@ -148,7 +146,7 @@ def is_font_adequate(
 def suggest_max_ticks(
     plot_kind: str,
     n_items: int,
-    policy: Optional[FigurePolicy] = None,
+    policy: FigurePolicy | None = None,
 ) -> int:
     """Return the recommended maximum number of visible tick labels.
 
@@ -182,7 +180,7 @@ def suggest_max_ticks(
 def suggest_legend_loc(
     plot_kind: str,
     n_entries: int,
-    policy: Optional[FigurePolicy] = None,
+    policy: FigurePolicy | None = None,
 ) -> str:
     """Return the recommended ``loc`` string for ``ax.legend()``.
 
@@ -217,8 +215,8 @@ def suggest_legend_loc(
 
 def should_rotate_labels(
     n_labels: int,
-    policy: Optional[FigurePolicy] = None,
-) -> Tuple[bool, int]:
+    policy: FigurePolicy | None = None,
+) -> tuple[bool, int]:
     """Decide whether axis tick labels should be rotated.
 
     Parameters

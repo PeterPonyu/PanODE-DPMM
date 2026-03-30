@@ -41,15 +41,15 @@ Usage
   python benchmarks/benchmark_joint.py --epochs 200 --max-cells 1500
 """
 
-import sys
-import os
-import json
-import gc
-import warnings
 import argparse
-from pathlib import Path
-from datetime import datetime
+import gc
+import json
+import os
+import sys
+import warnings
 from collections import Counter
+from datetime import datetime
+from pathlib import Path
 
 sys.stdout.reconfigure(line_buffering=True)
 
@@ -57,20 +57,18 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+import anndata
 import numpy as np
 import pandas as pd
-import torch
 import scanpy as sc
-import anndata
+import torch
 
 warnings.filterwarnings("ignore")
 
-from benchmarks.config import (
-    BASE_CONFIG, set_global_seed, DEFAULT_OUTPUT_DIR, CACHE_DIR, result_subdir,
-    ensure_dirs)
+from benchmarks.config import BASE_CONFIG, CACHE_DIR, result_subdir, set_global_seed
+from benchmarks.data_utils import load_or_preprocess_adata
 from benchmarks.dataset_registry import DATASET_REGISTRY
 from benchmarks.model_registry import MODELS
-from benchmarks.data_utils import load_or_preprocess_adata
 from benchmarks.train_utils import train_and_evaluate
 
 # ──────────────────────────────────────────────────────────────────────────────

@@ -10,32 +10,19 @@ At 300 DPI the full-width figure is 6.7 inches.
 """
 
 import logging
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import matplotlib as mpl
+import matplotlib.font_manager as fm
 
 # Ensure src.visualization is importable
 _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from src.visualization import (
-    apply_style as _apply_geometry_style,
-    style_axes,
-    add_panel_label,
-    save_with_vcd,
-    bind_figure_region,
-    LayoutRegion,
-    VIS_STYLE,
-    MODEL_COLORS as _MODEL_COLORS,
-    COLORS as _COLORS,
-    FONT_TITLE as _FONT_TITLE,
-    FONT_LABEL as _FONT_LABEL,
-    FONT_TICK as _FONT_TICK,
-    FONT_LEGEND as _FONT_LEGEND,
-    FONT_ANNOTATION as _FONT_ANNOTATION)
+from src.visualization import apply_style as _apply_geometry_style
+from src.visualization import save_with_vcd
 
 _log = logging.getLogger(__name__)
 

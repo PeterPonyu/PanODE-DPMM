@@ -12,14 +12,12 @@ Design Philosophy:
 - Single Responsibility: Each class has one clear purpose
 - Easy Testing: Modules can be tested independently
 """
-import math
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, List, Optional, Tuple, Any
 from torch.utils.data import Dataset
-
 
 # =============================================================================
 # Weight Initialization
@@ -107,7 +105,7 @@ class InformationBottleneck(nn.Module):
         self.compress = MLP([latent_dim, hidden_dim, bottleneck_dim], dropout=dropout)
         self.expand = MLP([bottleneck_dim, hidden_dim, latent_dim], dropout=dropout)
 
-    def forward(self, z: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, z: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         z_bottleneck = self.compress(z)
         z_reconstructed = self.expand(z_bottleneck)
         return z_bottleneck, z_reconstructed
@@ -171,7 +169,7 @@ class SubgraphDataset(Dataset):
         self.num_nodes = node_features.shape[0]
         self.neighbors = self._compute_neighbors()
 
-    def _compute_neighbors(self) -> List[List[int]]:
+    def _compute_neighbors(self) -> list[list[int]]:
         """Precompute neighbor lists for each node."""
         neighbors = [[] for _ in range(self.num_nodes)]
         for i, j in self.edge_index.T:
@@ -183,7 +181,7 @@ class SubgraphDataset(Dataset):
     def __len__(self) -> int:
         return max(1, self.num_nodes // self.subgraph_size * 2)
 
-    def __getitem__(self, idx: int) -> Dict[str, torch.Tensor]:
+    def __getitem__(self, idx: int) -> dict[str, torch.Tensor]:
         """Generate a subgraph sample."""
         selected_nodes = self._random_node_sampling()
         return self._create_data_object(selected_nodes)
@@ -193,7 +191,7 @@ class SubgraphDataset(Dataset):
         num_sample = min(self.subgraph_size, self.num_nodes)
         return np.random.choice(self.num_nodes, size=num_sample, replace=False)
 
-    def _create_data_object(self, selected_nodes: np.ndarray) -> Dict[str, torch.Tensor]:
+    def _create_data_object(self, selected_nodes: np.ndarray) -> dict[str, torch.Tensor]:
         """Create data dict from selected nodes."""
         node_map = {old_idx: new_idx for new_idx, old_idx in enumerate(selected_nodes)}
 
@@ -227,7 +225,7 @@ def precompute_knn_graph(
     x_full: np.ndarray,
     k: int = 10,
     metric: str = 'euclidean',
-    pca_dim: Optional[int] = None) -> Tuple[np.ndarray, np.ndarray]:
+    pca_dim: int | None = None) -> tuple[np.ndarray, np.ndarray]:
     """
     Precompute k-NN graph for entire dataset ONCE.
 
@@ -241,8 +239,8 @@ def precompute_knn_graph(
         edge_index: [2, n_edges] COO format
         edge_weight: [n_edges] edge weights
     """
-    from sklearn.neighbors import NearestNeighbors
     from sklearn.decomposition import PCA
+    from sklearn.neighbors import NearestNeighbors
 
     n_samples = x_full.shape[0]
     k_actual = min(k, n_samples - 1)

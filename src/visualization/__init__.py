@@ -3,6 +3,7 @@
 Replaces matplotlib subplots with explicit rectangle-based positioning.
 """
 
+from .direct_layout import LayoutRegion, bind_figure_region
 from .panel_geometry import (
     DEFAULT_EXPORT_PAD_INCHES,
     DEFAULT_LAYOUT_RECT,
@@ -10,11 +11,11 @@ from .panel_geometry import (
     get_export_pad_inches,
     mark_export_artists,
     normalize_layout_rect,
-    set_export_pad_inches)
-from .direct_layout import LayoutRegion, bind_figure_region
+    set_export_pad_inches,
+)
 from .style import (
-    COLORS,
     COLOR_THEMES,
+    COLORS,
     FONT_ANNOTATION,
     FONT_DENSE_YTICK,
     FONT_HEATMAP_CELL,
@@ -48,7 +49,8 @@ from .style import (
     set_dense_tick_labels,
     set_figure_suptitle,
     set_scientific_tickformat,
-    style_axes)
+    style_axes,
+)
 
 __all__ = [
     "LayoutRegion",

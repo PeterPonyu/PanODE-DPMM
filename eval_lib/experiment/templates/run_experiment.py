@@ -44,13 +44,8 @@ warnings.filterwarnings("ignore")
 
 # ── eval_lib imports (portable) ───────────────────────────────────────────────
 # All metric helpers live in eval_lib.metrics.battery — single source of truth.
-from eval_lib.metrics.battery import (
-    compute_metrics,
-    compute_latent_diagnostics,
-    convergence_diagnostics,
-    METRIC_COLUMNS)
 from eval_lib.experiment.config import ExperimentConfig
-
+from eval_lib.metrics.battery import METRIC_COLUMNS, compute_latent_diagnostics, compute_metrics
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # ██  PROJECT-SPECIFIC: Project root & config imports
@@ -120,7 +115,7 @@ def standardize_labels(adata, label_key: str):
             print(f"  Labels: using '{key}' ({adata.obs['cell_type'].nunique()} types)")
             return adata
 
-    print(f"  WARNING: No label column found — will generate KMeans pseudo-labels")
+    print("  WARNING: No label column found — will generate KMeans pseudo-labels")
     return adata
 
 
@@ -265,7 +260,7 @@ def train_single_model(
 
     except Exception as exc:
         if device.type == "cuda" and is_cuda_oom(exc):
-            print(f"  CUDA OOM → retrying on CPU ...")
+            print("  CUDA OOM → retrying on CPU ...")
             torch.cuda.empty_cache()
             gc.collect()
             return train_single_model(
@@ -337,7 +332,7 @@ def run_experiment(cfg: ExperimentConfig, device: torch.device = None):
         print(f"{'='*70}")
 
         if not Path(ds_path).exists():
-            print(f"  WARNING: File not found → skipping")
+            print("  WARNING: File not found → skipping")
             continue
 
         try:

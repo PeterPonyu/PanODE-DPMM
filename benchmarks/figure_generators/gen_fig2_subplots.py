@@ -14,37 +14,50 @@ Usage:
 
 import argparse
 import sys
+
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style, style_axes, add_panel_label, save_with_vcd,
-    bind_figure_region, LayoutRegion,
-    FONT_TITLE, FONT_TICK, FONT_LEGEND)
-from benchmarks.figure_generators.subplot_style import (
-    apply_subplot_style, save_subplot, build_manifest,
-    SUBPLOT_DPI,
-    FIGSIZE_BOXPLOT, FIGSIZE_UMAP,
-    SCATTER_SIZE_BOXPLOT, SCATTER_SIZE_UMAP,
-    LINE_WIDTH_MEDIAN, LINE_WIDTH_BOX,
-    FONTSIZE_TITLE, FONTSIZE_TICK, FONTSIZE_LEGEND)
 from benchmarks.figure_generators.common import (
-    get_model_order, get_color, compute_umap,
-    ALL_BOXPLOT_METRICS_CORE, ALL_BOXPLOT_METRICS_EXT,
-    get_core_metrics, get_ext_metrics,
-    MODEL_SHORT_NAMES, METRIC_DIRECTION, clip_extreme_outliers)
+    METRIC_DIRECTION,
+    MODEL_SHORT_NAMES,
+    clip_extreme_outliers,
+    compute_umap,
+    get_color,
+    get_core_metrics,
+    get_ext_metrics,
+    get_model_order,
+)
 from benchmarks.figure_generators.data_loaders import (
-    load_crossdata_per_dataset, load_cross_latent, load_joint_latent)
-from benchmarks.figure_generators.significance_brackets import (
-    draw_significance_brackets)
-
+    load_cross_latent,
+    load_crossdata_per_dataset,
+    load_joint_latent,
+)
+from benchmarks.figure_generators.significance_brackets import draw_significance_brackets
+from benchmarks.figure_generators.subplot_style import (
+    FIGSIZE_BOXPLOT,
+    FIGSIZE_UMAP,
+    FONTSIZE_LEGEND,
+    FONTSIZE_TICK,
+    FONTSIZE_TITLE,
+    LINE_WIDTH_BOX,
+    LINE_WIDTH_MEDIAN,
+    SCATTER_SIZE_BOXPLOT,
+    SCATTER_SIZE_UMAP,
+    SUBPLOT_DPI,
+    apply_subplot_style,
+    build_manifest,
+)
+from src.visualization import bind_figure_region, save_with_vcd, style_axes
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Data helpers

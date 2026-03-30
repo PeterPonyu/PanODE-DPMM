@@ -2,17 +2,19 @@
 scGCC: Graph contrastive learning with MoCo for single-cell data
 Dual mode: PyG Data loader or tensor loader with automatic kNN graph construction
 """
+import warnings
+from collections.abc import Callable
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import warnings
-from typing import Dict, Optional, Tuple, Callable
+
 from .base_model import BaseModel
 
 try:
-    from torch_geometric.nn import GATConv
     from torch_geometric.data import Batch, Data
+    from torch_geometric.nn import GATConv
 except Exception:
     GATConv = None
     Batch = None
@@ -48,7 +50,7 @@ class TwoViewAugmenter(nn.Module):
             v = v * s
         return v
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         return self._augment(x), self._augment(x)
 
 
@@ -175,7 +177,7 @@ class scGCCModel(BaseModel):
         heads: int = 4,
         mlp: bool = False,
         model_name: str = "scGCC",
-        view_augmenter: Optional[Callable[[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]] = None,
+        view_augmenter: Callable[[torch.Tensor], tuple[torch.Tensor, torch.Tensor]] | None = None,
         feature_mask_prob: float = 0.2,
         gaussian_noise_std: float = 0.1,
         scale_jitter: float = 0.0,
@@ -213,10 +215,10 @@ class scGCCModel(BaseModel):
     def decode(self, z: torch.Tensor, **kwargs) -> torch.Tensor:
         raise NotImplementedError("scGCC is contrastive-only; no decoder.")
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         raise NotImplementedError("Use fit() with Data batches for scGCC.")
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
         raise NotImplementedError("Use fit() for scGCC.")
 
     def _full_x_from_loader(self, loader) -> torch.Tensor:
@@ -241,11 +243,11 @@ class scGCCModel(BaseModel):
         epochs: int = 20,
         lr: float = 0.1,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 10,
         verbose: int = 1,
-        edge_index: Optional[torch.Tensor] = None,
-        full_x: Optional[torch.Tensor] = None,
+        edge_index: torch.Tensor | None = None,
+        full_x: torch.Tensor | None = None,
         knn_k: int = 15,
         knn_metric: str = "cosine",
         **kwargs):
@@ -337,10 +339,10 @@ class scGCCModel(BaseModel):
         data_loader,
         device: str = "cuda",
         return_reconstructions: bool = False,
-        edge_index: Optional[torch.Tensor] = None,
-        full_x: Optional[torch.Tensor] = None,
+        edge_index: torch.Tensor | None = None,
+        full_x: torch.Tensor | None = None,
         knn_k: int = 15,
-        knn_metric: str = "cosine") -> Dict[str, np.ndarray]:
+        knn_metric: str = "cosine") -> dict[str, np.ndarray]:
         """Extract latent with automatic kNN graph construction"""
         if return_reconstructions:
             warnings.warn("scGCC has no decoder; return_reconstructions ignored.")

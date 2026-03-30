@@ -1,11 +1,12 @@
+from math import log, sqrt
+
 import torch
-from math import log, sqrt, pi
-from torch.distributions import Normal, Gamma
+from torch.distributions import Gamma, Normal
 
 from ..utils import euclidean_kl_div, gamma_kl_div
 
 
-class Distribution():
+class Distribution:
     def __init__(self, means, log_gamma_square, c=-1) -> None:
         self.c = torch.tensor([c], device=means.device)
         self.alpha = means[..., 0]

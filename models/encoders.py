@@ -23,12 +23,13 @@ This module provides encoder architectures for single-cell representation learni
    - Leverages cell-cell neighbourhood structure via attention
    - Requires torch_geometric; gracefully unavailable otherwise
 """
+from typing import Literal
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple, Optional, Literal
 
-from .shared_modules import weight_init, MLP, ResidualMLP
+from .shared_modules import MLP, ResidualMLP, weight_init
 
 # Optional PyG dependency for GAT encoder
 try:
@@ -74,7 +75,7 @@ class MLPEncoder(nn.Module):
         if use_vae:
             nn.init.constant_(self.var_head.bias, 0.5)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, ...]:
         h = self.encoder(x)
 
         if self.use_vae:
@@ -164,7 +165,7 @@ class MultiHeadProjectionEncoder(nn.Module):
         if use_vae:
             nn.init.constant_(self.var_head.bias, 0.5)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, ...]:
         batch_size = x.size(0)
 
         # Create K tokens
@@ -248,7 +249,7 @@ class HybridMLPAttentionEncoder(nn.Module):
         if use_vae:
             nn.init.constant_(self.var_head.bias, 0.5)
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, ...]:
         h_mlp = self.mlp_encoder(x)
 
         h_seq = h_mlp.unsqueeze(0)
@@ -346,7 +347,7 @@ class GATConvEncoder(nn.Module):
         self,
         x: torch.Tensor,
         edge_index: torch.Tensor,
-    ) -> Tuple[torch.Tensor, ...]:
+    ) -> tuple[torch.Tensor, ...]:
         """Forward pass.
 
         Parameters

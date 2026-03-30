@@ -20,19 +20,19 @@ No GPU or model loading required — works entirely from saved results.
 """
 
 import argparse
-import json
 import sys
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+from pathlib import Path
+
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
-from pathlib import Path
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from utils.paper_style import apply_style, apply_cli_overrides, add_style_args
+from utils.paper_style import add_style_args, apply_cli_overrides, apply_style
 
 
 def _load_latent_data(results_dir, tag):
@@ -76,8 +76,8 @@ def _compute_umap(latent):
         return reducer.fit_transform(latent)
     except (ImportError, Exception):
         print("  [fallback] umap-learn unavailable, using PCA + t-SNE")
-        from sklearn.manifold import TSNE
         from sklearn.decomposition import PCA
+        from sklearn.manifold import TSNE
         # PCA to 30 dims first for efficiency
         n_pca = min(30, latent.shape[1])
         pca = PCA(n_components=n_pca, random_state=42)
@@ -233,7 +233,7 @@ def plot_composite_figure(latent, components, labels, importance, gene_names,
                      edgecolor="white", linewidth=0.3)
         ax_enr.set_yticks(range(len(df)))
         ax_enr.set_yticklabels(y_labels, fontsize=5.5)
-        ax_enr.set_xlabel(u"-log\u2081\u2080(adj. P)", fontsize=8)
+        ax_enr.set_xlabel("-log\u2081\u2080(adj. P)", fontsize=8)
         ax_enr.invert_yaxis()
         ax_enr.set_title("GO Enrichment (Top 3/comp.)", fontsize=10,
                           fontweight="bold", pad=6)

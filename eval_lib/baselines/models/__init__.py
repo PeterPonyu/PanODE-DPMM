@@ -6,20 +6,18 @@
 - 每个模型提供 create_* 工厂函数
 """
 from .base_model import BaseModel
-
 from .cellblast_model import CellBLASTModel, create_cellblast_model
-from .scalex_model import SCALEXModel, create_scalex_model
-from .scdiffusion_model import scDiffusionModel, create_scdiffusion_model
-from .sivae_model import siVAEModel, create_sivae_model
-
 from .clear_model import CLEARModel, create_clear_model
-from .scdac_model import scDACModel, create_scdac_model
-from .scdeepcluster_model import scDeepClusterModel, create_scdeepcluster_model
-from .scdhmap_model import scDHMapModel, create_scdhmap_model
-from .scgnn_model import scGNNModel, create_scgnn_model
-from .scgcc_model import scGCCModel, create_scgcc_model
-from .scsmd_model import scSMDModel, create_scsmd_model
 from .disentanglement_vae_model import DisentanglementVAEModel, create_disentanglement_vae_model
+from .scalex_model import SCALEXModel, create_scalex_model
+from .scdac_model import create_scdac_model, scDACModel
+from .scdeepcluster_model import create_scdeepcluster_model, scDeepClusterModel
+from .scdhmap_model import create_scdhmap_model, scDHMapModel
+from .scdiffusion_model import create_scdiffusion_model, scDiffusionModel
+from .scgcc_model import create_scgcc_model, scGCCModel
+from .scgnn_model import create_scgnn_model, scGNNModel
+from .scsmd_model import create_scsmd_model, scSMDModel
+from .sivae_model import create_sivae_model, siVAEModel
 
 # GM-VAE (requires geoopt)
 try:
@@ -31,9 +29,13 @@ except ImportError:
 # scVI-family (requires scvi-tools)
 try:
     from .scvi_family_model import (
-        SCVIModel, create_scvi_model,
-        PeakVIModel, create_peakvi_model,
-        PoissonVIModel, create_poissonvi_model)
+        PeakVIModel,
+        PoissonVIModel,
+        SCVIModel,
+        create_peakvi_model,
+        create_poissonvi_model,
+        create_scvi_model,
+    )
     _SCVI_AVAILABLE = True
 except ImportError:
     _SCVI_AVAILABLE = False

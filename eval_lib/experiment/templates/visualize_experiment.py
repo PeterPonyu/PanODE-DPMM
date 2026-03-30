@@ -41,16 +41,13 @@ import seaborn as sns
 warnings.filterwarnings("ignore")
 
 # ── eval_lib imports (portable) ───────────────────────────────────────────────
-from eval_lib.viz.rea import (
-    RigorousExperimentalAnalyzer,
-    create_publication_figure,
-    _apply_font)
-from eval_lib.experiment.merge import MergedExperimentConfig
 from eval_lib.experiment.config import ExperimentConfig
+from eval_lib.experiment.merge import MergedExperimentConfig
 from eval_lib.metrics.battery import METRIC_GROUPS
+from eval_lib.viz.rea import RigorousExperimentalAnalyzer, _apply_font, create_publication_figure
 
 try:
-    from src.visualization import save_with_vcd, apply_style, style_axes
+    from src.visualization import apply_style, save_with_vcd, style_axes
 except ImportError:
     save_with_vcd = None
 

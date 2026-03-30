@@ -22,7 +22,6 @@ Author: PanODE-DPMM pipeline
 import argparse
 import sys
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
@@ -250,7 +249,7 @@ def validate_composed_figure(png_path: Path, label: str = "",
 
 
 def validate_all_figures(series_list: list[str],
-                         figures: Optional[list[int]] = None,
+                         figures: list[int] | None = None,
                          verbose: bool = True) -> dict[str, list[dict]]:
     """Validate all composed figure PNGs for given series.
 
@@ -334,12 +333,12 @@ def validate_all_figures(series_list: list[str],
 
     if verbose:
         print(f"\n{'═' * 60}")
-        print(f"  COMPOSED-FIGURE VALIDATION SUMMARY")
+        print("  COMPOSED-FIGURE VALIDATION SUMMARY")
         print(f"{'═' * 60}")
         print(f"  Figures checked:  {len(all_results)}")
         print(f"  Total warnings:   {total_warnings}")
         if total_warnings == 0:
-            print(f"  ✓ All composed figures pass validation")
+            print("  ✓ All composed figures pass validation")
         else:
             problem_figs = [k for k, v in all_results.items()
                             if any(i["severity"] == "warning" for i in v)]

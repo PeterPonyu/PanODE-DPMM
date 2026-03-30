@@ -24,20 +24,19 @@ Requires: gseapy, torch (inference only — lightweight GPU usage)
 import argparse
 import json
 import sys
-import os
+from pathlib import Path
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from utils.paper_style import apply_style, apply_cli_overrides, add_style_args
-from benchmarks.biological_validation import load_model, load_data_with_genes  # shared
-
+from benchmarks.biological_validation import load_data_with_genes, load_model  # shared
+from utils.paper_style import add_style_args, apply_cli_overrides, apply_style
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Perturbation analysis

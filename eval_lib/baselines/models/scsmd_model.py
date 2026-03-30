@@ -2,15 +2,16 @@
 scSMD: ResNet-based autoencoder with clustering via mutual information
 Reshapes 1D gene data → 2D images for CNN processing
 """
+
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
-from typing import Dict, Optional, Any
+import torch.optim as optim
 from sklearn.cluster import KMeans
-from scipy.sparse import issparse
+
 from .base_model import BaseModel
+
 
 class myBottleneck(nn.Module):
     """ResNet bottleneck block"""
@@ -191,7 +192,7 @@ class scSMDModel(BaseModel):
         input_dim: int,
         latent_dim: int = 10,
         n_clusters: int = 10,
-        img_size: Optional[int] = None,
+        img_size: int | None = None,
         model_name: str = "scSMD"):
         """
         Args:
@@ -237,13 +238,13 @@ class scSMDModel(BaseModel):
         flat = y.view(y.size(0), -1)
         return flat[:, : self.input_dim]
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass"""
         x_img = self._preprocess(x)
         mean, disp, u, y = self.autoencoder(x_img)
         return {"mean": mean, "disp": disp, "latent": u, "reconstruction_img": y, "input_img": x_img}
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], cluster_centers: Optional[torch.Tensor] = None, **kwargs):
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], cluster_centers: torch.Tensor | None = None, **kwargs):
         """Compute loss: MSE + NB (+ optional cluster pulling)"""
         x_img = outputs["input_img"]
         y = outputs["reconstruction_img"]
@@ -272,7 +273,7 @@ class scSMDModel(BaseModel):
         epochs: int = 500,
         lr: float = 1e-4,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 10,
         verbose: int = 1,
         pretrain_epochs: int = 200,

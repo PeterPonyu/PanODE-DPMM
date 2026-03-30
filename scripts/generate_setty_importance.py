@@ -4,22 +4,20 @@
 Usage:
     python scripts/generate_setty_importance.py
 """
-import sys
 import gc
+import sys
 from pathlib import Path
 
-import torch
 import numpy as np
+import torch
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from benchmarks.model_registry import MODELS
-from benchmarks.data_utils import load_or_preprocess_adata
-from benchmarks.biological_validation import load_data_with_genes
 from benchmarks.biological_validation.perturbation_analysis import (
     compute_perturbation_importance,
 )
+from benchmarks.model_registry import MODELS
 from utils.data import DataSplitter
 
 BIO_RESULTS = ROOT / "benchmarks" / "biological_validation" / "results"

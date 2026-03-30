@@ -40,14 +40,13 @@ and FM co-adapt (joint mode).
 from __future__ import annotations
 
 import math
-from typing import Dict, Optional
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .dpmm_base import DPMMODEModel, MLP
+from .dpmm_base import MLP, DPMMODEModel
 
 
 class SinusoidalTimeEmbedding(nn.Module):
@@ -83,7 +82,7 @@ class LatentFlowField(nn.Module):
         self,
         latent_dim: int,
         time_embed_dim: int = 32,
-        hidden_dims: Optional[list[int]] = None,
+        hidden_dims: list[int] | None = None,
         dropout: float = 0.0,
     ):
         super().__init__()
@@ -111,8 +110,8 @@ class DPMMFlowMatchingModel(DPMMODEModel):
         self,
         input_dim: int,
         latent_dim: int = 32,
-        encoder_dims: Optional[list] = None,
-        decoder_dims: Optional[list] = None,
+        encoder_dims: list | None = None,
+        decoder_dims: list | None = None,
         norm_type: str = "bn",
         dropout_rate: float = 0.1,
         dpmm_warmup_ratio: float = 0.8,
@@ -124,11 +123,11 @@ class DPMMFlowMatchingModel(DPMMODEModel):
         mmd_bandwidth: float = 1.0,
         model_name: str = "DPMMFM",
         use_bottleneck: bool = False,
-        bottleneck_dim: Optional[int] = None,
+        bottleneck_dim: int | None = None,
         use_vae: bool = False,
         kl_weight: float = 0.1,
         flow_weight: float = 0.10,
-        flow_hidden_dims: Optional[list[int]] = None,
+        flow_hidden_dims: list[int] | None = None,
         flow_time_dim: int = 32,
         flow_noise_scale: float = 0.5,
         flow_after_dpmm: bool = True,
@@ -194,7 +193,7 @@ class DPMMFlowMatchingModel(DPMMODEModel):
         velocity_pred = self.flow_field(z_t, t)
         return F.mse_loss(velocity_pred, velocity_target)
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
         loss_dict = super().compute_loss(x, outputs, **kwargs)
         flow_loss = torch.tensor(0.0, device=x.device)
         if self._flow_active():
@@ -204,7 +203,7 @@ class DPMMFlowMatchingModel(DPMMODEModel):
         return loss_dict
 
     @torch.no_grad()
-    def sample_latent_prior(self, n_samples: int, device: str | torch.device = "cpu", steps: Optional[int] = None) -> torch.Tensor:
+    def sample_latent_prior(self, n_samples: int, device: str | torch.device = "cpu", steps: int | None = None) -> torch.Tensor:
         """Sample from the learned latent flow by Euler integration from Gaussian noise."""
         self.eval()
         device = torch.device(device)
@@ -226,8 +225,8 @@ class DPMMFlowMatchingModel(DPMMODEModel):
     def smooth_latent(
         self,
         z_real: torch.Tensor,
-        t0: Optional[float] = None,
-        steps: Optional[int] = None,
+        t0: float | None = None,
+        steps: int | None = None,
     ) -> torch.Tensor:
         """Smooth encoder latents by partial FM integration from *t0* → 1.0.
 
@@ -278,8 +277,8 @@ class DPMMFlowMatchingModel(DPMMODEModel):
         data_loader,
         device: str = "cuda",
         return_reconstructions: bool = False,
-        smooth: Optional[bool] = None,
-        t0: Optional[float] = None,
+        smooth: bool | None = None,
+        t0: float | None = None,
         **kwargs,
     ):
         """Extract latent representations, optionally FM-smoothed.

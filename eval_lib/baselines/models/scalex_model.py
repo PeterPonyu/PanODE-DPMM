@@ -4,11 +4,11 @@ SCALEX: VAE with Domain-Specific Batch Normalization for cross-batch integration
 Reference: Xiong et al. (2021) Online single-cell data integration through
 projecting heterogeneous datasets into a common cell-embedding space
 """
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, Union, Tuple
-import numpy as np
+
 from .base_model import BaseModel
 
 
@@ -26,7 +26,7 @@ class DSBatchNorm(nn.Module):
             for _ in range(n_domains)
         ])
 
-    def forward(self, x: torch.Tensor, domain_id: Union[int, torch.Tensor]) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, domain_id: int | torch.Tensor) -> torch.Tensor:
         if self.n_domains == 1:
             return self.bns[0](x)
 
@@ -65,7 +65,7 @@ class SCALEXEncoder(nn.Module):
         self.fc_mu = nn.Linear(prev_dim, latent_dim)
         self.fc_var = nn.Linear(prev_dim, latent_dim)
 
-    def forward(self, x: torch.Tensor, domain_id: Union[int, torch.Tensor] = 0):
+    def forward(self, x: torch.Tensor, domain_id: int | torch.Tensor = 0):
         """Returns (z, mu, logvar)"""
         h = x
 
@@ -131,7 +131,7 @@ class SCALEXDecoder(nn.Module):
 
         self.recon_scaling = nn.Parameter(torch.tensor(1.0))
 
-    def forward(self, z: torch.Tensor, domain_id: Union[int, torch.Tensor] = 0):
+    def forward(self, z: torch.Tensor, domain_id: int | torch.Tensor = 0):
         """Returns dict for ZINB/NB, tensor for MSE"""
         h = z
 
@@ -238,17 +238,17 @@ class SCALEXModel(BaseModel):
             x = batch_data.to(device).float()
             return x, {'domain_id': 0}
 
-    def encode(self, x: torch.Tensor, domain_id: Union[int, torch.Tensor] = 0) -> torch.Tensor:
+    def encode(self, x: torch.Tensor, domain_id: int | torch.Tensor = 0) -> torch.Tensor:
         """Encode to latent space"""
         z, mu, logvar = self.encoder_net(x, domain_id)
         return z
 
-    def decode(self, z: torch.Tensor, domain_id: Union[int, torch.Tensor] = 0):
+    def decode(self, z: torch.Tensor, domain_id: int | torch.Tensor = 0):
         """Decode from latent space"""
         return self.decoder_net(z, domain_id)
 
-    def forward(self, x: torch.Tensor, domain_id: Union[int, torch.Tensor] = 0,
-                **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, domain_id: int | torch.Tensor = 0,
+                **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass returning reconstruction and latent representation"""
         z, mu, logvar = self.encoder_net(x, domain_id)
         decoder_output = self.decoder_net(z, domain_id)
@@ -298,9 +298,9 @@ class SCALEXModel(BaseModel):
 
         return torch.mean(final)
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
-                     beta: float = 1.0, scale_factor: Optional[torch.Tensor] = None,
-                     **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
+                     beta: float = 1.0, scale_factor: torch.Tensor | None = None,
+                     **kwargs) -> dict[str, torch.Tensor]:
         """Compute VAE loss (reconstruction + KL)"""
         mu = outputs['mu']
         logvar = outputs['logvar']

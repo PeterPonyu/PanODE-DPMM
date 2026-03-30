@@ -21,8 +21,12 @@ Usage:
   python benchmarks/benchmark_crossdata.py --datasets setty endo
 """
 
-import sys, os, argparse, json, gc, warnings
-from pathlib import Path
+import argparse
+import gc
+import json
+import os
+import sys
+import warnings
 from datetime import datetime
 
 sys.stdout.reconfigure(line_buffering=True)
@@ -38,15 +42,17 @@ import torch
 warnings.filterwarnings("ignore")
 
 from benchmarks.config import BASE_CONFIG, DEFAULT_OUTPUT_DIR, ensure_dirs, set_global_seed
-from benchmarks.dataset_registry import DATASET_REGISTRY, ALL_DATASET_REGISTRY
-from benchmarks.model_registry import MODELS, SERIES_GROUPS
 from benchmarks.data_utils import load_or_preprocess_adata
+from benchmarks.dataset_registry import ALL_DATASET_REGISTRY, DATASET_REGISTRY
+from benchmarks.model_registry import MODELS
 from benchmarks.train_utils import (
-    train_and_evaluate, add_common_cli_args,
-    select_models, apply_model_overrides)
+    apply_model_overrides,
+    select_models,
+    train_and_evaluate,
+)
 from utils.data import DataSplitter
-from utils.viz import plot_umap_grid, plot_all_metrics_barplot
-from utils.paper_style import MODEL_SHORT_NAMES, MODEL_ORDER_DPMM
+from utils.paper_style import MODEL_ORDER_DPMM
+from utils.viz import plot_all_metrics_barplot, plot_umap_grid
 
 # ── defaults ──────────────────────────────────────────────────────────────────
 LATENT_DIM    = BASE_CONFIG.latent_dim
@@ -344,7 +350,7 @@ def main():
 
     # Cross-dataset ranking
     if len(ds_keys) > 1 and "Dataset" in combined.columns:
-        print(f"\n── Avg Rank Across Datasets ──")
+        print("\n── Avg Rank Across Datasets ──")
         rank_df_parts = []
         for ds_key in ds_keys:
             sdf = combined[combined["Dataset"] == ds_key].copy()

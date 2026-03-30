@@ -17,18 +17,19 @@ Requires GPU for model inference (lightweight).
 
 import argparse
 import sys
+from pathlib import Path
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from utils.paper_style import apply_style, apply_cli_overrides, add_style_args
 from benchmarks.biological_validation import load_model  # shared helper
 from benchmarks.config import BIO_RESULTS_DIR
+from utils.paper_style import add_style_args, apply_cli_overrides, apply_style
 
 
 def extract_latent_components(model, data_loader, device):
@@ -276,7 +277,7 @@ def main():
              latent=latent, components=components,
              labels=np.array(splitter.labels_test),
              gene_names=np.array(splitter.var_names if hasattr(splitter, 'var_names') else []))
-    print(f"  Latent data saved for downstream analysis.")
+    print("  Latent data saved for downstream analysis.")
 
 
 if __name__ == "__main__":

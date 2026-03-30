@@ -3,12 +3,12 @@ scDAC: Single-cell Deep AutoEncoder with Clustering via DPMM
 Combines autoencoder reconstruction with Dirichlet Process Mixture Model regularization
 """
 import math
+
 import numpy as np
 import torch
 import torch.nn as nn
-from typing import Dict, Optional, Any
 from sklearn.mixture import BayesianGaussianMixture
-from scipy.sparse import issparse
+
 from .base_model import BaseModel
 
 
@@ -24,7 +24,7 @@ def _act(name: str) -> nn.Module:
 
 class _Layer1D(nn.Module):
     """Normalization + Activation + Dropout layer"""
-    def __init__(self, dim: int, norm: Optional[str] = None, act: Optional[str] = None, drop: float = 0.0):
+    def __init__(self, dim: int, norm: str | None = None, act: str | None = None, drop: float = 0.0):
         super().__init__()
         layers = []
         if norm == "bn":
@@ -47,9 +47,9 @@ class MLP(nn.Module):
         self,
         features: list,
         hid_act: str = "mish",
-        out_act: Optional[str] = None,
-        norm: Optional[str] = None,
-        hid_norm: Optional[str] = None,
+        out_act: str | None = None,
+        norm: str | None = None,
+        hid_norm: str | None = None,
         drop: float = 0.0,
         hid_drop: float = 0.0):
         super().__init__()
@@ -96,8 +96,8 @@ class scDACModel(BaseModel):
         self,
         input_dim: int,
         latent_dim: int = 32,
-        encoder_dims: Optional[list] = None,
-        decoder_dims: Optional[list] = None,
+        encoder_dims: list | None = None,
+        decoder_dims: list | None = None,
         norm_type: str = "bn",
         dropout_rate: float = 0.1,
         dpmm_warmup_ratio: float = 0.6,
@@ -139,12 +139,12 @@ class scDACModel(BaseModel):
         """Decode from latent space"""
         return self.ae.decoder(z)
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass"""
         x_hat, z = self.ae(x)
         return {"reconstruction": x_hat, "latent": z}
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
         """Compute loss: reconstruction + DPMM regularization"""
         recon = self.recon_loss_fn(outputs["reconstruction"], x)
 
@@ -196,7 +196,7 @@ class scDACModel(BaseModel):
         epochs: int = 500,
         lr: float = 1e-4,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 10,
         verbose: int = 1,
         **kwargs):

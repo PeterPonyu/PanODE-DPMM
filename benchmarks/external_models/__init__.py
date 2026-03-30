@@ -7,8 +7,8 @@ without maintaining a second full copy of the model library.
 
 from __future__ import annotations
 
-from importlib import import_module
 import sys
+from importlib import import_module
 
 _CANONICAL_PACKAGE = "eval_lib.baselines.models"
 _CANONICAL_MODULE = import_module(_CANONICAL_PACKAGE)

@@ -21,7 +21,6 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List
 
 
 @dataclass
@@ -51,8 +50,8 @@ class ExperimentConfig:
     """
 
     name: str = "experiment"
-    models: Dict[str, dict] = field(default_factory=dict)
-    datasets: Dict[str, dict] = field(default_factory=dict)
+    models: dict[str, dict] = field(default_factory=dict)
+    datasets: dict[str, dict] = field(default_factory=dict)
     epochs: int = 100
     max_cells: int = 3000
     n_hvg: int = 3000
@@ -80,16 +79,16 @@ class ExperimentConfig:
         return self.output_root / self.name / "figures"
 
     @property
-    def method_names(self) -> List[str]:
+    def method_names(self) -> list[str]:
         return list(self.models.keys())
 
     @property
-    def dataset_keys(self) -> List[str]:
+    def dataset_keys(self) -> list[str]:
         return list(self.datasets.keys())
 
     # ── Utilities ─────────────────────────────────────────────────────────
 
-    def with_overrides(self, **kwargs) -> "ExperimentConfig":
+    def with_overrides(self, **kwargs) -> ExperimentConfig:
         """Return a shallow copy with selected fields overridden."""
         cfg = copy.copy(self)
         for k, v in kwargs.items():

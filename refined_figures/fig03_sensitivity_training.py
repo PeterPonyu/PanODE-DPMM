@@ -15,25 +15,26 @@ import sys
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.lines import Line2D
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import apply_style, style_axes, save_with_vcd, bind_figure_region
 from refined_figures.dpmm_shared import (
     DPMM_FM_SENSITIVITY_SUMMARY,
     DPMM_SENSITIVITY_CSV,
     SENSITIVITY_DATASETS,
-    require_dpmm,
     preferred_core_model_dir,
     preferred_target_model,
+    require_dpmm,
 )
+from src.visualization import apply_style, bind_figure_region, save_with_vcd, style_axes
 
 DPI = 300
 
@@ -178,7 +179,7 @@ def _load_latest_history(model_name, dataset):
         DYNAMICS_DIR.glob(f"{model_name}_{dataset}_history.json"), reverse=True))
     if not candidates:
         return None
-    with open(candidates[0], "r", encoding="utf-8") as f:
+    with open(candidates[0], encoding="utf-8") as f:
         return json.load(f)
 
 

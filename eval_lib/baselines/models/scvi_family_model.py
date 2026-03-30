@@ -19,11 +19,11 @@ Each wrapper:
        the internal scvi-tools model for compatibility.
 """
 import warnings
+from typing import Any
+
 import numpy as np
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
-from typing import Dict, Optional, Any
 
 from .base_model import BaseModel
 
@@ -154,15 +154,15 @@ class _ScVIFamilyBase(BaseModel):
         batch_size = z.shape[0]
         return torch.zeros(batch_size, self.input_dim, device=z.device)
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         z = self.encode(x, **kwargs)
         return {"latent": z, "reconstruction": self.decode(z)}
 
     def compute_loss(
         self,
         x: torch.Tensor,
-        outputs: Dict[str, torch.Tensor],
-        **kwargs) -> Dict[str, torch.Tensor]:
+        outputs: dict[str, torch.Tensor],
+        **kwargs) -> dict[str, torch.Tensor]:
         """Training loss is handled internally by scvi-tools."""
         zero = torch.tensor(0.0, device=x.device)
         return {"total_loss": zero, "recon_loss": zero}
@@ -172,15 +172,15 @@ class _ScVIFamilyBase(BaseModel):
     def fit(
         self,
         train_loader: DataLoader,
-        val_loader: Optional[DataLoader] = None,
+        val_loader: DataLoader | None = None,
         epochs: int = None,
         lr: float = 1e-3,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 25,
         verbose: int = 1,
         verbose_every: int = 1,
-        **kwargs) -> Dict[str, list]:
+        **kwargs) -> dict[str, list]:
         """
         Train the scVI-family model.
 
@@ -268,7 +268,7 @@ class _ScVIFamilyBase(BaseModel):
         self,
         data_loader: DataLoader,
         device: str = "cuda",
-        return_reconstructions: bool = False) -> Dict[str, np.ndarray]:
+        return_reconstructions: bool = False) -> dict[str, np.ndarray]:
         """
         Extract latent representations using scvi-tools' native method.
         """
@@ -282,7 +282,7 @@ class _ScVIFamilyBase(BaseModel):
         self._setup_anndata(adata)
 
         latent = self._scvi_model.get_latent_representation(adata)
-        result: Dict[str, Any] = {"latent": latent}
+        result: dict[str, Any] = {"latent": latent}
 
         if return_reconstructions:
             warnings.warn(

@@ -15,23 +15,21 @@ Usage:
     python benchmarks/benchmark_transfer.py --source endo --target dentate
 """
 
-import os
-import sys
+import argparse
+import gc
 import time
-import torch
+
 import numpy as np
 import pandas as pd
 import scanpy as sc
-from pathlib import Path
-import argparse
-import gc
+import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-from benchmarks.config import BASE_CONFIG, ensure_dirs, set_global_seed, result_subdir
+from benchmarks.config import BASE_CONFIG, ensure_dirs, result_subdir, set_global_seed
 from benchmarks.dataset_registry import DATASET_REGISTRY
-from utils.data import DataSplitter
-from benchmarks.model_registry import MODELS
 from benchmarks.metrics_utils import compute_metrics
+from benchmarks.model_registry import MODELS
+from utils.data import DataSplitter
 
 
 def standardize_labels(adata, label_key):
@@ -104,7 +102,7 @@ def main():
     print(f"{'='*60}")
 
     # Find common genes from raw data
-    print(f"\nFinding common genes...")
+    print("\nFinding common genes...")
     adata_s_raw = sc.read_h5ad(source_info["path"])
     adata_s_raw.var_names_make_unique()
     adata_t_raw = sc.read_h5ad(target_info["path"])

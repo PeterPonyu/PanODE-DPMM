@@ -13,14 +13,13 @@ Classes:
 - DataSplitter: Handles data extraction, normalization, and train/val/test splitting
 """
 
+
 import numpy as np
 import scipy.sparse as sp
 import torch
-from torch.utils.data import DataLoader, TensorDataset
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import LabelEncoder
-from typing import Optional, Dict, Any
-
+from torch.utils.data import DataLoader, TensorDataset
 
 # ============================================================
 # Normalization Utilities
@@ -61,7 +60,7 @@ def is_raw_counts(X, threshold: float = 0.5) -> bool:
     return np.mean(integer_like) >= threshold
 
 
-def compute_dataset_stats(X) -> Dict[str, float]:
+def compute_dataset_stats(X) -> dict[str, float]:
     """
     Compute statistics for adaptive normalization.
 
@@ -80,7 +79,7 @@ def compute_dataset_stats(X) -> Dict[str, float]:
     }
 
 
-def adaptive_normalize(X_log, stats: Dict[str, float], verbose: bool = True) -> np.ndarray:
+def adaptive_normalize(X_log, stats: dict[str, float], verbose: bool = True) -> np.ndarray:
     """
     Apply adaptive normalization based on dataset characteristics.
 
@@ -339,7 +338,7 @@ class DataSplitter:
         self.labels_test = self.labels[self.test_idx]
 
         if self.verbose:
-            print(f"\nData split:")
+            print("\nData split:")
             print(f"  Train: {len(self.train_idx):,} cells ({len(self.train_idx)/self.n_obs*100:.1f}%)")
             print(f"  Val:   {len(self.val_idx):,} cells ({len(self.val_idx)/self.n_obs*100:.1f}%)")
             print(f"  Test:  {len(self.test_idx):,} cells ({len(self.test_idx)/self.n_obs*100:.1f}%)")
@@ -379,7 +378,7 @@ class DataSplitter:
         if self.verbose:
             print(f"  Batch size: {self.batch_size}, Batches/epoch: {len(self.train_loader)}")
 
-    def get_all_loader(self, batch_size: Optional[int] = None) -> DataLoader:
+    def get_all_loader(self, batch_size: int | None = None) -> DataLoader:
         """
         Create a DataLoader for all data (train + val + test).
 

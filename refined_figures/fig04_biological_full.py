@@ -12,31 +12,31 @@ from __future__ import annotations
 
 import argparse
 import sys
-import textwrap
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
 import numpy as np
 import pandas as pd
+from matplotlib.ticker import MaxNLocator
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import apply_style, style_axes, save_with_vcd, bind_figure_region
 from refined_figures.dpmm_shared import (
-    require_dpmm,
-    DPMM_PRIOR_MODELS,
     BIO_DATASETS,
-    load_importance_payload,
-    load_correlation_payload,
-    load_umap_payload,
+    DPMM_PRIOR_MODELS,
     load_best_enrichment,
-    parse_overlap_count,
+    load_correlation_payload,
+    load_importance_payload,
+    load_umap_payload,
     method_short_name,
+    parse_overlap_count,
+    require_dpmm,
 )
+from src.visualization import apply_style, bind_figure_region, save_with_vcd, style_axes
 
 DPI = 300
 TOP_N_GENES = 24

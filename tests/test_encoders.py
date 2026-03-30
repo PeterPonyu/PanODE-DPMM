@@ -1,24 +1,26 @@
 """Tests for encoder module — covers all encoder types including GATConvEncoder."""
 
-import sys
 import os
+import sys
+
+import numpy as np
 import pytest
 import torch
-import numpy as np
 
 # Ensure project root is on path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from models.encoders import (
+    HybridMLPAttentionEncoder,
     MLPEncoder,
     MultiHeadProjectionEncoder,
-    HybridMLPAttentionEncoder,
     create_encoder,
 )
 
 # GATConv is optional
 try:
     from torch_geometric.nn import GATConv as _GATConv
+
     from models.encoders import GATConvEncoder
     HAS_PYG = True
 except ImportError:

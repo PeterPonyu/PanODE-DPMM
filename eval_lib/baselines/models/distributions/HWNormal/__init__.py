@@ -4,7 +4,7 @@ Wrapped normal distribution on hyperbolic space using Lorentz model
 """
 
 from .distribution import Distribution
-from .layers import VanillaEncoderLayer, VanillaDecoderLayer
+from .layers import VanillaDecoderLayer, VanillaEncoderLayer
 from .prior import get_prior
 
 __all__ = [

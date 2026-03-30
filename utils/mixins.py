@@ -1,16 +1,14 @@
-import torch
-import torch.nn.functional as F
-import numpy as np
-from typing import Tuple
-from sklearn.mixture import BayesianGaussianMixture
 import math
+
+import torch
+from sklearn.mixture import BayesianGaussianMixture
 
 
 class PriorMixin:
     """Logistic-normal prior mixin"""
 
     @staticmethod
-    def _dirichlet_to_logistic_normal(alpha: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def _dirichlet_to_logistic_normal(alpha: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Convert Dirichlet prior to logistic-normal prior parameters"""
         K = alpha.shape[0]
         mu = torch.log(alpha) - torch.log(alpha).sum() / K

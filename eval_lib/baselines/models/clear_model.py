@@ -2,12 +2,15 @@
 CLEAR: Contrastive Learning for Enhanced scRNA-seq Representation
 MoCo-based contrastive learning for single-cell embeddings
 """
+import warnings
+from collections.abc import Callable
+from typing import Any
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, Tuple, Any, Callable
-import warnings
+
 from .base_model import BaseModel
 
 
@@ -39,7 +42,7 @@ class TwoViewAugmenter(nn.Module):
 
         return v
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         return self._augment(x), self._augment(x)
 
 
@@ -105,7 +108,7 @@ class MoCoHead(nn.Module):
         ptr = (ptr + batch_size) % self.queue_size
         self.queue_ptr[0] = ptr
 
-    def forward(self, view1: torch.Tensor, view2: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward(self, view1: torch.Tensor, view2: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Returns (logits, labels) for InfoNCE loss"""
         q = F.normalize(self.encoder_q(view1), dim=1)
 
@@ -141,14 +144,14 @@ class CLEARModel(BaseModel):
         self,
         input_dim: int,
         latent_dim: int = 128,
-        hidden_dims: Optional[list] = None,
+        hidden_dims: list | None = None,
         hidden_dim: int = 1024,
         queue_size: int = 1024,
         momentum: float = 0.999,
         temperature: float = 0.2,
         dropout: float = 0.0,
         model_name: str = "CLEAR",
-        view_augmenter: Optional[Callable[[torch.Tensor], Tuple[torch.Tensor, torch.Tensor]]] = None,
+        view_augmenter: Callable[[torch.Tensor], tuple[torch.Tensor, torch.Tensor]] | None = None,
         feature_mask_prob: float = 0.2,
         gaussian_noise_std: float = 0.1,
         scale_jitter: float = 0.0):
@@ -213,12 +216,12 @@ class CLEARModel(BaseModel):
         """Not implemented: contrastive model has no decoder"""
         raise NotImplementedError("CLEARModel is contrastive-only; no decode()")
 
-    def forward(self, x: torch.Tensor, view2: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, view2: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass: compute logits and labels for InfoNCE"""
         logits, labels = self.moco(x, view2)
         return {"logits": logits, "labels": labels}
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
         """Compute InfoNCE loss"""
         loss = self.criterion(outputs["logits"], outputs["labels"])
         return {"total_loss": loss, "recon_loss": loss}

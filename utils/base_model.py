@@ -2,14 +2,16 @@
 Unified base model interface for single-cell gene expression models
 Provides consistent training, inference, and latent extraction
 """
+import inspect
+from abc import ABC, abstractmethod
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
+
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from typing import Dict, Optional, Tuple, Any, Iterator
-from abc import ABC, abstractmethod
-import numpy as np
-from pathlib import Path
-import inspect
 
 
 class BaseModel(ABC, nn.Module):
@@ -69,7 +71,7 @@ class BaseModel(ABC, nn.Module):
         """Decode z -> reconstruction"""
         raise NotImplementedError
 
-    def _filter_kwargs_for(self, fn, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+    def _filter_kwargs_for(self, fn, kwargs: dict[str, Any]) -> dict[str, Any]:
         """Filter kwargs to match callable signature (if no **kwargs, only pass accepted args)"""
         try:
             sig = inspect.signature(fn)
@@ -82,7 +84,7 @@ class BaseModel(ABC, nn.Module):
         return {k: v for k, v in kwargs.items() if k in params}
 
     @abstractmethod
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         """
         Forward pass
 
@@ -96,8 +98,8 @@ class BaseModel(ABC, nn.Module):
         pass
 
     @abstractmethod
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
-                     **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
+                     **kwargs) -> dict[str, torch.Tensor]:
         """
         Compute loss
 
@@ -114,15 +116,15 @@ class BaseModel(ABC, nn.Module):
     def fit(
             self,
             train_loader: DataLoader,
-            val_loader: Optional[DataLoader] = None,
+            val_loader: DataLoader | None = None,
             epochs: int = 100,
             lr: float = 1e-3,
             device: str = 'cuda',
-            save_path: Optional[str] = None,
+            save_path: str | None = None,
             patience: int = 25,
             verbose: int = 1,
             verbose_every: int = 1,
-            **kwargs) -> Dict[str, list]:
+            **kwargs) -> dict[str, list]:
         """
         Train with optional validation and early stopping
 
@@ -210,7 +212,7 @@ class BaseModel(ABC, nn.Module):
             print("\n✓ Training finished!")
         return history
 
-    def _prepare_batch(self, batch_data: Any, device: str) -> Tuple[torch.Tensor, Dict[str, Any]]:
+    def _prepare_batch(self, batch_data: Any, device: str) -> tuple[torch.Tensor, dict[str, Any]]:
         """
         Prepare batch for training/inference
 
@@ -224,7 +226,7 @@ class BaseModel(ABC, nn.Module):
 
         DataLoader should provide: TensorDataset(X_norm, X_raw) for full compatibility
         """
-        batch_kwargs: Dict[str, Any] = {}
+        batch_kwargs: dict[str, Any] = {}
 
         if isinstance(batch_data, (list, tuple)):
             # DataLoader provides (x_norm, x_raw) tuple
@@ -257,7 +259,7 @@ class BaseModel(ABC, nn.Module):
         return x, {}
 
     def _train_epoch(self, train_loader: DataLoader, optimizer: torch.optim.Optimizer,
-                     device: str, verbose: int = 1, **kwargs) -> Dict[str, float]:
+                     device: str, verbose: int = 1, **kwargs) -> dict[str, float]:
         """Train single epoch"""
         self.train()
         total_loss = 0
@@ -288,7 +290,7 @@ class BaseModel(ABC, nn.Module):
         }
 
     def _validate_epoch(self, val_loader: DataLoader, device: str,
-                       verbose: int = 1, **kwargs) -> Dict[str, float]:
+                       verbose: int = 1, **kwargs) -> dict[str, float]:
         """Validate single epoch"""
         self.eval()
         total_loss = 0
@@ -311,7 +313,7 @@ class BaseModel(ABC, nn.Module):
             'recon_loss': total_recon_loss / n_batches
         }
 
-    def _iter_loader(self, data_loader: DataLoader, device: str) -> Iterator[Tuple[torch.Tensor, Dict[str, Any]]]:
+    def _iter_loader(self, data_loader: DataLoader, device: str) -> Iterator[tuple[torch.Tensor, dict[str, Any]]]:
         """Iterate over DataLoader yielding (x, batch_kwargs) on device"""
         for batch_data in data_loader:
             x, batch_kwargs = self._prepare_batch(batch_data, device)
@@ -384,7 +386,7 @@ class BaseModel(ABC, nn.Module):
             }
         }, path)
 
-    def load_model(self, path: str) -> Dict[str, Any]:
+    def load_model(self, path: str) -> dict[str, Any]:
         """Load model weights and config"""
         checkpoint = torch.load(path, map_location='cpu')
         self.load_state_dict(checkpoint['model_state_dict'])

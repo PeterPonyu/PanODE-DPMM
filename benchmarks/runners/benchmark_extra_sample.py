@@ -29,12 +29,12 @@ python benchmarks/benchmark_extra_sample.py --all --seed 1 --append
 """
 
 from __future__ import annotations
+
 import argparse
-import os
 import sys
 import time
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -45,10 +45,10 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from benchmarks.config import DEFAULT_OUTPUT_DIR
 from benchmarks.dataset_registry import (
-    EXTRA_DATASET_REGISTRY,
     ALL_DATASET_REGISTRY,
     DATASET_GROUPS,
-    resolve_datasets)
+    EXTRA_DATASET_REGISTRY,
+)
 
 # ── Output root ──────────────────────────────────────────────────────────────
 RESULTS_ROOT = DEFAULT_OUTPUT_DIR / "_legacy" / "extra_sample"
@@ -93,6 +93,7 @@ def build_model_instance(model_name: str, n_genes: int, n_clusters: int, seed: i
     Uses the canonical MODELS registry from benchmarks.model_registry.
     """
     import torch
+
     from benchmarks.model_registry import MODELS
 
     torch.manual_seed(seed)
@@ -119,13 +120,14 @@ def evaluate_dataset(
     device: str,
     train_kwargs: dict | None = None) -> list[dict]:
     """Run all requested models on one dataset. Return list of result dicts."""
-    import torch
     import anndata as ad
     from sklearn.preprocessing import LabelEncoder
+
     from benchmarks.utils import (
         build_data_loaders,
         compute_cluster_metrics,
-        compute_trajectory_metrics)
+        compute_trajectory_metrics,
+    )
 
     train_kwargs = train_kwargs or {}
     meta = (EXTRA_DATASET_REGISTRY.get(dataset_key)
@@ -270,7 +272,7 @@ def main():
 
     ready, missing = check_ready(keys)
     if missing:
-        print(f"\nWARNING: these datasets are not yet preprocessed and will be skipped:")
+        print("\nWARNING: these datasets are not yet preprocessed and will be skipped:")
         print(f"  {', '.join(missing)}")
         print(f"  Run: python scripts/prep_extra_datasets.py --datasets {' '.join(missing)}")
     if not ready:

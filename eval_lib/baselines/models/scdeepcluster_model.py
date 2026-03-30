@@ -2,13 +2,14 @@
 scDeepCluster: Autoencoder with ZINB reconstruction and DEC-style clustering
 Multi-stage training: AE pretrain → KMeans init → joint clustering refinement
 """
+from typing import Any
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, Any
 from sklearn.cluster import KMeans
-from scipy.sparse import issparse
+
 from .base_model import BaseModel
 
 
@@ -39,7 +40,7 @@ class ZINBLoss(nn.Module):
 
 class scDeepClusterAE(nn.Module):
     """Autoencoder with ZINB decoder (pi, disp, mean)"""
-    def __init__(self, input_dim: int, latent_dim: int, hidden_dims: Optional[list] = None):
+    def __init__(self, input_dim: int, latent_dim: int, hidden_dims: list | None = None):
         super().__init__()
         hidden_dims = hidden_dims or [256, 64]
         dims = [input_dim] + hidden_dims + [latent_dim]
@@ -100,7 +101,7 @@ class scDeepClusterModel(BaseModel):
         input_dim: int,
         latent_dim: int = 32,
         n_clusters: int = 10,
-        hidden_dims: Optional[list] = None,
+        hidden_dims: list | None = None,
         alpha: float = 1.0,
         model_name: str = "scDeepCluster"):
         """
@@ -153,13 +154,13 @@ class scDeepClusterModel(BaseModel):
         """Decode to mean expression"""
         return self.ae.mean(z)
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass returning latent, ZINB params, and cluster assignments"""
         z, pi, disp, mean = self.ae(x)
         q = self.cluster(z)
         return {"latent": z, "pi": pi, "disp": disp, "mean": mean, "q": q}
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], raw=None, sf=None, p_target=None, **kwargs):
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], raw=None, sf=None, p_target=None, **kwargs):
         """Compute loss: ZINB reconstruction + clustering KL (if p_target provided)"""
         raw = x if raw is None else raw
         zinb_loss = self.zinb(raw, outputs["mean"], outputs["disp"], outputs["pi"], sf)
@@ -184,7 +185,7 @@ class scDeepClusterModel(BaseModel):
         epochs: int = 500,
         lr: float = 1e-3,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 10,
         verbose: int = 1,
         pretrain_epochs: int = 200,

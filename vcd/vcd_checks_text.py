@@ -5,9 +5,14 @@ from __future__ import annotations
 import re
 
 from matplotlib.text import Text
-from matplotlib.transforms import Bbox
 
-from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _overlap_area, _sides_outside, _artist_label, _is_colorbar_axes
+from .vcd_core import (
+    _ArtistInfo,
+    _is_colorbar_axes,
+    _overlap_area,
+    _safe_bbox,
+    _shrink,
+)
 
 
 def _check_text_overlaps(infos: list[_ArtistInfo], tol_px: float = 2.5):

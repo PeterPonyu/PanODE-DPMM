@@ -8,11 +8,10 @@ codebase rather than matplotlib's subplot template machinery.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from .panel_geometry import normalize_layout_rect
-
 
 NumberList = Sequence[float] | int
 
@@ -74,7 +73,7 @@ class LayoutRegion:
     height: float
 
     @classmethod
-    def from_bounds(cls, left: float, bottom: float, right: float, top: float) -> "LayoutRegion":
+    def from_bounds(cls, left: float, bottom: float, right: float, top: float) -> LayoutRegion:
         left = float(left)
         bottom = float(bottom)
         right = float(right)
@@ -101,7 +100,7 @@ class LayoutRegion:
         bottom: float = 0.0,
         right: float = 0.0,
         top: float = 0.0,
-    ) -> "LayoutRegion":
+    ) -> LayoutRegion:
         return LayoutRegion.from_bounds(
             self.left + float(left),
             self.bottom + float(bottom),
@@ -115,7 +114,7 @@ class LayoutRegion:
         *,
         gap: float | Sequence[float] | None = None,
         wspace: float | None = None,
-    ) -> list["LayoutRegion"]:
+    ) -> list[LayoutRegion]:
         weights = _normalize_weights(widths)
         if gap is not None and wspace is not None:
             raise ValueError("provide either gap or wspace, not both")
@@ -141,7 +140,7 @@ class LayoutRegion:
         gap: float | Sequence[float] | None = None,
         hspace: float | None = None,
         top_to_bottom: bool = True,
-    ) -> list["LayoutRegion"]:
+    ) -> list[LayoutRegion]:
         weights = _normalize_weights(heights)
         if gap is not None and hspace is not None:
             raise ValueError("provide either gap or hspace, not both")
@@ -178,7 +177,7 @@ class LayoutRegion:
         wgap: float | Sequence[float] | None = None,
         hspace: float | None = None,
         wspace: float | None = None,
-    ) -> list[list["LayoutRegion"]]:
+    ) -> list[list[LayoutRegion]]:
         row_regions = self.split_rows(row_heights or rows, gap=hgap, hspace=hspace)
         return [row.split_cols(col_widths or cols, gap=wgap, wspace=wspace) for row in row_regions]
 

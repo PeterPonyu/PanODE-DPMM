@@ -14,13 +14,16 @@ Usage:
     python scripts/prep_extra_datasets.py --check-only
 """
 
-import argparse, os, sys, gc, warnings
+import argparse
+import gc
+import os
+import sys
+import warnings
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 warnings.filterwarnings("ignore")
 
-import numpy as np
 import scanpy as sc
 
 # ── Dataset roots (portable; overridable via environment) ────────────────────
@@ -115,7 +118,6 @@ EXTRA_CATALOG = {
 
 def preprocess_dataset(key, info, max_cells=3000, hvg_genes=3000, seed=42):
     """Load, preprocess, compute Leiden (if needed), and save enriched h5ad."""
-    import anndata as ad
 
     src = Path(info["src"])
     dst = PREP_OUT / f"{key}_prepped.h5ad"
@@ -173,7 +175,7 @@ def preprocess_dataset(key, info, max_cells=3000, hvg_genes=3000, seed=42):
         if info["label_key"] != "cell_type":
             adata.obs["cell_type"] = adata.obs[info["label_key"]].copy()
     else:
-        print(f"  WARNING: No label key found and leiden_res=None → skipping label creation")
+        print("  WARNING: No label key found and leiden_res=None → skipping label creation")
 
     # 5. Save (save only the raw counts if possible for benchmark preproc)
     print(f"  Saving → {dst}")

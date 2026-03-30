@@ -15,25 +15,43 @@ Data loading functions live in ``data_loaders.py``.
 """
 
 import sys
-import numpy as np
-import matplotlib as mpl
 from pathlib import Path
+
+import matplotlib as mpl
+import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 # Re-export from paper_style so figure modules only need to import from here.
-from utils.paper_style import (          # noqa: F401  — re-exports
-    apply_style, get_model_order, get_color, MODEL_COLORS,
-    MODEL_SHORT_NAMES, get_cell_cmap, sort_df_by_model_order,
-    CORE_METRICS, RCPARAMS, METRIC_DIRECTION)
+from utils.paper_style import (  # noqa: F401  — re-exports
+    CORE_METRICS,
+    METRIC_DIRECTION,
+    MODEL_COLORS,
+    MODEL_SHORT_NAMES,
+    RCPARAMS,
+    apply_style,
+    get_cell_cmap,
+    get_color,
+    get_model_order,
+    sort_df_by_model_order,
+)
 
 # Re-export key path constants from data_loaders (single source of truth).
-from .data_loaders import (              # noqa: F401
-    RESULTS_DIR, BIO_RESULTS, DYNAMICS_DIR, OUTPUT_DIR,
-    CROSS_DATASETS, NEW_CROSS_DATASETS,
-    load_scalability_csv, load_latent_dim_csv, load_warmup_csv,
-    load_transfer_csv, load_interpretability_csv, load_external_csv)
+from .data_loaders import (  # noqa: F401
+    BIO_RESULTS,
+    CROSS_DATASETS,
+    DYNAMICS_DIR,
+    NEW_CROSS_DATASETS,
+    OUTPUT_DIR,
+    RESULTS_DIR,
+    load_external_csv,
+    load_interpretability_csv,
+    load_latent_dim_csv,
+    load_scalability_csv,
+    load_transfer_csv,
+    load_warmup_csv,
+)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Model-list & dataset constants
@@ -131,8 +149,7 @@ def apply_clean_style(font_size=None):
     font_size : float or None
         If given, override the base font size. Minimum 6 pt.
     """
-    from .subplot_style import (
-        FONTSIZE_TITLE, FONTSIZE_LABEL, FONTSIZE_TICK, FONTSIZE_LEGEND)
+    from .subplot_style import FONTSIZE_LABEL, FONTSIZE_LEGEND, FONTSIZE_TICK, FONTSIZE_TITLE
     apply_style()
     base = max(font_size or 8, 6.0)
     mpl.rcParams.update({

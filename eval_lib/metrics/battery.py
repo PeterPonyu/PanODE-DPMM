@@ -21,18 +21,18 @@ import scanpy as sc
 from scipy.spatial.distance import pdist
 from sklearn.cluster import KMeans
 from sklearn.metrics import (
-    normalized_mutual_info_score,
     adjusted_rand_score,
-    silhouette_score,
+    calinski_harabasz_score,
     davies_bouldin_score,
-    calinski_harabasz_score)
+    normalized_mutual_info_score,
+    silhouette_score,
+)
 from sklearn.model_selection import train_test_split
 
 from .dre import evaluate_dimensionality_reduction
 from .drex import evaluate_extended_dimensionality_reduction
 from .lse import evaluate_single_cell_latent_space
 from .lsex import evaluate_extended_latent_space
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Index-based data splitter
@@ -470,11 +470,7 @@ def compute_latent_diagnostics(latent: np.ndarray,
                                max_samples: int = 2000) -> dict:
     """Collapse / redundancy diagnostics for a latent embedding."""
     if latent is None or len(latent) == 0:
-        return {k: np.nan for k in (
-            'latent_mean_norm', 'latent_std_mean', 'latent_std_min',
-            'latent_std_max', 'latent_var_mean', 'latent_var_min',
-            'latent_var_max', 'latent_near_zero_dims',
-            'latent_pairwise_dist_mean', 'latent_pairwise_dist_std')}
+        return dict.fromkeys(('latent_mean_norm', 'latent_std_mean', 'latent_std_min', 'latent_std_max', 'latent_var_mean', 'latent_var_min', 'latent_var_max', 'latent_near_zero_dims', 'latent_pairwise_dist_mean', 'latent_pairwise_dist_std'), np.nan)
 
     z = np.asarray(latent)
     std = z.std(axis=0)

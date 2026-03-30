@@ -11,33 +11,38 @@ Usage:
 
 import argparse
 import sys
+
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
+
 matplotlib.use("Agg")
+from pathlib import Path
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style, style_axes, add_panel_label, save_with_vcd,
-    bind_figure_region, LayoutRegion)
-
-from benchmarks.figure_generators.subplot_style import (
-    apply_subplot_style, save_subplot, build_manifest,
-    FIGSIZE_BOXPLOT,
-    SCATTER_SIZE_SWEEP, LINE_WIDTH_MEDIAN, LINE_WIDTH_BOX,
-    FONTSIZE_TITLE, FONTSIZE_TICK, FONTSIZE_LABEL)
-from benchmarks.figure_generators.common import (
-    METRIC_DIRECTION
-)
+from benchmarks.figure_generators.common import METRIC_DIRECTION
 from benchmarks.figure_generators.data_loaders import (
-    load_sensitivity_csv, load_training_csv, load_preprocessing_csv,
-    parse_sweep_value)
-
+    load_preprocessing_csv,
+    load_sensitivity_csv,
+    load_training_csv,
+    parse_sweep_value,
+)
+from benchmarks.figure_generators.subplot_style import (
+    FIGSIZE_BOXPLOT,
+    FONTSIZE_TICK,
+    FONTSIZE_TITLE,
+    LINE_WIDTH_BOX,
+    LINE_WIDTH_MEDIAN,
+    SCATTER_SIZE_SWEEP,
+    apply_subplot_style,
+    build_manifest,
+)
+from src.visualization import bind_figure_region, save_with_vcd, style_axes
 
 _CORE_METRICS_ALL = ["NMI", "ARI", "ASW", "DAV",
                      "DRE_umap_overall_quality", "LSE_overall_quality"]

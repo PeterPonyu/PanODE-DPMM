@@ -21,12 +21,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from refined_figures.dpmm_shared import require_dpmm
 from refined_figures.fig01_architecture import generate as gen_fig1
 from refined_figures.fig02_base_ablation import generate as gen_fig2
 from refined_figures.fig03_sensitivity_training import generate as gen_fig3
 from refined_figures.fig04_biological_full import generate as gen_fig4
 from refined_figures.fig05_external import generate as gen_fig5
-from refined_figures.dpmm_shared import require_dpmm
 
 GENERATORS = {
     "1":  ("Architecture Overview",                gen_fig1),

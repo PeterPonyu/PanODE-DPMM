@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import numpy as np
-from matplotlib.text import Text
-from matplotlib.patches import Patch, FancyBboxPatch
-from matplotlib.collections import PathCollection, PolyCollection, LineCollection
-from matplotlib.lines import Line2D
+from matplotlib.collections import LineCollection, PathCollection, PolyCollection
 from matplotlib.image import AxesImage
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
+from matplotlib.text import Text
 from matplotlib.transforms import Bbox
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Geometry helpers

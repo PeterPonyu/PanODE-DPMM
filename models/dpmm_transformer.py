@@ -15,29 +15,28 @@ Uses shared modules from:
 - encoders.py: MultiHeadProjectionEncoder, HybridMLPAttentionEncoder
 """
 import math
+from typing import Literal
+
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from typing import Dict, Optional, Any, Literal, Tuple
 from sklearn.mixture import BayesianGaussianMixture
-from scipy.sparse import issparse
+
 try:
     from .base_model import BaseModel
-    from .shared_modules import (
-        weight_init, MLP, InformationBottleneck,
-        reparameterize)
     from .encoders import (
-        MLPEncoder, MultiHeadProjectionEncoder, HybridMLPAttentionEncoder,
-        create_encoder)
+        HybridMLPAttentionEncoder,
+        MLPEncoder,
+        MultiHeadProjectionEncoder,
+        create_encoder,
+    )
+    from .shared_modules import MLP, InformationBottleneck, reparameterize, weight_init
 except ImportError:
-    from utils.base_model import BaseModel
-    from models.shared_modules import (
-        weight_init, MLP, InformationBottleneck,
-        reparameterize)
     from models.encoders import (
-        MLPEncoder, MultiHeadProjectionEncoder, HybridMLPAttentionEncoder,
-        create_encoder)
+        create_encoder,
+    )
+    from models.shared_modules import MLP, InformationBottleneck
+    from utils.base_model import BaseModel
 
 from utils.mixins import PriorMixin
 
@@ -67,7 +66,7 @@ class DPMMTransformerAutoEncoder(nn.Module):
         decoder_dims: list = None,
         dropout: float = 0.1,
         use_bottleneck: bool = False,
-        bottleneck_dim: Optional[int] = None,
+        bottleneck_dim: int | None = None,
         use_vae: bool = False,
         var_eps: float = 1e-4,
         encoder_type: Literal['transformer', 'hybrid', 'mlp'] = 'transformer'):
@@ -151,7 +150,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         nhead: int = 4,
         num_encoder_layers: int = 2,
         dim_feedforward: int = 256,
-        decoder_dims: Optional[list] = None,
+        decoder_dims: list | None = None,
         dropout_rate: float = 0.1,
         encoder_type: Literal['transformer', 'hybrid', 'mlp'] = 'transformer',
         # DPMM params
@@ -164,7 +163,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         mmd_bandwidth: float = 1.0,
         model_name: str = "DPMMODETransformer",
         use_bottleneck: bool = False,
-        bottleneck_dim: Optional[int] = None,
+        bottleneck_dim: int | None = None,
         use_vae: bool = False,
         kl_weight: float = 0.1,
         # Anti-collapse mechanisms for transformer encoder
@@ -252,7 +251,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         """Decode from latent space"""
         return self.ae.decoder(z)
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass (Phase 1)"""
         if self.ae.use_bottleneck:
             x_hat, z, x_le_hat, z_ld, mu, var = self.ae(x)
@@ -267,15 +266,15 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
             result["var"] = var
         return result
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
         """Compute loss: reconstruction + DPMM + KL (Phase 1)
 
         NOTE: Uses _compute_loss_with_kl_weight internally for KL annealing support.
         """
         return self._compute_loss_with_kl_weight(x, outputs, self.kl_weight, **kwargs)
 
-    def _compute_loss_with_kl_weight(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
-                                      kl_weight: float, **kwargs) -> Dict[str, torch.Tensor]:
+    def _compute_loss_with_kl_weight(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
+                                      kl_weight: float, **kwargs) -> dict[str, torch.Tensor]:
         """Compute loss with a specific KL weight (for KL annealing)."""
         loss_dict = {}
 
@@ -405,7 +404,7 @@ class DPMMODETransformerModel(PriorMixin, BaseModel):
         epochs: int = 500,
         lr: float = 1e-4,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 20,
         verbose: int = 1,
         verbose_every: int = 1,

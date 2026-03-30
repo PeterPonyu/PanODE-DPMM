@@ -1,10 +1,10 @@
-import torch
 import geoopt
-from torch.nn import functional as F
+import torch
 from torch.distributions import Normal
+from torch.nn import functional as F
 
 
-class Distribution():
+class Distribution:
     def __init__(self, mean, sigma) -> None:
         self.mean = mean  # (1, *, 3)
         self.sigma = torch.nan_to_num(sigma, nan=1.0, posinf=1.0, neginf=1.0).clamp_min(1e-8)

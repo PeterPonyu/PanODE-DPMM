@@ -2,49 +2,36 @@
 GM-VAE: Geometric Manifold Variational Autoencoder
 Supports 5 geometric distributions: Euclidean, Poincaré, PGM, LearnablePGM, HW
 """
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, Union, Tuple
-import numpy as np
+
 from .base_model import BaseModel
-
-from .distributions.EuclideanNormal import (
-    Distribution as EuclideanDistribution,
-    VanillaEncoderLayer as EuclideanEncoderLayer,
-    VanillaDecoderLayer as EuclideanDecoderLayer,
-    get_prior as get_euclidean_prior
-)
-
-from .distributions.PoincareNormal import (
-    Distribution as PoincareDistribution,
-    VanillaEncoderLayer as PoincareEncoderLayer,
-    VanillaDecoderLayer as PoincareDecoderLayer,
-    get_prior as get_poincare_prior
-)
-
-from .distributions.PGMNormal import (
-    Distribution as PGMDistribution,
-    VanillaEncoderLayer as PGMVanillaEncoderLayer,
-    GeoEncoderLayer as PGMGeoEncoderLayer,
-    VanillaDecoderLayer as PGMVanillaDecoderLayer,
-    GeoDecoderLayer as PGMGeoDecoderLayer,
-    get_prior as get_pgm_prior
-)
-
-from .distributions.LearnablePGMNormal import (
-    Distribution as LearnablePGMDistribution,
-    VanillaEncoderLayer as LearnablePGMVanillaEncoderLayer,
-    ExpEncoderLayer as LearnablePGMExpEncoderLayer,
-    VanillaDecoderLayer as LearnablePGMVanillaDecoderLayer,
-    LogDecoderLayer as LearnablePGMLogDecoderLayer)
-
-from .distributions.HWNormal import (
-    Distribution as HWDistribution,
-    VanillaEncoderLayer as HWEncoderLayer,
-    VanillaDecoderLayer as HWDecoderLayer,
-    get_prior as get_hw_prior
-)
+from .distributions.EuclideanNormal import Distribution as EuclideanDistribution
+from .distributions.EuclideanNormal import VanillaDecoderLayer as EuclideanDecoderLayer
+from .distributions.EuclideanNormal import VanillaEncoderLayer as EuclideanEncoderLayer
+from .distributions.EuclideanNormal import get_prior as get_euclidean_prior
+from .distributions.HWNormal import Distribution as HWDistribution
+from .distributions.HWNormal import VanillaDecoderLayer as HWDecoderLayer
+from .distributions.HWNormal import VanillaEncoderLayer as HWEncoderLayer
+from .distributions.HWNormal import get_prior as get_hw_prior
+from .distributions.LearnablePGMNormal import Distribution as LearnablePGMDistribution
+from .distributions.LearnablePGMNormal import ExpEncoderLayer as LearnablePGMExpEncoderLayer
+from .distributions.LearnablePGMNormal import LogDecoderLayer as LearnablePGMLogDecoderLayer
+from .distributions.LearnablePGMNormal import VanillaDecoderLayer as LearnablePGMVanillaDecoderLayer
+from .distributions.LearnablePGMNormal import VanillaEncoderLayer as LearnablePGMVanillaEncoderLayer
+from .distributions.PGMNormal import Distribution as PGMDistribution
+from .distributions.PGMNormal import GeoDecoderLayer as PGMGeoDecoderLayer
+from .distributions.PGMNormal import GeoEncoderLayer as PGMGeoEncoderLayer
+from .distributions.PGMNormal import VanillaDecoderLayer as PGMVanillaDecoderLayer
+from .distributions.PGMNormal import VanillaEncoderLayer as PGMVanillaEncoderLayer
+from .distributions.PGMNormal import get_prior as get_pgm_prior
+from .distributions.PoincareNormal import Distribution as PoincareDistribution
+from .distributions.PoincareNormal import VanillaDecoderLayer as PoincareDecoderLayer
+from .distributions.PoincareNormal import VanillaEncoderLayer as PoincareEncoderLayer
+from .distributions.PoincareNormal import get_prior as get_poincare_prior
 
 
 class SimpleArgs:
@@ -423,7 +410,7 @@ class GMVAEModel(BaseModel):
         return output
 
     def forward(self, x: torch.Tensor, n_samples: int = 1, beta: float = 1.0,
-                iwae: int = 0, **kwargs) -> Dict[str, torch.Tensor]:
+                iwae: int = 0, **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass with optional IWAE sampling"""
         params = self.encoder_net(x)
         variational = self._create_distribution(*params)
@@ -456,9 +443,9 @@ class GMVAEModel(BaseModel):
             'params': params
         }
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
                      beta: float = 1.0, n_samples: int = 1, iwae: int = 0,
-                     **kwargs) -> Dict[str, torch.Tensor]:
+                     **kwargs) -> dict[str, torch.Tensor]:
         """Compute VAE loss (reconstruction + KL) with optional IWAE"""
         x_generated = outputs['reconstruction']
         z = outputs['latent']

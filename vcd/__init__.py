@@ -9,90 +9,90 @@ Usage::
 
 from __future__ import annotations
 
-from .vcd_core import (
-    _ArtistInfo,
-    _collect_artists,
-    _fig_bbox,
-    _safe_bbox,
-    _overlap_area,
-    _is_colorbar_axes,
-)
-from .vcd_checks_text import (
-    _check_text_overlaps,
-    _check_text_vs_artist_overlap,
-    _check_cross_panel_spillover,
-    _check_panel_label_overlap,
-)
 from .vcd_checks_artists import (
-    _check_truncation,
     _check_artist_content_overlap,
     _check_axes_overflow,
     _check_scatter_clip_risk,
-)
-from .vcd_checks_legend import (
-    _check_legend_spillover,
-    _check_legend_vs_other_panel_content,
-    _check_legend_vs_own_content,
-    _check_fig_legend_vs_subplot_content,
-    _check_legend_internal,
-    _check_legend_crowding_autofix,
-    _check_legend_vs_legend,
-    _check_legend_vs_other_artists,
+    _check_truncation,
 )
 from .vcd_checks_colorbar import (
-    _check_colorbar_internal,
     _check_colorbar_data_overlap,
+    _check_colorbar_internal,
+)
+from .vcd_checks_layout import (
+    _check_cross_axes_text_overlap,
+    _check_font_policy,
+    _check_fontsize_adequacy,
+    _check_label_density,
+    _check_panel_label_placement,
+    _check_tick_spine_overlap,
+)
+from .vcd_checks_legend import (
+    _check_fig_legend_vs_subplot_content,
+    _check_legend_crowding_autofix,
+    _check_legend_internal,
+    _check_legend_spillover,
+    _check_legend_vs_legend,
+    _check_legend_vs_other_artists,
+    _check_legend_vs_other_panel_content,
+    _check_legend_vs_own_content,
+)
+from .vcd_checks_perceptual import (
+    _check_colorblind_safety,
+    _check_contrast,
+    _check_errorbar_visibility,
+    _check_precision_excess,
+)
+from .vcd_checks_semantic import (
+    _check_floating_significance,
+    _check_log_scale_sanity,
+    _check_overplotting,
+    _check_panel_complexity,
+    _check_scale_consistency,
 )
 from .vcd_checks_structure import (
     _check_significance_brackets,
     _per_axes_summary,
 )
-from .vcd_checks_layout import (
-    _check_fontsize_adequacy,
-    _check_tick_spine_overlap,
-    _check_font_policy,
-    _check_label_density,
-    _check_cross_axes_text_overlap,
-    _check_panel_label_placement,
-)
-from .vcd_checks_perceptual import (
-    _check_contrast,
-    _check_colorblind_safety,
-    _check_errorbar_visibility,
-    _check_precision_excess,
-)
-from .vcd_checks_semantic import (
-    _check_overplotting,
-    _check_log_scale_sanity,
-    _check_scale_consistency,
-    _check_floating_significance,
-    _check_panel_complexity,
+from .vcd_checks_text import (
+    _check_cross_panel_spillover,
+    _check_panel_label_overlap,
+    _check_text_overlaps,
+    _check_text_vs_artist_overlap,
 )
 from .vcd_config import (
-    MIN_PT,
-    COMPOSED_SCALE,
-    DENSE_LABEL_MIN_PT,
     ALLOWED_FONT_FAMILIES,
-    MAX_TITLE_LABEL_SIZE_DIFF,
-    LABEL_DENSITY_THRESHOLD,
-    MIN_TEXT_CONTRAST,
-    MIN_LINE_CONTRAST,
-    MIN_CVD_DISTANCE,
+    COMPLEXITY_SCORE_THRESHOLD,
+    COMPOSED_SCALE,
+    CROSS_AXES_TEXT_OVERLAP_MIN_PX2,
+    CROSS_AXES_TEXT_OVERLAP_TOL_PX,
     CVD_MAX_CATEGORIES,
-    ERRORBAR_TARGET_DPI,
+    DENSE_LABEL_MIN_PT,
     ERRORBAR_MIN_CAP_PX,
+    ERRORBAR_TARGET_DPI,
+    LABEL_DENSITY_THRESHOLD,
+    MAX_ANNOTATIONS_COMPLEXITY,
     MAX_DECIMAL_PLACES,
-    OVERPLOT_ALPHA_THRESHOLD,
-    OVERPLOT_OPAQUE_THRESHOLD,
-    SCALE_RANGE_SPREAD_FACTOR,
-    SIGNIFICANCE_PROXIMITY_PX,
     MAX_LEGEND_SERIES,
     MAX_NUMERIC_BAR_LABELS,
-    MAX_ANNOTATIONS_COMPLEXITY,
-    COMPLEXITY_SCORE_THRESHOLD,
-    CROSS_AXES_TEXT_OVERLAP_TOL_PX,
-    CROSS_AXES_TEXT_OVERLAP_MIN_PX2,
+    MAX_TITLE_LABEL_SIZE_DIFF,
+    MIN_CVD_DISTANCE,
+    MIN_LINE_CONTRAST,
+    MIN_PT,
+    MIN_TEXT_CONTRAST,
+    OVERPLOT_ALPHA_THRESHOLD,
+    OVERPLOT_OPAQUE_THRESHOLD,
     PANEL_LABEL_PLACEMENT_MARGIN_PX,
+    SCALE_RANGE_SPREAD_FACTOR,
+    SIGNIFICANCE_PROXIMITY_PX,
+)
+from .vcd_core import (
+    _ArtistInfo,
+    _collect_artists,
+    _fig_bbox,
+    _is_colorbar_axes,
+    _overlap_area,
+    _safe_bbox,
 )
 
 
@@ -395,7 +395,7 @@ def summarize_issues(all_issues: dict[str, list[dict]]) -> None:
             problem_figs.append(name)
 
     print(f"\n{'=' * 60}")
-    print(f"CONFLICT AUDIT SUMMARY")
+    print("CONFLICT AUDIT SUMMARY")
     print(f"{'=' * 60}")
     print(f"  Figures checked: {len(all_issues)}")
     print(f"  Total warnings:  {total_warn}")
@@ -403,12 +403,12 @@ def summarize_issues(all_issues: dict[str, list[dict]]) -> None:
     if problem_figs:
         print(f"  Figures with warnings: {', '.join(problem_figs)}")
     else:
-        print(f"  All figures clean -- no warnings detected")
+        print("  All figures clean -- no warnings detected")
     print(f"{'=' * 60}\n")
 
 
-from .vcd_policy import FigurePolicy, DEFAULT_POLICY
 from .vcd_actions import Action, diagnose, group_by_category
+from .vcd_policy import DEFAULT_POLICY, FigurePolicy
 
 __all__ = [
     "detect_all_conflicts",

@@ -15,32 +15,33 @@ Shared Modules:
 """
 
 # Shared modules
-from .shared_modules import (
-    weight_init,
-    MLP,
-    ResidualMLP,
-    InformationBottleneck,
-    MLPDecoder,
-    SubgraphDataset,
-    precompute_knn_graph,
-    reparameterize,
-    log_to_simplex)
+# DPMM Models
+from .dpmm_base import DPMMAutoEncoder
+from .dpmm_contrastive import DPMMContrastiveAutoEncoder
+from .dpmm_flow_matching import DPMMFlowMatchingModel
+from .dpmm_transformer import DPMMTransformerAutoEncoder
 
 # Encoder modules
 from .encoders import (
-    MultiHeadProjectionEncoder,
     HybridMLPAttentionEncoder,
     MLPEncoder,
-    create_encoder)
-
-# DPMM Models
-from .dpmm_base import DPMMAutoEncoder
-from .dpmm_flow_matching import DPMMFlowMatchingModel
-from .dpmm_contrastive import DPMMContrastiveAutoEncoder
-from .dpmm_transformer import DPMMTransformerAutoEncoder
+    MultiHeadProjectionEncoder,
+    create_encoder,
+)
 
 # Pure-AE Models (no prior — DPMM ablation baseline)
-from .pure_ae import PureAEModel, PureAETransformerModel, PureAEContrastiveModel
+from .pure_ae import PureAEContrastiveModel, PureAEModel, PureAETransformerModel
+from .shared_modules import (
+    MLP,
+    InformationBottleneck,
+    MLPDecoder,
+    ResidualMLP,
+    SubgraphDataset,
+    log_to_simplex,
+    precompute_knn_graph,
+    reparameterize,
+    weight_init,
+)
 
 __all__ = [
     # Shared utilities

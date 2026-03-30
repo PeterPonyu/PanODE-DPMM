@@ -1,25 +1,23 @@
 
-import sys
-import numpy as np
-import pandas as pd
-from scipy import stats
-from scipy.stats import f
-from pathlib import Path
-import warnings
-import seaborn as sns
-import matplotlib.pyplot as plt
 import os
 import shutil
+import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from scipy import stats
+from scipy.stats import f
 
 # Geometry-based layout system
 _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from src.visualization import (
-    apply_style as _apply_geometry_style,
-    style_axes, save_with_vcd,
-    bind_figure_region, LayoutRegion)
+from src.visualization import apply_style as _apply_geometry_style
+from src.visualization import bind_figure_region, save_with_vcd
 
 _STYLE_APPLIED = False
 
@@ -328,7 +326,7 @@ class RigorousExperimentalAnalyzer:
         self.statistical_results = {}
         self.design_type = None
 
-        self._log(f"✅ Analyzer initialized:")
+        self._log("✅ Analyzer initialized:")
         self._log(f"   - All methods: {self.all_method_names}")
         self._log(f"   - Selected methods: {self.method_names}")
         self._log(f"   - Selected indices: {self.selected_indices}")
@@ -390,7 +388,7 @@ class RigorousExperimentalAnalyzer:
         # 检测实验设计类型
         self._detect_design_type()
 
-        self._log(f"✅ Data loading completed:")
+        self._log("✅ Data loading completed:")
         self._log(f"   - Methods: {len(self.method_names)} {self.method_names}")
         self._log(f"   - Metrics: {len(self.metrics)}")
         self._log(f"   - Datasets: {self.n_datasets}")
@@ -1978,7 +1976,7 @@ class RigorousExperimentalAnalyzer:
         print("="*120)
 
         # 实验设计摘要
-        print(f"\n📋 Experimental Design Summary:")
+        print("\n📋 Experimental Design Summary:")
         print(f"   • Methods: {len(self.method_names)} - {', '.join(self.method_names)}")
         print(f"   • Datasets: {self.n_datasets}")
         print(f"   • Metrics: {len(self.metrics)}")
@@ -1992,7 +1990,7 @@ class RigorousExperimentalAnalyzer:
             return summary_df
 
         # 总体性能摘要
-        print(f"\n📈 Overall Performance Summary:")
+        print("\n📈 Overall Performance Summary:")
 
         if len(self.method_names) == 2:
             # 两组比较摘要
@@ -2025,7 +2023,7 @@ class RigorousExperimentalAnalyzer:
                 print(f"   • Significant pairwise differences: {total_significant_pairs:.0f}/{total_possible_pairs:.0f} pairs")
 
         # 统计测试摘要
-        print(f"\n🔬 Statistical Test Distribution:")
+        print("\n🔬 Statistical Test Distribution:")
         test_counts = summary_df['Test_Used'].value_counts()
         for test_name, count in test_counts.items():
             print(f"   • {test_name}: {count} metrics")
@@ -2034,7 +2032,7 @@ class RigorousExperimentalAnalyzer:
         if 'Effect_Size' in summary_df.columns:
             effect_sizes = summary_df['Effect_Size'].dropna()
             if len(effect_sizes) > 0:
-                print(f"\n📏 Effect Size Distribution:")
+                print("\n📏 Effect Size Distribution:")
                 print(f"   • Mean effect size: {effect_sizes.mean():.3f} (±{effect_sizes.std():.3f})")
 
                 # 效应量分类
@@ -2049,7 +2047,7 @@ class RigorousExperimentalAnalyzer:
                 print(f"   • Negligible effects (|ES| ≤ 0.2): {negligible_effects}")
 
         # 详细结果表格
-        print(f"\n📊 Detailed Statistical Results:")
+        print("\n📊 Detailed Statistical Results:")
         print("="*120)
 
         # 选择要显示的列
@@ -2075,7 +2073,7 @@ class RigorousExperimentalAnalyzer:
 
         # 事后检验详细结果（对于多组比较）
         if len(self.method_names) > 2:
-            print(f"\n🔍 Post-hoc Analysis Details:")
+            print("\n🔍 Post-hoc Analysis Details:")
             print("-"*100)
 
             for metric, analysis in self.statistical_results.items():
@@ -2332,7 +2330,6 @@ def create_publication_figure(analyzer, metrics, figsize=(16, 12), dpi=300,
     matplotlib.pyplot.tight_layout : Automatic layout optimization
     """
     _apply_rea_style()
-    import string
 
     n_metrics = len(metrics)
     nrows = (n_metrics + ncols - 1) // ncols

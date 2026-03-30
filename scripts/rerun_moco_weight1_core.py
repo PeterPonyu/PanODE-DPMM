@@ -45,9 +45,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from benchmarks.config import BASE_CONFIG, set_global_seed
+from benchmarks.data_utils import load_or_preprocess_adata
 from benchmarks.dataset_registry import ALL_DATASET_REGISTRY
 from benchmarks.model_registry import MODELS
-from benchmarks.data_utils import load_or_preprocess_adata
 from benchmarks.train_utils import train_and_evaluate
 from utils.data import DataSplitter
 

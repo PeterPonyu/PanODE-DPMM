@@ -5,11 +5,11 @@ Cell BLAST的PyTorch实现
 Reference: Cao et al. (2020) Searching large-scale scRNA-seq databases via
 unbiased cell embedding with Cell BLAST. Nature Communications.
 """
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, Tuple
-import numpy as np
+
 from .base_model import BaseModel
 
 
@@ -213,8 +213,8 @@ class CellBLASTModel(BaseModel):
         decoder_output = self.decoder_net(z)
         return decoder_output['mean']
 
-    def forward(self, x: torch.Tensor, batch_id: Optional[torch.Tensor] = None,
-                x_raw: Optional[torch.Tensor] = None, **kwargs):
+    def forward(self, x: torch.Tensor, batch_id: torch.Tensor | None = None,
+                x_raw: torch.Tensor | None = None, **kwargs):
         """
         前向传播
 
@@ -276,9 +276,9 @@ class CellBLASTModel(BaseModel):
 
         return (t1 + t2).mean()
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor],
-                    beta: float = 1.0, batch_id: Optional[torch.Tensor] = None,
-                    x_raw: Optional[torch.Tensor] = None, **kwargs):
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor],
+                    beta: float = 1.0, batch_id: torch.Tensor | None = None,
+                    x_raw: torch.Tensor | None = None, **kwargs):
         """计算总损失：重构 + KL + 对抗性批次校正"""
         x_counts = x_raw if x_raw is not None else x
         mu, logvar = outputs["mu"], outputs["logvar"]

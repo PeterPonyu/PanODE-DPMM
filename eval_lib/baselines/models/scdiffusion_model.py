@@ -5,12 +5,13 @@ Note: Diffusion models operate in data space, not explicit latent space like VAE
 - encode(): UNet bottleneck features projected to [B, embedding_dim]
 - decode(): Maps embedding to initial noise → reverse diffusion → [B, input_dim]
 """
+import math
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-import math
-from typing import Dict, Optional
+
 from .base_model import BaseModel
 
 
@@ -151,13 +152,13 @@ class DenoisingUNet(nn.Module):
         self.out_norm = nn.GroupNorm(get_num_groups(ch), ch)
         self.out_proj = nn.Linear(ch, input_dim)
 
-    def _build_cond_embedding(self, t: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def _build_cond_embedding(self, t: torch.Tensor, y: torch.Tensor | None = None) -> torch.Tensor:
         emb = self.time_embed(timestep_embedding(t, self.time_embed[0].in_features))
         if self.class_embedder is not None and y is not None:
             emb = emb + self.class_embedder(y)
         return emb
 
-    def extract_bottleneck(self, x: torch.Tensor, t: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def extract_bottleneck(self, x: torch.Tensor, t: torch.Tensor, y: torch.Tensor | None = None) -> torch.Tensor:
         """Extract bottleneck features for encode()"""
         emb = self._build_cond_embedding(t, y)
         h = self.input_proj(x)
@@ -312,7 +313,7 @@ class scDiffusionModel(BaseModel):
         self.register_buffer("sqrt_recip_alphas_cumprod", torch.sqrt(1.0 / alphas_cumprod))
         self.register_buffer("sqrt_recipm1_alphas_cumprod", torch.sqrt(1.0 / alphas_cumprod - 1))
 
-    def q_sample(self, x_0: torch.Tensor, t: torch.Tensor, noise: Optional[torch.Tensor] = None):
+    def q_sample(self, x_0: torch.Tensor, t: torch.Tensor, noise: torch.Tensor | None = None):
         """Forward diffusion: add noise to x_0"""
         if noise is None:
             noise = torch.randn_like(x_0)
@@ -323,8 +324,8 @@ class scDiffusionModel(BaseModel):
     def encode(
         self,
         x: torch.Tensor,
-        y: Optional[torch.Tensor] = None,
-        timestep: Optional[int] = None) -> torch.Tensor:
+        y: torch.Tensor | None = None,
+        timestep: int | None = None) -> torch.Tensor:
         """Extract low-dimensional embedding [B, embedding_dim] from UNet bottleneck"""
         if timestep is None:
             timestep = self.n_timesteps // 2
@@ -335,12 +336,12 @@ class scDiffusionModel(BaseModel):
         z = self.latent_head(h)
         return z
 
-    def decode(self, z: torch.Tensor, y: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def decode(self, z: torch.Tensor, y: torch.Tensor | None = None) -> torch.Tensor:
         """Map embedding → initial noise → reverse diffusion → generated sample"""
         init_x = self.noise_head(z)
         return self.p_sample_loop(batch_size=z.size(0), device=init_x.device, init_x=init_x, y=y)
 
-    def forward(self, x: torch.Tensor, y: Optional[torch.Tensor] = None, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, y: torch.Tensor | None = None, **kwargs) -> dict[str, torch.Tensor]:
         """Training forward pass: predict noise"""
         batch_size = x.size(0)
         device = x.device
@@ -352,7 +353,7 @@ class scDiffusionModel(BaseModel):
 
         return {"predicted_noise": predicted_noise, "true_noise": noise, "x_noisy": x_noisy, "t": t, "y": y}
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
         """Compute noise prediction loss"""
         predicted_noise = outputs["predicted_noise"]
         true_noise = outputs["true_noise"]
@@ -369,7 +370,7 @@ class scDiffusionModel(BaseModel):
         return {"total_loss": loss, "recon_loss": loss, "diffusion_loss": loss}
 
     @torch.no_grad()
-    def p_sample(self, x: torch.Tensor, t: int, y: Optional[torch.Tensor] = None, clip_denoised: bool = True):
+    def p_sample(self, x: torch.Tensor, t: int, y: torch.Tensor | None = None, clip_denoised: bool = True):
         """Single reverse diffusion step"""
         batch_size = x.size(0)
         t_tensor = torch.full((batch_size), t, device=x.device, dtype=torch.long)
@@ -394,8 +395,8 @@ class scDiffusionModel(BaseModel):
         self,
         batch_size: int,
         device: str = "cuda",
-        init_x: Optional[torch.Tensor] = None,
-        y: Optional[torch.Tensor] = None,
+        init_x: torch.Tensor | None = None,
+        y: torch.Tensor | None = None,
         clip_denoised: bool = True):
         """Full reverse diffusion process"""
         if init_x is None:
@@ -408,7 +409,7 @@ class scDiffusionModel(BaseModel):
 
         return x
 
-    def extract_latent(self, data_loader, device="cuda", timestep: Optional[int] = None, return_reconstructions: bool = False):
+    def extract_latent(self, data_loader, device="cuda", timestep: int | None = None, return_reconstructions: bool = False):
         """
         Extract latent representations and optionally reconstructions
 

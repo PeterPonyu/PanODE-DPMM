@@ -5,7 +5,7 @@ infty = torch.tensor(float('Inf'))
 def diff(x):
     return x[:, 1:] - x[:, :-1]
 
-class ARS():
+class ARS:
     '''
     This class implements the Adaptive Rejection Sampling technique of Gilks and Wild '92.
     Where possible, naming convention has been borrowed from this paper.
@@ -57,8 +57,8 @@ class ARS():
 
         # Derivative at first point in xi must be > 0
         # Derivative at last point in xi must be < 0
-        if not (self.hprime[:, 0] > 0).all(): raise IOError('initial anchor points must span mode of PDF (left)')
-        if not (self.hprime[:, self.K-1] < 0).all(): raise IOError('initial anchor points must span mode of PDF (right)')
+        if not (self.hprime[:, 0] > 0).all(): raise OSError('initial anchor points must span mode of PDF (left)')
+        if not (self.hprime[:, self.K-1] < 0).all(): raise OSError('initial anchor points must span mode of PDF (right)')
         self.insert()
 
 

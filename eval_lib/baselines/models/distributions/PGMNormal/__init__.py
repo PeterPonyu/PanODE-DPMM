@@ -6,10 +6,10 @@ Gaussian mixture approximation on hyperbolic space using Poincaré half-plane mo
 from .distribution import Distribution
 from .layers import (
     EncoderLayer,
-    VanillaEncoderLayer,
+    GeoDecoderLayer,
     GeoEncoderLayer,
     VanillaDecoderLayer,
-    GeoDecoderLayer
+    VanillaEncoderLayer,
 )
 from .prior import get_prior
 

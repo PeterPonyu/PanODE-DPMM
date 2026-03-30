@@ -4,11 +4,11 @@
 Patches the DPMM-Trans row in full_comparison_all tables and saves
 crossdata latents for the 4 core datasets (setty, dentate, lung, endo).
 """
-import sys
 import gc
+import sys
 import time
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -18,9 +18,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from benchmarks.config import BASE_CONFIG, set_global_seed
+from benchmarks.data_utils import load_or_preprocess_adata
 from benchmarks.dataset_registry import ALL_DATASET_REGISTRY
 from benchmarks.model_registry import MODELS
-from benchmarks.data_utils import load_or_preprocess_adata
 from benchmarks.train_utils import train_and_evaluate
 from utils.data import DataSplitter
 

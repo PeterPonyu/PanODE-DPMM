@@ -11,32 +11,36 @@ Usage:
 
 import argparse
 import sys
+
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style, style_axes, add_panel_label, save_with_vcd,
-    bind_figure_region, LayoutRegion)
-
-from benchmarks.figure_generators.subplot_style import (
-    apply_subplot_style, save_subplot, build_manifest,
-    FIGSIZE_4COL, LINE_WIDTH_SPINE, SCATTER_SIZE_UMAP,
-    FONTSIZE_TITLE, FONTSIZE_CAPTION)
-from benchmarks.figure_generators.common import (
-    compute_umap, REPRESENTATIVE_DATASETS
-)
+from benchmarks.figure_generators.common import REPRESENTATIVE_DATASETS, compute_umap
 from benchmarks.figure_generators.data_loaders import (
-    load_sensitivity_csv, load_training_csv, load_preprocessing_csv,
-    load_sweep_latents, parse_sweep_value)
-
+    load_preprocessing_csv,
+    load_sensitivity_csv,
+    load_sweep_latents,
+    load_training_csv,
+)
+from benchmarks.figure_generators.subplot_style import (
+    FIGSIZE_4COL,
+    FONTSIZE_TITLE,
+    LINE_WIDTH_SPINE,
+    SCATTER_SIZE_UMAP,
+    apply_subplot_style,
+    build_manifest,
+)
+from src.visualization import bind_figure_region, save_with_vcd, style_axes
 
 # Series-specific sensitivity params (warmup_ratio = DPMM)
 _SENSITIVITY_PARAMS = {

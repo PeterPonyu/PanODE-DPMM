@@ -40,8 +40,12 @@ Usage:
   python benchmarks/benchmark_sensitivity.py --epochs 800
 """
 
-import sys, os, argparse, json, gc, warnings
-from pathlib import Path
+import argparse
+import gc
+import json
+import os
+import sys
+import warnings
 from datetime import datetime
 
 sys.stdout.reconfigure(line_buffering=True)
@@ -57,18 +61,21 @@ import torch
 warnings.filterwarnings("ignore")
 
 from benchmarks.config import BASE_CONFIG, DEFAULT_OUTPUT_DIR, ensure_dirs, set_global_seed
-from benchmarks.dataset_registry import DATASET_REGISTRY, resolve_datasets
 from benchmarks.data_utils import load_or_preprocess_adata
-from benchmarks.train_utils import (
-    make_dpmm_params, train_and_evaluate,
-    setup_series_dirs, save_latents, add_common_cli_args)
+from benchmarks.dataset_registry import DATASET_REGISTRY, resolve_datasets
 from benchmarks.model_registry import paper_group
-from utils.data import DataSplitter
-from utils.viz import plot_umap_grid, plot_all_metrics_barplot
-
+from benchmarks.train_utils import (
+    add_common_cli_args,
+    make_dpmm_params,
+    save_latents,
+    setup_series_dirs,
+    train_and_evaluate,
+)
 from models.dpmm_base import DPMMODEModel
-from models.dpmm_transformer import DPMMODETransformerModel
 from models.dpmm_contrastive import DPMMODEContrastiveModel
+from models.dpmm_transformer import DPMMODETransformerModel
+from utils.data import DataSplitter
+from utils.viz import plot_all_metrics_barplot, plot_umap_grid
 
 # ── defaults (optimal from prior experiments) ─────────────────────────────────
 DATA_PATH     = str(BASE_CONFIG.data_path)
@@ -317,7 +324,7 @@ def main():
           f"layers={TRANS_NLAYERS_DEFAULT}, drop={TRANS_DROP_DEFAULT}")
     print(f"Defaults — DPMM-Cont : moco_w={CONT_MOCO_WEIGHT_DEFAULT}, "
           f"moco_t={CONT_MOCO_TEMP_DEFAULT}, drop={CONT_DROP_DEFAULT}")
-    print(f"Sweeps :")
+    print("Sweeps :")
     for sw, grid in SWEEPS.items():
         print(f"  {sw}: {grid}")
     print(f"Total runs : {len(variants)} (DPMM: {n_d})")

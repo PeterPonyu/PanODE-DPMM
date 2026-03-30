@@ -6,10 +6,11 @@ registry    EXTERNAL_MODELS dict mapping model names → factory + params
 models/     BaseModel interface + 12 model wrapper implementations
 """
 
+from .models import BaseModel
 from .registry import (
-    EXTERNAL_MODELS,
-    MODEL_TAXONOMY,
     CLASSICAL_BASELINES,
     DEEP_GRAPH_BASELINES,
-    list_external_models)
-from .models import BaseModel
+    EXTERNAL_MODELS,
+    MODEL_TAXONOMY,
+    list_external_models,
+)

@@ -15,18 +15,18 @@ import argparse
 import json
 import sys
 import time
+from pathlib import Path
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from utils.paper_style import apply_style, apply_cli_overrides, add_style_args
 from benchmarks.config import DYNAMICS_DIR
-
+from utils.paper_style import add_style_args, apply_cli_overrides, apply_style
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Training: record per-epoch losses only (zero inference overhead)
@@ -236,8 +236,8 @@ def main():
         return
 
     # ── Set up data + model ──
-    from benchmarks.model_registry import MODELS
     from benchmarks.data_utils import DATASET_PATHS, load_data
+    from benchmarks.model_registry import MODELS
     from utils.data import DataSplitter
 
     torch.manual_seed(args.seed)

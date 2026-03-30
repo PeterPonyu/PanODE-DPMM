@@ -28,7 +28,8 @@ from . import (
     gen_fig7_subplots,
     gen_fig8_subplots,
     gen_fig9_subplots,
-    gen_fig10_subplots)
+    gen_fig10_subplots,
+)
 
 SUBPLOT_GENERATORS = {
     "2": gen_fig2_subplots.generate,

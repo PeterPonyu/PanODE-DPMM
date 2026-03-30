@@ -1,8 +1,11 @@
+from math import sqrt
+
 import torch
-from math import log, sqrt, pi
-from torch.distributions import Normal, Gamma
+from torch.distributions import Gamma, Normal
 from torch.distributions.distribution import Distribution
+
 from ..utils import euclidean_kl_div, gamma_kl_div
+
 
 @torch.jit.script
 def _log_prob(kl, log_gamma_square, log_beta_square, c):

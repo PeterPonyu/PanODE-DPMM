@@ -39,7 +39,6 @@ from benchmarks.figure_generators.gen_fig8_subplots import generate as gen_fig8
 from benchmarks.figure_generators.gen_fig9_subplots import generate as gen_fig9
 from benchmarks.figure_generators.gen_fig10_subplots import generate as gen_fig10
 
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # Dispatcher
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -5,12 +5,13 @@ Single-phase training:
 - Phase 1: Train AE/VAE with DPMM clustering (fit method)
 """
 import math
+from typing import Literal
+
 import numpy as np
 import torch
 import torch.nn as nn
-from typing import Dict, Optional, Any, Literal
 from sklearn.mixture import BayesianGaussianMixture
-from scipy.sparse import issparse
+
 try:
     from .base_model import BaseModel
 except ImportError:
@@ -34,7 +35,7 @@ def _act(name: str) -> nn.Module:
 
 class _Layer1D(nn.Module):
     """Normalization + Activation + Dropout layer"""
-    def __init__(self, dim: int, norm: Optional[str] = None, act: Optional[str] = None, drop: float = 0.0):
+    def __init__(self, dim: int, norm: str | None = None, act: str | None = None, drop: float = 0.0):
         super().__init__()
         layers = []
         if norm == "bn":
@@ -56,9 +57,9 @@ class MLP(nn.Module):
         self,
         features: list,
         hid_act: str = "mish",
-        out_act: Optional[str] = None,
-        norm: Optional[str] = None,
-        hid_norm: Optional[str] = None,
+        out_act: str | None = None,
+        norm: str | None = None,
+        hid_norm: str | None = None,
         drop: float = 0.0,
         hid_drop: float = 0.0):
         super().__init__()
@@ -102,7 +103,7 @@ class DPMMAutoEncoder(nn.Module):
         norm: str,
         drop: float,
         use_bottleneck: bool = False,
-        bottleneck_dim: Optional[int] = None,
+        bottleneck_dim: int | None = None,
         use_vae: bool = False,
         var_eps: float = 1e-4,
         **kwargs):
@@ -176,8 +177,8 @@ class DPMMODEModel(BaseModel):
         self,
         input_dim: int,
         latent_dim: int = 32,
-        encoder_dims: Optional[list] = None,
-        decoder_dims: Optional[list] = None,
+        encoder_dims: list | None = None,
+        decoder_dims: list | None = None,
         norm_type: str = "bn",
         dropout_rate: float = 0.1,
         dpmm_warmup_ratio: float = 0.6,
@@ -189,7 +190,7 @@ class DPMMODEModel(BaseModel):
         mmd_bandwidth: float = 1.0,
         model_name: str = "DPMMODE",
         use_bottleneck: bool = False,
-        bottleneck_dim: Optional[int] = None,
+        bottleneck_dim: int | None = None,
         use_vae: bool = False,
         kl_weight: float = 0.1,
         **kwargs):
@@ -262,7 +263,7 @@ class DPMMODEModel(BaseModel):
         """Decode from latent space"""
         return self.ae.decoder(z)
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass (Phase 1: AE/VAE training without ODE)"""
         if self.ae.use_bottleneck:
             x_hat, z, x_le_hat, z_ld, mu, var = self.ae(x)
@@ -276,7 +277,7 @@ class DPMMODEModel(BaseModel):
             result["var"] = var
         return result
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], **kwargs) -> Dict[str, torch.Tensor]:
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], **kwargs) -> dict[str, torch.Tensor]:
         """
         Compute loss: reconstruction + DPMM regularization (Phase 1 only)
         """
@@ -599,7 +600,7 @@ class DPMMODEModel(BaseModel):
         epochs: int = 500,
         lr: float = 1e-4,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 20,
         verbose: int = 1,
         verbose_every: int = 1,

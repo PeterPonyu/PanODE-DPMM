@@ -1,12 +1,16 @@
 # https://github.com/emilemathieu/pvae/tree/master/pvae
 import math
-import torch
-from torch.autograd import Function, grad
-import torch.distributions as dist
 from math import log, pi
+
 # from pvae.utils import Constants, logsinh, log_sum_exp_signs, rexpand
 from numbers import Number
+
+import torch
+import torch.distributions as dist
+from torch.autograd import Function, grad
+
 from .ars import ARS
+
 # from pvae.distributions.ars import ARS
 
 
@@ -217,7 +221,7 @@ class HyperbolicRadius(dist.Distribution):
         if torch.isnan(self.log_normalizer).any() or torch.isinf(self.log_normalizer).any():
             print('nan or inf in log_normalizer', torch.cat((self.log_normalizer, self.scale), dim=1))
             raise
-        super(HyperbolicRadius, self).__init__(batch_shape, validate_args=False)
+        super().__init__(batch_shape, validate_args=False)
 
     def rsample(self, sample_shape=torch.Size()):
         value = self.sample(sample_shape)
@@ -264,7 +268,7 @@ class HyperbolicRadius(dist.Distribution):
             g_left = self.grad_log_prob(xi[:, :1])
             g_right = self.grad_log_prob(xi[:, -1:])
             if not (g_left > 0).all() or not (g_right < 0).all():
-                raise IOError(
+                raise OSError(
                     "ARS anchor bracketing failed after expansion. "
                     f"g_left_min={float(g_left.min())}, g_right_max={float(g_right.max())}, "
                     f"scale_max={float(self.scale.max())}, mean_max={float(mean.max())}"

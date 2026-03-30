@@ -1,11 +1,11 @@
+import warnings
+
 import numpy as np
 import pandas as pd  # type: ignore
-from sklearn.metrics import pairwise_distances  # type: ignore
+from scipy.stats import pearsonr, spearmanr  # type: ignore
 from sklearn.manifold import trustworthiness as sklearn_trustworthiness  # type: ignore
+from sklearn.metrics import pairwise_distances  # type: ignore
 from sklearn.neighbors import NearestNeighbors  # type: ignore
-from scipy.stats import spearmanr, pearsonr  # type: ignore
-import warnings
-from typing import Dict, Tuple
 
 
 class ExtendedDimensionalityReductionEvaluator:
@@ -76,7 +76,7 @@ class ExtendedDimensionalityReductionEvaluator:
         x_high: np.ndarray,
         x_low: np.ndarray,
         max_samples: int = 2000,
-        random_state: int = 42) -> Tuple[np.ndarray, np.ndarray]:
+        random_state: int = 42) -> tuple[np.ndarray, np.ndarray]:
         """Subsample both arrays in the same way for tractable computation."""
         if x_high.shape[0] <= max_samples:
             return x_high, x_low
@@ -276,7 +276,7 @@ class ExtendedDimensionalityReductionEvaluator:
         X_low: np.ndarray,
         n_neighbors: int = 15,
         max_samples: int = 2000,
-        random_state: int = 42) -> Dict[str, float]:
+        random_state: int = 42) -> dict[str, float]:
         """
         Comprehensive evaluation of extended DR quality metrics.
 
@@ -300,7 +300,7 @@ class ExtendedDimensionalityReductionEvaluator:
         # Subsample for tractability
         xh, xl = self._subsample_aligned(X_high, X_low, max_samples, random_state)
 
-        results: Dict[str, float] = {}
+        results: dict[str, float] = {}
 
         # 1. Trustworthiness
         self._log("Computing trustworthiness...")
@@ -339,7 +339,7 @@ class ExtendedDimensionalityReductionEvaluator:
 
         return results
 
-    def _print_results(self, results: Dict[str, float]):
+    def _print_results(self, results: dict[str, float]):
         """Print a formatted summary of evaluation results."""
 
         print("\n" + "=" * 60)
@@ -383,7 +383,7 @@ class ExtendedDimensionalityReductionEvaluator:
 
     def compare_methods(
         self,
-        method_results_dict: Dict[str, Tuple[np.ndarray, np.ndarray]],
+        method_results_dict: dict[str, tuple[np.ndarray, np.ndarray]],
         n_neighbors: int = 15,
         max_samples: int = 2000) -> pd.DataFrame:
         """
@@ -459,7 +459,7 @@ def evaluate_extended_dimensionality_reduction(
     n_neighbors: int = 15,
     max_samples: int = 2000,
     random_state: int = 42,
-    verbose: bool = True) -> Dict[str, float]:
+    verbose: bool = True) -> dict[str, float]:
     """
     Convenience function to evaluate extended DR quality.
 
@@ -488,7 +488,7 @@ def evaluate_extended_dimensionality_reduction(
 
 
 def compare_extended_dr_methods(
-    method_results_dict: Dict[str, Tuple[np.ndarray, np.ndarray]],
+    method_results_dict: dict[str, tuple[np.ndarray, np.ndarray]],
     n_neighbors: int = 15,
     max_samples: int = 2000,
     verbose: bool = True) -> pd.DataFrame:

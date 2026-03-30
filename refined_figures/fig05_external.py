@@ -7,27 +7,26 @@ import sys
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.patches import Patch
-from matplotlib.ticker import ScalarFormatter
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import apply_style, style_axes, add_panel_label, save_with_vcd, bind_figure_region
-from benchmarks.figure_generators.common import METRIC_DIRECTION
 from refined_figures.dpmm_shared import (
-    require_dpmm,
+    EXTERNAL_METHOD_ORDER,
     FULL_METRIC_SPECS,
     load_merged_external_tables,
-    EXTERNAL_METHOD_ORDER,
     method_color,
     method_short_name,
+    require_dpmm,
 )
+from src.visualization import apply_style, bind_figure_region, save_with_vcd, style_axes
 
 DPI = 300
 _EXTERNAL_TICK_LABELS = {

@@ -21,7 +21,6 @@ import scipy.sparse as sp
 from benchmarks.config import DEFAULT_OUTPUT_DIR, ensure_dirs
 from benchmarks.dataset_registry import DATASET_REGISTRY
 
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # Legacy compatibility bridge
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -105,9 +104,9 @@ def load_or_preprocess_adata(data_path, max_cells, hvg_top_genes, seed,
                 adata.X = adata.X.toarray()
             sc.pp.normalize_total(adata, target_sum=1e4)
             sc.pp.log1p(adata)
-            print(f"  Applied normalize_total + log1p from counts layer")
+            print("  Applied normalize_total + log1p from counts layer")
         else:
-            print(f"  Using existing X matrix (already normalized)")
+            print("  Using existing X matrix (already normalized)")
     else:
         is_raw = _is_raw_counts(adata.X)
         print(f"  No 'counts' layer found. X matrix: "
@@ -119,13 +118,13 @@ def load_or_preprocess_adata(data_path, max_cells, hvg_top_genes, seed,
                 adata.layers['counts'] = sp.csr_matrix(adata.X.copy())
             sc.pp.normalize_total(adata, target_sum=1e4)
             sc.pp.log1p(adata)
-            print(f"  Applied normalize_total + log1p")
+            print("  Applied normalize_total + log1p")
         else:
             if sp.issparse(adata.X):
                 adata.layers['counts'] = adata.X.copy()
             else:
                 adata.layers['counts'] = sp.csr_matrix(adata.X.copy())
-            print(f"  Data already normalized, skipping normalization")
+            print("  Data already normalized, skipping normalization")
 
     # HVG selection
     if hvg_top_genes is not None and adata.n_vars > hvg_top_genes:

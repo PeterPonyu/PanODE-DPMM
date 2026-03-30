@@ -62,6 +62,7 @@ import traceback
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -73,37 +74,34 @@ PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from eval_lib.viz.rea import (
-    RigorousExperimentalAnalyzer,
-    create_publication_figure,
-    _apply_font,
-    clamp_xtick_fontsize,
-    needs_method_split,
-    MIN_XTICK_FONTSIZE)
 from eval_lib.experiment.merge import MergedExperimentConfig
 
 # Reuse helpers from visualize_experiment (DRY)
 from eval_lib.experiment.templates.visualize_experiment import (
-    METRIC_GROUPS,
     DEFAULT_PALETTE,
+    METRIC_GROUPS,
     _adaptive_ncols,
     _adaptive_params,
-    _compute_hspace,
     _build_sig_pairs,
-    _smooth)
+    _compute_hspace,
+    _smooth,
+)
+from eval_lib.viz.rea import (
+    RigorousExperimentalAnalyzer,
+    _apply_font,
+    clamp_xtick_fontsize,
+    create_publication_figure,
+)
 from experiments.merge_visualize_support import (
     DEFAULT_EXTERNAL_DIR,
     DEFAULT_INTERNAL_DIR,
     DEFAULT_MERGED_NAME,
     DEFAULT_OUTPUT_ROOT,
-    FOCAL_METHOD,
-    INTERNAL_METHODS,
     METHOD_GROUP_THRESHOLD,
     build_merged_config,
     build_method_groups,
     enforce_max_aspect,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Visualisation entry point

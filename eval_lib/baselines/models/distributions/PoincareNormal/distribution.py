@@ -1,5 +1,5 @@
-import torch
 import geoopt
+import torch
 
 from .hyperbolic_radius import HyperbolicRadius
 from .hyperbolic_uniform import HypersphericalUniform
@@ -21,7 +21,7 @@ def expmap_polar(c, x, u, r, dim: int = -1):
     return gamma_1
 
 
-class Distribution():
+class Distribution:
     def __init__(self, mean, sigma) -> None:
         self.mean = mean
         self.sigma = sigma  # .clamp(min=0.1, max=7.)

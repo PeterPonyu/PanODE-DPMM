@@ -13,11 +13,12 @@ are for per-run diagnostics only.
 
 import os
 import re
+from pathlib import Path
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-from pathlib import Path
 
 # ── Publication-quality defaults ──────────────────────────────────────────────
 _FONT_CFG = {
@@ -307,8 +308,7 @@ def plot_core_metrics_barplot(df, save_path, title="Benchmark Results",
         no_title: If True, omit *suptitle* (useful for compositing).
         figformat: ``"png"`` | ``"pdf"`` | ``"svg"``.
     """
-    from utils.paper_style import (
-        sort_df_by_model_order, get_color, MODEL_SHORT_NAMES)
+    from utils.paper_style import MODEL_SHORT_NAMES, get_color, sort_df_by_model_order
 
     _apply_style()
 

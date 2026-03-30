@@ -19,31 +19,28 @@ Usage:
     python benchmarks/benchmark_interpretability.py --all
 """
 
-import os
-import sys
-import time
-import torch
-import numpy as np
-import pandas as pd
-import scanpy as sc
-from pathlib import Path
 import argparse
 import gc
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+import torch
 from scipy.sparse import issparse
-from collections import defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from benchmarks.config import BASE_CONFIG, ensure_dirs, set_global_seed, CACHE_DIR, result_subdir
-from benchmarks.dataset_registry import DATASET_REGISTRY
-from benchmarks.data_utils import load_or_preprocess_adata
-from utils.data import DataSplitter
-from benchmarks.model_registry import MODELS
 from benchmarks.biological_validation.perturbation_analysis import (
     compute_perturbation_importance,
     get_top_genes_per_component,
-    run_enrichment)
-
+    run_enrichment,
+)
+from benchmarks.config import BASE_CONFIG, CACHE_DIR, ensure_dirs, result_subdir, set_global_seed
+from benchmarks.data_utils import load_or_preprocess_adata
+from benchmarks.dataset_registry import DATASET_REGISTRY
+from benchmarks.model_registry import MODELS
+from utils.data import DataSplitter
 
 # ═════════════════════════════════════════════════════════════════════════════
 # Component Coherence (Correlation-based, suitable for sparse scRNA-seq)
@@ -342,7 +339,7 @@ def main():
     csv_path = out_dirs["csv"] / f"interpretability_seed{args.seed}.csv"
     df.to_csv(csv_path, index=False)
     print(f"\n{'='*60}")
-    print(f"INTERPRETABILITY SUMMARY")
+    print("INTERPRETABILITY SUMMARY")
     print(f"{'='*60}")
     print(df.to_string(index=False))
     print(f"\nSaved: {csv_path}")
@@ -354,7 +351,7 @@ def main():
             columns="Model",
             values="Mean_Coherence",
             aggfunc="mean")
-        print(f"\n--- Mean Coherence by Model × Dataset ---")
+        print("\n--- Mean Coherence by Model × Dataset ---")
         print(pivot.to_string())
 
         pivot_spec = df.pivot_table(
@@ -362,7 +359,7 @@ def main():
             columns="Model",
             values="Gene_Specificity",
             aggfunc="mean")
-        print(f"\n--- Gene Specificity by Model × Dataset ---")
+        print("\n--- Gene Specificity by Model × Dataset ---")
         print(pivot_spec.to_string())
 
 

@@ -12,12 +12,11 @@ import re
 from collections import defaultdict
 
 import numpy as np
-from matplotlib.text import Text
-from matplotlib.lines import Line2D
 from matplotlib.collections import PathCollection
+from matplotlib.lines import Line2D
+from matplotlib.text import Text
 
-from .vcd_core import _ArtistInfo, _safe_bbox, _fig_bbox
-
+from .vcd_core import _safe_bbox
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Pass 27: Overplotted scatter detection

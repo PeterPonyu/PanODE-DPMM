@@ -15,17 +15,18 @@ Each entry specifies:
 
 from .models import (
     create_cellblast_model,
-    create_scalex_model,
-    create_scdiffusion_model,
-    create_sivae_model,
     create_clear_model,
+    create_disentanglement_vae_model,
+    create_scalex_model,
     create_scdac_model,
     create_scdeepcluster_model,
     create_scdhmap_model,
-    create_scgnn_model,
+    create_scdiffusion_model,
     create_scgcc_model,
+    create_scgnn_model,
     create_scsmd_model,
-    create_disentanglement_vae_model)
+    create_sivae_model,
+)
 
 # GM-VAE (optional — requires geoopt)
 try:
@@ -36,10 +37,7 @@ except ImportError:
 
 # scVI-family (optional — requires scvi-tools)
 try:
-    from .models import (
-        create_scvi_model,
-        create_peakvi_model,
-        create_poissonvi_model)
+    from .models import create_peakvi_model, create_poissonvi_model, create_scvi_model
     _SCVI_AVAILABLE = True
 except ImportError:
     _SCVI_AVAILABLE = False

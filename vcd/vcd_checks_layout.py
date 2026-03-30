@@ -20,12 +20,10 @@ from matplotlib.transforms import Bbox
 
 from .vcd_core import (
     _ArtistInfo,
+    _is_colorbar_axes,
+    _overlap_area,
     _safe_bbox,
     _shrink,
-    _fig_bbox,
-    _overlap_area,
-    _sides_outside,
-    _is_colorbar_axes,
 )
 
 

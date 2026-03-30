@@ -3,15 +3,15 @@ scDHMap: Hyperbolic VAE with ZINB reconstruction and t-SNE repulsion
 Latent space on Lorentz hyperboloid, with Poincaré ball interface
 """
 import math
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, Any, Tuple
+from sklearn.metrics import pairwise_distances
 from torch.distributions import constraints
 from torch.distributions.distribution import Distribution
-from scipy.sparse import issparse
-from sklearn.metrics import pairwise_distances
+
 from .base_model import BaseModel
 
 eps = 1e-6
@@ -234,8 +234,8 @@ class scDHMapModel(BaseModel):
         self,
         input_dim: int,
         latent_dim: int = 10,
-        encoder_layers: Optional[list] = None,
-        decoder_layers: Optional[list] = None,
+        encoder_layers: list | None = None,
+        decoder_layers: list | None = None,
         dropout: float = 0.0,
         likelihood: str = "zinb",
         alpha: float = 1.0,
@@ -288,7 +288,7 @@ class scDHMapModel(BaseModel):
         mean = self.core.dec_mean(dec_h)
         return mean
 
-    def forward(self, x: torch.Tensor, **kwargs) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **kwargs) -> dict[str, torch.Tensor]:
         """Forward pass"""
         q_z, z, z_mu, mean, disp, pi = self.core.ae_forward(x)
         return {
@@ -301,7 +301,7 @@ class scDHMapModel(BaseModel):
             "reconstruction": mean,
         }
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], x_raw=None, sf=None, p_tensor=None, **kwargs):
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], x_raw=None, sf=None, p_tensor=None, **kwargs):
         """Compute loss: ZINB + KL + optional t-SNE"""
         if x_raw is None:
             x_raw = x
@@ -326,11 +326,11 @@ class scDHMapModel(BaseModel):
         epochs: int = 100,
         lr: float = 1e-3,
         device: str = "cuda",
-        save_path: Optional[str] = None,
+        save_path: str | None = None,
         patience: int = 10,
         verbose: int = 1,
         pretrain_epochs: int = 400,
-        x_pca: Optional[np.ndarray] = None,
+        x_pca: np.ndarray | None = None,
         enable_batch_tsne: bool = False,
         **kwargs):
         """
@@ -360,7 +360,7 @@ class scDHMapModel(BaseModel):
                 x, x_raw, sf, idx = batch[0], batch[1], batch[2], batch[3]
             return x, x_raw, sf, idx
 
-        def _ensure_sf(x_raw_tensor: torch.Tensor, sf_tensor: Optional[torch.Tensor]):
+        def _ensure_sf(x_raw_tensor: torch.Tensor, sf_tensor: torch.Tensor | None):
             if sf_tensor is not None:
                 return sf_tensor
             lib = x_raw_tensor.sum(dim=1).clamp_min(1.0)

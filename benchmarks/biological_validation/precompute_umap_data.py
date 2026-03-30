@@ -27,6 +27,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
 from benchmarks.config import BIO_RESULTS_DIR
+
 BIO_RESULTS = BIO_RESULTS_DIR
 
 REPRESENTATIVE_DATASETS = ["setty", "endo", "dentate"]

@@ -4,7 +4,7 @@ from torch.distributions import Normal
 from ..utils import euclidean_kl_div
 
 
-class Distribution():
+class Distribution:
     def __init__(self, mean, logvar) -> None:
         self.mean = mean
         self.logvar = logvar

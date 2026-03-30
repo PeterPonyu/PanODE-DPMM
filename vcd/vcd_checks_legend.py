@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from matplotlib.transforms import Bbox
 
-from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _fig_bbox, _overlap_area, _sides_outside
+from .vcd_core import _fig_bbox, _overlap_area, _safe_bbox, _shrink, _sides_outside
 
 
 def _iter_legends(fig, renderer):

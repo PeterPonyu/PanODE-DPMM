@@ -46,10 +46,11 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -61,9 +62,7 @@ _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from src.visualization import (
-    apply_style, style_axes, save_with_vcd,
-    bind_figure_region, LayoutRegion)
+from src.visualization import bind_figure_region, save_with_vcd, style_axes
 
 __all__ = [
     "smooth",
@@ -85,7 +84,7 @@ def smooth(arr: np.ndarray, window: int) -> np.ndarray:
 
 def build_color_map(
     methods: Sequence[str],
-    palette: str = "husl") -> Dict[str, Tuple[float, ...]]:
+    palette: str = "husl") -> dict[str, tuple[float, ...]]:
     """Build a {method_name: colour} dict from a named seaborn palette."""
     colors = sns.color_palette(palette, len(methods))
     return dict(zip(methods, colors))
@@ -138,7 +137,7 @@ def _detect_columns(df: pd.DataFrame):
 
 
 def _load_series(
-    series_dir: Union[str, Path],
+    series_dir: str | Path,
     glob_pattern: str = "*_dfs.csv") -> pd.DataFrame:
     """Load and concatenate all series CSVs from *series_dir*."""
     series_dir = Path(series_dir)
@@ -158,16 +157,16 @@ def _load_series(
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def plot_aggregated_loss(
-    series_dir: Union[str, Path],
-    output_dir: Union[str, Path],
-    methods: Optional[List[str]] = None,
+    series_dir: str | Path,
+    output_dir: str | Path,
+    methods: list[str] | None = None,
     palette: str = "husl",
-    color_map: Optional[Dict[str, Tuple]] = None,
-    smoothing_window: Optional[int] = None,
+    color_map: dict[str, tuple] | None = None,
+    smoothing_window: int | None = None,
     fill_alpha: float = 0.15,
     line_alpha: float = 0.85,
     show_recon: bool = False,
-    figsize: Optional[Tuple[float, float]] = None,
+    figsize: tuple[float, float] | None = None,
     dpi: int = 200,
     font_family: str = "Arial",
     filename: str = "aggregated_loss.pdf",
@@ -303,16 +302,16 @@ def plot_aggregated_loss(
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def plot_individual_loss(
-    series_dir: Union[str, Path],
-    output_dir: Union[str, Path],
-    methods: Optional[List[str]] = None,
+    series_dir: str | Path,
+    output_dir: str | Path,
+    methods: list[str] | None = None,
     palette: str = "husl",
-    color_map: Optional[Dict[str, Tuple]] = None,
-    smoothing_window: Optional[int] = None,
+    color_map: dict[str, tuple] | None = None,
+    smoothing_window: int | None = None,
     show_recon: bool = False,
     dpi: int = 200,
     font_family: str = "Arial",
-    glob_pattern: str = "*_dfs.csv") -> List[Path]:
+    glob_pattern: str = "*_dfs.csv") -> list[Path]:
     """Generate individual loss-curve plots for each dataset.
 
     Parameters
@@ -343,7 +342,7 @@ def plot_individual_loss(
     if color_map is None:
         color_map = build_color_map(methods, palette)
 
-    saved: List[Path] = []
+    saved: list[Path] = []
 
     for sf in files:
         ds_name = sf.stem.replace("_dfs", "")
@@ -402,20 +401,20 @@ def plot_individual_loss(
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def plot_training_curves(
-    series_dir: Union[str, Path],
-    output_dir: Union[str, Path],
-    methods: Optional[List[str]] = None,
+    series_dir: str | Path,
+    output_dir: str | Path,
+    methods: list[str] | None = None,
     palette: str = "husl",
-    color_map: Optional[Dict[str, Tuple]] = None,
-    smoothing_window: Optional[int] = None,
+    color_map: dict[str, tuple] | None = None,
+    smoothing_window: int | None = None,
     fill_alpha: float = 0.15,
     line_alpha: float = 0.85,
     per_dataset: bool = False,
     show_recon: bool = False,
-    figsize: Optional[Tuple[float, float]] = None,
+    figsize: tuple[float, float] | None = None,
     dpi: int = 200,
     font_family: str = "Arial",
-    glob_pattern: str = "*_dfs.csv") -> List[Path]:
+    glob_pattern: str = "*_dfs.csv") -> list[Path]:
     """One-call convenience — aggregated + optional per-dataset loss curves.
 
     Parameters

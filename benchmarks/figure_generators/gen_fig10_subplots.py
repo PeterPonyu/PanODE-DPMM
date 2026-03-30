@@ -30,35 +30,45 @@ Usage:
 
 import argparse
 import sys
+
+import matplotlib
 import numpy as np
 import pandas as pd
-import matplotlib
+
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style, style_axes, add_panel_label, save_with_vcd,
-    bind_figure_region, LayoutRegion)
-
 from benchmarks.config import DEFAULT_OUTPUT_DIR as _RESULTS_DIR
-from benchmarks.figure_generators.subplot_style import (
-    apply_subplot_style, save_subplot, build_manifest,
-    SUBPLOT_DPI, FIGSIZE_BOXPLOT, FIGSIZE_4COL,
-    SCATTER_SIZE_BOXPLOT, LINE_WIDTH_MEDIAN, LINE_WIDTH_BOX,
-    FONTSIZE_TITLE, FONTSIZE_TICK, FONTSIZE_LABEL, FONTSIZE_LEGEND,
-    CONTAINER_CSS_PX, DPR, _col_figsize)
 from benchmarks.figure_generators.common import (
-    METRIC_DIRECTION, MODEL_SHORT_NAMES,
-    ALL_BOXPLOT_METRICS_CORE, ALL_BOXPLOT_METRICS_EXT,
-    get_core_metrics, get_ext_metrics, clip_extreme_outliers)
-from benchmarks.figure_generators.significance_brackets import (
-    draw_external_significance_stars)
+    METRIC_DIRECTION,
+    clip_extreme_outliers,
+    get_core_metrics,
+    get_ext_metrics,
+)
 from benchmarks.figure_generators.gen_workflow import gen_workflow_png
-
+from benchmarks.figure_generators.significance_brackets import draw_external_significance_stars
+from benchmarks.figure_generators.subplot_style import (
+    CONTAINER_CSS_PX,
+    DPR,
+    FIGSIZE_4COL,
+    FIGSIZE_BOXPLOT,
+    FONTSIZE_LABEL,
+    FONTSIZE_LEGEND,
+    FONTSIZE_TICK,
+    FONTSIZE_TITLE,
+    LINE_WIDTH_BOX,
+    LINE_WIDTH_MEDIAN,
+    SCATTER_SIZE_BOXPLOT,
+    SUBPLOT_DPI,
+    apply_subplot_style,
+    build_manifest,
+)
+from src.visualization import bind_figure_region, save_with_vcd, style_axes
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # External model color palettes for DPMM series.

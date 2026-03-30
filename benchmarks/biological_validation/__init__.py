@@ -13,8 +13,8 @@ Shared helpers (``load_model``, ``load_data_with_genes``) are defined here
 and imported by the sub-modules to avoid duplication.
 """
 
-import torch
 import numpy as np
+import torch
 
 
 def load_model(model_path, device="cpu"):

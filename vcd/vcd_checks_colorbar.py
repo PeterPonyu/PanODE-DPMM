@@ -1,11 +1,20 @@
 """VCD colorbar-related detection passes (14, 17)."""
 from __future__ import annotations
 
-from .vcd_core import _safe_bbox, _shrink, _fig_bbox, _overlap_area, _sides_outside, _artist_label, _is_colorbar_axes
-from matplotlib.collections import PathCollection, PolyCollection, LineCollection
-from matplotlib.lines import Line2D
+from matplotlib.collections import LineCollection, PathCollection, PolyCollection
 from matplotlib.image import AxesImage
+from matplotlib.lines import Line2D
 from matplotlib.transforms import Bbox
+
+from .vcd_core import (
+    _artist_label,
+    _fig_bbox,
+    _is_colorbar_axes,
+    _overlap_area,
+    _safe_bbox,
+    _shrink,
+    _sides_outside,
+)
 
 
 def _check_colorbar_internal(fig, renderer, tol_px=1.0):

@@ -13,31 +13,31 @@ import sys
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.ticker import ScalarFormatter, MaxNLocator
 import numpy as np
 import pandas as pd
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.visualization import (
-    apply_style,
-    style_axes,
-    save_with_vcd,
-    bind_figure_region,
-)
 from benchmarks.figure_generators.common import compute_umap
 from benchmarks.figure_generators.data_loaders import load_cross_latent
 from refined_figures.dpmm_shared import (
     FULL_METRIC_SPECS,
-    require_dpmm,
     load_table_directory,
-    preferred_ablation_table_dir,
     method_color,
     method_short_name,
+    preferred_ablation_table_dir,
+    require_dpmm,
+)
+from src.visualization import (
+    apply_style,
+    bind_figure_region,
+    save_with_vcd,
+    style_axes,
 )
 
 DPI = 300
@@ -80,18 +80,14 @@ def _darken(hex_col: str, factor: float = 0.55) -> str:
     r = int(hex_col[1:3], 16)
     g = int(hex_col[3:5], 16)
     b = int(hex_col[5:7], 16)
-    return "#{:02x}{:02x}{:02x}".format(
-        int(r * factor), int(g * factor), int(b * factor))
+    return f"#{int(r * factor):02x}{int(g * factor):02x}{int(b * factor):02x}"
 
 
 def _lighten(hex_col: str, factor: float = 0.45) -> str:
     r = int(hex_col[1:3], 16)
     g = int(hex_col[3:5], 16)
     b = int(hex_col[5:7], 16)
-    return "#{:02x}{:02x}{:02x}".format(
-        int(r + (255 - r) * factor),
-        int(g + (255 - g) * factor),
-        int(b + (255 - b) * factor))
+    return f"#{int(r + (255 - r) * factor):02x}{int(g + (255 - g) * factor):02x}{int(b + (255 - b) * factor):02x}"
 
 
 # ── Data loading ──────────────────────────────────────────────────────────

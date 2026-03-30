@@ -6,19 +6,16 @@ only the loaders they need — no drawing logic, no matplotlib.
 
 import json
 import re
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Paths  (single source of truth — imported from benchmarks.config)
 # ═══════════════════════════════════════════════════════════════════════════════
-
-from benchmarks.config import (
-    DEFAULT_OUTPUT_DIR as RESULTS_DIR,
-    BIO_RESULTS_DIR as BIO_RESULTS,
-    DYNAMICS_DIR,
-    PAPER_FIGURES_DIR as OUTPUT_DIR)
+from benchmarks.config import DEFAULT_OUTPUT_DIR as RESULTS_DIR
+from benchmarks.config import DYNAMICS_DIR
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 

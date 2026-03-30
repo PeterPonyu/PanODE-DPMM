@@ -6,10 +6,11 @@ PGM Normal with learnable concentration parameters and coordinate transformation
 from .distribution import Distribution
 from .layers import (
     EncoderLayer,
-    VanillaEncoderLayer,
     ExpEncoderLayer,
+    LogDecoderLayer,
     VanillaDecoderLayer,
-    LogDecoderLayer)
+    VanillaEncoderLayer,
+)
 from .prior import get_prior
 
 __all__ = [

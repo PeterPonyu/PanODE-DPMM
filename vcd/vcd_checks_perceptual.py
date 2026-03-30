@@ -10,14 +10,12 @@ from __future__ import annotations
 import re
 from itertools import combinations
 
-import numpy as np
-from matplotlib.text import Text
+from matplotlib.collections import PathCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
-from matplotlib.collections import PathCollection
+from matplotlib.text import Text
 
-from .vcd_core import _ArtistInfo, _safe_bbox, _fig_bbox
-
+from .vcd_core import _safe_bbox
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Colour helpers

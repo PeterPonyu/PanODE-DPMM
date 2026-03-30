@@ -8,11 +8,10 @@ Disentanglement VAE: default VAE architecture with optional DIP, TC, Info-VAE (M
 
 All other settings (architecture, lr, epochs) persist default VAE settings.
 """
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-from typing import Dict, Optional
 
 from .base_model import BaseModel
 
@@ -148,7 +147,7 @@ class DisentanglementVAEModel(BaseModel):
         self,
         x: torch.Tensor,
         n_samples: int = 1,
-        **kwargs) -> Dict[str, torch.Tensor]:
+        **kwargs) -> dict[str, torch.Tensor]:
         mu, logvar = self.encode(x)
         z = self.reparameterize(mu, logvar)
         recon = self.decode(z)
@@ -162,8 +161,8 @@ class DisentanglementVAEModel(BaseModel):
     def compute_loss(
         self,
         x: torch.Tensor,
-        outputs: Dict[str, torch.Tensor],
-        **kwargs) -> Dict[str, torch.Tensor]:
+        outputs: dict[str, torch.Tensor],
+        **kwargs) -> dict[str, torch.Tensor]:
         recon = outputs["reconstruction"]
         mu, logvar = outputs["mu"], outputs["logvar"]
         z = outputs["latent"]

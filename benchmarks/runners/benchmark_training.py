@@ -26,8 +26,12 @@ Usage:
   python benchmarks/benchmark_training.py
 """
 
-import sys, os, argparse, json, gc, warnings
-from pathlib import Path
+import argparse
+import gc
+import json
+import os
+import sys
+import warnings
 from datetime import datetime
 
 sys.stdout.reconfigure(line_buffering=True)
@@ -43,15 +47,17 @@ import torch
 warnings.filterwarnings("ignore")
 
 from benchmarks.config import BASE_CONFIG, DEFAULT_OUTPUT_DIR, ensure_dirs, set_global_seed
-from benchmarks.dataset_registry import DATASET_REGISTRY, resolve_datasets
 from benchmarks.data_utils import load_or_preprocess_adata
+from benchmarks.dataset_registry import DATASET_REGISTRY, resolve_datasets
 from benchmarks.train_utils import (
-    make_dpmm_params, train_and_evaluate,
-    setup_series_dirs, save_latents, add_common_cli_args)
-from utils.data import DataSplitter
-from utils.viz import plot_umap_grid, plot_all_metrics_barplot
-
+    add_common_cli_args,
+    make_dpmm_params,
+    setup_series_dirs,
+    train_and_evaluate,
+)
 from models.dpmm_base import DPMMODEModel
+from utils.data import DataSplitter
+from utils.viz import plot_all_metrics_barplot, plot_umap_grid
 
 # ── defaults ──────────────────────────────────────────────────────────────────
 DATA_PATH     = str(BASE_CONFIG.data_path)

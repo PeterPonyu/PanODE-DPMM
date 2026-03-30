@@ -5,11 +5,11 @@ Key: Interpretable linear encoder + supervised classification
 Reference: Kopf et al. (2021) Mixture-of-Experts VAE for clustering and
 generating from similarity-based representations on single cell data
 """
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Optional, List, Tuple
-import numpy as np
+
 from .base_model import BaseModel
 
 
@@ -319,7 +319,7 @@ class siVAEModel(BaseModel):
         z = self.reparameterize(mu, logvar)
         return z
 
-    def decode(self, z: torch.Tensor, batch_id: Optional[torch.Tensor] = None):
+    def decode(self, z: torch.Tensor, batch_id: torch.Tensor | None = None):
         """Decode latent to gene expression"""
         if self.use_batch and batch_id is not None:
             batch_emb = self.batch_embedding(batch_id)
@@ -332,7 +332,7 @@ class siVAEModel(BaseModel):
         else:
             return decoder_output['x_mu']
 
-    def forward(self, x: torch.Tensor, batch_id: Optional[torch.Tensor] = None, labels: Optional[torch.Tensor] = None, x_raw: Optional[torch.Tensor] = None, **kwargs):
+    def forward(self, x: torch.Tensor, batch_id: torch.Tensor | None = None, labels: torch.Tensor | None = None, x_raw: torch.Tensor | None = None, **kwargs):
         """Forward pass with library size normalization"""
         x_counts = x_raw if x_raw is not None else x
 
@@ -392,7 +392,7 @@ class siVAEModel(BaseModel):
 
         return (t1 + t2).mean()
 
-    def compute_loss(self, x: torch.Tensor, outputs: Dict[str, torch.Tensor], beta: float = 1, labels: Optional[torch.Tensor] = None, x_raw: Optional[torch.Tensor] = None, **kwargs):
+    def compute_loss(self, x: torch.Tensor, outputs: dict[str, torch.Tensor], beta: float = 1, labels: torch.Tensor | None = None, x_raw: torch.Tensor | None = None, **kwargs):
         """Compute loss: reconstruction + KL + supervised + constraint"""
         x_counts = x_raw if x_raw is not None else x
         z_mu = outputs['z_mu']

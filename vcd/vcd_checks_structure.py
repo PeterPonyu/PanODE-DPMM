@@ -12,18 +12,15 @@ Backward-compatible re-exports are provided so existing imports from
 from __future__ import annotations
 
 import re
-from matplotlib.text import Text
-
-from .vcd_core import _ArtistInfo, _safe_bbox, _shrink, _fig_bbox, _overlap_area, _sides_outside
 
 # Re-export moved functions for backward compatibility
 from .vcd_checks_layout import (  # noqa: F401
-    _check_fontsize_adequacy,
-    _check_tick_spine_overlap,
     _check_font_policy,
+    _check_fontsize_adequacy,
     _check_label_density,
+    _check_tick_spine_overlap,
 )
-
+from .vcd_core import _fig_bbox, _overlap_area, _safe_bbox, _shrink, _sides_outside
 
 # ===============================================================================
 # Pass 16: Significance bracket annotation issues

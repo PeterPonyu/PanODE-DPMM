@@ -1,5 +1,5 @@
-import torch
 import geoopt
+import torch
 from torch.nn import functional as F
 
 from .distribution import Distribution

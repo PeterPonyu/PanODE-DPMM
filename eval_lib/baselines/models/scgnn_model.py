@@ -2,12 +2,14 @@
 scGNN: Graph VAE for single-cell data with kNN graph construction
 Reconstructs cell-cell adjacency via inner product decoder
 """
+import warnings
+from typing import Any
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Dict, Any
-import warnings
-import numpy as np
+
 from .base_model import BaseModel
 
 
@@ -140,7 +142,7 @@ class scGNNModel(BaseModel):
         """Decode latent to adjacency matrix [B, B]"""
         return z @ z.t()
 
-    def forward(self, x: torch.Tensor, **_) -> Dict[str, torch.Tensor]:
+    def forward(self, x: torch.Tensor, **_) -> dict[str, torch.Tensor]:
         """Forward pass with graph construction"""
         adj = normalize_adj(build_knn_graph(x, self.k_neighbors))
         adj_recon, mu, logvar, z = self.vae(x, adj)
@@ -155,8 +157,8 @@ class scGNNModel(BaseModel):
     def compute_loss(
         self,
         x: torch.Tensor,
-        outputs: Dict[str, torch.Tensor],
-        **_) -> Dict[str, torch.Tensor]:
+        outputs: dict[str, torch.Tensor],
+        **_) -> dict[str, torch.Tensor]:
         """Compute loss: adjacency BCE + KL divergence"""
 
         adj_true = outputs["adj_true"]

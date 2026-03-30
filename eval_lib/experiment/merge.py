@@ -10,7 +10,6 @@ stdlib) to simplify portability across projects.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -40,7 +39,7 @@ class MergedExperimentConfig:
     """
 
     name: str = "merged"
-    sources: List[Dict] = field(default_factory=list)
+    sources: list[dict] = field(default_factory=list)
     output_root: Path = Path("experiments/results")
     description: str = ""
 
@@ -57,7 +56,7 @@ class MergedExperimentConfig:
         return self.output_root / self.name / "figures"
 
     @property
-    def method_names(self) -> List[str]:
+    def method_names(self) -> list[str]:
         """All methods in source order."""
         result = []
         for src in self.sources:
@@ -79,7 +78,7 @@ class MergedExperimentConfig:
         series_dir.mkdir(parents=True, exist_ok=True)
 
         # Discover all dataset keys across sources
-        all_ds_keys: Dict[str, List[Tuple[Path, Optional[List[str]]]]] = {}
+        all_ds_keys: dict[str, list[tuple[Path, list[str] | None]]] = {}
         for src in self.sources:
             src_tables = Path(src["tables"])
             methods_filter = src.get("methods")  # None = all methods
@@ -95,7 +94,7 @@ class MergedExperimentConfig:
                 all_ds_keys[ds_key].append((csv_path, methods_filter))
 
         # Also collect series files
-        all_ds_series: Dict[str, List[Tuple[Path, Optional[List[str]]]]] = {}
+        all_ds_series: dict[str, list[tuple[Path, list[str] | None]]] = {}
         for src in self.sources:
             src_series = Path(src.get("series", ""))
             methods_filter = src.get("methods")

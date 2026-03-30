@@ -7,7 +7,7 @@ automatic layout engines.
 
 from __future__ import annotations
 
-from typing import Iterable, Sequence
+from collections.abc import Iterable, Sequence
 
 DEFAULT_LAYOUT_RECT: tuple[float, float, float, float] = (0.02, 0.03, 0.98, 0.95)
 DEFAULT_EXPORT_PAD_INCHES: float = 0.10
