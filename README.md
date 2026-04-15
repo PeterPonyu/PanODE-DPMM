@@ -106,4 +106,15 @@ pytest               # run tests before opening a PR
 
 ## Citation
 
-If this repository contributes to your work, cite the software metadata in `CITATION.cff` and the associated manuscript once it is public.
+```bibtex
+@article{Fu2026PanODEDPMM,
+  author = {Fu, Zeyu},
+  title  = {Adaptive Cluster-Count Autoencoders with Dirichlet Process Priors},
+  year   = {2026},
+  note   = {Preprint},
+  doi    = {10.64898/2026.03.26.714611},
+  url    = {https://doi.org/10.64898/2026.03.26.714611}
+}
+```
+
+For software metadata, see `CITATION.cff`.
