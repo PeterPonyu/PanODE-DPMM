@@ -1,3 +1,9 @@
+<div align="center">
+  <a href="https://peterponyu.github.io/">
+    <img src="https://peterponyu.github.io/assets/badges/PanODE-DPMM.svg" width="64" alt="ZF Lab · PanODE-DPMM">
+  </a>
+</div>
+
 # PanODE-DPMM
 
 [![CI](https://github.com/PeterPonyu/PanODE-DPMM/actions/workflows/ci.yml/badge.svg)](https://github.com/PeterPonyu/PanODE-DPMM/actions/workflows/ci.yml)
