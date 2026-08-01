@@ -208,12 +208,12 @@ To assess whether the improved geometry carries biological meaning, we perform p
 \end{figure}
 
 \subsection{External Benchmark}
-Figure~\ref{fig:external} summarizes the unified 12-dataset external comparison, contrasting the best DPMM variant with 11 representative external baselines---including scVI~\cite{lopez2018deep}, CellBLAST~\cite{cao2020searching}, SCALEX~\cite{xiong2022online}, $\beta$-VAE~\cite{higgins2017beta}, and the MoCo-style CLEAR baseline---across the full 41-metric panel spanning concordance, geometry, projection fidelity, and latent-structure quality.
+Figure~\ref{fig:external} is a legibility-focused view of the external benchmark: it shows the fully populated 12-dataset core panel and 11 representative baselines---including scVI~\cite{lopez2018deep}, CellBLAST~\cite{cao2020searching}, SCALEX~\cite{xiong2022online}, $\beta$-VAE~\cite{higgins2017beta}, and the MoCo-style CLEAR baseline---across the full 41-metric panel. The catalogue-level statistics in Table~\ref{tab:dpmm_external_winrate} use the broader 56-dataset screen and all 18 external baselines. Thus, the figure is a selected visualization of the benchmark rather than the source of the full-screen win-rate calculation; the selection keeps only datasets with complete three-variant core coverage and representative methods from each baseline family.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{Fig5_external_dpmm}
-\caption{\textbf{External benchmark.} Panel~(a): experimental workflow showing 11 representative external baselines evaluated alongside the best DPMM variant under a unified preprocessing pipeline (3k~HVGs, log$_{1}$p normalization) across 12~datasets and 41~metrics. Panels~(b)--(d): metric boxplot grids for proposed models, classical baselines (PCA, ICA, NMF, FA, Truncated-SVD, UMAP, t-SNE), and deep/probabilistic baselines (scVI~\cite{lopez2018deep}, scDHA~\cite{tran2021scdha}, SCALEX~\cite{xiong2022online}, $\beta$-VAE~\cite{higgins2017beta}, CLEAR, and others), organized by clustering concordance, DRE-UMAP, DRE-tSNE, LSE intrinsic, DREX, and LSEX families.}
+\caption{\textbf{External benchmark selected view.} Panel~(a): the fully populated core panel, comprising 11 representative external baselines evaluated alongside the DPMM variants under a unified preprocessing pipeline (3k~HVGs, log$_{1}$p normalization) across 12~datasets and 41~metrics. Panels~(b)--(d): metric boxplot grids for proposed models, classical baselines (PCA, ICA, NMF, FA, Truncated-SVD, UMAP, t-SNE), and deep/probabilistic baselines (scVI~\cite{lopez2018deep}, scDHA~\cite{tran2021scdha}, SCALEX~\cite{xiong2022online}, $\beta$-VAE~\cite{higgins2017beta}, CLEAR, and others), organized by clustering concordance, DRE-UMAP, DRE-tSNE, LSE intrinsic, DREX, and LSEX families. The accompanying win-rate table is computed from the broader 56-dataset, 18-baseline statistical screen.}
 \label{fig:external}
 \end{figure}
 
@@ -221,7 +221,7 @@ Table~\ref{tab:dpmm_external_winrate} quantifies the external win rates.
 
 \input{tables/external_winrate}
 
-DPMM-Base achieves a core win rate of 70.5\%, winning 31 of 44 core-metric comparisons against external baselines, with 176 total significant wins across all metrics. This advantage is concentrated on ASW and DAV; on NMI alone, several external baselines---notably scVI~\cite{lopez2018deep} and CLEAR---match or exceed DPMM-Base on individual datasets, consistent with the geometry--concordance trade-off observed internally.
+DPMM-Base achieves a core win rate of 70.5\%, winning 31 of 44 core-metric comparisons against external baselines, with 176 total significant wins across all metrics in the full 56-dataset, 18-baseline screen. This advantage is concentrated on ASW and DAV; on NMI alone, several external baselines---notably scVI~\cite{lopez2018deep} and CLEAR---match or exceed DPMM-Base on individual datasets, consistent with the geometry--concordance trade-off observed internally. The canonical summary is archived with the manuscript; the remaining upstream pairwise-export boundary is documented in \texttt{PROVENANCE-GAP.md}.
 
 \subsection{Downstream Classification}
 Table~\ref{tab:dpmm_knn} reports $k$NN classification accuracy and macro-F1 as a supervised probe of representation quality.

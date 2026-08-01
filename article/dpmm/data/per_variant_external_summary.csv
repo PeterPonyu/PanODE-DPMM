@@ -1,0 +1,13 @@
+Model,Total_tests,Significant_all,Core_significant,Core_total,Core_win_rate
+Topic-Contrastive,407,173,38,44,0.864
+Topic-Transformer,407,161,37,44,0.841
+Topic-Base,407,163,36,44,0.818
+DPMM-Contrastive,407,170,35,44,0.795
+Pure-VAE,407,217,32,44,0.727
+DPMM-Base,407,176,31,44,0.705
+Pure-Contrastive-AE,407,148,30,44,0.682
+Pure-Transformer-AE,407,138,29,44,0.659
+DPMM-Transformer,407,191,28,44,0.636
+Pure-AE,407,138,28,44,0.636
+Pure-Transformer-VAE,407,177,27,44,0.614
+Pure-Contrastive-VAE,407,148,26,44,0.591
