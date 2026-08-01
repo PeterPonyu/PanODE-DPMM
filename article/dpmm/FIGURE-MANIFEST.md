@@ -29,10 +29,10 @@ This is the submission figure plan. It is intentionally limited to ten figures w
 | F6 Biological exploration | C | `benchmarks/biological_validation/results/*enrichment*` | same | Components map to coherent GO programs | No |
 | F6 Biological exploration | D | `benchmarks/biological_validation/results/*umap*` | same | Three-dataset qualitative grounding; not universal validation | No |
 | F7 External benchmark selection | A | `article/dpmm/data/per_variant_external_summary.csv` | `refined_figures/fig05_external.py` | Full screen: 56 datasets × 18 baselines | No |
-| F7 External benchmark selection | B | archived core-panel exports | same | Display subset: 12 core datasets × 11 representative baselines | No |
+| F7 External benchmark selection | B | `article/dpmm/data/per_variant_external_summary.csv` | same | Display subset: 12 core datasets × 11 representative baselines | No |
 | F7 External benchmark selection | C | `refined_figures/output/dpmm/Fig5_external_dpmm.pdf` | same | Geometry-family comparison | No |
 | F7 External benchmark selection | D | `article/dpmm/tables/external_winrate.tex` | same | DPMM-Base: 31/44 core significant wins | No |
-| F8 External metric decomposition | A | archived external statistical exports | `refined_figures/fig05_external.py` | Concordance metrics favour multiple alternatives | No |
+| F8 External metric decomposition | A | `article/dpmm/tables/external_winrate.tex` | `refined_figures/fig05_external.py` | Concordance metrics favour multiple alternatives | No |
 | F8 External metric decomposition | B | same | same | ASW advantage is concentrated | No |
 | F8 External metric decomposition | C | same | same | DAV advantage is concentrated | No |
 | F8 External metric decomposition | D | same | same | 70.5% win rate is not universal superiority | No |
@@ -45,4 +45,6 @@ This is the submission figure plan. It is intentionally limited to ten figures w
 | F10 Decision map | C | `experiments/results/dpmm_fm_core/summary.csv` | manuscript composition | Select DPMM-FM for projection fidelity | No |
 | F10 Decision map | D | F6-F9 evidence | manuscript composition | Scope recommendations by downstream task | No |
 
-Provenance boundary: F7-F8 require the release maintainer to identify the authoritative upstream pairwise external exports described in `PROVENANCE-GAP.md`. The canonical summary itself is present; no new training is required.
+Provenance boundary: F7-F8 draw on the in-repo canonical summary and derived tables above; the authoritative upstream pairwise external exports remain PENDING per `PROVENANCE-GAP.md` and are not required for the claims as scoped. No new training is required.
+
+Build evidence: `article/dpmm/main_mdpi.pdf` is covered by `.gitignore` (repo policy), so the rebuilt PDF is not committed. Rebuild evidence: compiled 2026-08-01 from current sources, 13 pages, 1,487,402 B, 0 undefined refs; recompile with the repo's LaTeX toolchain to reproduce.
