@@ -16,14 +16,14 @@ This is the submission figure plan. It is intentionally limited to ten figures w
 | F3 Core statistical evidence | B | `article/dpmm/tables/wilcoxon_core.tex` | table-to-panel composition | DAV improves on 12/12 core datasets | No |
 | F3 Core statistical evidence | C | `article/dpmm/tables/wilcoxon_core.tex` | table-to-panel composition | NMI losses are directional but non-significant | No |
 | F3 Core statistical evidence | D | `article/dpmm/tables/wilcoxon_core.tex` | table-to-panel composition | ARI losses are directional but non-significant | No |
-| F4 Sensitivity | A | `experiments/results/dpmm_fm_sensitivity_core/summary.csv` | `refined_figures/fig03_sensitivity_training.py` | Warmup sensitivity | No |
-| F4 Sensitivity | B | same | same | Latent-dimension sensitivity | No |
-| F4 Sensitivity | C | same | same | Flow-weight sensitivity | No |
-| F4 Sensitivity | D | same | same | Noise-scale sensitivity | No |
-| F5 Training dynamics | A | `benchmarks/training_dynamics_results/` | `refined_figures/fig03_sensitivity_training.py` | Pure-AE loss trajectory | No |
-| F5 Training dynamics | B | same | same | DPMM-Base reconstruction/DPMM losses | No |
-| F5 Training dynamics | C | same | same | DPMM-FM loss decomposition | No |
-| F5 Training dynamics | D | `article/dpmm/tables/runtime.tex` | same | DPMM refitting adds 8.8% mean runtime | No |
+| F4 Sensitivity | A | `experiments/results/dpmm_fm_sensitivity_core/summary.csv` | `refined_figures/build_submission_figures.py` | Flow-weight effect on NMI across eight datasets | No |
+| F4 Sensitivity | B | same | same | Flow-weight effect on DRE-UMAP | No |
+| F4 Sensitivity | C | same | same | Noise-scale effect on ARI | No |
+| F4 Sensitivity | D | same | same | Noise-scale effect on LSE | No |
+| F5 Training dynamics | A | `benchmarks/training_dynamics_results/DPMM-Base_setty_history.json` | `refined_figures/build_submission_figures.py` | DPMM-Base total-loss trajectory | No |
+| F5 Training dynamics | B | same | same | Reconstruction-loss trajectory | No |
+| F5 Training dynamics | C | same | same | DPMM loss activates after warmup | No |
+| F5 Training dynamics | D | same | same | Snapshot NMI/ARI/ASW trajectories | No |
 | F6 Biological exploration | A | `benchmarks/biological_validation/results/*importance*` | `refined_figures/fig04_biological_full.py` | Perturbation-importance workflow | No |
 | F6 Biological exploration | B | `benchmarks/biological_validation/results/*correlation*` | same | Latent-gene association structure | No |
 | F6 Biological exploration | C | `benchmarks/biological_validation/results/*enrichment*` | same | Components map to coherent GO programs | No |

@@ -45,7 +45,7 @@
 
 %=================================================================
 % Figures from refined_figures/output/dpmm/ (primary) and benchmarks/paper_figures/dpmm/ (fallback)
-\graphicspath{{../../refined_figures/output/dpmm/}{../../benchmarks/paper_figures/dpmm/}{../../experiments/results/dpmm/}}
+\graphicspath{{figures/submission/}{../../refined_figures/output/dpmm/}{../../benchmarks/paper_figures/dpmm/}{../../experiments/results/dpmm/}}
 
 %=================================================================
 \Title{Adaptive Cluster-Count Autoencoders with Dirichlet Process Priors for Geometry-Aware Single-Cell Representation Learning}
@@ -91,8 +91,8 @@ All variants share latent dimension 10 and the same encoder--decoder backbone; t
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig1_architecture_dpmm}
-\caption{\textbf{DPMM-FM architecture.} A feedforward autoencoder backbone (encoder layers $[256,128]$, latent dimension~10) with online Bayesian Gaussian Mixture refitting~\cite{blei2006variational} every 10 epochs post-warmup (90\%). The optional flow-matching head~\cite{lipman2023flow} (hidden $[128,128]$, $\lambda_{\text{FM}}{=}0.1$) transports latent samples toward DPMM-assigned cluster centers via conditional optimal-transport paths, smoothing the manifold geometry while preserving Bayesian cluster structure.}
+\includegraphics[width=\textwidth]{F01_architecture}
+\caption{\textbf{Adaptive-prior architecture and operating hypotheses.} Panels~(a)--(c) summarize the shared autoencoder, online DPMM refitting, and conditional flow refinement. Panel~(d) states the three pre-specified operating points: label concordance, compact geometry, and projection fidelity.}
 \label{fig:arch}
 \end{figure}
 
@@ -154,8 +154,8 @@ Figure~\ref{fig:ablation} presents the ablation analysis comparing Pure-AE, DPMM
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig2_base_ablation_dpmm}
-\caption{\textbf{Internal ablation: Pure-AE vs.\ DPMM-Base vs.\ DPMM-FM.} Panel~(a): experimental workflow showing 12~scRNA-seq datasets processed through a controlled three-model ablation ($\pm$DPMM, $\pm$flow matching) with 41-metric evaluation. Panel~(b): metric boxplot grid across six evaluation families---clustering concordance, DRE-UMAP~\cite{mcinnes2018umap}, DRE-tSNE~\cite{vandermaaten2008visualizing}, LSE intrinsic, DREX, and LSEX---comparing all model variants.}
+\includegraphics[width=\textwidth]{F02_tradeoff}
+\caption{\textbf{Geometry--concordance trade-off.} Panels~(a)--(c) compare label concordance, cluster compactness, and projection fidelity from the saved core summary. Panel~(d) places the three variants on the NMI--ASW plane, showing a Pareto relation rather than universal dominance.}
 \label{fig:ablation}
 \end{figure}
 
@@ -180,6 +180,13 @@ DPMM-FM   & 0.397 & 0.165 & 0.288 & 1.005 & \textbf{0.751} & \textbf{0.695} & \t
 
 The ablation reveals three distinct operating regimes arranged along a geometry--concordance axis. Pure-AE occupies the concordance end (NMI~0.647, ARI~0.479) with the weakest geometry (ASW~0.172, DAV~1.580). DPMM-Base sits at the geometry end (ASW~0.449, DAV~0.848) with reduced concordance (NMI~0.499, ARI~0.277). DPMM-FM extends the axis toward projection fidelity (DRE~0.751, LSE~0.695, DREX~0.873) at further concordance cost (NMI~0.397, ARI~0.165). Critically, DPMM-FM does \emph{not} dominate DPMM-Base on geometry: its ASW (0.288) and DAV (1.005) are weaker, because the flow field smooths local manifold structure at the expense of tight cluster boundaries. This means the three models are not a simple progression but a Pareto front: Pure-AE for labeling, DPMM-Base for compact clusters, DPMM-FM for smooth low-dimensional projections. The practical recommendation is to select the variant that matches the downstream objective.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{F03_statistics}
+\caption{\textbf{Core statistical evidence across 12 datasets.} Panels~(a)--(d) report directional wins/losses, Wilcoxon evidence, Cliff's $\delta$, and the scoped interpretation. Geometry gains (ASW and DAV) occur on all 12 datasets, whereas NMI/ARI losses are directional but not signed-rank significant.}
+\label{fig:statistics}
+\end{figure}
+
 \subsection{Statistical Validation}
 Table~\ref{tab:dpmm_wilcoxon_core} presents pairwise Wilcoxon signed-rank tests~\cite{wilcoxon1945individual} confirming which improvements are statistically significant, with effect sizes quantified by Cliff's $\delta$~\cite{cliff1993dominance}.
 
@@ -192,9 +199,16 @@ Figure~\ref{fig:sensitivity} shows hyperparameter sensitivity for DPMM-Base and 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig3_sensitivity_training_dpmm}
-\caption{\textbf{Sensitivity analysis and training dynamics.} Panel~(a): four 11-metric sensitivity heatmaps summarizing mean-rank performance across the 12-dataset sensitivity suite for DPMM warmup ratio, DPMM latent dimension, FM flow weight, and FM noise scale. Dashed outlines mark default settings. Panel~(b): training-loss trajectories on four representative datasets for Pure-AE, DPMM-Base, and DPMM-FM, decomposing total, reconstruction, DPMM, and flow losses over training.}
+\includegraphics[width=\textwidth]{F04_sensitivity}
+\caption{\textbf{DPMM-FM sensitivity across eight datasets.} Panels~(a)--(d) report mean and standard deviation across datasets for flow weight versus NMI and DRE-UMAP, and flow-noise scale versus ARI and LSE. Only the two sweeps present in the saved sensitivity export are shown.}
 \label{fig:sensitivity}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{F05_training}
+\caption{\textbf{Saved DPMM-Base training dynamics on setty.} Panels~(a)--(d) show total and reconstruction loss, activation of the DPMM loss after warmup, and snapshot NMI/ARI/ASW. The figure is generated from the saved 600-epoch history and requires no retraining.}
+\label{fig:training}
 \end{figure}
 
 \subsection{Biological Validation}
@@ -202,8 +216,8 @@ To assess whether the improved geometry carries biological meaning, we perform p
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig4_biological_full_dpmm}
-\caption{\textbf{Biological validation.} Panel~(a): experimental workflow---perturbation-based gene importance analysis on three pre-trained DPMM models (setty, endoderm, dentate gyrus) with forward-pass latent perturbation, top-gene grouping by dominant component, and block-diagonal marker validation. Panel~(b): z-scored perturbation importance heatmaps (gene $\times$ latent component) for DPMM-Base, DPMM-Transformer, and DPMM-Contrastive across all three datasets, with genes sorted by dominant component to reveal block-diagonal structure indicating that each latent dimension captures a distinct expression program.}
+\includegraphics[width=\textwidth]{F06_biological}
+\caption{\textbf{Biological exploration on saved representations.} Panels~(a)--(c) show the saved setty, endoderm, and dentate UMAP embeddings. Panel~(d) summarizes the strongest dentate GO term per selected latent component. These panels provide qualitative and program-level grounding, not universal biological validation.}
 \label{fig:bio}
 \end{figure}
 
@@ -212,9 +226,16 @@ Figure~\ref{fig:external} is a legibility-focused view of the external benchmark
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{Fig5_external_dpmm}
-\caption{\textbf{External benchmark selected view.} Panel~(a): the fully populated core panel, comprising 11 representative external baselines evaluated alongside the DPMM variants under a unified preprocessing pipeline (3k~HVGs, log$_{1}$p normalization) across 12~datasets and 41~metrics. Panels~(b)--(d): metric boxplot grids for proposed models, classical baselines (PCA, ICA, NMF, FA, Truncated-SVD, UMAP, t-SNE), and deep/probabilistic baselines (scVI~\cite{lopez2018deep}, scDHA~\cite{tran2021scdha}, SCALEX~\cite{xiong2022online}, $\beta$-VAE~\cite{higgins2017beta}, CLEAR, and others), organized by clustering concordance, DRE-UMAP, DRE-tSNE, LSE intrinsic, DREX, and LSEX families. The accompanying win-rate table is computed from the broader 56-dataset, 18-baseline statistical screen.}
+\includegraphics[width=\textwidth]{F07_external_selection}
+\caption{\textbf{External benchmark scope and selection.} Panels~(a)--(c) report full-screen significant wins, core significant wins, and core win rates from the in-repository canonical summary. Panel~(d) distinguishes the 56-dataset, 18-baseline statistical screen from the 12-dataset, 11-baseline selected visualization and marks the missing pairwise upstream provenance.}
 \label{fig:external}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{F08_external_provenance}
+\caption{\textbf{External evidence decomposition and provenance boundary.} Panels~(a)--(c) summarize the in-repository win-rate export and test coverage. Panel~(d) explicitly marks metric-family decomposition as PENDING-PROVENANCE because the authoritative upstream pairwise external exports are absent; no ASW/DAV-specific external counts are reconstructed.}
+\label{fig:external-provenance}
 \end{figure}
 
 Table~\ref{tab:dpmm_external_winrate} quantifies the external win rates.
@@ -244,6 +265,13 @@ Table~\ref{tab:dpmm_runtime} reports the computational cost.
 
 DPMM-Base adds minimal overhead over Pure-AE (50.5s vs.\ 46.4s, +8.8\%), confirming that the DPMM prior's online refitting is efficient.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{F09_utility_cost}
+\caption{\textbf{Downstream utility and computational cost.} Panels~(a)--(d) compare $k$NN accuracy, macro-F1, training time, and parameter count. Geometry gains do not translate to improved supervised discrimination, while online DPMM refitting adds modest time without changing parameter count.}
+\label{fig:utility-cost}
+\end{figure}
+
 \FloatBarrier
 \section{Discussion}\label{sec:discussion}
 
@@ -264,6 +292,13 @@ Perturbation analysis, latent--gene correlations, and GO enrichment~\cite{ashbur
 
 \textbf{Limitations and scope.}
 The concordance cost is the primary limitation: when cell-type labeling accuracy is the sole objective, the DPMM prior is counterproductive, and Pure-AE or a dedicated classifier should be preferred. The 90\% warmup ratio delays prior activation to near the end of training, raising the question of whether the DPMM is operating on a sufficiently plastic latent space. The two additional hyperparameters in DPMM-FM (flow weight, noise scale) add complexity, though sensitivity analysis (Fig.~\ref{fig:sensitivity}) shows broad robustness. Biological validation covers only three datasets; broader tissue-type coverage would strengthen the generalizability claim. Finally, this study evaluates only feedforward autoencoders; extending the DPMM prior to variational or graph-based encoders~\cite{duque2022grae} remains future work.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{F10_decision_map}
+\caption{\textbf{Task-conditional decision map.} Panels~(a)--(c) summarize the evidence-supported operating points for Pure-AE, DPMM-Base, and DPMM-FM. Panel~(d) records suitability by downstream objective. The map is a scope guide, not a claim of universal superiority.}
+\label{fig:decision-map}
+\end{figure}
 
 \FloatBarrier
 \section{Conclusions}\label{sec:conclusions}
