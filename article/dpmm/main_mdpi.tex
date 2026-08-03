@@ -20,6 +20,7 @@
 %=================================================================
 \usepackage{longtable}
 \usepackage{placeins}
+\usepackage{tikz}
 \raggedbottom
 \setlength{\headheight}{20pt}
 \setlength{\parskip}{0pt plus 1pt}
@@ -91,7 +92,7 @@ All variants share latent dimension 10 and the same encoder--decoder backbone; t
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{F01_architecture}
+\input{figures/submission/F01_architecture}
 \caption{\textbf{Adaptive-prior architecture and operating hypotheses.} Panels~(a)--(c) summarize the shared autoencoder, online DPMM refitting, and conditional flow refinement. Panel~(d) states the three pre-specified operating points: label concordance, compact geometry, and projection fidelity.}
 \label{fig:arch}
 \end{figure}
@@ -154,7 +155,7 @@ Figure~\ref{fig:ablation} presents the ablation analysis comparing Pure-AE, DPMM
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{F02_tradeoff}
+\input{figures/submission/F02_tradeoff}
 \caption{\textbf{Geometry--concordance trade-off.} Panels~(a)--(c) compare label concordance, cluster compactness, and projection fidelity from the saved core summary. Panel~(d) places the three variants on the NMI--ASW plane, showing a Pareto relation rather than universal dominance.}
 \label{fig:ablation}
 \end{figure}
@@ -182,7 +183,7 @@ The ablation reveals three distinct operating regimes arranged along a geometry-
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{F03_statistics}
+\input{figures/submission/F03_statistics}
 \caption{\textbf{Core statistical evidence across 12 datasets.} Panels~(a)--(d) report directional wins/losses, Wilcoxon evidence, Cliff's $\delta$, and the scoped interpretation. Geometry gains (ASW and DAV) occur on all 12 datasets, whereas NMI/ARI losses are directional but not signed-rank significant.}
 \label{fig:statistics}
 \end{figure}
@@ -199,14 +200,14 @@ Figure~\ref{fig:sensitivity} shows hyperparameter sensitivity for DPMM-Base and 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{F04_sensitivity}
+\input{figures/submission/F04_sensitivity}
 \caption{\textbf{DPMM-FM sensitivity across eight datasets.} Panels~(a)--(d) report mean and standard deviation across datasets for flow weight versus NMI and DRE-UMAP, and flow-noise scale versus ARI and LSE. Only the two sweeps present in the saved sensitivity export are shown.}
 \label{fig:sensitivity}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{F05_training}
+\input{figures/submission/F05_training}
 \caption{\textbf{Saved DPMM-Base training dynamics on setty.} Panels~(a)--(d) show total and reconstruction loss, activation of the DPMM loss after warmup, and snapshot NMI/ARI/ASW. The figure is generated from the saved 600-epoch history and requires no retraining.}
 \label{fig:training}
 \end{figure}
@@ -216,7 +217,7 @@ To assess whether the improved geometry carries biological meaning, we perform p
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{F06_biological}
+\input{figures/submission/F06_biological}
 \caption{\textbf{Biological exploration on saved representations.} Panels~(a)--(c) show the saved setty, endoderm, and dentate UMAP embeddings. Panel~(d) summarizes the strongest dentate GO term per selected latent component. These panels provide qualitative and program-level grounding, not universal biological validation.}
 \label{fig:bio}
 \end{figure}
@@ -226,14 +227,14 @@ Figure~\ref{fig:external} is a legibility-focused view of the external benchmark
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{F07_external_selection}
+\input{figures/submission/F07_external_selection}
 \caption{\textbf{External benchmark scope and selection.} Panels~(a)--(c) report full-screen significant wins, core significant wins, and core win rates from the in-repository canonical summary. Panel~(d) distinguishes the 56-dataset, 18-baseline statistical screen from the 12-dataset, 11-baseline selected visualization and marks the missing pairwise upstream provenance.}
 \label{fig:external}
 \end{figure}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{F08_external_provenance}
+\input{figures/submission/F08_external_provenance}
 \caption{\textbf{External evidence decomposition and provenance boundary.} Panels~(a)--(c) summarize the in-repository win-rate export and test coverage. Panel~(d) explicitly marks metric-family decomposition as PENDING-PROVENANCE because the authoritative upstream pairwise external exports are absent; no ASW/DAV-specific external counts are reconstructed.}
 \label{fig:external-provenance}
 \end{figure}
@@ -267,7 +268,7 @@ DPMM-Base adds minimal overhead over Pure-AE (50.5s vs.\ 46.4s, +8.8\%), confirm
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{F09_utility_cost}
+\input{figures/submission/F09_utility_cost}
 \caption{\textbf{Downstream utility and computational cost.} Panels~(a)--(d) compare $k$NN accuracy, macro-F1, training time, and parameter count. Geometry gains do not translate to improved supervised discrimination, while online DPMM refitting adds modest time without changing parameter count.}
 \label{fig:utility-cost}
 \end{figure}
@@ -295,7 +296,7 @@ The concordance cost is the primary limitation: when cell-type labeling accuracy
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth]{F10_decision_map}
+\input{figures/submission/F10_decision_map}
 \caption{\textbf{Task-conditional decision map.} Panels~(a)--(c) summarize the evidence-supported operating points for Pure-AE, DPMM-Base, and DPMM-FM. Panel~(d) records suitability by downstream objective. The map is a scope guide, not a claim of universal superiority.}
 \label{fig:decision-map}
 \end{figure}
