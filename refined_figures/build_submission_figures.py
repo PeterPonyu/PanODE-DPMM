@@ -416,7 +416,7 @@ def fig10():
     )
     labels = ["labels", "geometry", "projection", "classification"]
     mat = np.array([[3, 1, 1, 3], [1, 3, 2, 1], [0, 2, 3, 0]])
-    im = ax[3].imshow(mat, cmap="Blues", vmin=0, vmax=3)
+    ax[3].imshow(mat, cmap="Blues", vmin=0, vmax=3)
     ax[3].set_xticks(range(4), labels, rotation=25, ha="right")
     ax[3].set_yticks(range(3), ["Pure-AE", "DPMM-Base", "DPMM-FM"])
     ax[3].set_title("Evidence-based suitability", loc="left", fontweight="bold")

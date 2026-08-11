@@ -1,7 +1,7 @@
 # PanODE-DPMM FIGURE-PROVENANCE
 
-**Date:** 2026-08-10  
-**Scope:** Ten main-text figures × four panels A–D (structurally complete).  
+**Date:** 2026-08-10
+**Scope:** Ten main-text figures × four panels A–D (structurally complete).
 **Hard rules held:** no fabricated stats; no new GPU/training; **no PanODE-Topic merge**.
 
 ## Rebuild status
@@ -43,10 +43,10 @@ Verified in rebuilt `main_mdpi.pdf` text layer and refreshed `F07_external_selec
 
 ## External provenance boundary
 
-- Primary: `data/per_variant_external_wilcoxon.csv` (SHA256 `383a3fa8…`) → 407 / 176 / 31/44 / 0.705  
-- Summary: `data/per_variant_external_summary.csv` (SHA256 `fb4fffe8…`)  
-- Details: `PROVENANCE-GAP.md`, `data/VERIFY-EXTERNAL.md`  
-- Residual: raw per-dataset score dumps not in-repo  
+- Primary: `data/per_variant_external_wilcoxon.csv` (SHA256 `383a3fa8…`) → 407 / 176 / 31/44 / 0.705
+- Summary: `data/per_variant_external_summary.csv` (SHA256 `fb4fffe8…`)
+- Details: `PROVENANCE-GAP.md`, `data/VERIFY-EXTERNAL.md`
+- Residual: raw per-dataset score dumps not in-repo
 - Topic-* rows in shared summary = sister-catalogue context only; **not** merged DPMM claims
 
 ## Reproduce

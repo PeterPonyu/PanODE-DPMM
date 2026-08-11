@@ -1,7 +1,7 @@
 # VERIFY-EXTERNAL — DPMM-Base re-aggregation
 
-**Date:** 2026-08-10  
-**Primary file:** `per_variant_external_wilcoxon.csv`  
+**Date:** 2026-08-10
+**Primary file:** `per_variant_external_wilcoxon.csv`
 **SHA256:** `383a3fa8cebacb8964fa52e812246c01b58f9e117921815713bccdb9d1af7a29`
 
 ## Procedure

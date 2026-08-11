@@ -145,4 +145,3 @@ article/dpmm/data/*
 !article/dpmm/data/pairwise_wilcoxon_external.csv
 !article/dpmm/data/per_variant_external_wilcoxon.csv
 !article/dpmm/data/per_variant_external_summary.csv
-
