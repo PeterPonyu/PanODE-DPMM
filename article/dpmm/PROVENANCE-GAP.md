@@ -16,10 +16,11 @@ This closes the prior blocker that exports existed only under `_previous/` witho
 | **Companion** (Best-* screen) | `data/pairwise_wilcoxon_external.csv` | `5c62b106770bd21655f1ceda2f74ce2d5c445b90173d54bd206f0b5d7a059acd` | Best-DPMM / Best-Topic schema; **not** the 31/44 aggregator |
 | Summary (table source) | `data/per_variant_external_summary.csv` | `fb4fffe83c2fdb0b2ab875872c80a51da48a421470e0675c9d0dbb33f8e6754f` | Byte-identical to archive; derives `tables/external_winrate.tex` |
 
-Archived originals (same hashes):
-`/home/zeyufu/Desktop/labs/_previous/PanODE-LAB/benchmarks/benchmark_results/statistical_exports/`
+Archived originals (same hashes) lived under the retired PanODE-LAB tree at
+`benchmarks/benchmark_results/statistical_exports/` (outside this repository).
 
-Archived builder: `/home/zeyufu/Desktop/labs/_previous/PanODE-LAB/scripts/generate_latex_tables.py`, function `generate_external_winrate`.
+Archived builder: PanODE-LAB `scripts/generate_latex_tables.py`, function
+`generate_external_winrate` (same retired tree; not shipped here).
 
 ## Re-verification
 
