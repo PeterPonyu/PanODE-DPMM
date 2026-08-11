@@ -92,6 +92,32 @@ vcd/fonts/
 .DS_Store
 Thumbs.db
 
+# LaTeX / manuscript sources
+*.tex
+*.bib
+*.sty
+*.cls
+*.bst
+*.aux
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.out
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
+article/
+paper/
+manuscript/
+latex/
+docs/ARTICLE_PLAN.tex
+
 # --- dual-plane: submission capsules live outside this workbench ---
 # Plane C worktrees: labs/capsules/<id>/ (host: submission-capsules)
 /paper/
@@ -104,11 +130,19 @@ Rplots.pdf
 .omc/
 .omx/
 .claude/worktrees/
-__pycache__/
-*.py[cod]
-.ipynb_checkpoints/
-*.aux
-*.fdb_latexmk
-*.fls
-*.synctex.gz
+
+# Keep auditable DPMM float provenance in the workbench (not LaTeX body)
+!article/
+article/*
+!article/dpmm/
+article/dpmm/*
+!article/dpmm/FIGURE-MANIFEST.md
+!article/dpmm/FIGURE-PROVENANCE.md
+!article/dpmm/PROVENANCE-GAP.md
+!article/dpmm/data/
+article/dpmm/data/*
+!article/dpmm/data/VERIFY-EXTERNAL.md
+!article/dpmm/data/pairwise_wilcoxon_external.csv
+!article/dpmm/data/per_variant_external_wilcoxon.csv
+!article/dpmm/data/per_variant_external_summary.csv
 

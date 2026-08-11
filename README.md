@@ -1,3 +1,9 @@
+<div align="center">
+  <a href="https://peterponyu.github.io/">
+    <img src="https://peterponyu.github.io/assets/badges/PanODE-DPMM.svg" width="64" alt="ZF Lab · PanODE-DPMM">
+  </a>
+</div>
+
 # PanODE-DPMM
 
 [![CI](https://github.com/PeterPonyu/PanODE-DPMM/actions/workflows/ci.yml/badge.svg)](https://github.com/PeterPonyu/PanODE-DPMM/actions/workflows/ci.yml)
@@ -106,4 +112,15 @@ pytest               # run tests before opening a PR
 
 ## Citation
 
-If this repository contributes to your work, cite the software metadata in `CITATION.cff` and the associated manuscript once it is public.
+```bibtex
+@article{Fu2026PanODEDPMM,
+  author = {Fu, Zeyu},
+  title  = {Adaptive Cluster-Count Autoencoders with Dirichlet Process Priors},
+  year   = {2026},
+  note   = {Preprint},
+  doi    = {10.64898/2026.03.26.714611},
+  url    = {https://doi.org/10.64898/2026.03.26.714611}
+}
+```
+
+For software metadata, see `CITATION.cff`.
