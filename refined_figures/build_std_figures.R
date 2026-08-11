@@ -15,7 +15,19 @@ file_arg <- args_all[grep("^--file=", args_all)]
 script_dir <- if (length(file_arg)) dirname(normalizePath(sub("^--file=", "", file_arg[1]), mustWork = FALSE)) else getwd()
 ROOT <- normalizePath(file.path(script_dir, ".."), mustWork = FALSE)
 if (!file.exists(file.path(ROOT, "article", "dpmm", "main_mdpi.tex"))) {
-  ROOT <- "/home/zeyufu/Desktop/labs/active/PanODE-DPMM"
+  # Optional override: LABS_ROOT/<repo> or PANODE_DPMM_ROOT; otherwise fail fast.
+  env_root <- Sys.getenv("PANODE_DPMM_ROOT", unset = "")
+  if (!nzchar(env_root) && nzchar(Sys.getenv("LABS_ROOT", unset = ""))) {
+    env_root <- file.path(Sys.getenv("LABS_ROOT"), "active", "PanODE-DPMM")
+  }
+  if (nzchar(env_root) && file.exists(file.path(env_root, "article", "dpmm", "main_mdpi.tex"))) {
+    ROOT <- normalizePath(env_root, mustWork = FALSE)
+  } else {
+    stop(
+      "Cannot locate PanODE-DPMM root from script path. ",
+      "Set PANODE_DPMM_ROOT (or LABS_ROOT) and re-run."
+    )
+  }
 }
 source(file.path(ROOT, "refined_figures", "figure_standard.R"))
 
