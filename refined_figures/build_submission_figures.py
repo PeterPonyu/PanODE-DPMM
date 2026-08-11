@@ -144,8 +144,8 @@ def fig7():
     bars(ax[0],list(d.index),{"all significant":d.Significant_all.tolist()},"Full-screen significant wins","tests")
     bars(ax[1],list(d.index),{"core significant":d.Core_significant.tolist()},"Core significant wins","of 44")
     bars(ax[2],list(d.index),{"core win rate":d.Core_win_rate.tolist()},"Core win rate","fraction")
-    text_panel(ax[3],"Selection and provenance",["Statistics: 56 datasets × 18 baselines", "Display: 12 complete core datasets", "11 representative baseline methods", "pairwise upstream exports: PENDING"])
-    save(fig,7,"external_selection","article/dpmm/data/per_variant_external_summary.csv; article/dpmm/tables/external_winrate.tex; PROVENANCE-GAP.md")
+    text_panel(ax[3],"Selection and provenance",["Statistics: 56 datasets × 18 baselines", "Display: 12 complete core datasets", "11 representative baseline methods", "Primary Wilcoxon export in-repo"])
+    save(fig,7,"external_selection","article/dpmm/data/per_variant_external_summary.csv; article/dpmm/data/per_variant_external_wilcoxon.csv; PROVENANCE-GAP.md")
 
 
 def fig8():
@@ -154,8 +154,8 @@ def fig8():
     ax[0].barh(d.Model[::-1],d.Core_win_rate[::-1],color="#4E79A7"); ax[0].set(title="Top summary win rates",xlabel="core win rate")
     ax[1].scatter(d.Significant_all,d.Core_significant,c=d.Core_win_rate,cmap="viridis",s=55); ax[1].set(title="All vs core significant wins",xlabel="all significant",ylabel="core significant")
     ax[2].bar(d.Model.str.replace("Pure-","P-").str.replace("DPMM-","D-").str.replace("Topic-","T-").head(6),d.Total_tests.head(6),color="#9E9E9E"); ax[2].tick_params(axis="x",rotation=35); ax[2].set(title="Test-count coverage",ylabel="tests")
-    text_panel(ax[3],"PENDING-PROVENANCE",["Metric-family attribution cannot", "be regenerated in this repository:", "pairwise external exports missing.", "No ASW/DAV split is fabricated."] ,"#C44E52")
-    save(fig,8,"external_provenance","article/dpmm/data/per_variant_external_summary.csv; article/dpmm/PROVENANCE-GAP.md")
+    text_panel(ax[3],"Provenance closed",["Primary per-variant Wilcoxon in-repo", "DPMM-Base: 407 tests; 176 sig wins", "Core: 31/44 (NMI9 ARI9 ASW7 DAV6)", "Residual: raw score dumps not imported"] ,"#2F4B7C")
+    save(fig,8,"external_provenance","article/dpmm/data/per_variant_external_wilcoxon.csv; article/dpmm/PROVENANCE-GAP.md")
 
 
 def fig9():

@@ -228,14 +228,14 @@ Figure~\ref{fig:external} is a legibility-focused view of the external benchmark
 \begin{figure}[H]
 \centering
 \input{figures/submission/F07_external_selection}
-\caption{\textbf{External benchmark scope and selection.} Panels~(a)--(c) report full-screen significant wins, core significant wins, and core win rates from the in-repository canonical summary. Panel~(d) distinguishes the 56-dataset, 18-baseline statistical screen from the 12-dataset, 11-baseline selected visualization and marks the missing pairwise upstream provenance.}
+\caption{\textbf{External benchmark scope and selection.} Panels~(a)--(c) report full-screen significant wins, core significant wins, and core win rates from the in-repository canonical summary (DPMM-Base / Pure-AE rows). Panel~(d) distinguishes the 56-dataset, 18-baseline statistical screen from the 12-dataset, 11-baseline selected visualization; the primary per-variant Wilcoxon export is archived with the manuscript.}
 \label{fig:external}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \input{figures/submission/F08_external_provenance}
-\caption{\textbf{External evidence decomposition and provenance boundary.} Panels~(a)--(c) summarize the in-repository win-rate export and test coverage. Panel~(d) explicitly marks metric-family decomposition as PENDING-PROVENANCE because the authoritative upstream pairwise external exports are absent; no ASW/DAV-specific external counts are reconstructed.}
+\caption{\textbf{External evidence decomposition and provenance boundary.} Panels~(a)--(c) summarize the shared win-rate catalogue (Topic-* rows are sister-family context only, not DPMM claims). Panel~(d) records closed provenance for the primary per-variant Wilcoxon export (DPMM-Base: 407 tests, 176 significant wins, core 31/44 with regenerable NMI/ARI/ASW/DAV splits); raw per-dataset score dumps remain outside the repository.}
 \label{fig:external-provenance}
 \end{figure}
 
@@ -243,7 +243,7 @@ Table~\ref{tab:dpmm_external_winrate} quantifies the external win rates.
 
 \input{tables/external_winrate}
 
-DPMM-Base achieves a core win rate of 70.5\%, winning 31 of 44 core-metric comparisons against external baselines, with 176 total significant wins across all metrics in the full 56-dataset, 18-baseline screen. This advantage is concentrated on ASW and DAV; on NMI alone, several external baselines---notably scVI~\cite{lopez2018deep} and CLEAR---match or exceed DPMM-Base on individual datasets, consistent with the geometry--concordance trade-off observed internally. The canonical summary is archived with the manuscript; the remaining upstream pairwise-export boundary is documented in \texttt{PROVENANCE-GAP.md}.
+DPMM-Base achieves a core win rate of 70.5\%, winning 31 of 44 core-metric comparisons against external baselines, with 176 total significant wins across all metrics in the full 56-dataset, 18-baseline screen. This advantage is concentrated on ASW and DAV; on NMI alone, several external baselines---notably scVI~\cite{lopez2018deep} and CLEAR---match or exceed DPMM-Base on individual datasets, consistent with the geometry--concordance trade-off observed internally. The primary per-variant Wilcoxon export and canonical summary are archived with the manuscript (\texttt{data/per\_variant\_external\_wilcoxon.csv}; re-aggregation 407/176/31/44); residual absence of raw per-dataset score dumps is documented in \texttt{PROVENANCE-GAP.md}.
 
 \subsection{Downstream Classification}
 Table~\ref{tab:dpmm_knn} reports $k$NN classification accuracy and macro-F1 as a supervised probe of representation quality.
@@ -288,6 +288,9 @@ The NMI and ARI losses under the DPMM prior are not surprising when examined mec
 \textbf{External positioning.}
 The 70.5\% core win rate against 18 baselines~\cite{lopez2018deep,cao2020searching,xiong2022online,kingma2014auto,higgins2017beta,tran2021scdha} is driven primarily by geometry metrics. On NMI alone, scVI and CLEAR match or exceed DPMM-Base on several datasets. This is consistent with the trade-off: methods optimized for reconstruction and label recovery (scVI, $\beta$-VAE) naturally score higher on concordance, while DPMM-Base dominates on compactness and separation. Notably, the concurrent scDAC approach~\cite{an2024scdac}, which also couples an autoencoder with a DPMM prior, prioritizes concordance optimization; our work complements it by explicitly quantifying the geometry--concordance cost surface.
 
+\textbf{Sister prior regime.}
+A companion simplex / topic-prior study (PanODE-Topic / Topic-FM manuscript) characterizes a complementary \emph{no trade-off} operating regime under a different latent prior. That sister manuscript remains separate; we do not import its win rates or merge claims into a single PanODE SOTA narrative. The present work stays the explicit geometry--concordance trade-off / Pareto characterization for the DPMM prior family.
+
 \textbf{Biological grounding.}
 Perturbation analysis, latent--gene correlations, and GO enrichment~\cite{ashburner2000gene} on three representative datasets confirm that geometry-improved components capture coherent biological programs (Fig.~\ref{fig:bio}). Importantly, this validates the DPMM prior's partitioning as biologically meaningful even when it diverges from annotated labels---the clusters correspond to expression programs, not noise.
 
@@ -303,7 +306,7 @@ The concordance cost is the primary limitation: when cell-type labeling accuracy
 
 \FloatBarrier
 \section{Conclusions}\label{sec:conclusions}
-This study systematically characterizes the effect of imposing a Dirichlet Process Mixture Model prior~\cite{ferguson1973bayesian,neal2000markov} on autoencoder latent spaces for single-cell transcriptomics. The core finding is a reproducible geometry--concordance trade-off: across 56~datasets, the DPMM prior improves cluster compactness (ASW~+127\%) and separation (DAV~$-$47\%) while reducing label-recovery metrics (NMI~$-$17\%, ARI~$-$21\%) and downstream $k$NN accuracy ($-$7.5\%). A second-stage flow refinement (DPMM-FM)~\cite{lipman2023flow} extends the axis toward projection fidelity without recovering concordance. The three resulting models---Pure-AE, DPMM-Base, DPMM-FM---form a Pareto front from label recovery through cluster geometry to manifold visualization, and biological validation confirms that geometry-improved components capture coherent gene-expression programs~\cite{ashburner2000gene}. Rather than proposing the DPMM prior as a universal replacement for prior-free autoencoders, we recommend it as a task-appropriate tool: use DPMM-Base when the downstream analysis requires tight, biologically coherent clusters (trajectory inference~\cite{saelens2019comparison}, spatial organization), and use prior-free models when cell-type classification accuracy is paramount.
+This study systematically characterizes the effect of imposing a Dirichlet Process Mixture Model prior~\cite{ferguson1973bayesian,neal2000markov} on autoencoder latent spaces for single-cell transcriptomics. The core finding is a reproducible geometry--concordance trade-off: across 56~datasets, the DPMM prior improves cluster compactness (ASW~+127\%) and separation (DAV~$-$47\%) while reducing label-recovery metrics (NMI~$-$17\%, ARI~$-$21\%) and downstream $k$NN accuracy ($-$7.5\%). A second-stage flow refinement (DPMM-FM)~\cite{lipman2023flow} extends the axis toward projection fidelity without recovering concordance. The three resulting models---Pure-AE, DPMM-Base, DPMM-FM---form a Pareto front from label recovery through cluster geometry to manifold visualization, and biological validation confirms that geometry-improved components capture coherent gene-expression programs~\cite{ashburner2000gene}. A sister Topic-FM / PanODE-Topic manuscript maps a complementary no-trade-off simplex-prior regime and is not merged here. Rather than proposing the DPMM prior as a universal replacement for prior-free autoencoders, we recommend it as a task-appropriate tool: use DPMM-Base when the downstream analysis requires tight, biologically coherent clusters (trajectory inference~\cite{saelens2019comparison}, spatial organization), and use prior-free models when cell-type classification accuracy is paramount.
 
 \vspace{6pt}
 

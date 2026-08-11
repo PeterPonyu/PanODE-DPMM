@@ -252,8 +252,8 @@ fig7 <- function() {
   p1 <- bar_panel(d, "Model", "Significant_all", "Model", "Full-screen significant wins", "A", "tests", rotate = 20)
   p2 <- bar_panel(d, "Model", "Core_significant", "Model", "Core significant wins", "B", "of 44", rotate = 20)
   p3 <- bar_panel(d, "Model", "Core_win_rate", "Model", "Core win rate", "C", "fraction", rotate = 20, limits = c(0, 1))
-  p4 <- text_panel("Selection and provenance", "D", c("Statistics: 56 datasets x 18 baselines", "Display: 12 complete core datasets", "11 representative baseline methods", "pairwise upstream exports: PENDING"), "#2F4B7C")
-  dims <- save_figure(list(p1, p2, p3, p4), 7, "external_selection", "article/dpmm/data/per_variant_external_summary.csv; article/dpmm/tables/external_winrate.tex; PROVENANCE-GAP.md")
+  p4 <- text_panel("Selection and provenance", "D", c("Statistics: 56 datasets x 18 baselines", "Display: 12 complete core datasets", "11 representative baseline methods", "Primary Wilcoxon export in-repo"), "#2F4B7C")
+  dims <- save_figure(list(p1, p2, p3, p4), 7, "external_selection", "article/dpmm/data/per_variant_external_summary.csv; article/dpmm/data/per_variant_external_wilcoxon.csv; PROVENANCE-GAP.md")
   dims
 }
 
@@ -263,8 +263,8 @@ fig8 <- function() {
   p1 <- ggplot(d, aes(reorder(Model, Core_win_rate), Core_win_rate)) + geom_col(fill = "#4E79A7", width = .68, colour = "white", linewidth = .2) + coord_flip() + labs(title = "Top summary win rates", tag = "A", x = NULL, y = "core win rate") + std_theme() + theme(plot.title = element_text(face = "bold", hjust = 0), panel.grid.major.y = element_blank(), panel.grid.minor = element_blank())
   p2 <- ggplot(d, aes(Significant_all, Core_significant, label = ModelShort)) + geom_point(size = 2.2, colour = "#355C7D") + geom_text(nudge_y = 1.2, size = 2.1, show.legend = FALSE) + labs(title = "All vs core significant wins", tag = "B", x = "all significant", y = "core significant") + std_theme() + theme(plot.title = element_text(face = "bold", hjust = 0), legend.position = "none", panel.grid.minor = element_blank())
   p3 <- ggplot(head(d, 6), aes(ModelShort, Total_tests)) + geom_col(fill = "#9E9E9E", width = .68, colour = "white", linewidth = .2) + labs(title = "Test-count coverage", tag = "C", x = NULL, y = "tests") + std_theme() + theme(axis.text.x = element_text(angle = 35, hjust = 1), plot.title = element_text(face = "bold", hjust = 0), panel.grid.major.x = element_blank(), panel.grid.minor = element_blank())
-  p4 <- text_panel("PENDING-PROVENANCE", "D", c("Metric-family attribution cannot", "be regenerated in this repository:", "pairwise external exports missing.", "No ASW/DAV split is fabricated."), "#C44E52")
-  dims <- save_figure(list(p1, p2, p3, p4), 8, "external_provenance", "article/dpmm/data/per_variant_external_summary.csv; article/dpmm/PROVENANCE-GAP.md")
+  p4 <- text_panel("Provenance closed", "D", c("Primary per-variant Wilcoxon in-repo", "DPMM-Base: 407 tests; 176 sig wins", "Core: 31/44 (NMI9 ARI9 ASW7 DAV6)", "Residual: raw score dumps not imported"), "#2F4B7C")
+  dims <- save_figure(list(p1, p2, p3, p4), 8, "external_provenance", "article/dpmm/data/per_variant_external_wilcoxon.csv; article/dpmm/PROVENANCE-GAP.md")
   dims
 }
 
