@@ -19,6 +19,8 @@ htmlcov/
 .conda/
 .venv/
 .env
+.env.*
+!.env.example
 
 # ── IDE / editor ─────────────────────────────────────────────────────────────
 .vscode/
@@ -129,7 +131,19 @@ docs/ARTICLE_PLAN.tex
 Rplots.pdf
 .omc/
 .omx/
-.claude/worktrees/
+.claude/
+
+# --- AI assistant / agent session artifacts (local only, never public) ---
+.cursor/
+.cursor.cloud
+.cursorignore
+.codex/
+agent-transcripts/
+*.canvas.tsx
+.aider*
+.continue/
+.codeium/
+.windsurf/
 
 # Keep auditable DPMM float provenance in the workbench (not LaTeX body)
 !article/
