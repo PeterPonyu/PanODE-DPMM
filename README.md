@@ -9,13 +9,13 @@
 [![CI](https://github.com/PeterPonyu/PanODE-DPMM/actions/workflows/ci.yml/badge.svg)](https://github.com/PeterPonyu/PanODE-DPMM/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Research code for single-cell representation learning with DPMM-regularised autoencoders, ablation variants, external baselines, and publication figure tooling.
+Research code for single-cell representation learning with DPMM-regularised autoencoders, ablation variants, external baselines, and figure tooling.
 
 ## Highlights
 
 - modular implementations of `Pure-AE`, `DPMM-Base`, `DPMM-Transformer`, `DPMM-Contrastive`, and `DPMM-FM`,
 - reusable benchmarking and latent-space evaluation utilities under `benchmarks/` and `eval_lib/`,
-- publication-style figure generation under `refined_figures/`,
+- figure generation under `refined_figures/`,
 - a local Next.js architecture viewer under `model-arch-viewer/`, and
 - automated tests and CI.
 
@@ -27,7 +27,7 @@ PanODE-DPMM/
 ├── eval_lib/              Portable evaluation and baseline library
 ├── benchmarks/            Internal benchmarking, validation, and figure helpers
 ├── experiments/           Experiment orchestration and result-merging utilities
-├── refined_figures/       Publication-style figure generation pipeline
+├── refined_figures/       Figure generation pipeline
 ├── scripts/               Dataset prep and experiment refresh helpers
 ├── model-arch-viewer/     Local Next.js viewer for figure/layout preview
 ├── tests/                 Automated tests
