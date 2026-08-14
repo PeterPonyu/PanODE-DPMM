@@ -144,6 +144,11 @@ agent-transcripts/
 .continue/
 .codeium/
 .windsurf/
+.credentials/
+credentials/
+credentials.*
+*.pem
+*.key
 
 # Keep auditable DPMM float provenance in the workbench (not LaTeX body)
 !article/
