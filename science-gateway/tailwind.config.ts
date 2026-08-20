@@ -5,8 +5,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: '#2563eb',
-        teal: '#0d9488',
+        brand: '#3d4f7c',
+        paper: '#efe6d6',
       },
     },
   },

@@ -1,19 +1,14 @@
 /**
- * PanODE-DPMM science gateway site config.
- * Fail-closed: Article DOI disabled until real assignment.
+ * PanODE-DPMM public companion page.
+ * Code description only — no manuscript figures or result tables.
  */
 export const SITE = {
   slug: 'PanODE-DPMM',
   navTitle: 'PanODE-DPMM',
-  title:
-    'Online Dirichlet process mixture priors adapt latent cluster count during autoencoder training',
-  kicker: 'ZF Lab · latent partitions · GO programs',
+  title: 'PanODE-DPMM',
+  kicker: 'Public Python package',
   lead:
-    'The physical object is a single-cell latent partition on setty, endoderm, and dentate, plus dentate GO gene programs from Fig. 6 — not a win-rate dashboard.',
-  physicalObject:
-    'Saved UMAP partitions and dentate GO enrichment bars (Fig. 6). F07–F10 are tagged metric panels and follow the biological object.',
-  primaryClaim:
-    'DPMM-family autoencoders recover interpretable dentate GO programs while refitting component count online during training.',
+    'Research code for Dirichlet-process-mixture regularised autoencoders, ablation variants, and local evaluation utilities.',
   homepage: 'https://peterponyu.github.io/',
   scportal: 'https://peterponyu.github.io/scportal/',
   github: 'https://github.com/PeterPonyu/PanODE-DPMM',
@@ -28,39 +23,107 @@ export type BadgeConfig = {
 
 export const BADGES = {
   code: {
-    label: 'Code',
+    label: 'GitHub',
     href: SITE.github,
     enabled: true,
   } satisfies BadgeConfig,
   site: {
-    label: 'Site',
+    label: 'This page',
     href: 'https://peterponyu.github.io/PanODE-DPMM/',
     enabled: true,
   } satisfies BadgeConfig,
   archive: {
     label: 'Archive',
     enabled: false,
-    disabledReason: 'No Zenodo record yet',
+    disabledReason: 'No archive record on this page',
   } satisfies BadgeConfig,
   articleDoi: {
     label: 'Article DOI',
     enabled: false,
-    disabledReason: 'On acceptance',
+    disabledReason: 'No article DOI on this page',
   } satisfies BadgeConfig,
 } as const;
 
 export const ROUTES = [
-  { href: '/results', label: 'Results', number: '01', blurb: 'Fig. 6 partitions and GO programs; metric panels F07–F10.' },
-  { href: '/methods', label: 'Methods', number: '02', blurb: 'DPMM prior, training protocol, dataset scope.' },
-  { href: '/evidence', label: 'Evidence', number: '03', blurb: 'Wilcoxon externals, sensitivity, runtime.' },
-  { href: '/claims', label: 'Claims', number: '04', blurb: 'Falsifiable statements and refutation hooks.' },
+  {
+    href: '/results',
+    label: 'Package',
+    number: '01',
+    blurb: 'Tracked Python modules, benchmarks, and local figure tooling.',
+  },
+  {
+    href: '/methods',
+    label: 'Install',
+    number: '02',
+    blurb: 'Editable install extras and optional dataset path variables.',
+  },
+  {
+    href: '/evidence',
+    label: 'Tests',
+    number: '03',
+    blurb: 'pytest, pre-commit, and the public CI workflow.',
+  },
+  {
+    href: '/claims',
+    label: 'Scope',
+    number: '04',
+    blurb: 'This page describes the repository. It is not a journal article.',
+  },
 ] as const;
 
-export const GO_TERMS = [
-  { id: 'GO:0030182', name: 'neuron differentiation' },
-  { id: 'GO:0099504', name: 'synaptic vesicle cycle' },
-  { id: 'GO:0021782', name: 'glial cell development' },
-  { id: 'GO:0045666', name: 'positive regulation of neuron differentiation' },
-  { id: 'GO:0007411', name: 'axon guidance' },
-  { id: 'GO:0140059', name: 'dendrite arborization' },
+export const PACKAGE_ROWS = [
+  { path: 'models/', note: 'DPMM-regularised autoencoder variants and shared layers' },
+  { path: 'eval_lib/', note: 'Portable evaluation helpers used by local runners' },
+  { path: 'benchmarks/', note: 'Smoke and series runners for a caller-supplied .h5ad path' },
+  { path: 'experiments/', note: 'Orchestration entry points for optional local jobs' },
+  { path: 'refined_figures/', note: 'Scripts that emit figures on the machine that has the data' },
+  { path: 'model-arch-viewer/', note: 'Optional local Next.js preview; not this public page' },
+  { path: 'tests/', note: 'Automated checks run by pytest and CI' },
 ] as const;
+
+/** Unique infra binding per route. Shared chrome is chrome.dpmm-code-sheet only. */
+export type PageBinding = {
+  pageId: string;
+  runnerId: string;
+  dataId: string;
+  lawId: string;
+  sharedRunner: 'chrome.dpmm-code-sheet';
+};
+
+export const PAGE_BINDINGS = {
+  home: {
+    pageId: 'dpmm.page.code-home',
+    runnerId: 'dpmm.runner.package-sheet',
+    dataId: 'dpmm.data.repo-layout',
+    lawId: 'dpmm.law.code-companion-not-article',
+    sharedRunner: 'chrome.dpmm-code-sheet',
+  },
+  results: {
+    pageId: 'dpmm.page.package',
+    runnerId: 'dpmm.runner.module-inventory',
+    dataId: 'dpmm.data.tracked-python-tree',
+    lawId: 'dpmm.law.no-hosted-result-panels',
+    sharedRunner: 'chrome.dpmm-code-sheet',
+  },
+  methods: {
+    pageId: 'dpmm.page.install',
+    runnerId: 'dpmm.runner.editable-extras',
+    dataId: 'dpmm.data.pip-extras-dev-bio-graph',
+    lawId: 'dpmm.law.caller-supplies-h5ad',
+    sharedRunner: 'chrome.dpmm-code-sheet',
+  },
+  evidence: {
+    pageId: 'dpmm.page.tests',
+    runnerId: 'dpmm.runner.pytest-ci',
+    dataId: 'dpmm.data.workflow-ci-yml',
+    lawId: 'dpmm.law.ci-is-not-a-result-table',
+    sharedRunner: 'chrome.dpmm-code-sheet',
+  },
+  claims: {
+    pageId: 'dpmm.page.scope',
+    runnerId: 'dpmm.runner.site-boundary',
+    dataId: 'dpmm.data.companion-copy',
+    lawId: 'dpmm.law.no-manuscript-on-pages',
+    sharedRunner: 'chrome.dpmm-code-sheet',
+  },
+} as const satisfies Record<string, PageBinding>;

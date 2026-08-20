@@ -1,36 +1,28 @@
 import PageShell from '@/components/PageShell';
-import StatTile from '@/components/StatTile';
+import { PAGE_BINDINGS } from '@/lib/site';
 
-export default function EvidencePage() {
+/** Unique page module: tests and CI, not a result table. */
+const EVIDENCE = PAGE_BINDINGS.evidence;
+
+export default function DpmmTestsPage() {
   return (
-    <PageShell title="Evidence" kicker="Metrics and controls">
+    <PageShell title="Tests" kicker="Automated checks">
       <p>
-        Verifier-gated numbers from matched external benchmarks. Metric panels are labeled as
-        evidence, not marketing stats.
+        The public workflow <code>.github/workflows/ci.yml</code> runs the repository test suite.
+        That badge reports job status. It is not a scientific scoreboard.
       </p>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <StatTile value="11" label="Named Wilcoxon externals" note="Matched comparison set" />
-        <StatTile value="37" label="Metrics per external" note="Full ranking grid" />
-        <StatTile value="407" label="Wilcoxon rows" note="11 × 37 matched pairs" />
-      </div>
-
-      <section className="rounded-2xl border border-slate-200 bg-white/80 p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Negative controls and scope</h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-700">
-          <li>F06 GO programs are qualitative dentate grounding — not pan-tissue validation</li>
-          <li>F07–F10 report selection, provenance, utility, and decision metrics separately</li>
-          <li>Sensitivity and training dynamics (F04–F05) bound hyperparameter stability</li>
-        </ul>
-      </section>
-
-      <section className="rounded-2xl border border-amber-200 bg-amber-50/80 p-6">
-        <h2 className="text-lg font-semibold text-slate-900">What would refute</h2>
-        <p className="mt-2 text-slate-700">
-          Dentate GO terms absent under reproduced F06D pipeline, or partition structure not stable
-          across matched reruns on setty/endoderm/dentate.
-        </p>
-      </section>
+      <pre className="cmd">
+        <code>{`pre-commit install
+pytest`}</code>
+      </pre>
+      <p>
+        An optional local architecture viewer lives under <code>model-arch-viewer/</code> and is
+        started with <code>npm install</code> then <code>npm run dev</code> in that directory.
+      </p>
+      <p className="sr-only" data-page-id={EVIDENCE.pageId}>
+        {EVIDENCE.pageId} {EVIDENCE.runnerId} {EVIDENCE.dataId} {EVIDENCE.lawId}{' '}
+        {EVIDENCE.sharedRunner}
+      </p>
     </PageShell>
   );
 }

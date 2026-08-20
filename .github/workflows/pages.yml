@@ -39,11 +39,38 @@ jobs:
             exit 1
           fi
           python3 - <<'PY'
+          import re
           from pathlib import Path
           root = Path("docs")
           html = list(root.rglob("*.html"))
           assert html, "no html"
-          print(f"ok {len(html)} html files")
+          leaks = [
+              re.compile(r"unpublished results", re.I),
+              re.compile(r"Science Gateway", re.I),
+              re.compile(r"Wilcoxon", re.I),
+              re.compile(r"GO:\d{7}"),
+              re.compile(r"Fig\.?\s*6", re.I),
+              re.compile(r"\bF0[6-9]\b"),
+              re.compile(r"\bF10\b"),
+              re.compile(r"Primary claim", re.I),
+              re.compile(r"neuron differentiation", re.I),
+              re.compile(r"win-rate", re.I),
+              re.compile(r"ZF Lab", re.I),
+          ]
+          if (root / "figures").exists():
+              raise SystemExit("leak: docs/figures present")
+          for path in root.rglob("*"):
+              if path.is_dir():
+                  continue
+              if path.suffix.lower() in {".png", ".pdf", ".svg", ".jpg", ".jpeg", ".webp"}:
+                  raise SystemExit(f"leak: binary {path}")
+              if path.suffix.lower() not in {".html", ".txt"}:
+                  continue
+              text = path.read_text(encoding="utf-8", errors="replace")
+              for rx in leaks:
+                  if rx.search(text):
+                      raise SystemExit(f"leak: {rx.pattern} in {path}")
+          print(f"ok {len(html)} html files, leak-scan clean")
           PY
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request'

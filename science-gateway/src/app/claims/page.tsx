@@ -1,36 +1,35 @@
 import PageShell from '@/components/PageShell';
-import { SITE } from '@/lib/site';
+import { PAGE_BINDINGS } from '@/lib/site';
 
-export default function ClaimsPage() {
+/** Unique page module: site boundary, not scientific claims. */
+const CLAIMS = PAGE_BINDINGS.claims;
+
+export default function DpmmScopePage() {
   return (
-    <PageShell title="Claims" kicker="Falsifiable statements">
-      <section className="rounded-2xl border border-slate-200 bg-white/80 p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Claim 1 — adaptive partitions</h2>
-        <p className="mt-3 text-slate-700">{SITE.primaryClaim}</p>
-        <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Would refute
-        </h3>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
-          <li>DPMM variants fail to recover stable dentate GO programs under reproduced F06 pipeline</li>
-          <li>Online component refit collapses to fixed-k behavior on all three partition datasets</li>
+    <PageShell title="Scope" kicker="Public companion">
+      <section className="scope-box">
+        <h2>On this page</h2>
+        <ul>
+          <li>How to install the Python package from the public clone</li>
+          <li>Which directories the repository tracks</li>
+          <li>Where tests and CI live</li>
         </ul>
       </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white/80 p-6">
-        <h2 className="text-lg font-semibold text-slate-900">Claim 2 — honest metric scope</h2>
-        <p className="mt-3 text-slate-700">
-          External win-rate panels (F07–F10) describe selection and utility context; they do not
-          substitute for Fig. 6 biological grounding.
-        </p>
-        <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Out of scope
-        </h3>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
-          <li>Universal single-cell atlas validation</li>
-          <li>Journal venue packaging or invented article DOI</li>
-          <li>56×18 GO heatmap as a shipped Site artifact (F06 uses complete term transcription)</li>
+      <section className="scope-box">
+        <h2>Not on this page</h2>
+        <ul>
+          <li>Manuscript figures or captioned result panels</li>
+          <li>Benchmark tables, rank lists, or archive/article identifiers</li>
+          <li>A journal submission kit</li>
         </ul>
       </section>
+      <p>
+        Cite software metadata in <code>CITATION.cff</code> if the clone is useful. Cite a
+        manuscript only after that manuscript is public.
+      </p>
+      <p className="sr-only" data-page-id={CLAIMS.pageId}>
+        {CLAIMS.pageId} {CLAIMS.runnerId} {CLAIMS.dataId} {CLAIMS.lawId} {CLAIMS.sharedRunner}
+      </p>
     </PageShell>
   );
 }
